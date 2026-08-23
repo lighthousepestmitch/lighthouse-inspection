@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<title>Inspection Capture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap">
+
+<style>
+  :root{
+    --paper:#F5F1EA; --raised:#FBF8F3; --sunk:#EFE9DF;
+    --edge:#E1D8CA; --edge-soft:#EDE6DA;
+    --ink:#241F1A; --muted:#6E6357; --faint:#948979;
+    --timber:#8A5626; --timber-soft:#f0e4d5;
+    --clear:#2F6B4A; --clear-bg:#e6f0e7;
+    --find:#B4551C; --find-bg:#f7e7d6;
+    --todo:#98897a; --todo-bg:#ece5d9;
+    --place:#7a4bb8; --place-bg:#ece2fb;
+    --shadow:0 1px 2px rgba(40,30,18,.06),0 6px 20px rgba(40,30,18,.05);
+    --radius:15px;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --paper:#161210; --raised:#201A15; --sunk:#120f0c; --edge:#33291f; --edge-soft:#2a231c;
+      --ink:#ECE4D9; --muted:#a99b89; --faint:#7d7160;
+      --timber:#d59a5f; --timber-soft:#31241a;
+      --clear:#77c79a; --clear-bg:#1b2a21;
+      --find:#e79a5b; --find-bg:#2f2216;
+      --todo:#8a7d6d; --todo-bg:#241d16;
+      --place:#c3a3f0; --place-bg:#241b33;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.34);
+    }
+  }
+  :root[data-theme="dark"]{
+      --paper:#161210; --raised:#201A15; --sunk:#120f0c; --edge:#33291f; --edge-soft:#2a231c;
+      --ink:#ECE4D9; --muted:#a99b89; --faint:#7d7160; --timber:#d59a5f; --timber-soft:#31241a;
+      --clear:#77c79a; --clear-bg:#1b2a21; --find:#e79a5b; --find-bg:#2f2216;
+      --todo:#8a7d6d; --todo-bg:#241d16; --place:#c3a3f0; --place-bg:#241b33;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.34);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);
+    font-family:"Public Sans",system-ui,-apple-system,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;
+    padding-bottom:96px}
+  .wrap{max-width:820px;margin:0 auto;padding:0 15px}
+  button{font-family:inherit}
+
+  /* header */
+  header{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--edge);
+    padding:calc(env(safe-area-inset-top) + 12px) 0 10px}
+  .hrow{display:flex;align-items:center;gap:12px;justify-content:space-between}
+  .htitle{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.2rem;line-height:1.05}
+  .htitle small{display:block;font-family:"Public Sans";font-weight:500;font-size:.72rem;color:var(--muted);margin-top:2px}
+  .prog{display:flex;align-items:center;gap:8px;font-family:"Spline Sans Mono",monospace;font-size:.72rem;color:var(--muted)}
+  .bar{width:70px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--timber);width:0;transition:width .3s}
+
+  /* section chips nav */
+  .jump{display:flex;gap:6px;overflow-x:auto;margin-top:10px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .jump::-webkit-scrollbar{display:none}
+  .jchip{flex:none;font-family:"Spline Sans Mono",monospace;font-size:.72rem;font-weight:600;padding:5px 9px;border-radius:8px;
+    border:1px solid var(--edge);background:var(--raised);color:var(--muted);cursor:pointer;white-space:nowrap;position:relative}
+  .jchip.done{color:var(--clear);border-color:var(--clear)}
+  .jchip.find{color:var(--find);border-color:var(--find)}
+
+  main{padding-top:18px}
+
+  /* details card */
+  .block{background:var(--raised);border:1px solid var(--edge);border-radius:var(--radius);box-shadow:var(--shadow);
+    margin-bottom:14px;overflow:hidden}
+  .block-h{display:flex;align-items:center;gap:10px;padding:14px 15px;cursor:pointer;user-select:none}
+  .block-h .code{font-family:"Spline Sans Mono",monospace;font-weight:600;font-size:.82rem;color:var(--timber);flex:none;min-width:34px}
+  .block-h .name{flex:1;font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.04rem;letter-spacing:-.01em}
+  .pill{flex:none;font-family:"Spline Sans Mono",monospace;font-size:.62rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+    padding:4px 8px;border-radius:20px}
+  .pill.todo{background:var(--todo-bg);color:var(--todo)}
+  .pill.clear{background:var(--clear-bg);color:var(--clear)}
+  .pill.find{background:var(--find-bg);color:var(--find)}
+  .pill.undet{background:var(--todo-bg);color:var(--muted)}
+  .hcam{flex:none;position:relative;border:1px solid var(--edge);background:var(--paper);color:var(--timber);
+    border-radius:10px;padding:8px 10px;display:flex;align-items:center;cursor:pointer}
+  .hcam:active{transform:scale(.94)}
+  .hcam svg{width:19px;height:19px;stroke:currentColor;fill:none}
+  .hcount{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--find);
+    color:#fff;font-size:.64rem;font-weight:700;display:none;align-items:center;justify-content:center;font-family:"Spline Sans Mono",monospace;border:2px solid var(--raised)}
+  .hcount.on{display:flex}
+  .htog{display:flex;gap:4px;flex:none}
+  .ht{width:33px;height:33px;border-radius:9px;border:1.5px solid var(--edge);background:var(--paper);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--faint)}
+  .ht:active{transform:scale(.94)}
+  .ht svg{width:16px;height:16px;stroke:currentColor;fill:none}
+  .ht.clear.on{background:var(--clear-bg);border-color:var(--clear);color:var(--clear)}
+  .ht.find.on{background:var(--find-bg);border-color:var(--find);color:var(--find)}
+  .ht.undet.on{background:var(--todo-bg);border-color:var(--faint);color:var(--muted)}
+  .chev{flex:none;width:16px;height:16px;stroke:var(--faint);fill:none;transition:transform .2s}
+  .block.open .chev{transform:rotate(90deg)}
+  .block-b{display:none;padding:0 15px 16px;border-top:1px solid var(--edge-soft)}
+  .block.open .block-b{display:block}
+
+  /* form fields */
+  .field{margin-top:13px}
+  .field label{display:block;font-size:.74rem;font-weight:600;color:var(--muted);letter-spacing:.02em;margin-bottom:5px;text-transform:uppercase}
+  .field input,.field select,.field textarea{width:100%;font-family:inherit;font-size:1rem;color:var(--ink);background:var(--paper);
+    border:1px solid var(--edge);border-radius:10px;padding:11px 12px;outline:0;-webkit-appearance:none}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--timber)}
+  .field textarea{min-height:92px;resize:vertical;line-height:1.45}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  @media (max-width:520px){.grid2{grid-template-columns:1fr}}
+
+  /* status toggle */
+  .seg{display:flex;gap:8px;margin-top:14px}
+  .seg button{flex:1;padding:11px;border-radius:11px;border:1.5px solid var(--edge);background:var(--paper);
+    font-weight:600;font-size:.92rem;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
+  .seg button svg{width:15px;height:15px;stroke:currentColor;fill:none}
+  .seg button.on.clear{border-color:var(--clear);background:var(--clear-bg);color:var(--clear)}
+  .seg button.on.find{border-color:var(--find);background:var(--find-bg);color:var(--find)}
+  .seg button.on.undet{border-color:var(--faint);background:var(--todo-bg);color:var(--muted)}
+  .seg{gap:6px}
+  .seg button{padding:10px 6px;font-size:.86rem;gap:5px}
+
+  .findbody{display:none;margin-top:4px}
+  .block.isfind .findbody{display:block}
+  .subqs{margin-top:14px;display:flex;flex-direction:column;gap:13px}
+  .subqlead{font-size:.8rem;color:var(--muted)}
+  .subq-q{font-size:.92rem;line-height:1.35;margin-bottom:7px}
+  .subqcam{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;
+    border:1.5px solid var(--timber);background:var(--timber-soft);color:var(--timber);
+    border-radius:10px;padding:10px;font-size:.86rem;font-weight:700;cursor:pointer}
+  .subqcam:active{transform:scale(.98)}
+  .subqcam svg{width:17px;height:17px;stroke:currentColor;fill:none}
+  .subq .photos{margin:8px 0 10px}
+  .ynu{display:flex;gap:6px}
+  .ynu-b{flex:1;padding:11px 6px;border-radius:11px;border:1.5px solid var(--edge);background:var(--paper);
+    color:var(--muted);font-size:.86rem;font-weight:600;cursor:pointer}
+  .ynu-b.on.yes{border-color:var(--find);background:var(--find-bg);color:var(--find)}
+  .ynu-b.on.no{border-color:var(--clear);background:var(--clear-bg);color:var(--clear)}
+  .ynu-b.on.undet{border-color:var(--faint);background:var(--todo-bg);color:var(--muted)}
+
+  /* mic */
+  .notelabel{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .mic{border:1px solid var(--timber);background:var(--timber-soft);color:var(--timber);border-radius:8px;padding:6px 12px;
+    display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;cursor:pointer;text-transform:none;letter-spacing:0}
+  .mic:active{transform:scale(.95)}
+  .mic svg{width:13px;height:13px;stroke:currentColor;fill:none}
+  .mic.rec{background:var(--find);color:#fff;border-color:var(--find);animation:pulse 1.1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+  .fhint{font-size:.74rem;color:var(--clear);margin-top:7px;font-weight:600}
+
+  /* quick-photo grid (top) */
+  .qgwrap{background:var(--raised);border:1px solid var(--edge);border-radius:var(--radius);box-shadow:var(--shadow);padding:13px 14px;margin-bottom:14px}
+  .qgtitle{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);margin-bottom:10px}
+  .quickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+  .qgbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border:1px solid var(--edge);background:var(--paper);border-radius:11px;color:var(--timber);cursor:pointer}
+  .qgbtn:active{transform:scale(.95)}
+  .qgbtn svg{width:17px;height:17px;stroke:currentColor;fill:none}
+  .qgcode{font-family:"Spline Sans Mono",monospace;font-size:.6rem;font-weight:700;color:var(--timber)}
+  .qglabel{font-size:.66rem;font-weight:600;color:var(--ink);text-align:center;line-height:1.15}
+  .qgcount{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--timber);color:#fff;font-size:.6rem;font-weight:700;display:none;align-items:center;justify-content:center;font-family:"Spline Sans Mono",monospace;border:2px solid var(--raised)}
+  .qgcount.on{display:flex}
+  .qgcount.need,.hcount.need{background:var(--find)}
+  .qgbtn.need{border-color:var(--find);background:var(--find-bg)}
+
+  /* needs-comment (red) / done (green) states */
+  .needchip{display:none;align-items:center;gap:4px;font-family:"Spline Sans Mono",monospace;font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;background:var(--find);padding:4px 8px;border-radius:20px;flex:none}
+  .block.needs{border-color:var(--find)}
+  .block.needs>.block-h{background:var(--find-bg)}
+  .block.done>.block-h{box-shadow:inset 4px 0 0 var(--clear)}
+  .jchip.need{color:var(--find);border-color:var(--find)}
+
+  /* yes/no segments + multi-select chips */
+  .ynseg{display:flex;gap:8px}
+  .yn{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--edge);background:var(--paper);font-weight:600;font-size:.9rem;color:var(--muted);cursor:pointer}
+  .yn.on{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
+  .chipset{display:flex;flex-wrap:wrap;gap:7px}
+  .mchip{font-size:.82rem;padding:8px 11px;border-radius:9px;border:1.5px solid var(--edge);background:var(--paper);color:var(--ink);cursor:pointer}
+  .mchip.on{border-color:var(--clear);background:var(--clear-bg);color:var(--clear);font-weight:600}
+  .chipsel{display:flex;flex-wrap:wrap;gap:7px}
+  .csbtn{font-size:.85rem;padding:9px 13px;border-radius:10px;border:1.5px solid var(--edge);background:var(--paper);color:var(--muted);font-weight:600;cursor:pointer}
+  .csbtn:active{transform:scale(.97)}
+  .csbtn.on{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
+  .subhead{margin:20px 2px 8px;font-weight:700;font-size:.95rem;color:var(--timber);border-top:1px solid var(--edge-soft);padding-top:16px}
+  .obswrap{display:flex;flex-direction:column;gap:12px}
+  .obsrow{border:1px solid var(--edge-soft);border-radius:11px;padding:11px 12px;background:var(--paper)}
+  .obslabel{font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:7px}
+  .obsnote{width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);background:var(--raised);border:1px solid var(--edge);border-radius:9px;padding:9px 11px;outline:0}
+  .obsnote:focus{border-color:var(--timber)}
+  .qgbtn.access{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
+  .qgbtn.access .qglabel{color:var(--timber);font-weight:700}
+  .pickwrap{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow:auto;margin:6px 0 16px}
+  .pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:13px 14px;
+    border:1.5px solid var(--edge);border-radius:11px;background:var(--paper);color:var(--ink);font-size:.95rem;font-weight:600;cursor:pointer}
+  .pickrow:active{transform:scale(.98)}
+  .pickrow.has{border-color:var(--find);background:var(--find-bg)}
+  .pickrow.inacc{color:var(--muted)}
+  .pickcount{flex:none;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:var(--find);color:#fff;
+    font-family:"Spline Sans Mono",monospace;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+  /* bank chips */
+  .banklab{font-size:.72rem;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 7px}
+  .bankchips{display:flex;flex-wrap:wrap;gap:7px}
+  .bchip{font-size:.82rem;text-align:left;background:var(--timber-soft);border:1px solid var(--edge);color:var(--ink);
+    border-radius:9px;padding:8px 10px;cursor:pointer;line-height:1.3;max-width:100%}
+  .bchip:active{transform:scale(.98)}
+  .bchip .ph{background:var(--place-bg);color:var(--place);border-radius:4px;padding:0 3px;font-family:"Spline Sans Mono",monospace;font-size:.85em}
+
+  /* photos */
+  .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:9px;margin-top:14px}
+  .thumb{position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;background:var(--sunk);border:1px solid var(--edge)}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .thumb .x{position:absolute;top:4px;right:4px;width:23px;height:23px;border-radius:50%;border:0;background:rgba(20,14,8,.72);
+    color:#fff;font-size:1rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .addphoto{aspect-ratio:1;border-radius:11px;border:1.5px dashed var(--edge);background:var(--paper);color:var(--timber);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-size:.72rem;font-weight:600}
+  .addphoto svg{width:22px;height:22px;stroke:currentColor;fill:none}
+
+  /* footer bar */
+  .footbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--raised);border-top:1px solid var(--edge);
+    padding:11px 15px calc(env(safe-area-inset-bottom) + 11px)}
+  .footbar .wrap{display:flex;gap:10px;align-items:center;padding:0 0}
+  .footinfo{flex:1;font-size:.76rem;color:var(--muted)}
+  .footinfo b{color:var(--ink)}
+  .btn{font-weight:700;font-size:.92rem;border-radius:11px;padding:12px 18px;cursor:pointer;border:1px solid transparent}
+  .btn.primary{background:var(--timber);color:#fff}
+  .btn.ghost{background:transparent;border-color:var(--edge);color:var(--muted);font-weight:600;padding:12px 14px}
+  .btn:disabled{opacity:.5}
+
+  #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--paper);
+    font-size:.82rem;font-weight:600;padding:10px 17px;border-radius:22px;opacity:0;pointer-events:none;transition:.2s;z-index:60;text-align:center}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .savedot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--clear);margin-right:5px;vertical-align:middle}
+
+  /* modal */
+  .modal{position:fixed;inset:0;z-index:70;background:rgba(20,14,8,.5);display:none;align-items:center;justify-content:center;padding:20px}
+  .modal.show{display:flex}
+  .sheet{background:var(--raised);border-radius:16px;max-width:460px;width:100%;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+  .sheet h3{font-family:"Newsreader",serif;margin:0 0 8px;font-size:1.2rem}
+  .sheet p{margin:0 0 16px;font-size:.9rem;color:var(--muted)}
+  .sheet .acts{display:flex;gap:9px;justify-content:flex-end}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap">
+    <div class="hrow">
+      <div class="htitle">Inspection Capture<small id="hsub">New regular termite inspection</small></div>
+      <div class="prog"><span id="pcount">0/14</span><span class="bar"><i id="pbar"></i></span></div>
+    </div>
+    <nav class="jump" id="jump"></nav>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<div class="footbar">
+  <div class="wrap">
+    <div class="footinfo"><span class="savedot"></span><span id="saveinfo">Saved on this device</span></div>
+    <button class="btn ghost" id="newBtn">New</button>
+    <button class="btn primary" id="finishBtn">Finish &amp; Export</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
+<input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+
+<script>
+"use strict";
+
+/* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
+const BANK = {
+  "8.1":["Live termites consistent with subterranean termites (likely Coptotermes spp.) were observed to [LOCATION], with [shelter tubes / mudding] present.","Live termites were observed to [LOCATION] and were treated with a [dust / foam] application at the time of inspection.","A termite nest (appears consistent with Coptotermes spp.) was noted in a tree adjacent to the dwelling."],
+  "8.3":["Termite workings were noted to [LOCATION]; no live termite activity was observed at the time of inspection.","Inactive termite workings and old damage were noted to [LOCATION]; the areas appear inactive.","Internal wall linings within [LOCATION] showed irregularities that may be consistent with previous termite damage."],
+  "8.4":["A durable notice within the meter box indicates a [chemical treated zone / physical barrier] installed [at construction / by another firm] on [DATE]; given its age, renewal is worth considering.","A chemical barrier was previously installed by Lighthouse Pest Control on [DATE]; as it has passed its expected service life, re-treatment is recommended.","A termite baiting system was noted; it does not appear to have been maintained recently.","The durable notice within the meter box was illegible."],
+  "8.5":["The next inspection is recommended in [6 / 12] months.","Given the conditions noted, a 6-month interval is recommended."],
+  "8.7":["Timber decay was noted to [fascia boards / veranda timbers / bases of some posts / subfloor timbers].","Some fungal decay was noted to [LOCATION], likely related to ongoing moisture exposure."],
+  "8.8":["Timber damage consistent with longicorn borer activity was noted to [LOCATION]."],
+  "8.9":["Subfloor ventilation appeared limited to sections of the property.","Subfloor ventilation could not be fully assessed due to restricted access."],
+  "8.10":["Elevated moisture was recorded in the subfloor soil.","The hot water overflow [and/or air-conditioning condensate] was discharging near the building.","A [disconnected / damaged] downpipe was noted, allowing dampness near the building.","Elevated moisture readings were noted to the wall near the [shower / ensuite]."],
+  "8.11":["Render extends to ground level with no visible termite control joint in areas.","External ground levels were high against sections of the [garage / building] walls.","Slab construction details could not be confirmed at the time of inspection."],
+  "8.12":["Some timber is in ground contact — [external stairs / veranda timbers / posts where stirrups are covered / subfloor infill].","Stored timber / firewood was noted [near the building / in the subfloor]."],
+  "8.13":["Ant capping was missing or corroded in sections of the subfloor.","Foliage was noted growing against the building in areas.","A [tree stump / tree roots] was noted [in the subfloor / near the building].","Large trees are close to the building."],
+  "8.14":["[Element / location] may present a safety concern; assessment by a qualified professional is recommended.","Internal areas were cluttered, limiting safe access in those areas."]
+};
+
+const ITEMS = [
+  {code:"8.1",title:"Active (live) termites"},
+  {code:"8.3",title:"Termite workings and/or damage"},
+  {code:"8.4",title:"Previous termite management"},
+  {code:"8.5",title:"Frequency of future inspections",always:true,nophoto:true},
+  {code:"8.6",title:"Chemical delignification"},
+  {code:"8.7",title:"Fungal decay"},
+  {code:"8.8",title:"Wood borers"},
+  {code:"8.9",title:"Subfloor ventilation"},
+  {code:"8.10",title:"Excessive moisture"},
+  {code:"8.11",title:"Bridging / breaching",
+   subShort:["Bridge · ground level","Bridge · slab edge","Bridge · concealed","Bridge · breach/bridge"],
+   subQs:[
+    "Was the finished ground or paving level above the adjacent internal floor level or damp-proof-course or obstructing any weephole or vent face on external walls?",
+    "Where slab edge exposure has been used as part of a termite management system, was evidence of the condition \"insufficient slab edge exposure\" found?",
+    "Was the inspection zone or slab edge (where the slab edge is the inspection zone) concealed in any areas?",
+    "Was evidence of breaching or bridging found?"
+  ]},
+  {code:"8.12",title:"Untreated / non-durable timber"},
+  {code:"8.13",title:"Other conducive conditions"},
+  {code:"8.14",title:"Major safety hazards"}
+];
+// cover shots for the report cover (rendered first)
+const COVER = {code:"COVER",title:"Cover shots — front of property",ph:"Optional note for the cover photo(s). Take 1–2 front/street shots."};
+// extra capture sections that aren't clear/finding significant items — guided notes I slot into the right Mira fields
+const EXTRAS = [];
+
+/* ---------- state ---------- */
+let STATE = { customer:{}, sections:{} };
+
+/* ---------- IndexedDB ---------- */
+let db;
+function openDB(){return new Promise((res,rej)=>{
+  const r=indexedDB.open("lpc_insp",1);
+  r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains("kv"))d.createObjectStore("kv")};
+  r.onsuccess=e=>{db=e.target.result;res()};
+  r.onerror=e=>rej(e);
+});}
+function dbGet(k){return new Promise((res)=>{try{const t=db.transaction("kv","readonly").objectStore("kv").get(k);
+  t.onsuccess=()=>res(t.result);t.onerror=()=>res(null)}catch(e){res(null)}});}
+function dbSet(k,v){return new Promise((res)=>{try{const t=db.transaction("kv","readwrite").objectStore("kv").put(v,k);
+  t.onsuccess=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}});}
+
+let saveT;
+function scheduleSave(){
+  clearTimeout(saveT);
+  document.getElementById("saveinfo").textContent="Saving…";
+  saveT=setTimeout(async()=>{
+    await dbSet("current",STATE);
+    document.getElementById("saveinfo").textContent="Saved on this device";
+  },500);
+}
+
+/* ---------- photo handling: shrink on capture ---------- */
+function shrink(file,max=1600,q=0.72){return new Promise((res)=>{
+  const img=new Image();const url=URL.createObjectURL(file);
+  img.onload=()=>{
+    let{width:w,height:h}=img;
+    if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s)}
+    const c=document.createElement("canvas");c.width=w;c.height=h;
+    c.getContext("2d").drawImage(img,0,0,w,h);
+    URL.revokeObjectURL(url);
+    res(c.toDataURL("image/jpeg",q));   // store as data-URL string (iOS-safe)
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);res(null)};
+  img.src=url;
+});}
+
+/* ---------- rendering ---------- */
+const main=document.getElementById("main");
+let activePhotoCode=null;
+
+function sec(code){return STATE.sections[code]||(STATE.sections[code]={status:null,note:"",photos:[]})}
+
+function pill(code){
+  const s=STATE.sections[code];
+  const it=ITEMS.find(i=>i.code===code);
+  if(it&&it.always) return s&&s.note?["clear","Noted"]:["todo","To do"];
+  if(!s||!s.status) return ["todo","To do"];
+  if(s.status==="clear") return ["clear","Clear"];
+  if(s.status==="undet") return ["undet","Undet."];
+  return ["find","Finding"];
+}
+
+function buildDetails(){
+  const c=STATE.customer;
+  const b=document.createElement("div");b.className="block open";b.id="b-DET";
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">i</span><span class="name">Customer &amp; property details</span>
+      <span class="pill ${c.address?'clear':'todo'}" id="pill-DET">${c.address?'Filled':'To do'}</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      <div class="field"><label class="notelabel"><span>Property address</span>
+        <button class="mic" type="button" data-locate><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-10a6 6 0 0 1 12 0c0 4.3-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Locate</button></label>
+        <input data-c="address" autocomplete="street-address" placeholder="Start typing, or tap Locate on site" value="${escv(c.address)}">
+        <div class="fhint" style="display:${c.geo?'block':'none'}" id="geo-hint">${c.geo?`📍 Location captured (±${c.geo.acc}m) — I'll fill the exact address.`:''}</div></div>
+      <div class="grid2">
+        <div class="field"><label>Client name</label><input data-c="client" value="${escv(c.client)}"></div>
+        <div class="field"><label>Client phone</label><input data-c="phone" inputmode="tel" value="${escv(c.phone)}"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Report date</label><input data-c="date" placeholder="e.g. 22 Aug 2026" value="${escv(c.date)}"></div>
+        <div class="field"><label>Building type</label>
+          <select data-c="btype">${opts(["","Detached house","Semidetached house","Terrace house","Queenslander","Duplex","Townhouse","Home unit","Villa unit","Other"],c.btype)}</select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Storeys</label>
+          <select data-c="storeys">${opts(["","Single storey","Two storey","Three storey","Lowset","Highset","Split-Level"],c.storeys)}</select></div>
+        <div class="field"><label>Floor construction</label>
+          <select data-c="floor">${opts(["","Suspended timber framed","Suspended steel framed","Suspended slab","Slab floor (infill)","Part suspended timber frame and slab on ground","Part suspended steel frame and slab on ground","Other"],c.floor)}</select></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Wall construction</label>
+          <select data-c="wall">${opts(["","Timber framed","Steel framed","Brick veneer","Brick veneer (timber framed)","Brick veneer (steel framed)","Full brick","Cavity brick","Concrete block","Earth wall","Other"],c.wall)}</select></div>
+        <div class="field"><label>Roof construction</label>
+          <select data-c="roof">${opts(["","Timber framed - tiled","Timber framed - metal","Trussed - tiled","Trussed - metal","Metal / Colorbond","Other"],c.roof)}</select></div>
+      </div>
+      <div class="field"><label class="notelabel"><span>Other timber building elements</span>
+        <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
+        <input data-c="othertimber" placeholder="e.g. timber verandas, decking, flooring" value="${escv(c.othertimber)}"></div>
+      <div class="field"><label class="notelabel"><span>Orientation</span>
+        <button class="mic" type="button" data-compass><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg>Compass</button></label>
+        <input data-c="orientation" placeholder="The façade faces the street" value="${escv(c.orientation)}"></div>
+    </div>`;
+  return b;
+}
+
+function buildSection(item,isExtra){
+  const code=item.code;const s=sec(code);
+  const [pc,pl]=isExtra?[ (s.note||s.photos.length?'clear':'todo'), (s.note||s.photos.length?'Noted':'To do')]:pill(code);
+  const b=document.createElement("div");
+  b.className="block"+(!isExtra&&(s.status==="find"||s.status==="undet")?" isfind":"");
+  b.id="b-"+code;
+  const isFindItem=!isExtra;
+  const hasSub=!!item.subQs;
+  const bankLines=BANK[code]||[];
+
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">${isExtra?'':code}</span>
+      <span class="name">${escv(item.title)}</span>
+      ${!item.nophoto&&!hasSub?`<button class="hcam" type="button" data-quickphoto="${code}" aria-label="Take photo">
+        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>
+        <span class="hcount" id="hcount-${code}"></span>
+      </button>`:''}
+      <span class="needchip">Needs note</span>
+      ${isFindItem&&!item.always&&!hasSub?`<div class="htog">
+        <button class="ht clear ${s.status==='clear'?'on':''}" type="button" data-hstatus="clear" aria-label="Clear">
+          <svg viewBox="0 0 24 24" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+        <button class="ht find ${s.status==='find'?'on':''}" type="button" data-hstatus="find" aria-label="Finding">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg></button>
+        <button class="ht undet ${s.status==='undet'?'on':''}" type="button" data-hstatus="undet" aria-label="Undetermined">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 1 1 3.1 2.4c-.6.2-1.1.8-1.1 1.5v.3"/><path d="M12 17.2v.01"/></svg></button>
+      </div>`:`<span class="pill ${pc}" id="pill-${code}">${pl}</span>`}
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      ${hasSub?`<div class="subqs">
+        <div class="subqlead">Answer each — a <b>photo</b> on a question auto-answers it <b>Yes</b>. Photos are kept separate per question.</div>
+        ${item.subQs.map((q,i)=>{const a=(s.subq||{})[i];return `<div class="subq">
+          <div class="subq-q">${escv(q)}</div>
+          <button class="subqcam" type="button" data-subqphoto="${code}::${i}">
+            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>Add photo</button>
+          <div class="photos subqphotos" id="subqph-${code}-${i}"></div>
+          <div class="ynu">
+            <button class="ynu-b yes ${a==='yes'?'on':''}" type="button" data-subq="${i}" data-subv="yes">Yes</button>
+            <button class="ynu-b no ${a==='no'?'on':''}" type="button" data-subq="${i}" data-subv="no">No</button>
+            <button class="ynu-b undet ${a==='undet'?'on':''}" type="button" data-subq="${i}" data-subv="undet">Undetermined</button>
+          </div></div>`}).join("")}
+      </div>`:''}
+      ${isFindItem&&!item.always&&!hasSub?`
+      <div class="seg">
+        <button class="clear ${s.status==='clear'?'on':''}" data-status="clear">
+          <svg viewBox="0 0 24 24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Clear</button>
+        <button class="find ${s.status==='find'?'on':''}" data-status="find">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>Finding</button>
+        <button class="undet ${s.status==='undet'?'on':''}" data-status="undet">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 1 1 3.1 2.4c-.6.2-1.1.8-1.1 1.5v.3"/><path d="M12 17.2v.01"/></svg>Undet.</button>
+      </div>`:''}
+      <div class="${isFindItem&&!item.always?'findbody':''}">
+        <div class="field"><label class="notelabel"><span>${item.always?'Note':(isExtra?'Notes':'What did you see? (rough note is fine)')}</span>
+          <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
+          <textarea data-note placeholder="${escv(item.ph||(item.always?'e.g. 6 months':'Type or speak quick notes — I will polish them into report wording.'))}">${escv(s.note)}</textarea></div>
+        ${isFindItem&&!item.always?`<div class="field"><label>Tone for this comment (optional)</label>
+          ${chipSel("secchip","tone",["Use report tone","Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],s.tone||"Use report tone")}</div>`:''}
+        ${bankLines.length?`<div class="banklab">Quick add from bank</div>
+          <div class="bankchips">${bankLines.map((l,i)=>`<button class="bchip" data-bank="${i}">${phHtml(l)}</button>`).join("")}</div>`:''}
+        ${!item.nophoto&&!hasSub?`<div class="banklab">Photos</div>
+        <div class="photos" id="ph-${code}"></div>`:''}
+      </div>
+    </div>`;
+  return b;
+}
+
+const QG_SHORT={"COVER":"Cover","8.1":"Active termites","8.3":"Termite workings","8.4":"Prev mgmt","8.6":"Delig","8.7":"Decay","8.8":"Borers","8.9":"Vent","8.10":"Moisture","8.11":"Bridging","8.12":"Timber","8.13":"Conducive","8.14":"Safety","ACC":"Access","SCOPE":"Scope","GEN":"General"};
+function buildQuickGrid(){
+  const s=document.createElement("section");s.className="qgwrap";
+  s.innerHTML=`<div class="qgtitle">Quick photos — tap to shoot any section</div><div class="quickgrid" id="quickgrid"></div>`;
+  const g=s.querySelector("#quickgrid");
+  const CAMPATH=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>`;
+  [COVER].concat(ITEMS.filter(it=>!it.nophoto),EXTRAS).forEach(it=>{
+    if(it.subQs){
+      it.subQs.forEach((q,i)=>{
+        const nm=(it.subShort&&it.subShort[i])||(it.code+" Q"+(i+1));
+        const b=document.createElement("button");b.className="qgbtn";b.type="button";
+        b.id="qgb-SUBQ-"+slug(it.code)+"-"+i;b.dataset.quickphoto="SUBQ::"+it.code+"::"+i;
+        b.innerHTML=`${CAMPATH}<span class="qgcode">${it.code}</span><span class="qglabel">${escv(nm)}</span><span class="qgcount" id="qgc-SUBQ-${slug(it.code)}-${i}"></span>`;
+        g.appendChild(b);
+      });
+      return;
+    }
+    const code=it.code==="COVER"||it.code==="ACC"||it.code==="SCOPE"||it.code==="GEN"?"":it.code;
+    const name=QG_SHORT[it.code]||it.code;
+    const b=document.createElement("button");b.className="qgbtn";b.type="button";b.id="qgb-"+it.code;b.dataset.quickphoto=it.code;
+    b.innerHTML=`${CAMPATH}${code?`<span class="qgcode">${code}</span>`:''}<span class="qglabel">${escv(name)}</span><span class="qgcount" id="qgc-${it.code}"></span>`;
+    g.appendChild(b);
+  });
+  const ab=document.createElement("button");ab.className="qgbtn access";ab.type="button";ab.dataset.access="1";
+  ab.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/><circle cx="7" cy="7" r="0"/></svg><span class="qglabel">Access &amp; obstructed</span><span class="qgcount" id="qgc-ACCESS"></span>`;
+  g.appendChild(ab);
+  return s;
+}
+
+function ynSeg(key,val){
+  return `<div class="ynseg" data-ynkey="${key}">
+    <button type="button" class="yn ${val==='Yes'?'on':''}" data-yn="Yes">Yes</button>
+    <button type="button" class="yn ${val==='No'?'on':''}" data-yn="No">No</button></div>`;
+}
+function chipSel(attr,key,options,val){
+  return `<div class="chipsel" data-${attr}="${escv(key)}">${options.map(o=>`<button type="button" class="csbtn ${o===val?'on':''}" data-cs="${escv(o)}">${escv(o)}</button>`).join("")}</div>`;
+}
+const INSPECTED=["Building interior (of a company or strata title unit)","Building exterior (only the immediate exterior of a company or strata title unit)","Building interior","Building exterior","Roof exterior","Roof space","Subfloor space","Outbuildings","The site","Other"];
+const OBSAREAS=["Building interior","Building exterior","Roof exterior","Roof space","Subfloor space","Outbuildings","The site","Other"];
+function slug(s){return s.replace(/[^a-z0-9]/gi,"_");}
+function obsBlock(a,c){
+  const o=(c.obs&&c.obs[a])||{note:"",photos:[]};
+  return `<div class="obsrow"><div class="obslabel">${escv(a)}</div>
+    <input class="obsnote" data-obsnote="${escv(a)}" placeholder="Note (optional)" value="${escv(o.note)}">
+    <div class="photos" id="obsph-${slug(a)}"></div></div>`;
+}
+function buildScopeBlock(){
+  const c=STATE.customer;
+  const b=document.createElement("div");b.className="block";b.id="b-SCOPE2";
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">3-4</span><span class="name">Scope &amp; additional tests</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      <div class="field"><label>Scope of work ordered</label>
+        <select data-c="scope">${opts(["Option 1: Standard Timber Pest Inspection","Option 2: Special-Purpose Inspection","Option 3: + Subterranean Termite Management Proposal"],c.scope||"Option 1: Standard Timber Pest Inspection")}</select></div>
+      <div class="field"><label>Additional tests carried out?</label>${ynSeg("addtests",c.addtests)}</div>
+      <div class="field"><label>Additional tests — details (if yes)</label><input data-c="addtestsnote" placeholder="e.g. moisture meter, thermal, borescope, tapping" value="${escv(c.addtestsnote)}"></div>
+      <div class="field"><label>Comment tone — how Claude finalises your notes</label>
+        ${chipSel("chipkey","tone",["Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],c.tone||"Measured (standard)")}</div>
+    </div>`;
+  return b;
+}
+function buildAccessBlock(){
+  const c=STATE.customer;const areas=c.areas||[];const inacc=c.inacc||{yn:"",note:"",photos:[]};
+  const b=document.createElement("div");b.className="block open";b.id="b-ACCESS";
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">6</span><span class="name">Accessibility &amp; obstructions</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      <div class="field"><label>Areas inspected — tap all that apply</label>
+        <div class="chipset">${INSPECTED.map(a=>`<button type="button" class="mchip ${areas.includes(a)?'on':''}" data-area="${escv(a)}">${escv(a)}</button>`).join("")}</div></div>
+      <div class="grid2">
+        <div class="field"><label>Strata / company title?</label>${ynSeg("strata",c.strata)}</div>
+        <div class="field"><label>Obstructions present?</label>${ynSeg("obstructions",c.obstructions)}</div>
+      </div>
+      <div class="field"><label>Areas obstructed — note &amp; photos for each that applies</label>
+        <div class="obswrap">${OBSAREAS.map(a=>obsBlock(a,c)).join("")}</div></div>
+      <div class="field"><label>Inaccessible areas?</label>${ynSeg("inaccessible",c.inaccessible)}</div>
+      <div class="field"><input data-inaccnote placeholder="Which areas couldn't be accessed? (if yes)" value="${escv(inacc.note)}">
+        <div class="photos" id="inaccph" style="margin-top:10px"></div></div>
+      <div class="field"><label>Undetected timber pest risk</label>
+        ${chipSel("chipkey","risk",["Low","Moderate","Moderate-High","High"],c.risk)}</div>
+      <div class="field"><label>Additional comments</label>
+        <textarea data-c="addcomments" placeholder="Any extra comments for the report">${escv(c.addcomments)}</textarea></div>
+    </div>`;
+  return b;
+}
+function buildConcBlock(){
+  const c=STATE.customer;
+  const b=document.createElement("div");b.className="block";b.id="b-CONC";
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">8</span><span class="name">Conclusion</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      <div class="grid2">
+        <div class="field"><label>Treatment of pest attack required?</label>${ynSeg("treatment",c.treatment)}</div>
+        <div class="field"><label>Remove conducive conditions?</label>${ynSeg("conducive",c.conducive)}</div>
+      </div>
+      <div class="field"><label>Next inspection recommended in</label>
+        ${chipSel("chipkey","nextinsp",["3 months","6 months","12 months"],c.nextinsp)}</div>
+    </div>`;
+  return b;
+}
+
+function render(){
+  main.innerHTML="";
+  main.appendChild(buildQuickGrid());
+  main.appendChild(buildSection(COVER,true));
+  main.appendChild(buildDetails());
+  main.appendChild(buildScopeBlock());
+  main.appendChild(buildAccessBlock());
+  ITEMS.forEach(it=>main.appendChild(buildSection(it,false)));
+  main.appendChild(buildConcBlock());
+  EXTRAS.forEach(it=>main.appendChild(buildSection(it,true)));
+  [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
+  renderReportPhotos();
+  buildJump();updateProgress();
+}
+
+function renderPhotos(code){
+  const host=document.getElementById("ph-"+code);if(!host)return;
+  const s=sec(code);host.innerHTML="";
+  (sec(code).photos||[]).forEach((durl,i)=>{
+    const d=document.createElement("div");d.className="thumb";
+    d.innerHTML=`<img src="${durl}"><button class="x" data-delphoto="${i}">&times;</button>`;
+    host.appendChild(d);
+  });
+  const add=document.createElement("button");add.className="addphoto";add.dataset.addphoto=code;
+  add.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>Photo`;
+  host.appendChild(add);
+}
+const CAM_SVG=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>Photo`;
+function photoBucket(code){
+  if(code&&code.indexOf("SUBQ::")===0){const p=code.slice(6).split("::");const s=sec(p[0]);s.subqPhotos=s.subqPhotos||{};s.subqPhotos[+p[1]]=s.subqPhotos[+p[1]]||[];return s.subqPhotos[+p[1]];}
+  if(code&&code.indexOf("OBS::")===0){const a=code.slice(5);const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};return o[a].photos;}
+  if(code==="INACC"){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};return i.photos;}
+  return sec(code).photos;
+}
+function renderSubqPhotos(code){
+  const it=ITEMS.find(i=>i.code===code);if(!it||!it.subQs)return;
+  const s=sec(code);s.subqPhotos=s.subqPhotos||{};
+  it.subQs.forEach((q,i)=>{
+    const host=document.getElementById("subqph-"+code+"-"+i);if(!host)return;host.innerHTML="";
+    (s.subqPhotos[i]||[]).forEach((durl,j)=>{
+      const d=document.createElement("div");d.className="thumb";
+      d.innerHTML=`<img src="${durl}"><button class="x" data-delsubq="${escv(code)}::${i}::${j}">&times;</button>`;host.appendChild(d);
+    });
+    const n=(s.subqPhotos[i]||[]).length;
+    host.style.display=n?"grid":"none";
+    const qc=document.getElementById("qgc-SUBQ-"+slug(code)+"-"+i);
+    if(qc){qc.textContent=n;qc.classList.toggle("on",n>0);}
+  });
+}
+function renderObsArea(a){
+  const host=document.getElementById("obsph-"+slug(a));if(!host)return;
+  const o=(STATE.customer.obs&&STATE.customer.obs[a])||{photos:[]};host.innerHTML="";
+  (o.photos||[]).forEach((durl,i)=>{const d=document.createElement("div");d.className="thumb";
+    d.innerHTML=`<img src="${durl}"><button class="x" data-delobs="${escv(a)}|${i}">&times;</button>`;host.appendChild(d);});
+  const add=document.createElement("button");add.className="addphoto";add.dataset.obsphoto=a;add.innerHTML=CAM_SVG;host.appendChild(add);
+}
+function renderInacc(){
+  const host=document.getElementById("inaccph");if(!host)return;
+  const inacc=STATE.customer.inacc||{photos:[]};host.innerHTML="";
+  (inacc.photos||[]).forEach((durl,i)=>{const d=document.createElement("div");d.className="thumb";
+    d.innerHTML=`<img src="${durl}"><button class="x" data-delinacc="${i}">&times;</button>`;host.appendChild(d);});
+  const add=document.createElement("button");add.className="addphoto";add.dataset.inaccphoto="1";add.innerHTML=CAM_SVG;host.appendChild(add);
+}
+function syncYn(key){const seg=document.querySelector('[data-ynkey="'+key+'"]');if(!seg)return;const v=STATE.customer[key];seg.querySelectorAll(".yn").forEach(x=>x.classList.toggle("on",x.dataset.yn===v));}
+function updateAccessCount(){let n=0;const o=STATE.customer.obs||{};for(const a in o)n+=((o[a].photos||[]).length);n+=((STATE.customer.inacc&&STATE.customer.inacc.photos.length)||0);const el=document.getElementById("qgc-ACCESS");if(el){el.textContent=n;el.classList.toggle("on",n>0);}}
+function renderReportPhotos(){OBSAREAS.forEach(renderObsArea);renderInacc();updateAccessCount();}
+
+function buildJump(){
+  const j=document.getElementById("jump");j.innerHTML="";
+  ITEMS.forEach(it=>{
+    const [pc]=pill(it.code);const need=needsComment(it.code);
+    const a=document.createElement("button");a.className="jchip"+(need?" need":pc==="clear"?" done":pc==="find"?" find":"");
+    a.textContent=it.code;a.onclick=()=>openTo(it.code);j.appendChild(a);
+  });
+}
+
+function updateProgress(){
+  const done=ITEMS.filter(it=>{const s=STATE.sections[it.code];return it.always?(s&&s.note):(s&&s.status)}).length;
+  document.getElementById("pcount").textContent=done+"/"+ITEMS.length;
+  document.getElementById("pbar").style.width=(done/ITEMS.length*100)+"%";
+}
+
+/* ---------- helpers ---------- */
+function todayStr(){const d=new Date();const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];return d.getDate()+" "+m[d.getMonth()]+" "+d.getFullYear();}
+function escv(s){return (s==null?"":String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function phHtml(s){return escv(s).replace(/(\[[^\]]+\])/g,'<span class="ph">$1</span>')}
+function opts(arr,sel){return arr.map(o=>`<option ${o===sel?'selected':''} value="${escv(o)}">${escv(o||'—')}</option>`).join("")}
+function openTo(code){const b=document.getElementById("b-"+code);if(!b)return;
+  if(!b.classList.contains("open"))b.classList.add("open");
+  b.scrollIntoView({behavior:"smooth",block:"start"});}
+
+/* ---------- events ---------- */
+main.addEventListener("click",e=>{
+  const qp=e.target.closest("[data-quickphoto]");
+  if(qp){activePhotoCode=qp.dataset.quickphoto;document.getElementById("cameraInput").click();return}
+  const sqp=e.target.closest("[data-subqphoto]");
+  if(sqp){activePhotoCode="SUBQ::"+sqp.dataset.subqphoto;document.getElementById("cameraInput").click();return}
+  const acc=e.target.closest("[data-access]");
+  if(acc){openAccessPicker();return}
+  const loc=e.target.closest("[data-locate]");
+  if(loc){getLocation(loc);return}
+  const comp=e.target.closest("[data-compass]");
+  if(comp){getHeading(comp);return}
+  const yn=e.target.closest("[data-yn]");
+  if(yn){const key=yn.closest("[data-ynkey]").dataset.ynkey;STATE.customer[key]=yn.dataset.yn;
+    yn.parentElement.querySelectorAll(".yn").forEach(x=>x.classList.remove("on"));yn.classList.add("on");scheduleSave();return}
+  const cs=e.target.closest("[data-cs]");
+  if(cs){const wrap=cs.closest("[data-chipkey],[data-secchip]");const val=cs.dataset.cs;
+    wrap.querySelectorAll(".csbtn").forEach(x=>x.classList.remove("on"));cs.classList.add("on");
+    if(wrap.dataset.chipkey!==undefined){STATE.customer[wrap.dataset.chipkey]=val;}
+    else{const code=cs.closest(".block").id.slice(2);sec(code)[wrap.dataset.secchip]=val;}
+    scheduleSave();return}
+  const ar=e.target.closest("[data-area]");
+  if(ar){const a=ar.dataset.area;const arr=STATE.customer.areas=STATE.customer.areas||[];
+    const i=arr.indexOf(a);if(i>=0){arr.splice(i,1);ar.classList.remove("on")}else{arr.push(a);ar.classList.add("on")}scheduleSave();return}
+  const mic=e.target.closest("[data-mic]");
+  if(mic){toggleMic(mic);return}
+  const hs=e.target.closest("[data-hstatus]");
+  if(hs){setStatus(hs.closest(".block").id.slice(2),hs.dataset.hstatus,true);return}
+  const sq=e.target.closest("[data-subq]");
+  if(sq){const blk=sq.closest(".block");const code=blk.id.slice(2);const idx=+sq.dataset.subq;const val=sq.dataset.subv;
+    const s=sec(code);s.subq=s.subq||{};s.subq[idx]=val;
+    blk.querySelectorAll(`[data-subq="${idx}"]`).forEach(b=>b.classList.toggle("on",b.dataset.subv===val));
+    setStatus(code,subStatus(code),val==="yes");return}
+  const tog=e.target.closest("[data-toggle]");
+  if(tog){tog.parentElement.classList.toggle("open");return}
+  const st=e.target.closest("[data-status]");
+  if(st){setStatus(st.closest(".block").id.slice(2),st.dataset.status,false);return}
+  const bank=e.target.closest("[data-bank]");
+  if(bank){const code=bank.closest(".block").id.slice(2);const line=BANK[code][+bank.dataset.bank];
+    const ta=bank.closest(".block").querySelector("[data-note]");
+    ta.value=(ta.value.trim()?ta.value.trim()+" ":"")+line;
+    sec(code).note=ta.value;refreshPill(code);updateHeaderCount(code);scheduleSave();updateProgress();toast("Added to note");return}
+  const ap=e.target.closest("[data-addphoto]");
+  if(ap){activePhotoCode=ap.dataset.addphoto;document.getElementById("fileInput").click();return}
+  const obp=e.target.closest("[data-obsphoto]");
+  if(obp){activePhotoCode="OBS::"+obp.dataset.obsphoto;document.getElementById("cameraInput").click();return}
+  const inp=e.target.closest("[data-inaccphoto]");
+  if(inp){activePhotoCode="INACC";document.getElementById("cameraInput").click();return}
+  const dsq=e.target.closest("[data-delsubq]");
+  if(dsq){const p=dsq.dataset.delsubq.split("::");const s=sec(p[0]);
+    if(s.subqPhotos&&s.subqPhotos[+p[1]])s.subqPhotos[+p[1]].splice(+p[2],1);
+    renderSubqPhotos(p[0]);updateHeaderCount(p[0]);scheduleSave();return}
+  const dob=e.target.closest("[data-delobs]");
+  if(dob){const p=dob.dataset.delobs.split("|");const a=p[0];const o=STATE.customer.obs&&STATE.customer.obs[a];
+    if(o){o.photos.splice(+p[1],1);renderObsArea(a);updateAccessCount();scheduleSave();}return}
+  const din=e.target.closest("[data-delinacc]");
+  if(din){const inacc=STATE.customer.inacc;if(inacc){inacc.photos.splice(+din.dataset.delinacc,1);renderInacc();updateAccessCount();scheduleSave();}return}
+  const dp=e.target.closest("[data-delphoto]");
+  if(dp){const code=dp.closest(".block").id.slice(2);const i=+dp.dataset.delphoto;
+    sec(code).photos.splice(i,1);
+    renderPhotos(code);updateHeaderCount(code);refreshPill(code);scheduleSave();return}
+});
+main.addEventListener("input",e=>{
+  const c=e.target.dataset.c;
+  if(c!==undefined){STATE.customer[c]=e.target.value;if(c==="address")document.getElementById("hsub").textContent=e.target.value||"New regular termite inspection";
+    document.getElementById("pill-DET").textContent=STATE.customer.address?"Filled":"To do";
+    document.getElementById("pill-DET").className="pill "+(STATE.customer.address?"clear":"todo");scheduleSave();return}
+  if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;scheduleSave();return}
+  if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
+  if(e.target.matches("[data-note]")){const code=e.target.closest(".block").id.slice(2);sec(code).note=e.target.value;
+    refreshPill(code);updateHeaderCount(code);scheduleSave();updateProgress()}
+});
+main.addEventListener("change",e=>{
+  if(e.target.matches("[data-sectone]")){const code=e.target.closest(".block").id.slice(2);sec(code).tone=e.target.value;scheduleSave();return}
+  if(e.target.dataset.c!==undefined){STATE.customer[e.target.dataset.c]=e.target.value;scheduleSave()}
+});
+
+function subStatus(code){
+  const it=ITEMS.find(i=>i.code===code);if(!it||!it.subQs)return sec(code).status;
+  const ans=sec(code).subq||{};const vals=it.subQs.map((q,i)=>ans[i]).filter(Boolean);
+  if(vals.includes("yes"))return "find";
+  if(vals.includes("undet"))return "undet";
+  if(vals.length===it.subQs.length)return "clear";
+  return null;
+}
+function setStatus(code,val,expand){
+  sec(code).status=val;
+  const blk=document.getElementById("b-"+code);
+  if(blk){
+    blk.classList.toggle("isfind",val==="find"||val==="undet");
+    blk.querySelectorAll("[data-status]").forEach(b=>b.classList.toggle("on",b.dataset.status===val));
+    blk.querySelectorAll("[data-hstatus]").forEach(b=>b.classList.toggle("on",b.dataset.hstatus===val));
+    if(expand&&val==="find")blk.classList.add("open");
+  }
+  refreshPill(code);updateHeaderCount(code);scheduleSave();updateProgress();buildJump();
+}
+function needsComment(code){
+  if(code==="COVER")return false;
+  const s=sec(code);return photoCount(code)>0&&!((s.note||"").trim());
+}
+function updateNeed(code){
+  const blk=document.getElementById("b-"+code);if(!blk)return;
+  const need=needsComment(code);const s=sec(code);
+  blk.classList.toggle("needs",need);
+  const done=!need&&((s.note||"").trim().length>0)&&(s.photos.length>0||s.status==="find"||s.status==="undet");
+  blk.classList.toggle("done",done);
+  const chip=blk.querySelector(".needchip");if(chip)chip.style.display=need?"inline-flex":"none";
+}
+function photoCount(code){const s=sec(code);let n=(s.photos||[]).length;if(s.subqPhotos)for(const k in s.subqPhotos)n+=(s.subqPhotos[k]||[]).length;return n;}
+function updateHeaderCount(code){
+  const n=photoCount(code),need=needsComment(code);
+  const hc=document.getElementById("hcount-"+code);
+  if(hc){hc.textContent=n;hc.classList.toggle("on",n>0);hc.classList.toggle("need",need);}
+  const qc=document.getElementById("qgc-"+code);
+  if(qc){qc.textContent=n;qc.classList.toggle("on",n>0);qc.classList.toggle("need",need);}
+  const qb=document.getElementById("qgb-"+code);if(qb)qb.classList.toggle("need",need);
+  updateNeed(code);
+}
+function refreshPill(code){
+  const el=document.getElementById("pill-"+code);if(!el)return;
+  const isExtra=EXTRAS.some(x=>x.code===code);
+  let pc,pl;
+  if(isExtra){const s=sec(code);const has=s.note||s.photos.length;pc=has?"clear":"todo";pl=has?"Noted":"To do"}
+  else{[pc,pl]=pill(code)}
+  el.className="pill "+pc;el.textContent=pl;
+}
+
+/* photo input */
+async function onFiles(e){
+  const files=[...e.target.files];e.target.value="";
+  if(!files.length||!activePhotoCode)return;
+  const code=activePhotoCode;toast("Processing photo…");
+  const bucket=photoBucket(code);
+  for(const f of files){
+    const durl=await shrink(f);
+    if(durl) bucket.push(durl);
+  }
+  if(code.indexOf("SUBQ::")===0){
+    // a photo on a specific question = that question is Yes
+    const p=code.slice(6).split("::");const c=p[0];const idx=+p[1];
+    const s=sec(c);s.subq=s.subq||{};
+    if(s.subq[idx]!=="yes"){s.subq[idx]="yes";
+      const blk=document.getElementById("b-"+c);
+      if(blk)blk.querySelectorAll(`[data-subq="${idx}"]`).forEach(b=>b.classList.toggle("on",b.dataset.subv==="yes"));
+    }
+    renderSubqPhotos(c);setStatus(c,subStatus(c),false);updateHeaderCount(c);refreshPill(c);
+  }
+  else if(code.indexOf("OBS::")===0){renderObsArea(code.slice(5));STATE.customer.obstructions="Yes";syncYn("obstructions");updateAccessCount();}
+  else if(code==="INACC"){renderInacc();STATE.customer.inaccessible="Yes";syncYn("inaccessible");updateAccessCount();}
+  else{
+    const it=ITEMS.find(x=>x.code===code&&!x.always);
+    if(it&&!sec(code).status){
+      // a photo on an untouched significant item implies a finding — flip it automatically
+      setStatus(code,"find",false);
+    }
+    renderPhotos(code);updateHeaderCount(code);refreshPill(code);
+  }
+  scheduleSave();
+  toast(files.length+" photo"+(files.length>1?"s":"")+" added");
+}
+document.getElementById("fileInput").addEventListener("change",onFiles);
+document.getElementById("cameraInput").addEventListener("change",onFiles);
+
+/* ---------- location (GPS) ---------- */
+function getLocation(btn){
+  if(!navigator.geolocation){toast("Location isn't available here");return}
+  btn.classList.add("rec");toast("Getting location…");
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude:lat,longitude:lng,accuracy:acc}=pos.coords;
+    STATE.customer.geo={lat:+lat.toFixed(6),lng:+lng.toFixed(6),acc:Math.round(acc)};
+    const h=document.getElementById("geo-hint");
+    if(h){h.style.display="block";h.textContent=`📍 Location captured (±${Math.round(acc)}m) — I'll fill the exact address.`;}
+    btn.classList.remove("rec");scheduleSave();toast("Location captured");
+  },err=>{btn.classList.remove("rec");toast(err&&err.code===1?"Allow location access to use Locate":"Couldn't get location — try again")},
+  {enableHighAccuracy:true,timeout:12000,maximumAge:0});
+}
+
+/* ---------- compass (orientation) ---------- */
+function compassPoint(deg){
+  const dirs=["North","North-East","East","South-East","South","South-West","West","North-West"];
+  return dirs[Math.round(((deg%360)/45))%8];
+}
+function getHeading(btn){
+  const read=()=>{
+    btn.classList.add("rec");toast("Point the phone the way the front faces…");
+    let done=false;
+    const handler=ev=>{
+      let hd=(ev.webkitCompassHeading!=null)?ev.webkitCompassHeading:(ev.alpha!=null?360-ev.alpha:null);
+      if(hd==null||done)return;
+      done=true;window.removeEventListener("deviceorientation",handler,true);
+      const pt=compassPoint(hd);
+      const inp=btn.closest(".field").querySelector('[data-c="orientation"]');
+      inp.value=`The façade faces ${pt}`;
+      STATE.customer.orientation=inp.value;STATE.customer.heading=Math.round(hd);
+      btn.classList.remove("rec");scheduleSave();toast(`Façade faces ${pt} (${Math.round(hd)}°)`);
+    };
+    window.addEventListener("deviceorientation",handler,true);
+    setTimeout(()=>{if(!done){window.removeEventListener("deviceorientation",handler,true);btn.classList.remove("rec");toast("Couldn't read the compass here")}},4000);
+  };
+  const DOE=window.DeviceOrientationEvent;
+  if(DOE&&typeof DOE.requestPermission==="function"){
+    DOE.requestPermission().then(s=>{s==="granted"?read():toast("Allow Motion & Orientation access to use the compass")}).catch(()=>toast("Compass not available here"));
+  }else if(DOE){read();}
+  else{toast("Compass not available on this device");}
+}
+
+/* ---------- voice dictation ---------- */
+const INFRAME=(()=>{try{return window.self!==window.top}catch(e){return true}})();
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recog=null,recBtn=null;
+function stopRec(){if(recog){try{recog.stop()}catch(e){}}}
+function micField(btn){return btn.closest(".field").querySelector("[data-note], input[data-c]");}
+function commitField(el){
+  if(!el)return;
+  if(el.dataset.note!==undefined){const code=el.closest(".block").id.slice(2);sec(code).note=el.value;refreshPill(code);updateHeaderCount(code);updateProgress();}
+  else if(el.dataset.c!==undefined){STATE.customer[el.dataset.c]=el.value;}
+  scheduleSave();
+}
+function toggleMic(btn){
+  const ta=micField(btn);if(!ta)return;
+  if(recBtn===btn&&recog){stopRec();return}
+  stopRec();
+  // In-app speech only works top-level (real website); inside the sandboxed artifact use the keyboard mic
+  if(SR&&!INFRAME){startSpeech(btn,ta);return;}
+  // No in-app speech engine: open the keyboard so its own mic key can be used
+  ta.focus();try{ta.click();}catch(e){}
+  toast("Keyboard up — tap the 🎤 key on it. No 🎤? Settings ▸ General ▸ Keyboard ▸ Enable Dictation");
+}
+function startSpeech(btn,ta){
+  try{recog=new SR();}catch(e){recog=null;ta.focus();return;}
+  recog.lang="en-AU";recog.continuous=true;recog.interimResults=true;
+  recBtn=btn;btn.classList.add("rec");
+  let base=ta.value?ta.value.replace(/\s+$/,"")+" ":"";
+  recog.onresult=ev=>{
+    let fin="",intr="";
+    for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];if(r.isFinal)fin+=r[0].transcript;else intr+=r[0].transcript}
+    if(fin)base=(base+fin+" ").replace(/\s+/g," ");
+    ta.value=(base+intr).trim();commitField(ta);
+  };
+  recog.onend=()=>{btn.classList.remove("rec");commitField(ta);recog=null;recBtn=null};
+  recog.onerror=ev=>{
+    btn.classList.remove("rec");recog=null;recBtn=null;
+    const c=ev&&ev.error;
+    if(c==="not-allowed"||c==="service-not-allowed"){ta.focus();toast("Mic blocked — use the keyboard 🎤 key instead");}
+    else if(c==="no-speech"){toast("Didn't catch that — tap Speak and try again");}
+    else{ta.focus();toast("Use the keyboard 🎤 key to dictate");}
+  };
+  try{recog.start();toast("Listening… tap Speak again to stop");}
+  catch(e){btn.classList.remove("rec");recog=null;recBtn=null;ta.focus();}
+}
+
+/* ---------- toast ---------- */
+let tt;const toastEl=document.getElementById("toast");
+function toast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove("show"),1600)}
+
+/* ---------- modal ---------- */
+const modal=document.getElementById("modal"),sheet=document.getElementById("sheet");
+function closeModal(){modal.classList.remove("show")}
+function obsCount(a){return ((STATE.customer.obs&&STATE.customer.obs[a]&&STATE.customer.obs[a].photos.length)||0);}
+function openAccessPicker(){
+  const rows=OBSAREAS.map(a=>{const n=obsCount(a);return `<button class="pickrow${n?' has':''}" data-pick="OBS::${escv(a)}"><span>${escv(a)}</span>${n?`<span class="pickcount">${n}</span>`:''}</button>`;}).join("");
+  const inn=((STATE.customer.inacc&&STATE.customer.inacc.photos.length)||0);
+  sheet.innerHTML=`<h3>Access &amp; obstruction photos</h3>
+    <p style="font-size:.85rem">Tap an area to shoot a photo straight into it. Any area with photos is treated as <b>obstructed</b> — comment on it lower down in Accessibility.</p>
+    <div class="pickwrap">${rows}
+      <button class="pickrow inacc${inn?' has':''}" data-pick="INACC"><span>Inaccessible areas</span>${inn?`<span class="pickcount">${inn}</span>`:''}</button></div>
+    <div class="acts"><button class="btn ghost" id="mCancel">Close</button></div>`;
+  modal.classList.add("show");
+  document.getElementById("mCancel").onclick=closeModal;
+  sheet.querySelectorAll("[data-pick]").forEach(btn=>{
+    btn.onclick=()=>{activePhotoCode=btn.dataset.pick;document.getElementById("cameraInput").click();closeModal();};
+  });
+}
+modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
+
+/* ---------- new inspection ---------- */
+document.getElementById("newBtn").addEventListener("click",()=>{
+  sheet.innerHTML=`<h3>Start a new inspection?</h3><p>This clears the current job from this device. Make sure you've exported it first.</p>
+    <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn primary" id="mNew" style="background:var(--find)">Clear &amp; start new</button></div>`;
+  modal.classList.add("show");
+  document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mNew").onclick=async()=>{
+    STATE={customer:{date:todayStr()},sections:{}};await dbSet("current",STATE);
+    closeModal();render();toast("New inspection started");window.scrollTo(0,0);
+    document.getElementById("hsub").textContent="New regular termite inspection";
+  };
+});
+
+/* ---------- export ---------- */
+async function buildPacket(){
+  const out={meta:{app:"LPC Inspection Capture",type:"RSA Regular Visual Timber Pest Inspection",version:1},
+    customer:STATE.customer,sections:[]};
+  const list=[COVER].concat(ITEMS,EXTRAS);
+  for(const it of list){
+    const s=STATE.sections[it.code];if(!s)continue;
+    const photos=(s.photos||[]).filter(Boolean);
+    if(s.status||s.note||photos.length||s.subq||s.subqPhotos){
+      const rec={code:it.code,title:it.title,status:s.status||(ITEMS.some(x=>x.code===it.code)?"clear":"note"),note:s.note||"",tone:(s.tone&&s.tone!=="Use report tone")?s.tone:"",photos};
+      if(it.subQs)rec.subq=it.subQs.map((q,i)=>({q,a:(s.subq&&s.subq[i])||null,photos:((s.subqPhotos&&s.subqPhotos[i])||[]).filter(Boolean)}));
+      out.sections.push(rec);
+    }
+  }
+  return out;
+}
+
+function validateComplete(){
+  const miss=[];const c=STATE.customer;
+  if(!(c.address||"").trim())miss.push({t:"Property address",go:"DET"});
+  if(!(c.client||"").trim())miss.push({t:"Client name",go:"DET"});
+  ITEMS.forEach(it=>{const s=STATE.sections[it.code];
+    if(it.always){if(!(s&&(s.note||"").trim()))miss.push({t:it.code+" "+it.title,go:it.code});return;}
+    if(it.subQs){const ans=(s&&s.subq)||{};
+      const un=it.subQs.filter((q,i)=>!ans[i]).length;
+      if(un)miss.push({t:it.code+" "+it.title+" — "+un+" question"+(un>1?"s":"")+" unanswered",go:it.code});
+      if(s&&(s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
+      return;}
+    if(!(s&&s.status)){miss.push({t:it.code+" "+it.title+" — not answered",go:it.code});return;}
+    if((s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
+  });
+  if(!((c.areas||[]).length))miss.push({t:"Accessibility — areas inspected",go:"ACCESS"});
+  if(!c.risk)miss.push({t:"Accessibility — undetected risk",go:"ACCESS"});
+  if(!c.treatment)miss.push({t:"Conclusion — treatment required?",go:"CONC"});
+  if(!c.conducive)miss.push({t:"Conclusion — remove conducive conditions?",go:"CONC"});
+  if(!c.nextinsp)miss.push({t:"Conclusion — next inspection interval",go:"CONC"});
+  return miss;
+}
+function showIncomplete(miss,proceed){
+  sheet.innerHTML=`<h3>Not finished yet</h3>
+    <p style="font-size:.85rem">${miss.length} thing${miss.length===1?'':'s'} still to complete before export. Tap one to jump to it.</p>
+    <div class="pickwrap">${miss.map(m=>`<button class="pickrow" data-missgo="${escv(m.go)}"><span>${escv(m.t)}</span></button>`).join("")}</div>
+    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mAnyway" style="opacity:.6">Export anyway</button></div>`;
+  modal.classList.add("show");
+  document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mAnyway").onclick=()=>{closeModal();proceed();};
+  sheet.querySelectorAll("[data-missgo]").forEach(btn=>btn.onclick=()=>{closeModal();openTo(btn.dataset.missgo);});
+}
+async function doExport(){
+  const addr=(STATE.customer.address||"inspection").replace(/[^\w]+/g,"_").slice(0,40);
+  toast("Building packet…");
+  let packet,json,sizeMB,nPhotos,nFind;
+  try{
+    packet=await buildPacket();
+    json=JSON.stringify(packet);
+    sizeMB=(new Blob([json]).size/1048576).toFixed(1);
+    nPhotos=packet.sections.reduce((a,s)=>a+s.photos.length+((s.subq||[]).reduce((b,q)=>b+((q.photos||[]).length),0)),0);
+    nFind=packet.sections.filter(s=>s.status==="find").length;
+  }catch(err){toast("Couldn't build the packet — tell Claude");return;}
+
+  sheet.innerHTML=`<h3>Export this inspection</h3>
+    <p><b>${escv(STATE.customer.address||"(no address)")}</b><br>
+    ${nFind} finding${nFind===1?'':'s'} · ${nPhotos} photo${nPhotos===1?'':'s'} · ${sizeMB} MB packet</p>
+    <p style="font-size:.82rem">Saves one file. On your phone the share sheet opens — pick <b>Mail</b> and send it to yourself, or <b>Save to Files / AirDrop</b>. Then tell Claude the job's ready.</p>
+    <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn primary" id="mExport">Save / Share packet</button></div>`;
+  modal.classList.add("show");
+  document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mExport").onclick=async()=>{
+    const btn=document.getElementById("mExport");btn.disabled=true;btn.textContent="Saving…";
+    const fname=`inspection_${addr}.json`;
+    const blob=new Blob([json],{type:"application/json"});
+    const resetBtn=()=>{btn.disabled=false;btn.textContent="Save / Share packet";};
+    try{
+      const dl=await (window.claude&&window.claude.use?window.claude.use("downloads"):Promise.resolve(null));
+      if(dl){await dl.save({filename:fname,data:json});toast("Packet saved — AirDrop or email it");closeModal();return;}
+      // real website on iPhone/iPad: share the file (Mail it to yourself / Save to Files)
+      let file=null;try{file=new File([blob],fname,{type:"application/json"});}catch(e){}
+      if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file],title:fname});toast("Packet shared");closeModal();return;}
+        catch(err){if(err&&err.name==="AbortError"){toast("Share cancelled");resetBtn();return;}}
+      }
+      // desktop / no share: download the file
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+      a.download=fname;document.body.appendChild(a);a.click();a.remove();
+      toast("Packet downloaded");closeModal();
+    }catch(err){
+      const code=err&&err.code;
+      if(code==="declined"){toast("Export cancelled")}
+      else{toast("Couldn't save here — tell Claude")}
+      resetBtn();
+    }
+  };
+}
+document.getElementById("finishBtn").addEventListener("click",()=>{
+  const miss=validateComplete();
+  if(miss.length){showIncomplete(miss,doExport);return;}
+  doExport();
+});
+
+/* ---------- boot ---------- */
+(async function(){
+  try{ await openDB(); }catch(e){ db=null; }
+  const saved=db?await dbGet("current"):null;
+  if(saved&&saved.sections){STATE=saved;
+    if(!STATE.customer.date)STATE.customer.date=todayStr();
+    if(STATE.customer.address)document.getElementById("hsub").textContent=STATE.customer.address;
+  }
+  if(!STATE.customer.date)STATE.customer.date=todayStr();
+  render();
+})();
+</script>
+
+</body>
+</html>
