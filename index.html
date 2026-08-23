@@ -397,19 +397,24 @@ function buildDetails(){
       <div class="grid2">
         <div class="field"><label>Report date</label><input data-c="date" placeholder="e.g. 22 Aug 2026" value="${escv(c.date)}"></div>
         <div class="field"><label>Building type</label>
-          <select data-c="btype">${opts(["","Detached house","Semidetached house","Terrace house","Queenslander","Duplex","Townhouse","Home unit","Villa unit","Other"],c.btype)}</select></div>
+          <select data-c="btype">${opts(["","Detached house","Semidetached house","Terrace house","Queenslander","Duplex","Townhouse","Home unit","Villa unit","Other"],c.btype)}</select>
+          <input class="otherline" data-c="btypeOther" placeholder="Type the other building type" value="${escv(c.btypeOther)}" style="margin-top:8px;display:${c.btype==='Other'?'block':'none'}"></div>
       </div>
       <div class="grid2">
         <div class="field"><label>Storeys</label>
-          <select data-c="storeys">${opts(["","Single storey","Two storey","Three storey","Lowset","Highset","Split-Level"],c.storeys)}</select></div>
+          <select data-c="storeys">${opts(["","Single storey","Two storey","Three storey","Lowset","Highset","Split-Level"],c.storeys)}</select>
+          <input class="otherline" data-c="storeysOther" placeholder="Type the other storeys detail" value="${escv(c.storeysOther)}" style="margin-top:8px;display:${c.storeys==='Other'?'block':'none'}"></div>
         <div class="field"><label>Floor construction</label>
-          <select data-c="floor">${opts(["","Suspended timber framed","Suspended steel framed","Suspended slab","Slab floor (infill)","Part suspended timber frame and slab on ground","Part suspended steel frame and slab on ground","Other"],c.floor)}</select></div>
+          <select data-c="floor">${opts(["","Suspended timber framed","Suspended steel framed","Suspended slab","Slab floor (infill)","Part suspended timber frame and slab on ground","Part suspended steel frame and slab on ground","Other"],c.floor)}</select>
+          <input class="otherline" data-c="floorOther" placeholder="Type the other floor construction" value="${escv(c.floorOther)}" style="margin-top:8px;display:${c.floor==='Other'?'block':'none'}"></div>
       </div>
       <div class="grid2">
         <div class="field"><label>Wall construction</label>
-          <select data-c="wall">${opts(["","Timber framed","Steel framed","Brick veneer","Brick veneer (timber framed)","Brick veneer (steel framed)","Full brick","Cavity brick","Concrete block","Earth wall","Other"],c.wall)}</select></div>
+          <select data-c="wall">${opts(["","Timber framed","Steel framed","Brick veneer","Brick veneer (timber framed)","Brick veneer (steel framed)","Full brick","Cavity brick","Concrete block","Earth wall","Other"],c.wall)}</select>
+          <input class="otherline" data-c="wallOther" placeholder="Type the other wall construction" value="${escv(c.wallOther)}" style="margin-top:8px;display:${c.wall==='Other'?'block':'none'}"></div>
         <div class="field"><label>Roof construction</label>
-          <select data-c="roof">${opts(["","Timber framed - tiled","Timber framed - metal","Trussed - tiled","Trussed - metal","Metal / Colorbond","Other"],c.roof)}</select></div>
+          <select data-c="roof">${opts(["","Timber framed - tiled","Timber framed - metal","Trussed - tiled","Trussed - metal","Metal / Colorbond","Other"],c.roof)}</select>
+          <input class="otherline" data-c="roofOther" placeholder="Type the other roof construction" value="${escv(c.roofOther)}" style="margin-top:8px;display:${c.roof==='Other'?'block':'none'}"></div>
       </div>
       <div class="field"><label class="notelabel"><span>Other timber building elements</span>
         <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
@@ -462,6 +467,11 @@ function buildSection(item,isExtra){
             <button class="ynu-b yes ${a==='yes'?'on':''}" type="button" data-subq="${i}" data-subv="yes">Yes</button>
             <button class="ynu-b no ${a==='no'?'on':''}" type="button" data-subq="${i}" data-subv="no">No</button>
             <button class="ynu-b undet ${a==='undet'?'on':''}" type="button" data-subq="${i}" data-subv="undet">Undetermined</button>
+          </div>
+          <div class="field subqfind" id="subqfind-${code}-${i}" style="display:${(a==='yes'||a==='undet')?'block':'none'}">
+            <label class="notelabel"><span>Findings — what did you see?</span>
+              <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
+            <textarea data-subqnote="${i}" placeholder="Type or speak what you found — I'll polish it for the report.">${escv((s.subqNotes&&s.subqNotes[i])||'')}</textarea>
           </div></div>`}).join("")}
       </div>`:''}
       ${isFindItem&&!item.always&&!hasSub?`
@@ -473,7 +483,7 @@ function buildSection(item,isExtra){
         <button class="undet ${s.status==='undet'?'on':''}" data-status="undet">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 1 1 3.1 2.4c-.6.2-1.1.8-1.1 1.5v.3"/><path d="M12 17.2v.01"/></svg>Undet.</button>
       </div>`:''}
-      <div class="${isFindItem&&!item.always?'findbody':''}">
+      ${hasSub?'':`<div class="${isFindItem&&!item.always?'findbody':''}">
         <div class="field"><label class="notelabel"><span>${item.always?'Note':(isExtra?'Notes':'What did you see? (rough note is fine)')}</span>
           <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
           <textarea data-note placeholder="${escv(item.ph||(item.always?'e.g. 6 months':'Type or speak quick notes — I will polish them into report wording.'))}">${escv(s.note)}</textarea></div>
@@ -481,9 +491,9 @@ function buildSection(item,isExtra){
           ${chipSel("secchip","tone",["Use report tone","Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],s.tone||"Use report tone")}</div>`:''}
         ${bankLines.length?`<div class="banklab">Quick add from bank</div>
           <div class="bankchips">${bankLines.map((l,i)=>`<button class="bchip" data-bank="${i}">${phHtml(l)}</button>`).join("")}</div>`:''}
-        ${!item.nophoto&&!hasSub?`<div class="banklab">Photos</div>
+        ${!item.nophoto?`<div class="banklab">Photos</div>
         <div class="photos" id="ph-${code}"></div>`:''}
-      </div>
+      </div>`}
     </div>`;
   return b;
 }
@@ -530,8 +540,9 @@ const OBSAREAS=["Building interior","Building exterior","Roof exterior","Roof sp
 function slug(s){return s.replace(/[^a-z0-9]/gi,"_");}
 function obsBlock(a,c){
   const o=(c.obs&&c.obs[a])||{note:"",photos:[]};
-  return `<div class="obsrow"><div class="obslabel">${escv(a)}</div>
-    <input class="obsnote" data-obsnote="${escv(a)}" placeholder="Note (optional)" value="${escv(o.note)}">
+  const has=o.photos&&o.photos.length>0;
+  return `<div class="obsrow" id="obsrow-${slug(a)}" style="display:${has?'block':'none'}"><div class="obslabel">${escv(a)}</div>
+    <input class="obsnote" data-obsnote="${escv(a)}" placeholder="Finding for this obstructed area" value="${escv(o.note)}">
     <div class="photos" id="obsph-${slug(a)}"></div></div>`;
 }
 function buildScopeBlock(){
@@ -567,7 +578,8 @@ function buildAccessBlock(){
         <div class="field"><label>Strata / company title?</label>${ynSeg("strata",c.strata)}</div>
         <div class="field"><label>Obstructions present?</label>${ynSeg("obstructions",c.obstructions)}</div>
       </div>
-      <div class="field"><label>Areas obstructed — note &amp; photos for each that applies</label>
+      <div class="field"><label>Areas obstructed</label>
+        <div class="subqlead" id="obshint">Photograph an area from the <b>Access &amp; obstructed</b> button up top. Each area you shoot appears here to write its finding.</div>
         <div class="obswrap">${OBSAREAS.map(a=>obsBlock(a,c)).join("")}</div></div>
       <div class="field"><label>Inaccessible areas?</label>${ynSeg("inaccessible",c.inaccessible)}</div>
       <div class="field"><input data-inaccnote placeholder="Which areas couldn't be accessed? (if yes)" value="${escv(inacc.note)}">
@@ -653,6 +665,10 @@ function renderObsArea(a){
   (o.photos||[]).forEach((durl,i)=>{const d=document.createElement("div");d.className="thumb";
     d.innerHTML=`<img src="${durl}"><button class="x" data-delobs="${escv(a)}|${i}">&times;</button>`;host.appendChild(d);});
   const add=document.createElement("button");add.className="addphoto";add.dataset.obsphoto=a;add.innerHTML=CAM_SVG;host.appendChild(add);
+  const row=document.getElementById("obsrow-"+slug(a));
+  if(row)row.style.display=(o.photos&&o.photos.length)?"block":"none";
+  const anyObs=OBSAREAS.some(x=>{const oo=STATE.customer.obs&&STATE.customer.obs[x];return oo&&oo.photos&&oo.photos.length;});
+  const hint=document.getElementById("obshint");if(hint)hint.style.display=anyObs?"none":"block";
 }
 function renderInacc(){
   const host=document.getElementById("inaccph");if(!host)return;
@@ -721,6 +737,7 @@ main.addEventListener("click",e=>{
   if(sq){const blk=sq.closest(".block");const code=blk.id.slice(2);const idx=+sq.dataset.subq;const val=sq.dataset.subv;
     const s=sec(code);s.subq=s.subq||{};s.subq[idx]=val;
     blk.querySelectorAll(`[data-subq="${idx}"]`).forEach(b=>b.classList.toggle("on",b.dataset.subv===val));
+    toggleSubqFind(code,idx,val);
     setStatus(code,subStatus(code),val==="yes");return}
   const tog=e.target.closest("[data-toggle]");
   if(tog){tog.parentElement.classList.toggle("open");return}
@@ -758,12 +775,17 @@ main.addEventListener("input",e=>{
     document.getElementById("pill-DET").className="pill "+(STATE.customer.address?"clear":"todo");scheduleSave();return}
   if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
+  if(e.target.matches("[data-subqnote]")){const code=e.target.closest(".block").id.slice(2);const idx=+e.target.dataset.subqnote;
+    const s=sec(code);s.subqNotes=s.subqNotes||{};s.subqNotes[idx]=e.target.value;updateNeed(code);scheduleSave();return}
   if(e.target.matches("[data-note]")){const code=e.target.closest(".block").id.slice(2);sec(code).note=e.target.value;
     refreshPill(code);updateHeaderCount(code);scheduleSave();updateProgress()}
 });
 main.addEventListener("change",e=>{
   if(e.target.matches("[data-sectone]")){const code=e.target.closest(".block").id.slice(2);sec(code).tone=e.target.value;scheduleSave();return}
-  if(e.target.dataset.c!==undefined){STATE.customer[e.target.dataset.c]=e.target.value;scheduleSave()}
+  if(e.target.dataset.c!==undefined){STATE.customer[e.target.dataset.c]=e.target.value;
+    if(e.target.tagName==="SELECT"){const key=e.target.dataset.c;const ol=e.target.parentElement.querySelector('[data-c="'+key+'Other"]');
+      if(ol){const on=e.target.value==="Other";ol.style.display=on?"block":"none";if(!on){ol.value="";STATE.customer[key+"Other"]="";}else{ol.focus();}}}
+    scheduleSave()}
 });
 
 function subStatus(code){
@@ -773,6 +795,14 @@ function subStatus(code){
   if(vals.includes("undet"))return "undet";
   if(vals.length===it.subQs.length)return "clear";
   return null;
+}
+function toggleSubqFind(code,idx,val){
+  const ff=document.getElementById("subqfind-"+code+"-"+idx);if(!ff)return;
+  const show=(val==="yes"||val==="undet");
+  ff.style.display=show?"block":"none";
+  const ta=ff.querySelector("[data-subqnote]");
+  if(!show){if(ta)ta.value="";const s=sec(code);if(s.subqNotes)s.subqNotes[idx]="";}
+  else if(ta){setTimeout(()=>{try{ta.focus()}catch(e){}},60);}
 }
 function setStatus(code,val,expand){
   sec(code).status=val;
@@ -787,7 +817,10 @@ function setStatus(code,val,expand){
 }
 function needsComment(code){
   if(code==="COVER")return false;
-  const s=sec(code);return photoCount(code)>0&&!((s.note||"").trim());
+  const s=sec(code);const it=ITEMS.find(i=>i.code===code);
+  if(it&&it.subQs){const ans=s.subq||{},notes=s.subqNotes||{};
+    return it.subQs.some((q,i)=>(ans[i]==="yes"||ans[i]==="undet")&&!((notes[i]||"").trim()));}
+  return photoCount(code)>0&&!((s.note||"").trim());
 }
 function updateNeed(code){
   const blk=document.getElementById("b-"+code);if(!blk)return;
@@ -834,6 +867,7 @@ async function onFiles(e){
       const blk=document.getElementById("b-"+c);
       if(blk)blk.querySelectorAll(`[data-subq="${idx}"]`).forEach(b=>b.classList.toggle("on",b.dataset.subv==="yes"));
     }
+    toggleSubqFind(c,idx,"yes");
     renderSubqPhotos(c);setStatus(c,subStatus(c),false);updateHeaderCount(c);refreshPill(c);
   }
   else if(code.indexOf("OBS::")===0){renderObsArea(code.slice(5));STATE.customer.obstructions="Yes";syncYn("obstructions");updateAccessCount();}
@@ -900,10 +934,11 @@ const INFRAME=(()=>{try{return window.self!==window.top}catch(e){return true}})(
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recog=null,recBtn=null;
 function stopRec(){if(recog){try{recog.stop()}catch(e){}}}
-function micField(btn){return btn.closest(".field").querySelector("[data-note], input[data-c]");}
+function micField(btn){return btn.closest(".field").querySelector("[data-note], [data-subqnote], input[data-c]");}
 function commitField(el){
   if(!el)return;
-  if(el.dataset.note!==undefined){const code=el.closest(".block").id.slice(2);sec(code).note=el.value;refreshPill(code);updateHeaderCount(code);updateProgress();}
+  if(el.dataset.subqnote!==undefined){const code=el.closest(".block").id.slice(2);const idx=+el.dataset.subqnote;const s=sec(code);s.subqNotes=s.subqNotes||{};s.subqNotes[idx]=el.value;updateNeed(code);}
+  else if(el.dataset.note!==undefined){const code=el.closest(".block").id.slice(2);sec(code).note=el.value;refreshPill(code);updateHeaderCount(code);updateProgress();}
   else if(el.dataset.c!==undefined){STATE.customer[el.dataset.c]=el.value;}
   scheduleSave();
 }
@@ -985,9 +1020,9 @@ async function buildPacket(){
   for(const it of list){
     const s=STATE.sections[it.code];if(!s)continue;
     const photos=(s.photos||[]).filter(Boolean);
-    if(s.status||s.note||photos.length||s.subq||s.subqPhotos){
+    if(s.status||s.note||photos.length||s.subq||s.subqPhotos||s.subqNotes){
       const rec={code:it.code,title:it.title,status:s.status||(ITEMS.some(x=>x.code===it.code)?"clear":"note"),note:s.note||"",tone:(s.tone&&s.tone!=="Use report tone")?s.tone:"",photos};
-      if(it.subQs)rec.subq=it.subQs.map((q,i)=>({q,a:(s.subq&&s.subq[i])||null,photos:((s.subqPhotos&&s.subqPhotos[i])||[]).filter(Boolean)}));
+      if(it.subQs)rec.subq=it.subQs.map((q,i)=>({q,a:(s.subq&&s.subq[i])||null,note:(s.subqNotes&&s.subqNotes[i])||"",photos:((s.subqPhotos&&s.subqPhotos[i])||[]).filter(Boolean)}));
       out.sections.push(rec);
     }
   }
@@ -1000,10 +1035,10 @@ function validateComplete(){
   if(!(c.client||"").trim())miss.push({t:"Client name",go:"DET"});
   ITEMS.forEach(it=>{const s=STATE.sections[it.code];
     if(it.always){if(!(s&&(s.note||"").trim()))miss.push({t:it.code+" "+it.title,go:it.code});return;}
-    if(it.subQs){const ans=(s&&s.subq)||{};
+    if(it.subQs){const ans=(s&&s.subq)||{};const notes=(s&&s.subqNotes)||{};
       const un=it.subQs.filter((q,i)=>!ans[i]).length;
       if(un)miss.push({t:it.code+" "+it.title+" — "+un+" question"+(un>1?"s":"")+" unanswered",go:it.code});
-      if(s&&(s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
+      it.subQs.forEach((q,i)=>{if((ans[i]==="yes"||ans[i]==="undet")&&!((notes[i]||"").trim()))miss.push({t:it.code+" Q"+(i+1)+" — needs findings written in",go:it.code});});
       return;}
     if(!(s&&s.status)){miss.push({t:it.code+" "+it.title+" — not answered",go:it.code});return;}
     if((s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
