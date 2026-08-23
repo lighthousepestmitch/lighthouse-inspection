@@ -239,6 +239,21 @@
   .sheet h3{font-family:"Newsreader",serif;margin:0 0 8px;font-size:1.2rem}
   .sheet p{margin:0 0 16px;font-size:.9rem;color:var(--muted)}
   .sheet .acts{display:flex;gap:9px;justify-content:flex-end}
+  /* address autocomplete */
+  .aclist{margin-top:6px;border:1px solid var(--edge);border-radius:10px;overflow:hidden;background:var(--raised)}
+  .acitem{display:block;width:100%;text-align:left;padding:10px 12px;font-size:.85rem;line-height:1.3;background:none;border:none;border-bottom:1px solid var(--edge);color:var(--ink);cursor:pointer}
+  .acitem:last-child{border-bottom:none}
+  .acitem:active{background:var(--timber-soft)}
+  /* jobs list */
+  .joblist{display:flex;flex-direction:column;gap:8px;max-height:52vh;overflow:auto;margin-bottom:16px}
+  .jobrow{display:flex;align-items:stretch;gap:8px}
+  .jobrow.active .jobopen{border-color:var(--timber);box-shadow:inset 3px 0 0 var(--timber)}
+  .jobopen{flex:1;text-align:left;background:var(--raised);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
+  .jobaddr{font-weight:600;font-size:.92rem;color:var(--ink)}
+  .jobmeta{font-size:.76rem;color:var(--muted)}
+  .nowtag{font-size:.62rem;background:var(--timber-soft);color:var(--timber);border-radius:6px;padding:1px 6px;font-weight:700;margin-left:6px;vertical-align:middle}
+  .jobdel{width:42px;flex:none;border:1px solid var(--edge);background:var(--raised);border-radius:10px;color:var(--muted);font-size:1.2rem;cursor:pointer}
+  .jobdel.armed{background:var(--find);color:#fff;border-color:var(--find);font-size:.76rem;font-weight:700;width:70px}
 </style>
 </head>
 <body>
@@ -259,6 +274,7 @@
 <div class="footbar">
   <div class="wrap">
     <div class="footinfo"><span class="savedot"></span><span id="saveinfo">Saved on this device</span></div>
+    <button class="btn ghost" id="jobsBtn">Jobs</button>
     <button class="btn ghost" id="newBtn">New</button>
     <button class="btn primary" id="finishBtn">Finish &amp; Export</button>
   </div>
@@ -319,6 +335,11 @@ const COVER = {code:"COVER",title:"Cover shots — front of property",ph:"Option
 // extra capture sections that aren't clear/finding significant items — guided notes I slot into the right Mira fields
 const EXTRAS = [];
 
+// shared mic ("Speak") button — dropped next to every free-text field except client contact fields
+const MIC_SVG='<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>';
+const MIC_BTN='<button class="mic" type="button" data-mic>'+MIC_SVG+'Speak</button>';
+const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","South Australia":"SA","Western Australia":"WA","Tasmania":"TAS","Northern Territory":"NT","Australian Capital Territory":"ACT"};
+
 /* ---------- state ---------- */
 let STATE = { customer:{}, sections:{} };
 
@@ -334,13 +355,43 @@ function dbGet(k){return new Promise((res)=>{try{const t=db.transaction("kv","re
   t.onsuccess=()=>res(t.result);t.onerror=()=>res(null)}catch(e){res(null)}});}
 function dbSet(k,v){return new Promise((res)=>{try{const t=db.transaction("kv","readwrite").objectStore("kv").put(v,k);
   t.onsuccess=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}});}
+function dbDel(k){return new Promise((res)=>{try{const t=db.transaction("kv","readwrite").objectStore("kv").delete(k);
+  t.onsuccess=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}});}
+
+/* ---------- multi-job storage ---------- */
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function jobMeta(state){
+  const secs=state.sections||{};let find=0,photos=0;
+  Object.keys(secs).forEach(k=>{const s=secs[k]||{};
+    if(s.status==="find"||s.status==="undet")find++;
+    photos+=(s.photos||[]).length;
+    if(s.subqPhotos)Object.keys(s.subqPhotos).forEach(i=>photos+=((s.subqPhotos[i])||[]).length);
+  });
+  const c=state.customer||{};
+  if(c.obs)Object.keys(c.obs).forEach(a=>photos+=(((c.obs[a]||{}).photos)||[]).length);
+  if(c.inacc)photos+=((c.inacc.photos)||[]).length;
+  return {id:state.id,address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),updated:Date.now(),find,photos};
+}
+async function loadJobsIndex(){return (db?await dbGet("jobs"):null)||[];}
+async function saveJobsIndex(list){await dbSet("jobs",list);}
+async function upsertJobMeta(){
+  const list=await loadJobsIndex();const m=jobMeta(STATE);
+  const i=list.findIndex(j=>j.id===STATE.id);
+  if(i>=0)list[i]=m;else list.unshift(m);
+  await saveJobsIndex(list);
+}
+function timeAgo(t){if(!t)return"";const m=Math.round((Date.now()-t)/60000);
+  if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago";}
 
 let saveT;
 function scheduleSave(){
   clearTimeout(saveT);
   document.getElementById("saveinfo").textContent="Saving…";
   saveT=setTimeout(async()=>{
-    await dbSet("current",STATE);
+    if(!STATE.id)STATE.id=genId();
+    await dbSet("job::"+STATE.id,STATE);
+    await dbSet("activeId",STATE.id);
+    await upsertJobMeta();
     document.getElementById("saveinfo").textContent="Saved on this device";
   },500);
 }
@@ -386,16 +437,26 @@ function buildDetails(){
       <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
     </div>
     <div class="block-b">
-      <div class="field"><label class="notelabel"><span>Property address</span>
-        <button class="mic" type="button" data-locate><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-10a6 6 0 0 1 12 0c0 4.3-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Locate</button></label>
-        <input data-c="address" autocomplete="street-address" placeholder="Start typing, or tap Locate on site" value="${escv(c.address)}">
-        <div class="fhint" style="display:${c.geo?'block':'none'}" id="geo-hint">${c.geo?`📍 Location captured (±${c.geo.acc}m) — I'll fill the exact address.`:''}</div></div>
       <div class="grid2">
-        <div class="field"><label>Client name</label><input data-c="client" value="${escv(c.client)}"></div>
-        <div class="field"><label>Client phone</label><input data-c="phone" inputmode="tel" value="${escv(c.phone)}"></div>
+        <div class="field"><label>Client name</label><input data-c="client" autocomplete="name" placeholder="Full name" value="${escv(c.client)}"></div>
+        <div class="field"><label>Client phone</label><input data-c="phone" inputmode="tel" autocomplete="tel" value="${escv(c.phone)}"></div>
+      </div>
+      <div class="field"><label>Client email</label><input data-c="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${escv(c.email)}"></div>
+      <div class="field"><label class="notelabel"><span>Property address — start typing to search</span>
+        <button class="mic" type="button" data-locate><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-10a6 6 0 0 1 12 0c0 4.3-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Locate</button></label>
+        <input data-c="address" autocomplete="off" placeholder="e.g. 20 Windrow Ave — pick a match to auto-fill" value="${escv(c.address)}">
+        <div class="aclist" id="aclist" hidden></div>
+        <div class="fhint" style="display:${c.geo?'block':'none'}" id="geo-hint">${c.geo?`📍 Location captured (±${c.geo.acc}m)`:''}</div></div>
+      <div class="grid2">
+        <div class="field"><label>Suburb / town</label><input data-c="suburb" value="${escv(c.suburb)}"></div>
+        <div class="field"><label>Postcode</label><input data-c="postcode" inputmode="numeric" value="${escv(c.postcode)}"></div>
       </div>
       <div class="grid2">
+        <div class="field"><label>State</label>
+          <select data-c="state">${opts(["","NSW","QLD","VIC","SA","WA","TAS","NT","ACT"],c.state)}</select></div>
         <div class="field"><label>Report date</label><input data-c="date" placeholder="e.g. 22 Aug 2026" value="${escv(c.date)}"></div>
+      </div>
+      <div class="grid2">
         <div class="field"><label>Building type</label>
           <select data-c="btype">${opts(["","Detached house","Semidetached house","Terrace house","Queenslander","Duplex","Townhouse","Home unit","Villa unit","Other"],c.btype)}</select>
           <input class="otherline" data-c="btypeOther" placeholder="Type the other building type" value="${escv(c.btypeOther)}" style="margin-top:8px;display:${c.btype==='Other'?'block':'none'}"></div>
@@ -541,7 +602,8 @@ function slug(s){return s.replace(/[^a-z0-9]/gi,"_");}
 function obsBlock(a,c){
   const o=(c.obs&&c.obs[a])||{note:"",photos:[]};
   const has=o.photos&&o.photos.length>0;
-  return `<div class="obsrow" id="obsrow-${slug(a)}" style="display:${has?'block':'none'}"><div class="obslabel">${escv(a)}</div>
+  return `<div class="obsrow" id="obsrow-${slug(a)}" style="display:${has?'block':'none'}">
+    <label class="notelabel"><span class="obslabel">${escv(a)}</span>${MIC_BTN}</label>
     <input class="obsnote" data-obsnote="${escv(a)}" placeholder="Finding for this obstructed area" value="${escv(o.note)}">
     <div class="photos" id="obsph-${slug(a)}"></div></div>`;
 }
@@ -557,7 +619,8 @@ function buildScopeBlock(){
       <div class="field"><label>Scope of work ordered</label>
         <select data-c="scope">${opts(["Option 1: Standard Timber Pest Inspection","Option 2: Special-Purpose Inspection","Option 3: + Subterranean Termite Management Proposal"],c.scope||"Option 1: Standard Timber Pest Inspection")}</select></div>
       <div class="field"><label>Additional tests carried out?</label>${ynSeg("addtests",c.addtests)}</div>
-      <div class="field"><label>Additional tests — details (if yes)</label><input data-c="addtestsnote" placeholder="e.g. moisture meter, thermal, borescope, tapping" value="${escv(c.addtestsnote)}"></div>
+      <div class="field"><label class="notelabel"><span>Additional tests — details (if yes)</span>${MIC_BTN}</label>
+        <input data-c="addtestsnote" placeholder="e.g. moisture meter, thermal, borescope, tapping" value="${escv(c.addtestsnote)}"></div>
       <div class="field"><label>Comment tone — how Claude finalises your notes</label>
         ${chipSel("chipkey","tone",["Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],c.tone||"Measured (standard)")}</div>
     </div>`;
@@ -582,11 +645,12 @@ function buildAccessBlock(){
         <div class="subqlead" id="obshint">Photograph an area from the <b>Access &amp; obstructed</b> button up top. Each area you shoot appears here to write its finding.</div>
         <div class="obswrap">${OBSAREAS.map(a=>obsBlock(a,c)).join("")}</div></div>
       <div class="field"><label>Inaccessible areas?</label>${ynSeg("inaccessible",c.inaccessible)}</div>
-      <div class="field"><input data-inaccnote placeholder="Which areas couldn't be accessed? (if yes)" value="${escv(inacc.note)}">
+      <div class="field"><label class="notelabel"><span>Which areas couldn't be accessed? (if yes)</span>${MIC_BTN}</label>
+        <input data-inaccnote placeholder="e.g. subfloor — no access hatch" value="${escv(inacc.note)}">
         <div class="photos" id="inaccph" style="margin-top:10px"></div></div>
       <div class="field"><label>Undetected timber pest risk</label>
         ${chipSel("chipkey","risk",["Low","Moderate","Moderate-High","High"],c.risk)}</div>
-      <div class="field"><label>Additional comments</label>
+      <div class="field"><label class="notelabel"><span>Additional comments</span>${MIC_BTN}</label>
         <textarea data-c="addcomments" placeholder="Any extra comments for the report">${escv(c.addcomments)}</textarea></div>
     </div>`;
   return b;
@@ -731,6 +795,8 @@ main.addEventListener("click",e=>{
     const i=arr.indexOf(a);if(i>=0){arr.splice(i,1);ar.classList.remove("on")}else{arr.push(a);ar.classList.add("on")}scheduleSave();return}
   const mic=e.target.closest("[data-mic]");
   if(mic){toggleMic(mic);return}
+  const acp=e.target.closest("[data-acpick]");
+  if(acp){pickAddr(+acp.dataset.acpick);return}
   const hs=e.target.closest("[data-hstatus]");
   if(hs){setStatus(hs.closest(".block").id.slice(2),hs.dataset.hstatus,true);return}
   const sq=e.target.closest("[data-subq]");
@@ -770,9 +836,12 @@ main.addEventListener("click",e=>{
 });
 main.addEventListener("input",e=>{
   const c=e.target.dataset.c;
-  if(c!==undefined){STATE.customer[c]=e.target.value;if(c==="address")document.getElementById("hsub").textContent=e.target.value||"New regular termite inspection";
-    document.getElementById("pill-DET").textContent=STATE.customer.address?"Filled":"To do";
-    document.getElementById("pill-DET").className="pill "+(STATE.customer.address?"clear":"todo");scheduleSave();return}
+  if(c!==undefined){STATE.customer[c]=e.target.value;
+    if(c==="address"){document.getElementById("hsub").textContent=e.target.value||"New regular termite inspection";
+      clearTimeout(acT);acT=setTimeout(()=>addrLookup(e.target.value),400);}
+    const pd=document.getElementById("pill-DET");
+    if(pd){pd.textContent=STATE.customer.address?"Filled":"To do";pd.className="pill "+(STATE.customer.address?"clear":"todo");}
+    scheduleSave();return}
   if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-subqnote]")){const code=e.target.closest(".block").id.slice(2);const idx=+e.target.dataset.subqnote;
@@ -890,12 +959,13 @@ document.getElementById("cameraInput").addEventListener("change",onFiles);
 function getLocation(btn){
   if(!navigator.geolocation){toast("Location isn't available here");return}
   btn.classList.add("rec");toast("Getting location…");
-  navigator.geolocation.getCurrentPosition(pos=>{
+  navigator.geolocation.getCurrentPosition(async pos=>{
     const {latitude:lat,longitude:lng,accuracy:acc}=pos.coords;
     STATE.customer.geo={lat:+lat.toFixed(6),lng:+lng.toFixed(6),acc:Math.round(acc)};
     const h=document.getElementById("geo-hint");
-    if(h){h.style.display="block";h.textContent=`📍 Location captured (±${Math.round(acc)}m) — I'll fill the exact address.`;}
+    if(h){h.style.display="block";h.textContent=`📍 Location captured (±${Math.round(acc)}m)`;}
     btn.classList.remove("rec");scheduleSave();toast("Location captured");
+    await reverseGeo(lat,lng);
   },err=>{btn.classList.remove("rec");toast(err&&err.code===1?"Allow location access to use Locate":"Couldn't get location — try again")},
   {enableHighAccuracy:true,timeout:12000,maximumAge:0});
 }
@@ -929,16 +999,68 @@ function getHeading(btn){
   else{toast("Compass not available on this device");}
 }
 
+/* ---------- address autocomplete (real website only; sandboxed artifact can't fetch) ---------- */
+let acT,acAbort,acResults=[];
+function hideAC(){const el=document.getElementById("aclist");if(el){el.hidden=true;el.innerHTML="";}}
+function showAC(list){
+  acResults=list||[];const el=document.getElementById("aclist");if(!el)return;
+  if(!acResults.length){hideAC();return;}
+  el.innerHTML=acResults.map((r,i)=>`<button type="button" class="acitem" data-acpick="${i}">${escv(r.display_name||"")}</button>`).join("");
+  el.hidden=false;
+}
+async function addrLookup(q){
+  if(INFRAME){return;}                       // sandboxed artifact: CSP blocks the fetch, stay manual
+  if(!q||q.trim().length<4){hideAC();return;}
+  try{
+    if(acAbort)acAbort.abort();
+    acAbort=("AbortController"in window)?new AbortController():null;
+    const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&countrycodes=au&limit=6&q="+encodeURIComponent(q.trim());
+    const r=await fetch(url,acAbort?{signal:acAbort.signal,headers:{Accept:"application/json"}}:{headers:{Accept:"application/json"}});
+    if(!r.ok)return;
+    showAC(await r.json());
+  }catch(e){/* offline / blocked — silently stay manual */}
+}
+function setDetailFieldValues(){
+  const c=STATE.customer;
+  const set=(k,v)=>{const el=document.querySelector('[data-c="'+k+'"]');if(el)el.value=v||"";};
+  set("address",c.address);set("suburb",c.suburb);set("state",c.state);set("postcode",c.postcode);
+  const pd=document.getElementById("pill-DET");if(pd){pd.textContent=c.address?"Filled":"To do";pd.className="pill "+(c.address?"clear":"todo");}
+  document.getElementById("hsub").textContent=c.address||"New regular termite inspection";
+  const gh=document.getElementById("geo-hint");if(gh&&c.geo){gh.style.display="block";gh.textContent=`📍 Location captured (±${c.geo.acc||"?"}m)`;}
+}
+function applyAddr(d){
+  const a=d.address||{};const c=STATE.customer;
+  const street=[a.house_number,a.road].filter(Boolean).join(" ");
+  if(street)c.address=street; else if(d.display_name&&!(c.address||"").trim())c.address=d.display_name.split(",")[0];
+  c.suburb=a.suburb||a.town||a.city||a.village||a.municipality||a.hamlet||a.county||c.suburb||"";
+  c.state=STATE_ABBR[a.state]||a.state||c.state||"";
+  c.postcode=a.postcode||c.postcode||"";
+  if(d.lat&&d.lon)c.geo=Object.assign({},c.geo||{},{lat:+(+d.lat).toFixed(6),lng:+(+d.lon).toFixed(6)});
+  setDetailFieldValues();scheduleSave();
+}
+function pickAddr(i){const r=acResults[i];if(!r)return;applyAddr(r);hideAC();toast("Address filled");}
+async function reverseGeo(lat,lng){
+  if(INFRAME)return;
+  try{
+    const url="https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&lat="+lat+"&lon="+lng;
+    const r=await fetch(url,{headers:{Accept:"application/json"}});
+    if(!r.ok)return;const d=await r.json();
+    if(d&&d.address){applyAddr(d);toast("Address filled from GPS");}
+  }catch(e){}
+}
+
 /* ---------- voice dictation ---------- */
 const INFRAME=(()=>{try{return window.self!==window.top}catch(e){return true}})();
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recog=null,recBtn=null;
 function stopRec(){if(recog){try{recog.stop()}catch(e){}}}
-function micField(btn){return btn.closest(".field").querySelector("[data-note], [data-subqnote], input[data-c]");}
+function micField(btn){const box=btn.closest(".field, .obsrow");if(!box)return null;return box.querySelector("[data-note],[data-subqnote],[data-obsnote],[data-inaccnote],textarea[data-c],input[data-c]");}
 function commitField(el){
   if(!el)return;
   if(el.dataset.subqnote!==undefined){const code=el.closest(".block").id.slice(2);const idx=+el.dataset.subqnote;const s=sec(code);s.subqNotes=s.subqNotes||{};s.subqNotes[idx]=el.value;updateNeed(code);}
   else if(el.dataset.note!==undefined){const code=el.closest(".block").id.slice(2);sec(code).note=el.value;refreshPill(code);updateHeaderCount(code);updateProgress();}
+  else if(el.dataset.obsnote!==undefined){const a=el.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=el.value;}
+  else if(el.dataset.inaccnote!==undefined){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=el.value;}
   else if(el.dataset.c!==undefined){STATE.customer[el.dataset.c]=el.value;}
   scheduleSave();
 }
@@ -999,18 +1121,63 @@ function openAccessPicker(){
 }
 modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
 
-/* ---------- new inspection ---------- */
-document.getElementById("newBtn").addEventListener("click",()=>{
-  sheet.innerHTML=`<h3>Start a new inspection?</h3><p>This clears the current job from this device. Make sure you've exported it first.</p>
-    <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn primary" id="mNew" style="background:var(--find)">Clear &amp; start new</button></div>`;
+/* ---------- jobs (multi-inspection) ---------- */
+async function openNewJob(){
+  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  STATE={id:genId(),customer:{date:todayStr()},sections:{}};
+  await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
+  closeModal();render();window.scrollTo(0,0);
+  document.getElementById("hsub").textContent="New regular termite inspection";
+  toast("New job started — the old one is saved under Jobs");
+}
+async function switchJob(id){
+  if(id===STATE.id)return;
+  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  const s=await dbGet("job::"+id);if(!s||!s.sections)return;
+  STATE=s;if(!STATE.customer.date)STATE.customer.date=todayStr();
+  await dbSet("activeId",id);
+  render();window.scrollTo(0,0);
+  document.getElementById("hsub").textContent=STATE.customer.address||"New regular termite inspection";
+  toast("Opened "+(STATE.customer.address||"job"));
+}
+async function deleteJob(id){
+  await dbDel("job::"+id);
+  const list=(await loadJobsIndex()).filter(j=>j.id!==id);await saveJobsIndex(list);
+  if(id===STATE.id){
+    if(list.length){const s=await dbGet("job::"+list[0].id);STATE=s||{id:genId(),customer:{date:todayStr()},sections:{}};await dbSet("activeId",STATE.id);}
+    else{STATE={id:genId(),customer:{date:todayStr()},sections:{}};await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
+    render();document.getElementById("hsub").textContent=STATE.customer.address||"New regular termite inspection";
+  }
+  toast("Job deleted");
+}
+async function openJobs(){
+  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  const list=(await loadJobsIndex()).sort((a,b)=>b.updated-a.updated);
+  const rows=list.map(j=>{
+    const active=j.id===STATE.id;
+    const title=(j.address||"(no address yet)")+(j.suburb?", "+j.suburb:"");
+    const meta=`${j.find} finding${j.find===1?'':'s'} · ${j.photos} photo${j.photos===1?'':'s'} · ${timeAgo(j.updated)}`;
+    return `<div class="jobrow${active?' active':''}">
+      <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}${active?'<span class="nowtag">current</span>':''}</span><span class="jobmeta">${escv(meta)}</span></button>
+      <button class="jobdel" data-deljob="${escv(j.id)}" aria-label="Delete job">&times;</button></div>`;
+  }).join("")||`<p style="font-size:.85rem">No saved jobs yet.</p>`;
+  sheet.innerHTML=`<h3>Your jobs</h3>
+    <p style="font-size:.85rem">Tap a job to open it. Everything's saved on this phone — remember to Export each one so there's a backup off the device.</p>
+    <div class="joblist">${rows}</div>
+    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn primary" id="mNewJob">Start new job</button></div>`;
   modal.classList.add("show");
   document.getElementById("mCancel").onclick=closeModal;
-  document.getElementById("mNew").onclick=async()=>{
-    STATE={customer:{date:todayStr()},sections:{}};await dbSet("current",STATE);
-    closeModal();render();toast("New inspection started");window.scrollTo(0,0);
-    document.getElementById("hsub").textContent="New regular termite inspection";
-  };
-});
+  document.getElementById("mNewJob").onclick=openNewJob;
+  sheet.querySelectorAll("[data-openjob]").forEach(b=>b.onclick=()=>switchJob(b.dataset.openjob).then(closeModal));
+  sheet.querySelectorAll("[data-deljob]").forEach(b=>b.onclick=(ev)=>{
+    ev.stopPropagation();
+    if(b.dataset.armed){deleteJob(b.dataset.deljob).then(openJobs);return;}
+    b.dataset.armed="1";b.textContent="Delete?";b.classList.add("armed");
+    setTimeout(()=>{if(b.isConnected){b.textContent="×";b.classList.remove("armed");delete b.dataset.armed;}},2500);
+  });
+}
+document.getElementById("jobsBtn").addEventListener("click",openJobs);
+document.getElementById("newBtn").addEventListener("click",openNewJob);
 
 /* ---------- export ---------- */
 async function buildPacket(){
@@ -1114,12 +1281,26 @@ document.getElementById("finishBtn").addEventListener("click",()=>{
 /* ---------- boot ---------- */
 (async function(){
   try{ await openDB(); }catch(e){ db=null; }
-  const saved=db?await dbGet("current"):null;
-  if(saved&&saved.sections){STATE=saved;
-    if(!STATE.customer.date)STATE.customer.date=todayStr();
-    if(STATE.customer.address)document.getElementById("hsub").textContent=STATE.customer.address;
+  let list=await loadJobsIndex();
+  // migrate the old single-job "current" store into the jobs system, once
+  const legacy=db?await dbGet("current"):null;
+  if(legacy&&legacy.sections&&!list.length){
+    legacy.id=legacy.id||genId();
+    await dbSet("job::"+legacy.id,legacy);
+    await dbSet("activeId",legacy.id);
+    list=[jobMeta(legacy)];await saveJobsIndex(list);
+    await dbDel("current");
   }
+  const activeId=db?await dbGet("activeId"):null;
+  let saved=activeId?await dbGet("job::"+activeId):null;
+  if((!saved||!saved.sections)&&list.length){saved=await dbGet("job::"+list[0].id);}
+  if(saved&&saved.sections){STATE=saved;}
+  else{STATE={id:genId(),customer:{date:todayStr()},sections:{}};}
+  if(!STATE.id)STATE.id=genId();
+  if(!STATE.customer)STATE.customer={};
   if(!STATE.customer.date)STATE.customer.date=todayStr();
+  if(db){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
+  if(STATE.customer.address)document.getElementById("hsub").textContent=STATE.customer.address;
   render();
 })();
 </script>
