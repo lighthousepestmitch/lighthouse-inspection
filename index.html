@@ -466,7 +466,7 @@ function buildDetails(){
           <select data-c="storeys">${opts(["","Single storey","Two storey","Three storey","Lowset","Highset","Split-Level"],c.storeys)}</select>
           <input class="otherline" data-c="storeysOther" placeholder="Type the other storeys detail" value="${escv(c.storeysOther)}" style="margin-top:8px;display:${c.storeys==='Other'?'block':'none'}"></div>
         <div class="field"><label>Floor construction</label>
-          <select data-c="floor">${opts(["","Suspended timber framed","Suspended steel framed","Suspended slab","Slab floor (infill)","Part suspended timber frame and slab on ground","Part suspended steel frame and slab on ground","Other"],c.floor)}</select>
+          <select data-c="floor">${opts(["","Suspended timber framed","Suspended steel framed","Suspended slab","Slab-on-ground","Slab floor (infill)","Part suspended timber frame and slab on ground","Part suspended steel frame and slab on ground","Other"],c.floor)}</select>
           <input class="otherline" data-c="floorOther" placeholder="Type the other floor construction" value="${escv(c.floorOther)}" style="margin-top:8px;display:${c.floor==='Other'?'block':'none'}"></div>
       </div>
       <div class="grid2">
@@ -674,6 +674,45 @@ function buildConcBlock(){
   return b;
 }
 
+/* ---------- 8.2 Subterranean termite management proposal (mirrors RSA 7.2) ---------- */
+const STMP_RECS=[
+  "In addition to this Inspection Report, a written Subterranean Termite Management Proposal will be delivered to the Client.",
+  "In addition to this Inspection Report, a written Subterranean Termite Management Proposal is not recommended, but regular competent inspections are required – see 8.5 for further advice.",
+  "In addition to this Inspection Report, a written Subterranean Termite Management Proposal is highly recommended and available to the Client at their request."
+];
+function stmpState(){return STATE.customer.stmp||(STATE.customer.stmp={issued:null,updated:null,rec:""})}
+function stmpDone(){const s=stmpState();return s.issued==="no"?!!s.rec:(s.issued==="yes"?!!s.updated:false)}
+function stmpInner(){
+  const s=stmpState();
+  const yn=(key,val)=>`<button class="ynu-b ${val==='yes'?'yes':'no'} ${s[key]===val?'on':''}" type="button" data-stmpq="${key}" data-stmpv="${val}">${val==='yes'?'Yes':'No'}</button>`;
+  let cond="";
+  if(s.issued==="yes"){
+    cond=`<div class="subqlead">If there is any doubt about the accuracy of the previously issued proposal, or it is out of date, an updated proposal must be completed, signed and available before any treatment is undertaken.</div>
+      <div class="subq-q">Is an updated Subterranean Termite Management Proposal required?</div>
+      <div class="ynu">${yn('updated','yes')}${yn('updated','no')}</div>`;
+  }else if(s.issued==="no"){
+    cond=`<div class="subq-q">Recommendation for the report</div>
+      <select data-stmprec>${opts([""].concat(STMP_RECS),s.rec)}</select>`;
+  }
+  return `<div class="subq-q">Has a Subterranean Termite Management Proposal been previously issued and available for the property?</div>
+    <div class="ynu">${yn('issued','yes')}${yn('issued','no')}</div>
+    <div id="stmp-cond" style="margin-top:13px">${cond}</div>`;
+}
+function buildStmpBlock(){
+  const b=document.createElement("div");b.className="block open";b.id="b-8.2";
+  b.innerHTML=`<div class="block-h" data-toggle>
+      <span class="code">8.2</span><span class="name">Subterranean termite management proposal</span>
+      <span class="pill ${stmpDone()?'clear':'todo'}" id="pill-8.2">${stmpDone()?'Done':'To do'}</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b"><div class="subqs" id="stmp-body">${stmpInner()}</div></div>`;
+  return b;
+}
+function renderStmp(){
+  const body=document.getElementById("stmp-body");if(body)body.innerHTML=stmpInner();
+  const p=document.getElementById("pill-8.2");if(p){p.textContent=stmpDone()?'Done':'To do';p.className='pill '+(stmpDone()?'clear':'todo');}
+}
+
 function render(){
   main.innerHTML="";
   main.appendChild(buildQuickGrid());
@@ -681,7 +720,7 @@ function render(){
   main.appendChild(buildDetails());
   main.appendChild(buildScopeBlock());
   main.appendChild(buildAccessBlock());
-  ITEMS.forEach(it=>main.appendChild(buildSection(it,false)));
+  ITEMS.forEach(it=>{main.appendChild(buildSection(it,false));if(it.code==="8.1")main.appendChild(buildStmpBlock());});
   main.appendChild(buildConcBlock());
   EXTRAS.forEach(it=>main.appendChild(buildSection(it,true)));
   [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
@@ -799,6 +838,10 @@ main.addEventListener("click",e=>{
   if(acp){pickAddr(+acp.dataset.acpick);return}
   const hs=e.target.closest("[data-hstatus]");
   if(hs){setStatus(hs.closest(".block").id.slice(2),hs.dataset.hstatus,true);return}
+  const sm=e.target.closest("[data-stmpq]");
+  if(sm){const st=stmpState();const key=sm.dataset.stmpq;st[key]=sm.dataset.stmpv;
+    if(key==="issued"){if(st.issued==="yes")st.rec="";else st.updated=null;}
+    renderStmp();scheduleSave();return}
   const sq=e.target.closest("[data-subq]");
   if(sq){const blk=sq.closest(".block");const code=blk.id.slice(2);const idx=+sq.dataset.subq;const val=sq.dataset.subv;
     const s=sec(code);s.subq=s.subq||{};s.subq[idx]=val;
@@ -850,6 +893,7 @@ main.addEventListener("input",e=>{
     refreshPill(code);updateHeaderCount(code);scheduleSave();updateProgress()}
 });
 main.addEventListener("change",e=>{
+  if(e.target.matches("[data-stmprec]")){stmpState().rec=e.target.value;renderStmp();scheduleSave();return}
   if(e.target.matches("[data-sectone]")){const code=e.target.closest(".block").id.slice(2);sec(code).tone=e.target.value;scheduleSave();return}
   if(e.target.dataset.c!==undefined){STATE.customer[e.target.dataset.c]=e.target.value;
     if(e.target.tagName==="SELECT"){const key=e.target.dataset.c;const ol=e.target.parentElement.querySelector('[data-c="'+key+'Other"]');
@@ -1210,6 +1254,10 @@ function validateComplete(){
     if(!(s&&s.status)){miss.push({t:it.code+" "+it.title+" — not answered",go:it.code});return;}
     if((s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
   });
+  const stp=c.stmp||{};
+  if(!stp.issued)miss.push({t:"8.2 Subterranean termite management proposal — not answered",go:"8.2"});
+  else if(stp.issued==="yes"&&!stp.updated)miss.push({t:"8.2 — is an updated proposal required?",go:"8.2"});
+  else if(stp.issued==="no"&&!stp.rec)miss.push({t:"8.2 — choose the recommendation",go:"8.2"});
   if(!((c.areas||[]).length))miss.push({t:"Accessibility — areas inspected",go:"ACCESS"});
   if(!c.risk)miss.push({t:"Accessibility — undetected risk",go:"ACCESS"});
   if(!c.treatment)miss.push({t:"Conclusion — treatment required?",go:"CONC"});
