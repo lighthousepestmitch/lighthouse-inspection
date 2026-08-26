@@ -674,6 +674,24 @@ function buildConcBlock(){
   return b;
 }
 
+function buildAnnexBlock(){
+  const c=STATE.customer;const ax=c.annex||{note:"",photos:[]};
+  const b=document.createElement("div");b.className="block";b.id="b-ANNEX";
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">11</span><span class="name">Annexures</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      <div class="field"><label>Any annexures to add to the report?</label>${ynSeg("annexures",c.annexures)}</div>
+      <div class="field"><label class="notelabel"><span>What is being annexed? (if yes)</span>${MIC_BTN}</label>
+        <textarea data-annexnote placeholder="e.g. moisture meter readings, engineer's letter, extra photos">${escv(ax.note)}</textarea></div>
+      <div class="field"><label>Annexure photos / documents</label>
+        <div class="photos" id="annexph" style="margin-top:10px"></div></div>
+    </div>`;
+  return b;
+}
+
 /* ---------- 8.2 Subterranean termite management proposal (mirrors RSA 7.2) ---------- */
 const STMP_RECS=[
   "In addition to this Inspection Report, a written Subterranean Termite Management Proposal will be delivered to the Client.",
@@ -723,8 +741,9 @@ function render(){
   ITEMS.forEach(it=>{main.appendChild(buildSection(it,false));if(it.code==="8.1")main.appendChild(buildStmpBlock());});
   main.appendChild(buildConcBlock());
   EXTRAS.forEach(it=>main.appendChild(buildSection(it,true)));
+  main.appendChild(buildAnnexBlock());
   [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
-  renderReportPhotos();
+  renderReportPhotos();renderAnnex();
   buildJump();updateProgress();
 }
 
@@ -745,6 +764,7 @@ function photoBucket(code){
   if(code&&code.indexOf("SUBQ::")===0){const p=code.slice(6).split("::");const s=sec(p[0]);s.subqPhotos=s.subqPhotos||{};s.subqPhotos[+p[1]]=s.subqPhotos[+p[1]]||[];return s.subqPhotos[+p[1]];}
   if(code&&code.indexOf("OBS::")===0){const a=code.slice(5);const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};return o[a].photos;}
   if(code==="INACC"){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};return i.photos;}
+  if(code==="ANNEX"){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};return a.photos;}
   return sec(code).photos;
 }
 function renderSubqPhotos(code){
@@ -783,6 +803,15 @@ function renderInacc(){
 function syncYn(key){const seg=document.querySelector('[data-ynkey="'+key+'"]');if(!seg)return;const v=STATE.customer[key];seg.querySelectorAll(".yn").forEach(x=>x.classList.toggle("on",x.dataset.yn===v));}
 function updateAccessCount(){let n=0;const o=STATE.customer.obs||{};for(const a in o)n+=((o[a].photos||[]).length);n+=((STATE.customer.inacc&&STATE.customer.inacc.photos.length)||0);const el=document.getElementById("qgc-ACCESS");if(el){el.textContent=n;el.classList.toggle("on",n>0);}}
 function renderReportPhotos(){OBSAREAS.forEach(renderObsArea);renderInacc();updateAccessCount();}
+function anyObsContent(){const o=STATE.customer.obs||{};return OBSAREAS.some(a=>{const oo=o[a];return oo&&(((oo.note||"").trim())||((oo.photos||[]).length));});}
+function syncObstructions(){STATE.customer.obstructions=anyObsContent()?"Yes":"No";syncYn("obstructions");}
+function renderAnnex(){
+  const host=document.getElementById("annexph");if(!host)return;
+  const ax=STATE.customer.annex||{photos:[]};host.innerHTML="";
+  (ax.photos||[]).forEach((durl,i)=>{const d=document.createElement("div");d.className="thumb";
+    d.innerHTML=`<img src="${durl}"><button class="x" data-delannex="${i}">&times;</button>`;host.appendChild(d);});
+  const add=document.createElement("button");add.className="addphoto";add.dataset.annexphoto="1";add.innerHTML=CAM_SVG;host.appendChild(add);
+}
 
 function buildJump(){
   const j=document.getElementById("jump");j.innerHTML="";
@@ -863,15 +892,19 @@ main.addEventListener("click",e=>{
   if(obp){activePhotoCode="OBS::"+obp.dataset.obsphoto;document.getElementById("cameraInput").click();return}
   const inp=e.target.closest("[data-inaccphoto]");
   if(inp){activePhotoCode="INACC";document.getElementById("cameraInput").click();return}
+  const axp=e.target.closest("[data-annexphoto]");
+  if(axp){activePhotoCode="ANNEX";document.getElementById("cameraInput").click();return}
   const dsq=e.target.closest("[data-delsubq]");
   if(dsq){const p=dsq.dataset.delsubq.split("::");const s=sec(p[0]);
     if(s.subqPhotos&&s.subqPhotos[+p[1]])s.subqPhotos[+p[1]].splice(+p[2],1);
     renderSubqPhotos(p[0]);updateHeaderCount(p[0]);scheduleSave();return}
   const dob=e.target.closest("[data-delobs]");
   if(dob){const p=dob.dataset.delobs.split("|");const a=p[0];const o=STATE.customer.obs&&STATE.customer.obs[a];
-    if(o){o.photos.splice(+p[1],1);renderObsArea(a);updateAccessCount();scheduleSave();}return}
+    if(o){o.photos.splice(+p[1],1);renderObsArea(a);syncObstructions();updateAccessCount();scheduleSave();}return}
   const din=e.target.closest("[data-delinacc]");
   if(din){const inacc=STATE.customer.inacc;if(inacc){inacc.photos.splice(+din.dataset.delinacc,1);renderInacc();updateAccessCount();scheduleSave();}return}
+  const dax=e.target.closest("[data-delannex]");
+  if(dax){const ax=STATE.customer.annex;if(ax){ax.photos.splice(+dax.dataset.delannex,1);renderAnnex();scheduleSave();}return}
   const dp=e.target.closest("[data-delphoto]");
   if(dp){const code=dp.closest(".block").id.slice(2);const i=+dp.dataset.delphoto;
     sec(code).photos.splice(i,1);
@@ -885,8 +918,9 @@ main.addEventListener("input",e=>{
     const pd=document.getElementById("pill-DET");
     if(pd){pd.textContent=STATE.customer.address?"Filled":"To do";pd.className="pill "+(STATE.customer.address?"clear":"todo");}
     scheduleSave();return}
-  if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;scheduleSave();return}
+  if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;syncObstructions();scheduleSave();return}
   if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
+  if(e.target.matches("[data-annexnote]")){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};a.note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-subqnote]")){const code=e.target.closest(".block").id.slice(2);const idx=+e.target.dataset.subqnote;
     const s=sec(code);s.subqNotes=s.subqNotes||{};s.subqNotes[idx]=e.target.value;updateNeed(code);scheduleSave();return}
   if(e.target.matches("[data-note]")){const code=e.target.closest(".block").id.slice(2);sec(code).note=e.target.value;
@@ -983,8 +1017,9 @@ async function onFiles(e){
     toggleSubqFind(c,idx,"yes");
     renderSubqPhotos(c);setStatus(c,subStatus(c),false);updateHeaderCount(c);refreshPill(c);
   }
-  else if(code.indexOf("OBS::")===0){renderObsArea(code.slice(5));STATE.customer.obstructions="Yes";syncYn("obstructions");updateAccessCount();}
+  else if(code.indexOf("OBS::")===0){renderObsArea(code.slice(5));syncObstructions();updateAccessCount();}
   else if(code==="INACC"){renderInacc();STATE.customer.inaccessible="Yes";syncYn("inaccessible");updateAccessCount();}
+  else if(code==="ANNEX"){renderAnnex();STATE.customer.annexures="Yes";syncYn("annexures");}
   else{
     const it=ITEMS.find(x=>x.code===code&&!x.always);
     if(it&&!sec(code).status){
@@ -1230,6 +1265,7 @@ document.getElementById("newBtn").addEventListener("click",openNewJob);
 
 /* ---------- export ---------- */
 async function buildPacket(){
+  STATE.customer.obstructions=anyObsContent()?"Yes":"No";
   const out={meta:{app:"LPC Inspection Capture",type:"RSA Regular Visual Timber Pest Inspection",version:1},
     customer:STATE.customer,sections:[]};
   const list=[COVER].concat(ITEMS,EXTRAS);
