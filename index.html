@@ -1074,7 +1074,12 @@ function setDetailFieldValues(){
 }
 function applyAddr(d){
   const a=d.address||{};const c=STATE.customer;
-  const street=[a.house_number,a.road].filter(Boolean).join(" ");
+  // Keep any house/unit number already typed — OSM returns just the road for new-estate
+  // streets, which was wiping the number back off the address after picking a match.
+  const typed=(document.querySelector('[data-c="address"]')?.value||c.address||"").trim();
+  const typedNum=(typed.match(/^\s*(\d+[a-zA-Z]?(?:\s*[-/]\s*\d+[a-zA-Z]?)?)\b/)||[])[1]||"";
+  const hn=a.house_number||typedNum;
+  const street=[hn,a.road].filter(Boolean).join(" ");
   if(street)c.address=street; else if(d.display_name&&!(c.address||"").trim())c.address=d.display_name.split(",")[0];
   c.suburb=a.suburb||a.town||a.city||a.village||a.municipality||a.hamlet||a.county||c.suburb||"";
   c.state=STATE_ABBR[a.state]||a.state||c.state||"";
@@ -1353,5 +1358,4 @@ document.getElementById("finishBtn").addEventListener("click",()=>{
 })();
 </script>
 
-</body>
-</html>
+</body></html>
