@@ -674,6 +674,24 @@ function buildConcBlock(){
   return b;
 }
 
+function buildCommentsBlock(){
+  const c=STATE.customer;const cm=c.cmts||{note:"",photos:[]};
+  const b=document.createElement("div");b.className="block";b.id="b-CMT";
+  b.innerHTML=`
+    <div class="block-h" data-toggle>
+      <span class="code">10</span><span class="name">Comments</span>
+      <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+    </div>
+    <div class="block-b">
+      <div class="field"><label>Any comments to add to the report?</label>${ynSeg("comments",c.comments)}</div>
+      <div class="field"><label class="notelabel"><span>Comments (if yes)</span>${MIC_BTN}</label>
+        <textarea data-cmtnote placeholder="Any additional comments for the report">${escv(cm.note)}</textarea></div>
+      <div class="field"><label>Comment photos / documents</label>
+        <div class="photos" id="cmtph" style="margin-top:10px"></div></div>
+    </div>`;
+  return b;
+}
+
 function buildAnnexBlock(){
   const c=STATE.customer;const ax=c.annex||{note:"",photos:[]};
   const b=document.createElement("div");b.className="block";b.id="b-ANNEX";
@@ -741,9 +759,10 @@ function render(){
   ITEMS.forEach(it=>{main.appendChild(buildSection(it,false));if(it.code==="8.1")main.appendChild(buildStmpBlock());});
   main.appendChild(buildConcBlock());
   EXTRAS.forEach(it=>main.appendChild(buildSection(it,true)));
+  main.appendChild(buildCommentsBlock());
   main.appendChild(buildAnnexBlock());
   [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
-  renderReportPhotos();renderAnnex();
+  renderReportPhotos();renderComments();renderAnnex();
   buildJump();updateProgress();
 }
 
@@ -765,6 +784,7 @@ function photoBucket(code){
   if(code&&code.indexOf("OBS::")===0){const a=code.slice(5);const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};return o[a].photos;}
   if(code==="INACC"){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};return i.photos;}
   if(code==="ANNEX"){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};return a.photos;}
+  if(code==="CMT"){const a=STATE.customer.cmts=STATE.customer.cmts||{note:"",photos:[]};return a.photos;}
   return sec(code).photos;
 }
 function renderSubqPhotos(code){
@@ -805,6 +825,13 @@ function updateAccessCount(){let n=0;const o=STATE.customer.obs||{};for(const a 
 function renderReportPhotos(){OBSAREAS.forEach(renderObsArea);renderInacc();updateAccessCount();}
 function anyObsContent(){const o=STATE.customer.obs||{};return OBSAREAS.some(a=>{const oo=o[a];return oo&&(((oo.note||"").trim())||((oo.photos||[]).length));});}
 function syncObstructions(){STATE.customer.obstructions=anyObsContent()?"Yes":"No";syncYn("obstructions");}
+function renderComments(){
+  const host=document.getElementById("cmtph");if(!host)return;
+  const cm=STATE.customer.cmts||{photos:[]};host.innerHTML="";
+  (cm.photos||[]).forEach((durl,i)=>{const d=document.createElement("div");d.className="thumb";
+    d.innerHTML=`<img src="${durl}"><button class="x" data-delcmt="${i}">&times;</button>`;host.appendChild(d);});
+  const add=document.createElement("button");add.className="addphoto";add.dataset.cmtphoto="1";add.innerHTML=CAM_SVG;host.appendChild(add);
+}
 function renderAnnex(){
   const host=document.getElementById("annexph");if(!host)return;
   const ax=STATE.customer.annex||{photos:[]};host.innerHTML="";
@@ -894,6 +921,8 @@ main.addEventListener("click",e=>{
   if(inp){activePhotoCode="INACC";document.getElementById("cameraInput").click();return}
   const axp=e.target.closest("[data-annexphoto]");
   if(axp){activePhotoCode="ANNEX";document.getElementById("cameraInput").click();return}
+  const cmp=e.target.closest("[data-cmtphoto]");
+  if(cmp){activePhotoCode="CMT";document.getElementById("cameraInput").click();return}
   const dsq=e.target.closest("[data-delsubq]");
   if(dsq){const p=dsq.dataset.delsubq.split("::");const s=sec(p[0]);
     if(s.subqPhotos&&s.subqPhotos[+p[1]])s.subqPhotos[+p[1]].splice(+p[2],1);
@@ -905,6 +934,8 @@ main.addEventListener("click",e=>{
   if(din){const inacc=STATE.customer.inacc;if(inacc){inacc.photos.splice(+din.dataset.delinacc,1);renderInacc();updateAccessCount();scheduleSave();}return}
   const dax=e.target.closest("[data-delannex]");
   if(dax){const ax=STATE.customer.annex;if(ax){ax.photos.splice(+dax.dataset.delannex,1);renderAnnex();scheduleSave();}return}
+  const dcm=e.target.closest("[data-delcmt]");
+  if(dcm){const cm=STATE.customer.cmts;if(cm){cm.photos.splice(+dcm.dataset.delcmt,1);renderComments();scheduleSave();}return}
   const dp=e.target.closest("[data-delphoto]");
   if(dp){const code=dp.closest(".block").id.slice(2);const i=+dp.dataset.delphoto;
     sec(code).photos.splice(i,1);
@@ -921,6 +952,7 @@ main.addEventListener("input",e=>{
   if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;syncObstructions();scheduleSave();return}
   if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-annexnote]")){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};a.note=e.target.value;scheduleSave();return}
+  if(e.target.matches("[data-cmtnote]")){const a=STATE.customer.cmts=STATE.customer.cmts||{note:"",photos:[]};a.note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-subqnote]")){const code=e.target.closest(".block").id.slice(2);const idx=+e.target.dataset.subqnote;
     const s=sec(code);s.subqNotes=s.subqNotes||{};s.subqNotes[idx]=e.target.value;updateNeed(code);scheduleSave();return}
   if(e.target.matches("[data-note]")){const code=e.target.closest(".block").id.slice(2);sec(code).note=e.target.value;
@@ -1020,6 +1052,7 @@ async function onFiles(e){
   else if(code.indexOf("OBS::")===0){renderObsArea(code.slice(5));syncObstructions();updateAccessCount();}
   else if(code==="INACC"){renderInacc();STATE.customer.inaccessible="Yes";syncYn("inaccessible");updateAccessCount();}
   else if(code==="ANNEX"){renderAnnex();STATE.customer.annexures="Yes";syncYn("annexures");}
+  else if(code==="CMT"){renderComments();STATE.customer.comments="Yes";syncYn("comments");}
   else{
     const it=ITEMS.find(x=>x.code===code&&!x.always);
     if(it&&!sec(code).status){
