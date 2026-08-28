@@ -444,7 +444,10 @@ function buildDetails(){
       <div class="field"><label>Client email</label><input data-c="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${escv(c.email)}"></div>
       <div class="field"><label class="notelabel"><span>Property address — start typing to search</span>
         <button class="mic" type="button" data-locate><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-10a6 6 0 0 1 12 0c0 4.3-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Locate</button></label>
-        <input data-c="address" autocomplete="off" placeholder="e.g. 20 Windrow Ave — pick a match to auto-fill" value="${escv(c.address)}">
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <input data-c="streetno" autocomplete="off" inputmode="text" placeholder="No." style="flex:0 0 84px;min-width:0" value="${escv(c.streetno)}">
+          <input data-c="address" autocomplete="off" placeholder="Street — e.g. Windrow Ave, pick a match" style="flex:1 1 auto;min-width:0" value="${escv(c.address)}">
+        </div>
         <div class="aclist" id="aclist" hidden></div>
         <div class="fhint" style="display:${c.geo?'block':'none'}" id="geo-hint">${c.geo?`📍 Location captured (±${c.geo.acc}m)`:''}</div></div>
       <div class="grid2">
@@ -474,7 +477,7 @@ function buildDetails(){
           <select data-c="wall">${opts(["","Timber framed","Steel framed","Brick veneer","Brick veneer (timber framed)","Brick veneer (steel framed)","Full brick","Cavity brick","Concrete block","Earth wall","Other"],c.wall)}</select>
           <input class="otherline" data-c="wallOther" placeholder="Type the other wall construction" value="${escv(c.wallOther)}" style="margin-top:8px;display:${c.wall==='Other'?'block':'none'}"></div>
         <div class="field"><label>Roof construction</label>
-          <select data-c="roof">${opts(["","Timber framed - tiled","Timber framed - metal","Trussed - tiled","Trussed - metal","Metal / Colorbond","Other"],c.roof)}</select>
+          <select data-c="roof">${opts(["","Timber framed","Steel framed","Other"],c.roof)}</select>
           <input class="otherline" data-c="roofOther" placeholder="Type the other roof construction" value="${escv(c.roofOther)}" style="margin-top:8px;display:${c.roof==='Other'?'block':'none'}"></div>
       </div>
       <div class="field"><label class="notelabel"><span>Other timber building elements</span>
@@ -1084,7 +1087,7 @@ function getLocation(btn){
 
 /* ---------- compass (orientation) ---------- */
 function compassPoint(deg){
-  const dirs=["North","North-East","East","South-East","South","South-West","West","North-West"];
+  const dirs=["North","North East","East","South East","South","South West","West","North West"];
   return dirs[Math.round(((deg%360)/45))%8];
 }
 function getHeading(btn){
@@ -1135,20 +1138,17 @@ async function addrLookup(q){
 function setDetailFieldValues(){
   const c=STATE.customer;
   const set=(k,v)=>{const el=document.querySelector('[data-c="'+k+'"]');if(el)el.value=v||"";};
-  set("address",c.address);set("suburb",c.suburb);set("state",c.state);set("postcode",c.postcode);
+  set("streetno",c.streetno);set("address",c.address);set("suburb",c.suburb);set("state",c.state);set("postcode",c.postcode);
   const pd=document.getElementById("pill-DET");if(pd){pd.textContent=c.address?"Filled":"To do";pd.className="pill "+(c.address?"clear":"todo");}
   document.getElementById("hsub").textContent=c.address||"New regular termite inspection";
   const gh=document.getElementById("geo-hint");if(gh&&c.geo){gh.style.display="block";gh.textContent=`📍 Location captured (±${c.geo.acc||"?"}m)`;}
 }
 function applyAddr(d){
   const a=d.address||{};const c=STATE.customer;
-  // Keep any house/unit number already typed — OSM returns just the road for new-estate
-  // streets, which was wiping the number back off the address after picking a match.
-  const typed=(document.querySelector('[data-c="address"]')?.value||c.address||"").trim();
-  const typedNum=(typed.match(/^\s*(\d+[a-zA-Z]?(?:\s*[-/]\s*\d+[a-zA-Z]?)?)\b/)||[])[1]||"";
-  const hn=a.house_number||typedNum;
-  const street=[hn,a.road].filter(Boolean).join(" ");
-  if(street)c.address=street; else if(d.display_name&&!(c.address||"").trim())c.address=d.display_name.split(",")[0];
+  // House/unit number lives in its own field now, so autocomplete only ever fills the
+  // street name — it can never wipe the number the way the old merged field did.
+  if(a.house_number&&!(c.streetno||"").trim())c.streetno=a.house_number;
+  if(a.road)c.address=a.road; else if(d.display_name&&!(c.address||"").trim())c.address=d.display_name.split(",")[0];
   c.suburb=a.suburb||a.town||a.city||a.village||a.municipality||a.hamlet||a.county||c.suburb||"";
   c.state=STATE_ABBR[a.state]||a.state||c.state||"";
   c.postcode=a.postcode||c.postcode||"";
@@ -1299,8 +1299,13 @@ document.getElementById("newBtn").addEventListener("click",openNewJob);
 /* ---------- export ---------- */
 async function buildPacket(){
   STATE.customer.obstructions=anyObsContent()?"Yes":"No";
+  // Export a copy with number + street folded into address (keeps STATE clean so a
+  // re-export never doubles the number); streetno is also kept for reference.
+  const cust=Object.assign({},STATE.customer);
+  const _no=(cust.streetno||"").trim();
+  if(_no)cust.address=[_no,(cust.address||"").trim()].filter(Boolean).join(" ");
   const out={meta:{app:"LPC Inspection Capture",type:"RSA Regular Visual Timber Pest Inspection",version:1},
-    customer:STATE.customer,sections:[]};
+    customer:cust,sections:[]};
   const list=[COVER].concat(ITEMS,EXTRAS);
   for(const it of list){
     const s=STATE.sections[it.code];if(!s)continue;
