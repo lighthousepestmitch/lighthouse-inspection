@@ -316,7 +316,7 @@ const ITEMS = [
   {code:"8.6",title:"Chemical delignification"},
   {code:"8.7",title:"Fungal decay"},
   {code:"8.8",title:"Wood borers"},
-  {code:"8.9",title:"Subfloor ventilation"},
+  {code:"8.9",title:"Subfloor ventilation",ppTitle:"Lack of adequate subfloor ventilation"},
   {code:"8.10",title:"Excessive moisture"},
   {code:"8.11",title:"Bridging / breaching",
    subShort:["Bridge · ground level","Bridge · slab edge","Bridge · concealed","Bridge · breach/bridge"],
@@ -326,14 +326,25 @@ const ITEMS = [
     "Was the inspection zone or slab edge (where the slab edge is the inspection zone) concealed in any areas?",
     "Was evidence of breaching or bridging found?"
   ]},
-  {code:"8.12",title:"Untreated / non-durable timber"},
-  {code:"8.13",title:"Other conducive conditions"},
+  {code:"8.12",title:"Untreated / non-durable timber",ppTitle:"Untreated or non-durable timber used in a hazardous environment"},
+  {code:"8.13",title:"Other conducive conditions",ppTitle:"Other conditions conducive to timber pest attack"},
   {code:"8.14",title:"Major safety hazards"}
 ];
 // cover shots for the report cover (rendered first)
 const COVER = {code:"COVER",title:"Cover shots — front of property",ph:"Optional note for the cover photo(s). Take 1–2 front/street shots."};
 // extra capture sections that aren't clear/finding significant items — guided notes I slot into the right Mira fields
 const EXTRAS = [];
+
+// ---- report type (Regular vs Pre-Purchase) ----
+// Regular = RSA "Regular Visual Timber Pest Inspection Report" (AS3660).
+// Pre-purchase = RSA "Pre-Purchase Timber Pest Inspection Report" (AS4349.3, form v3.3).
+// The two share ~90% of fields; the switch only changes scope, the special-conditions field,
+// the risk options, and a few item labels. Section 5 "Results Summary" on the PP form is
+// auto-derived from the 8.x answers when the Mira report is built, so there's nothing extra to capture.
+const PP_SCOPE="Pre-Purchase Standard Timber Pest Inspection Report";
+function isPP(){return (STATE.customer&&STATE.customer.rtype)==="prepurchase";}
+function itemTitle(it){return isPP()&&it.ppTitle?it.ppTitle:it.title;}
+function subFallback(){return isPP()?"New pre-purchase inspection":"New regular termite inspection";}
 
 // shared mic ("Speak") button — dropped next to every free-text field except client contact fields
 const MIC_SVG='<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>';
@@ -370,7 +381,7 @@ function jobMeta(state){
   const c=state.customer||{};
   if(c.obs)Object.keys(c.obs).forEach(a=>photos+=(((c.obs[a]||{}).photos)||[]).length);
   if(c.inacc)photos+=((c.inacc.photos)||[]).length;
-  return {id:state.id,address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),updated:Date.now(),find,photos};
+  return {id:state.id,address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),rtype:c.rtype||"regular",updated:Date.now(),find,photos};
 }
 async function loadJobsIndex(){return (db?await dbGet("jobs"):null)||[];}
 async function saveJobsIndex(list){await dbSet("jobs",list);}
@@ -503,7 +514,7 @@ function buildSection(item,isExtra){
   b.innerHTML=`
     <div class="block-h" data-toggle>
       <span class="code">${isExtra?'':code}</span>
-      <span class="name">${escv(item.title)}</span>
+      <span class="name">${escv(itemTitle(item))}</span>
       ${!item.nophoto&&!hasSub?`<button class="hcam" type="button" data-quickphoto="${code}" aria-label="Take photo">
         <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>
         <span class="hcount" id="hcount-${code}"></span>
@@ -610,17 +621,34 @@ function obsBlock(a,c){
     <input class="obsnote" data-obsnote="${escv(a)}" placeholder="Finding for this obstructed area" value="${escv(o.note)}">
     <div class="photos" id="obsph-${slug(a)}"></div></div>`;
 }
+function buildTypeBlock(){
+  const pp=isPP();
+  const s=document.createElement("section");s.className="qgwrap";s.id="b-RTYPE";
+  s.innerHTML=`<div class="qgtitle">Inspection type</div>
+    <div class="ynseg" data-rtypeseg>
+      <button type="button" class="yn ${!pp?'on':''}" data-rtype="regular">Regular termite inspection</button>
+      <button type="button" class="yn ${pp?'on':''}" data-rtype="prepurchase">Pre-purchase (AS4349.3)</button>
+    </div>`;
+  return s;
+}
 function buildScopeBlock(){
   const c=STATE.customer;
+  const pp=isPP();
   const b=document.createElement("div");b.className="block";b.id="b-SCOPE2";
+  const scopeField=pp
+    ? `<div class="field"><label>Scope of work ordered</label>
+        <div style="padding:11px 12px;border:1px solid var(--edge);border-radius:10px;background:var(--sunk);font-size:.95rem;color:var(--muted)">${escv(PP_SCOPE)}</div></div>
+       <div class="field"><label class="notelabel"><span>Special conditions or instructions (if any)</span>${MIC_BTN}</label>
+        <textarea data-c="specialcond" placeholder="Any special conditions or instructions from the client — leave blank if there are none">${escv(c.specialcond)}</textarea></div>`
+    : `<div class="field"><label>Scope of work ordered</label>
+        <select data-c="scope">${opts(["Option 1: Standard Timber Pest Inspection","Option 2: Special-Purpose Inspection","Option 3: + Subterranean Termite Management Proposal"],c.scope||"Option 1: Standard Timber Pest Inspection")}</select></div>`;
   b.innerHTML=`
     <div class="block-h" data-toggle>
-      <span class="code">3-4</span><span class="name">Scope &amp; additional tests</span>
+      <span class="code">${pp?'2-4':'3-4'}</span><span class="name">Scope${pp?', conditions':''} &amp; additional tests</span>
       <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
     </div>
     <div class="block-b">
-      <div class="field"><label>Scope of work ordered</label>
-        <select data-c="scope">${opts(["Option 1: Standard Timber Pest Inspection","Option 2: Special-Purpose Inspection","Option 3: + Subterranean Termite Management Proposal"],c.scope||"Option 1: Standard Timber Pest Inspection")}</select></div>
+      ${scopeField}
       <div class="field"><label>Additional tests carried out?</label>${ynSeg("addtests",c.addtests)}</div>
       <div class="field"><label class="notelabel"><span>Additional tests — details (if yes)</span>${MIC_BTN}</label>
         <input data-c="addtestsnote" placeholder="e.g. moisture meter, thermal, borescope, tapping" value="${escv(c.addtestsnote)}"></div>
@@ -652,7 +680,7 @@ function buildAccessBlock(){
         <input data-inaccnote placeholder="e.g. subfloor — no access hatch" value="${escv(inacc.note)}">
         <div class="photos" id="inaccph" style="margin-top:10px"></div></div>
       <div class="field"><label>Undetected timber pest risk</label>
-        ${chipSel("chipkey","risk",["Low","Moderate","Moderate-High","High"],c.risk)}</div>
+        ${chipSel("chipkey","risk",isPP()?["Low","Moderate","Moderate-High","High","Extremely High"]:["Low","Moderate","Moderate-High","High"],c.risk)}</div>
       <div class="field"><label class="notelabel"><span>Additional comments</span>${MIC_BTN}</label>
         <textarea data-c="addcomments" placeholder="Any extra comments for the report">${escv(c.addcomments)}</textarea></div>
     </div>`;
@@ -754,6 +782,7 @@ function renderStmp(){
 
 function render(){
   main.innerHTML="";
+  main.appendChild(buildTypeBlock());
   main.appendChild(buildQuickGrid());
   main.appendChild(buildSection(COVER,true));
   main.appendChild(buildDetails());
@@ -869,6 +898,16 @@ function openTo(code){const b=document.getElementById("b-"+code);if(!b)return;
 
 /* ---------- events ---------- */
 main.addEventListener("click",e=>{
+  const rt=e.target.closest("[data-rtype]");
+  if(rt){const v=rt.dataset.rtype;
+    if(STATE.customer.rtype!==v){
+      STATE.customer.rtype=v;
+      if(v==="prepurchase"){STATE.customer.scope=PP_SCOPE;}
+      else if(STATE.customer.scope===PP_SCOPE){STATE.customer.scope="";}
+      render();document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
+      scheduleSave();toast(v==="prepurchase"?"Pre-purchase inspection":"Regular inspection");
+    }
+    return}
   const qp=e.target.closest("[data-quickphoto]");
   if(qp){activePhotoCode=qp.dataset.quickphoto;document.getElementById("cameraInput").click();return}
   const sqp=e.target.closest("[data-subqphoto]");
@@ -947,7 +986,7 @@ main.addEventListener("click",e=>{
 main.addEventListener("input",e=>{
   const c=e.target.dataset.c;
   if(c!==undefined){STATE.customer[c]=e.target.value;
-    if(c==="address"){document.getElementById("hsub").textContent=e.target.value||"New regular termite inspection";
+    if(c==="address"){document.getElementById("hsub").textContent=e.target.value||subFallback();
       clearTimeout(acT);acT=setTimeout(()=>addrLookup(e.target.value),400);}
     const pd=document.getElementById("pill-DET");
     if(pd){pd.textContent=STATE.customer.address?"Filled":"To do";pd.className="pill "+(STATE.customer.address?"clear":"todo");}
@@ -1140,7 +1179,7 @@ function setDetailFieldValues(){
   const set=(k,v)=>{const el=document.querySelector('[data-c="'+k+'"]');if(el)el.value=v||"";};
   set("streetno",c.streetno);set("address",c.address);set("suburb",c.suburb);set("state",c.state);set("postcode",c.postcode);
   const pd=document.getElementById("pill-DET");if(pd){pd.textContent=c.address?"Filled":"To do";pd.className="pill "+(c.address?"clear":"todo");}
-  document.getElementById("hsub").textContent=c.address||"New regular termite inspection";
+  document.getElementById("hsub").textContent=c.address||subFallback();
   const gh=document.getElementById("geo-hint");if(gh&&c.geo){gh.style.display="block";gh.textContent=`📍 Location captured (±${c.geo.acc||"?"}m)`;}
 }
 function applyAddr(d){
@@ -1244,7 +1283,7 @@ async function openNewJob(){
   STATE={id:genId(),customer:{date:todayStr()},sections:{}};
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
-  document.getElementById("hsub").textContent="New regular termite inspection";
+  document.getElementById("hsub").textContent=subFallback();
   toast("New job started — the old one is saved under Jobs");
 }
 async function switchJob(id){
@@ -1254,7 +1293,7 @@ async function switchJob(id){
   STATE=s;if(!STATE.customer.date)STATE.customer.date=todayStr();
   await dbSet("activeId",id);
   render();window.scrollTo(0,0);
-  document.getElementById("hsub").textContent=STATE.customer.address||"New regular termite inspection";
+  document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
   toast("Opened "+(STATE.customer.address||"job"));
 }
 async function deleteJob(id){
@@ -1263,7 +1302,7 @@ async function deleteJob(id){
   if(id===STATE.id){
     if(list.length){const s=await dbGet("job::"+list[0].id);STATE=s||{id:genId(),customer:{date:todayStr()},sections:{}};await dbSet("activeId",STATE.id);}
     else{STATE={id:genId(),customer:{date:todayStr()},sections:{}};await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
-    render();document.getElementById("hsub").textContent=STATE.customer.address||"New regular termite inspection";
+    render();document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
   }
   toast("Job deleted");
 }
@@ -1273,9 +1312,10 @@ async function openJobs(){
   const rows=list.map(j=>{
     const active=j.id===STATE.id;
     const title=(j.address||"(no address yet)")+(j.suburb?", "+j.suburb:"");
+    const typeTag=j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"";
     const meta=`${j.find} finding${j.find===1?'':'s'} · ${j.photos} photo${j.photos===1?'':'s'} · ${timeAgo(j.updated)}`;
     return `<div class="jobrow${active?' active':''}">
-      <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}${active?'<span class="nowtag">current</span>':''}</span><span class="jobmeta">${escv(meta)}</span></button>
+      <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}${typeTag}${active?'<span class="nowtag">current</span>':''}</span><span class="jobmeta">${escv(meta)}</span></button>
       <button class="jobdel" data-deljob="${escv(j.id)}" aria-label="Delete job">&times;</button></div>`;
   }).join("")||`<p style="font-size:.85rem">No saved jobs yet.</p>`;
   sheet.innerHTML=`<h3>Your jobs</h3>
@@ -1304,14 +1344,18 @@ async function buildPacket(){
   const cust=Object.assign({},STATE.customer);
   const _no=(cust.streetno||"").trim();
   if(_no)cust.address=[_no,(cust.address||"").trim()].filter(Boolean).join(" ");
-  const out={meta:{app:"LPC Inspection Capture",type:"RSA Regular Visual Timber Pest Inspection",version:1},
+  const pp=isPP();
+  if(pp)cust.scope=cust.scope||PP_SCOPE;
+  const out={meta:{app:"LPC Inspection Capture",
+      type:pp?"RSA Pre-Purchase Timber Pest Inspection":"RSA Regular Visual Timber Pest Inspection",
+      reportType:pp?"prepurchase":"regular",version:1},
     customer:cust,sections:[]};
   const list=[COVER].concat(ITEMS,EXTRAS);
   for(const it of list){
     const s=STATE.sections[it.code];if(!s)continue;
     const photos=(s.photos||[]).filter(Boolean);
     if(s.status||s.note||photos.length||s.subq||s.subqPhotos||s.subqNotes){
-      const rec={code:it.code,title:it.title,status:s.status||(ITEMS.some(x=>x.code===it.code)?"clear":"note"),note:s.note||"",tone:(s.tone&&s.tone!=="Use report tone")?s.tone:"",photos};
+      const rec={code:it.code,title:itemTitle(it),status:s.status||(ITEMS.some(x=>x.code===it.code)?"clear":"note"),note:s.note||"",tone:(s.tone&&s.tone!=="Use report tone")?s.tone:"",photos};
       if(it.subQs)rec.subq=it.subQs.map((q,i)=>({q,a:(s.subq&&s.subq[i])||null,note:(s.subqNotes&&s.subqNotes[i])||"",photos:((s.subqPhotos&&s.subqPhotos[i])||[]).filter(Boolean)}));
       out.sections.push(rec);
     }
@@ -1432,4 +1476,5 @@ document.getElementById("finishBtn").addEventListener("click",()=>{
 })();
 </script>
 
-</body></html>
+</body>
+</html>
