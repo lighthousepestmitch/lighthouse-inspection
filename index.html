@@ -1210,13 +1210,15 @@ const INFRAME=(()=>{try{return window.self!==window.top}catch(e){return true}})(
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let recog=null,recBtn=null;
 function stopRec(){if(recog){try{recog.stop()}catch(e){}}}
-function micField(btn){const box=btn.closest(".field, .obsrow");if(!box)return null;return box.querySelector("[data-note],[data-subqnote],[data-obsnote],[data-inaccnote],textarea[data-c],input[data-c]");}
+function micField(btn){const box=btn.closest(".field, .obsrow");if(!box)return null;return box.querySelector("[data-note],[data-subqnote],[data-obsnote],[data-inaccnote],[data-cmtnote],[data-annexnote],textarea[data-c],input[data-c]");}
 function commitField(el){
   if(!el)return;
   if(el.dataset.subqnote!==undefined){const code=el.closest(".block").id.slice(2);const idx=+el.dataset.subqnote;const s=sec(code);s.subqNotes=s.subqNotes||{};s.subqNotes[idx]=el.value;updateNeed(code);}
   else if(el.dataset.note!==undefined){const code=el.closest(".block").id.slice(2);sec(code).note=el.value;refreshPill(code);updateHeaderCount(code);updateProgress();}
   else if(el.dataset.obsnote!==undefined){const a=el.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=el.value;}
   else if(el.dataset.inaccnote!==undefined){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=el.value;}
+  else if(el.dataset.cmtnote!==undefined){const a=STATE.customer.cmts=STATE.customer.cmts||{note:"",photos:[]};a.note=el.value;}
+  else if(el.dataset.annexnote!==undefined){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};a.note=el.value;}
   else if(el.dataset.c!==undefined){STATE.customer[el.dataset.c]=el.value;}
   scheduleSave();
 }
