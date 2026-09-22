@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Job Book">
+<meta name="theme-color" content="#0E4F54">
+<title>Lighthouse Job Book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --surface2:#EDF0EC; --raise:0 1px 2px rgba(20,32,30,.06),0 4px 14px rgba(20,32,30,.05);
+  --ink:#14201E; --ink2:#4B5B57; --ink3:#7E8D88; --line:#DCE1DD; --line2:#C9D1CC;
+  --deep:#0E4F54; --deepInk:#FFFFFF; --accent:#B4701F;
+  --over:#A23C29; --overBg:#F8E8E3; --soon:#8C6314; --soonBg:#F8F0DC; --ok:#276B59; --okBg:#E2EFE9;
+  --focus:#0E4F54;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
+  --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D;
+  --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+  --focus:#57B3BA;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
+  --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D;
+  --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+  --focus:#57B3BA;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.wrap{max-width:880px;margin:0 auto;padding:0 14px}
+
+/* header */
+header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepInk);
+  padding:12px 0 0;box-shadow:var(--raise)}
+.brand{display:flex;align-items:baseline;gap:9px;padding-bottom:10px}
+.brand h1{font-size:19px;color:var(--deepInk);letter-spacing:-.01em}
+.brand .sub{font-size:11px;opacity:.72;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.16);
+  border-radius:10px 10px 0 0;overflow:hidden}
+.stat{background:var(--deep);padding:9px 10px 11px;text-align:left}
+.stat b{display:block;font-family:"Spline Sans Mono",monospace;font-size:21px;font-weight:600;
+  line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;opacity:.78;font-weight:600}
+.stat.hot b{color:#FFC9B8}
+
+/* tabs / nav */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
+  padding-bottom:env(safe-area-inset-bottom)}
+nav.bottom button{padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:10.5px;font-weight:600;color:var(--ink3);letter-spacing:.02em}
+nav.bottom button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;
+  stroke-linecap:round;stroke-linejoin:round}
+nav.bottom button[aria-current="true"]{color:var(--deep)}
+nav.bottom .badge{position:absolute;transform:translate(13px,-4px);background:var(--over);color:#fff;
+  font-size:9px;font-weight:700;padding:1px 4px;border-radius:7px;font-family:"Spline Sans Mono",monospace}
+
+/* chips */
+.chips{display:flex;gap:7px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:5px 11px;border-radius:999px;border:1px solid var(--line2);
+  background:var(--surface);font-size:12.5px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* section head */
+.sechead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;
+  margin:20px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sechead h2{font-size:16px}
+.sechead .n{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ink3);font-weight:500}
+
+/* rows */
+.row{display:flex;gap:0;align-items:stretch;background:var(--surface);border:1px solid var(--line);
+  border-radius:10px;margin-bottom:7px;overflow:hidden;box-shadow:var(--raise);width:100%;text-align:left}
+.row:hover{border-color:var(--line2)}
+.rowhit{flex:1;min-width:0;display:flex;gap:11px;align-items:stretch;text-align:left;
+  background:none;border:none;padding:0;font:inherit;color:inherit;cursor:pointer}
+.rowhit:hover .nm{color:var(--deep)}
+.stripe{flex:0 0 4px;background:var(--line2)}
+.row.over .stripe{background:var(--over)} .row.soon .stripe{background:var(--soon)}
+.row.ok .stripe{background:var(--ok)} .row.todo .stripe{background:var(--accent)}
+.row.fresh .stripe{background:var(--over)} .row.stale .stripe{background:var(--ink3)}
+.rowmain{flex:1;min-width:0;padding:10px 4px 10px 0;display:flex;gap:10px;align-items:center}
+.rowtext{flex:1;min-width:0}
+.rowtext .nm{font-weight:700;font-size:14.5px;letter-spacing:-.005em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowtext .pl{font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowtext .mt{font-size:11.5px;color:var(--ink3);margin-top:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{flex:0 0 auto;font-family:"Spline Sans Mono",monospace;font-size:11px;font-weight:600;
+  padding:3px 7px;border-radius:6px;background:var(--surface2);color:var(--ink2);white-space:nowrap}
+.pill.over{background:var(--overBg);color:var(--over)} .pill.soon{background:var(--soonBg);color:var(--soon)}
+.pill.ok{background:var(--okBg);color:var(--ok)} .pill.todo{background:var(--soonBg);color:var(--accent)}
+.pill.fresh{background:var(--overBg);color:var(--over)} .pill.stale{background:var(--surface2);color:var(--ink3)}
+.acts{flex:0 0 auto;display:flex;gap:5px;padding:0 9px 0 4px;align-items:center}
+@media(max-width:400px){.acts{gap:3px;padding:0 5px 0 2px}.iact{width:30px;height:30px}}
+.iact{width:34px;height:34px;border-radius:8px;border:1px solid var(--line2);background:var(--surface2);
+  display:grid;place-items:center;color:var(--ink2)}
+.iact svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.iact:hover{color:var(--deep);border-color:var(--deep)}
+.iact[disabled]{opacity:.32;cursor:default}
+
+.empty{text-align:center;padding:44px 20px;color:var(--ink3)}
+.empty h3{font-size:17px;color:var(--ink2);margin-bottom:5px}
+.note{background:var(--surface2);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:8px;padding:10px 12px;font-size:12.5px;color:var(--ink2);margin:12px 0}
+.note b{color:var(--ink)}
+
+/* search */
+.search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--ink);font-size:15px;margin-top:12px}
+.search::placeholder{color:var(--ink3)}
+
+/* calendar */
+.calhead{display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px}
+.calhead h2{font-size:17px}
+.calnav{display:flex;gap:6px}
+.calnav button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line2);
+  background:var(--surface);display:grid;place-items:center}
+.calnav svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dow{text-align:center;font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;
+  letter-spacing:.06em;padding-bottom:4px}
+.day{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:var(--surface);
+  padding:4px 3px 3px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px}
+.day.pad{background:transparent;border-color:transparent}
+.day .d{font-family:"Spline Sans Mono",monospace;font-size:12px;font-weight:600;color:var(--ink2)}
+.day.today{border-color:var(--deep);border-width:2px}
+.day.today .d{color:var(--deep)}
+.dots{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
+.dot{width:5px;height:5px;border-radius:50%}
+.dot.job{background:var(--deep)} .dot.due{background:var(--over)}
+.daylist{margin-top:16px}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink2);margin-top:10px;align-items:center}
+.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+
+/* sheet */
+.sheet{position:fixed;inset:0;z-index:60;background:rgba(10,20,18,.42);display:flex;
+  align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
+.sheet .panel{background:var(--bg);width:100%;max-width:880px;max-height:92vh;overflow-y:auto;
+  border-radius:16px 16px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.28)}
+@media(min-width:720px){.sheet{align-items:center}.sheet .panel{border-radius:16px;max-height:86vh}}
+.shhead{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);
+  padding:14px 16px 11px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:2}
+.shttl{flex:1;min-width:0}
+.shhead h2{font-size:19px;line-height:1.2}
+.shhead .sb{font-size:12.5px;color:var(--ink2);margin-top:2px}
+.x{width:32px;height:32px;border-radius:8px;background:var(--surface2);display:grid;place-items:center;flex:0 0 auto}
+.x svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.shbody{padding:14px 16px 26px}
+.kv{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv dt{flex:0 0 96px;color:var(--ink3);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding-top:1px}
+.kv dd{margin:0;flex:1;min-width:0;word-break:break-word}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.btn{flex:1;min-width:112px;padding:11px 12px;border-radius:10px;border:1px solid var(--line2);
+  background:var(--surface);font-weight:600;font-size:13.5px;display:flex;align-items:center;
+  justify-content:center;gap:7px}
+.btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.btn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.btn.warn{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn[disabled]{opacity:.4;cursor:default}
+.ivgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:7px;margin:10px 0}
+.iv{padding:9px 6px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);
+  font-size:12.5px;font-weight:600;text-align:center}
+.iv[aria-pressed="true"]{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.svc{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px}
+.svc .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:3px}
+.svc .top b{font-size:14px}
+.hist{font-size:12.5px;color:var(--ink2);border-left:2px solid var(--line2);padding:2px 0 2px 11px;margin-bottom:11px}
+.hist.warnrow{border-left-color:var(--soon);background:var(--soonBg);border-radius:0 8px 8px 0;padding:7px 10px 9px 11px}
+.quote{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;
+  margin:6px 0;font-size:13px;color:var(--ink);white-space:pre-wrap;line-height:1.5}
+.subj{font-weight:700;color:var(--ink);margin-top:3px}
+.reply{margin-top:8px;padding-left:10px;border-left:2px solid var(--ok)}
+.hist.inrow{border-left-color:var(--ok)}
+.hist.inrow .quote{background:var(--okBg);border-color:var(--ok)}
+.lbl2{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);
+  font-weight:700;margin:12px 0 6px}
+.daterow{display:flex;gap:8px;align-items:stretch}
+.daterow .inp{flex:1;min-width:0}
+.daterow .btn{flex:0 0 auto;min-width:0;padding:10px 14px}
+.sel{appearance:none;-webkit-appearance:none;background-image:
+  linear-gradient(45deg,transparent 50%,currentColor 50%),
+  linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;
+  background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  padding-right:34px;font-weight:600;cursor:pointer}
+a.iact{text-decoration:none}
+a.btn{text-decoration:none}
+.copybox{display:flex;gap:8px;align-items:center;background:var(--surface2);
+  border:1px solid var(--line2);border-radius:9px;padding:8px 8px 8px 12px;margin-bottom:8px}
+.copylink{color:var(--deep);text-decoration:underline;text-underline-offset:3px;
+  font-weight:600;font-size:16px!important;padding:3px 0;display:block}
+.copylink:hover{color:var(--accent)}
+.hint{font-size:11.5px;color:var(--ink3);margin:-4px 0 10px 2px}
+.bignum{font-family:"Spline Sans Mono",monospace;font-size:21px;font-weight:600;color:var(--ink);
+  letter-spacing:.01em;padding:10px 0 4px;-webkit-user-select:text;user-select:text;word-break:break-all}
+.copyval{flex:1;min-width:0;font-family:"Spline Sans Mono",monospace;font-size:13px;
+  color:var(--ink);word-break:break-word;white-space:pre-wrap;max-height:130px;overflow:auto;
+  -webkit-user-select:text;user-select:text}
+.copybox .btn{flex:0 0 auto;min-width:0;padding:8px 13px}
+.diag{font-family:"Spline Sans Mono",monospace;font-size:11.5px;color:var(--ink2);
+  background:var(--surface2);border:1px solid var(--line);border-radius:9px;
+  padding:10px 12px;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}
+.hist .hd{font-family:"Spline Sans Mono",monospace;font-size:11px;color:var(--ink3);font-weight:600}
+.msgbox{width:100%;min-height:118px;padding:11px;border-radius:10px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;resize:vertical}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;
+  margin:16px 0 7px}
+.inp{width:100%;padding:10px 11px;border-radius:9px;border:1px solid var(--line2);
+  background:var(--surface);color:var(--ink);font:inherit;font-size:14px}
+.banner{padding:11px 13px;border-radius:10px;font-size:13px;margin-bottom:12px;border:1px solid}
+.banner.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.banner.ok{background:var(--okBg);border-color:var(--ok);color:var(--ok)}
+.banner.bad{background:var(--overBg);border-color:var(--over);color:var(--over)}
+.spin{width:19px;height:19px;border:2px solid var(--line2);border-top-color:var(--deep);
+  border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.boot{display:grid;place-items:center;min-height:70vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand">
+      <h1>Job Book</h1><span class="sub">Lighthouse Pest</span>
+    </div>
+    <div class="stats">
+      <button class="stat hot" data-go="due" data-band="fresh"><b id="s-fresh">—</b><span>Ring today</span></button>
+      <button class="stat" data-go="due" data-band="over"><b id="s-over">—</b><span>Well overdue</span></button>
+      <button class="stat" data-go="todo"><b id="s-todo">—</b><span>Needs an interval</span></button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="boot"><div><span class="spin"></span></div><div>Opening your job book…</div></div>
+</main>
+
+<nav class="bottom" id="nav" hidden>
+  <button data-go="due" aria-current="true"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Due</button>
+  <button data-go="cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
+  <button data-go="clients"><svg viewBox="0 0 24 24"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17 11h4M19 9v4"/></svg>Clients</button>
+  <button data-go="sync"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Setup</button>
+</nav>
+<div id="sheet"></div>
+
+<script>
+(function(){
+"use strict";
+const BUILD="2026-09-23a";
+const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
+  if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DAY=864e5;
+const iso=d=>{const z=new Date(d); z.setMinutes(z.getMinutes()-z.getTimezoneOffset()); return z.toISOString().slice(0,10);};
+const TODAY=iso(new Date());
+const parse=s=>{const [y,m,d]=String(s).split("-").map(Number); return new Date(y,m-1,d);};
+const days=(a,b)=>Math.round((parse(b)-parse(a))/DAY);
+const AU=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const nice=s=>{if(!s)return "—";const d=parse(s);return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear();};
+const when=t=>{if(!t)return "—";const d=new Date(t);
+  return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear()+", "+
+    String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
+const SVG={phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
+ msg:'<path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 3.7 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+ cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ tick:'<path d="m5 13 4 4L19 7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ bell:'<path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/>',
+ note:'<path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/>',
+ l:'<path d="m15 6-6 6 6 6"/>', r:'<path d="m9 6 6 6-6 6"/>'};
+const ico=p=>`<svg viewBox="0 0 24 24">${p}</svg>`;
+
+/* everyday words for what you actually do */
+const PLAIN={"General Pest Treatment":"a cockroach, ant and spider treatment",
+ "Cockroach Treatment":"a cockroach treatment","Cockroach & Ant Treatment":"a cockroach and ant treatment",
+ "Ant Treatment":"an ant treatment","Spider Treatment":"a spider treatment",
+ "Termite Inspection":"a termite inspection","Pre-Purchase Inspection":"a pre-purchase inspection",
+ "Rodent Treatment":"the rodent baiting","Rodent Boxes (supply)":"the rodent bait boxes",
+ "Nemesis Renewal":"the Nemesis baiting renewal","Nemesis New":"the Nemesis baiting",
+ "Trelona Baiting":"the Trelona baiting","Barrier Follow-Up Inspection":"a termite barrier inspection",
+ "Post-Construction Barrier":"a termite barrier check","Pre-Construction Barrier":"a termite barrier check",
+ "Termite Treatment":"a termite treatment","Mosquito Treatment":"a mosquito treatment",
+ "Wasp/Bee Treatment":"a wasp and bee treatment","Flea Treatment":"a flea treatment",
+ "Bed Bug Treatment":"a bed bug treatment","Drain Fly Treatment":"a drain fly treatment",
+ "Clothes Moth Treatment":"a clothes moth treatment","Carpet Beetle Treatment":"a carpet beetle treatment",
+ "Lawn Grub Treatment":"a lawn grub treatment","Specialist Treatment":"a treatment",
+ "OC Site Assessment":"the site assessment"};
+const plain=s=>PLAIN[s]||("a "+String(s).toLowerCase());
+/* how intervals are named and how long they are */
+const INTERVAL_GROUPS=[
+ {label:"Weeks",  items:[{k:"2 weeks",m:0.5},{k:"4 weeks",m:1},{k:"6 weeks",m:1.5},{k:"8 weeks",m:2}]},
+ {label:"Months", items:[{k:"Quarterly",m:3},{k:"Biannual",m:6},{k:"9 months",m:9},{k:"Annual",m:12}]},
+ {label:"Years",  items:[{k:"2 years",m:24},{k:"3 years",m:36},{k:"4 years",m:48},{k:"5 years",m:60}]},
+ {label:"Neither",items:[{k:"One-off",m:null}]}];
+const INTERVALS=INTERVAL_GROUPS.reduce((a,g)=>a.concat(g.items),[]);
+const LEGACY={"3 months":"Quarterly","6 months":"Biannual","12 months":"Annual","1 year":"Annual",
+ "one-off":"One-off","1 month":"Quarterly","2 months":"Quarterly"};
+const normIv=v=>!v?null:(LEGACY[String(v).toLowerCase()]||LEGACY[v]||v);
+const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null;};
+function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
+
+const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
+  ov:{},bookings:{},replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
+
+/* ---------- storage ----------
+   Client list and job history are static files served with the page - they only change
+   when Claude refreshes them. Anything Mitch changes (intervals, dates, contact log,
+   bookings) lives in this device's own storage. */
+const STORE={
+  key:"lpc_jobbook_v1",
+  read(){ try{ return JSON.parse(localStorage.getItem(this.key)||"{}")||{}; }catch(e){ return {}; } },
+  write(o){ try{ localStorage.setItem(this.key,JSON.stringify(o)); return true; }
+            catch(e){ return false; } }
+};
+const DATA="jobbook-data/";
+async function loadAll(){
+  const g=async f=>{ try{ const r=await fetch(DATA+f+".json?v="+BUILD);
+      return r.ok?await r.json():null; }catch(e){ return null; } };
+  S.settings=await g("settings");
+  if(!S.settings){ boot("Couldn't load your clients",
+    "The data files didn't come down. Check you're online and pull to reload."); return; }
+  S.sync=await g("sync")||{lastSyncedDate:S.settings.seedDataEnds};
+  const m=Object.assign({clients:5,properties:3,jobs:4,due:3,replies:0},S.settings.manifest||{});
+  const want=[]; for(const k of ["clients","properties","jobs","due","replies"])
+    for(let i=0;i<m[k];i++) want.push([k,k+"_"+i]);
+  const got=await Promise.all(want.map(([,f])=>g(f)));
+  want.forEach(([k],i)=>{ const d=got[i]; if(!d)return;
+    if(k==="due") S.due=S.due.concat(d.rows||[]);
+    else if(k==="replies") Object.assign(S.replies,d.rows||{});
+    else Object.assign(S[k==="clients"?"clients":k==="properties"?"props":"jobs"],d.rows||{}); });
+  const mine=STORE.read();
+  S.ov=mine.ov||{}; S.bookings=mine.bookings||{};
+  S.ready=true; $("#nav").hidden=false; render();
+}
+function boot(h,p){ $("#main").innerHTML=`<div class="boot"><h2>${esc(h)}</h2><p>${esc(p)}</p></div>`; }
+
+/* every write goes through here: updates memory first so the screen is never a lie,
+   then persists. A failed write shouts instead of failing silently. */
+function persist(){
+  const ok=STORE.write({ov:S.ov,bookings:S.bookings,at:new Date().toISOString()});
+  if(!ok) toast("Couldn't save to this device. If you're in a private window, storage is turned off.",true);
+  return ok;
+}
+async function saveOv(pid,patch){
+  const before=JSON.parse(JSON.stringify(S.ov[pid]||{}));
+  S.ov[pid]=Object.assign({},S.ov[pid],patch);
+  render();
+  if(persist()) return true;
+  S.ov[pid]=before; render(); return false;
+}
+async function saveBookings(){ return persist(); }
+function toast(m,bad){ const t=el("div","banner "+(bad?"bad":"ok"),m);
+  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"84px",zIndex:99,
+    maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
+  document.body.appendChild(t); setTimeout(()=>t.remove(),4200); }
+
+/* ---------- model ---------- */
+function lines(){
+  const out=[];
+  for(const d of S.due){
+    const o=S.ov[d.p]||{}, so=(o.svc&&o.svc[d.s])||{};
+    if(so.skip) continue;
+    const interval=so.interval!==undefined?normIv(so.interval):normIv(d.iv);
+    const lastDone=so.lastDone||d.ld;
+    let nextDue;
+    if(so.nextDue!==undefined) nextDue=so.nextDue;                       // hand-picked date wins
+    else if(so.interval!==undefined) nextDue=lastDone&&monthsOf(interval)?addMonths(lastDone,monthsOf(interval)):null;
+    else nextDue=d.nd;
+    out.push({pid:d.p,svc:d.s,lastDone,interval,nextDue,src:d.src,manual:so.nextDue!==undefined});
+  }
+  return out;
+}
+const cOf=pid=>S.clients[(S.props[pid]||{}).c]||{n:"(unknown)",e:"",p:"",g:"active",a:["","","",""]};
+const pOf=pid=>S.props[pid]||{l:"",c:""};
+function band(l){ if(!l.nextDue) return "todo";
+  const n=days(TODAY,l.nextDue);
+  if(n<0){ const a=-n; return a>730?"stale":a>92?"over":"fresh"; }
+  return n<=30?"soon":"ok"; }
+function ago(l){ if(!l.nextDue) return "set it";
+  const n=days(TODAY,l.nextDue);
+  if(n<0){ const a=-n; return a>=365?Math.floor(a/365)+"y "+Math.floor(a%365/30)+"m":a>=60?Math.floor(a/30)+"m":a+"d"; }
+  if(n===0) return "today"; return n<=30?n+"d":nice(l.nextDue); }
+function firstName(n){
+  if(/\b(pty|ltd|strata|realty|construction|constructions|building|builders|group|holdings|retreats|hotel|resort|brewery|cafe|committee|council|services|plan|yha|management|properties|estate|bakery)\b/i.test(n)) return "there";
+  const a=String(n).split(/\s*&\s*/)[0].trim().split(/\s+/)[0];
+  return a&&a.length>1?a:"there";
+}
+const joinNat=a=>a.length===1?a[0]:a.slice(0,-1).join(", ")+" and "+a[a.length-1];
+function msgFor(l){
+  const c=cOf(l.pid);
+  const svcs=(l.svcs||[l.svc]).map(plain);
+  return `Hey ${firstName(c.n)}, hope you're going well! Just checking if you'd like me to book you in for `
+       + joinNat(svcs) + ` to keep on top of things. Let me know what suits. Cheers, Mitch`;
+}
+const isApple=/iPad|iPhone|iPod|Macintosh|Mac OS X/.test(navigator.userAgent);
+/* Apple Messages wants sms:NUMBER&body=..., everything else uses ? */
+const smsHref=(ph,body)=>"sms:"+String(ph).replace(/[^\d+]/g,"")+(isApple?"&":"?")+"body="+encodeURIComponent(body);
+const mailHref=(em,subj,body)=>"mailto:"+em+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
+/* This page runs in a sandbox with no allow-top-navigation, so location.href and a
+   plain <a> click are silently swallowed. allow-popups is granted, so window.open is
+   the only way out - and even that can be refused for sms:/tel:/mailto:. Every caller
+   must handle a false return by offering copy-and-paste instead. */
+function openExternal(href){
+  // window.open returns null BOTH when the sandbox blocks it and when the OS quietly
+  // hands the link to Messages/Mail. There is no way to tell those apart, so this
+  // never reports success - callers always offer copy-and-paste as well.
+  try{ window.open(href,"_blank","noopener"); }catch(e){}
+  try{ const a=document.createElement("a"); a.href=href; a.target="_blank"; a.rel="noopener";
+       document.body.appendChild(a); a.click(); a.remove(); }catch(e){}
+}
+async function copyText(t){
+  try{ await navigator.clipboard.writeText(t); return true; }catch(e){}
+  try{ const ta=document.createElement("textarea"); ta.value=t;
+       ta.style.position="fixed"; ta.style.opacity="0"; document.body.appendChild(ta);
+       ta.select(); const ok=document.execCommand("copy"); ta.remove(); return ok; }catch(e){}
+  return false;
+}
+/* One row: the value, a Copy button, and - when it's a number or address - the value
+   itself as a real tappable link carrying the message. If the sandbox lets the tap
+   through, Messages/Mail opens with the text already in it and there's nothing to paste.
+   If it doesn't, Copy is right there. Either way something works. */
+function copyRow(b,label,value,href,hint){
+  b.appendChild(el("div","lbl2",label));
+  const box=el("div","copybox");
+  if(href){
+    const a=document.createElement("a");
+    a.className="copyval copylink"; a.href=href; a.target="_blank"; a.rel="noopener";
+    a.textContent=value; box.appendChild(a);
+  } else box.appendChild(el("div","copyval",value));
+  const cb=el("button","btn"); cb.innerHTML=ico(SVG.tick)+"<span>Copy</span>";
+  cb.onclick=async()=>{ const ok=await copyText(value);
+    cb.querySelector("span").textContent=ok?"Copied":"Select it and copy";
+    setTimeout(()=>{cb.querySelector("span").textContent="Copy";},2500); };
+  box.appendChild(cb); b.appendChild(box);
+  if(hint) b.appendChild(el("div","hint",hint));
+}
+function copyFallback(b,label,value,extraLabel,extraValue,extraHref,extraHint){
+  copyRow(b,label,value,null);
+  if(extraValue) copyRow(b,extraLabel,extraValue,extraHref,extraHint);
+}
+/* contact log: newest first. status stays "drafted" until Mitch confirms he sent it. */
+async function logContact(pid,entry){
+  const o=S.ov[pid]||{}; const log=[entry].concat(o.log||[]).slice(0,40);
+  return saveOv(pid,{log});
+}
+async function setLogStatus(pid,id,st){
+  const o=S.ov[pid]||{}; const log=(o.log||[]).map(e=>e.id===id?Object.assign({},e,{st}):e);
+  return saveOv(pid,{log});
+}
+const uid=()=>"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const unconfirmed=()=>{const out=[];
+  for(const pid in S.ov) (S.ov[pid].log||[]).forEach(e=>{ if(e.st==="drafted") out.push({pid,e}); });
+  return out.sort((a,b)=>(b.e.t||"").localeCompare(a.e.t||""));};
+const reminders=()=>{const out=[];
+  for(const pid in S.ov){ const r=S.ov[pid].remind; if(r&&r.on) out.push({pid,r}); }
+  return out.sort((a,b)=>(a.r.on||"").localeCompare(b.r.on||""));};
+
+/* ---------- render ---------- */
+function render(){
+  if(!S.ready) return;
+  const L=lines(), b=L.reduce((a,l)=>{a[band(l)]=(a[band(l)]||0)+1;return a;},{});
+  $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-todo").textContent=b.todo||0;
+  document.querySelectorAll("#nav button").forEach(x=>
+    x.setAttribute("aria-current", String(x.dataset.go===S.view||(S.view==="todo"&&x.dataset.go==="due"))));
+  const m=$("#main"); m.innerHTML="";
+  try{
+    if(S.view==="due") viewDue(m,L);
+    else if(S.view==="todo") viewTodo(m,L);
+    else if(S.view==="cal") viewCal(m,L);
+    else if(S.view==="clients") viewClients(m);
+    else if(S.view==="sync") viewSync(m);
+  }catch(err){
+    reportErr("the "+S.view+" screen",err);
+    m.innerHTML="";
+    const w=el("div","banner bad","That screen hit a problem: "+esc(String(err&&err.message||err))
+      +". The other tabs still work.");
+    m.appendChild(w);
+    m.appendChild(btn("Try it again",null,"pri",()=>render()));
+  }
+}
+function groupLines(list){
+  const map=new Map();
+  list.forEach(l=>{ const k=l.pid+"|"+(l.nextDue||"none");
+    if(!map.has(k)) map.set(k,{pid:l.pid,nextDue:l.nextDue,lastDone:l.lastDone,
+                               interval:l.interval,manual:l.manual,svcs:[],lines:[]});
+    const g=map.get(k); g.svcs.push(l.svc); g.lines.push(l);
+    if(l.lastDone&&(!g.lastDone||l.lastDone>g.lastDone)) g.lastDone=l.lastDone; });
+  return [...map.values()];
+}
+/* These are anchors, not buttons, on purpose. The page is sandboxed without
+   allow-top-navigation, so JS asking to open Messages gets swallowed. A direct tap on a
+   real link is the one thing with a chance of getting through. The onclick still runs
+   (log it, open the panel) but never calls preventDefault, so the link fires too. */
+function actionLink(href,svgp,title,after,enabled){
+  if(!enabled){ const b=el("button","iact"); b.innerHTML=ico(svgp);
+    b.title=title; b.setAttribute("aria-label",title); b.disabled=true; return b; }
+  const a=document.createElement("a");
+  a.className="iact"; a.href=href; a.target="_blank"; a.rel="noopener";
+  a.innerHTML=ico(svgp); a.title=title; a.setAttribute("aria-label",title);
+  a.onclick=e=>{ e.stopPropagation(); try{ after(); }catch(err){ reportErr(title,err); } };
+  return a;
+}
+function actionBtns(l){
+  const c=cOf(l.pid), acts=el("div","acts");
+  const num=String(c.p||"").replace(/[^\d+]/g,"");
+  const mk=(href,svgp,title,after,on)=>{
+    if(!on){ const b=el("button","iact"); b.innerHTML=ico(svgp); b.title=title;
+      b.setAttribute("aria-label",title); b.disabled=true; return b; }
+    const a=document.createElement("a");
+    a.className="iact"; a.href=href; a.innerHTML=ico(svgp);
+    a.title=title; a.setAttribute("aria-label",title);
+    a.onclick=e=>{ e.stopPropagation(); try{ after(); }catch(err){ reportErr(title,err); } };
+    return a;
+  };
+  const msg=msgFor(l);
+  acts.appendChild(mk("tel:"+num,SVG.phone,"Ring "+c.n,()=>afterRing(l),!!c.p));
+  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,"Text "+c.n,()=>afterSend(l,"text",msg),!!c.p));
+  acts.appendChild(mk(mailHref(c.e,"Lighthouse Pest Control",msg),SVG.mail,"Email "+c.n,
+    ()=>afterSend(l,"email",msg),!!c.e));
+  return acts;
+}
+/* The link has already handed off to the Phone app. Come back to this. */
+function afterRing(l){
+  const c=cOf(l.pid);
+  setTimeout(()=>openSheet({title:"Called "+c.n,sub:c.p,build:b=>{
+    b.appendChild(el("div","note","When you're back, log how it went, or just close this."));
+    const row=el("div","btns");
+    row.appendChild(btn("Record the call",SVG.note,"pri",()=>replaceSheet(recordSpec(l,"call"))));
+    row.appendChild(btn("Nothing to log",null,"",()=>closeSheet(true)));
+    b.appendChild(row);
+  }}),700);
+}
+/* Messages/Mail is opening with the message already in it. Log it, ask if it went. */
+function afterSend(l,channel,msg){
+  const c=cOf(l.pid), to=channel==="email"?c.e:c.p;
+  const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
+               subject:channel==="email"?"Lighthouse Pest Control":"",
+               msg,svcs:(l.svcs||[l.svc]),st:"drafted"};
+  logContact(l.pid,entry);
+  setTimeout(()=>openSheet(confirmSpec(l.pid,entry)),700);
+}
+function rowFor(l,extra){
+  const c=cOf(l.pid), p=pOf(l.pid), bd=band(l), svcs=l.svcs||[l.svc];
+  const r=el("div","row "+bd);
+  const hit=el("button","rowhit");
+  hit.appendChild(el("div","stripe"));
+  const main=el("div","rowmain"), tx=el("div","rowtext");
+  tx.appendChild(el("div","nm",c.n));
+  tx.appendChild(el("div","pl",p.l||"(no address)"));
+  const bits=[svcs.join(" + ")];
+  if(l.lastDone) bits.push("last "+nice(l.lastDone));
+  if(l.interval) bits.push(l.interval.toLowerCase());
+  if(l.manual) bits.push("date set by you");
+  tx.appendChild(el("div","mt",bits.join(" · ")));
+  main.appendChild(tx);
+  main.appendChild(el("span","pill "+bd, extra||ago(l)));
+  hit.appendChild(main);
+  hit.onclick=()=>openProp(l.pid,svcs[0]);
+  r.appendChild(hit);
+  r.appendChild(actionBtns(l));
+  return r;
+}
+function section(host,title,n,rows,note){
+  const h=el("div","sechead"); h.appendChild(el("h2",null,title));
+  h.appendChild(el("span","n",n+(n===1?" job":" jobs"))); host.appendChild(h);
+  if(note) host.appendChild(el("div","note",note));
+  rows.forEach(r=>host.appendChild(r));
+}
+function viewDue(m,L){
+  const unc=unconfirmed(), rem=reminders().filter(x=>x.r.on<=TODAY);
+  if(unc.length){
+    const n=el("div","banner warn");
+    n.appendChild(el("div",null,unc.length+" message"+(unc.length===1?"":"s")+" you opened but haven't confirmed you sent."));
+    const b=el("button","btn"); b.style.marginTop="8px"; b.style.maxWidth="200px";
+    b.innerHTML=ico(SVG.tick)+"<span>Sort them out</span>"; b.onclick=()=>openUnconfirmed();
+    n.appendChild(b); m.appendChild(n);
+  }
+  if(rem.length){
+    const n=el("div","banner ok");
+    n.textContent=rem.length+" reminder"+(rem.length===1?"":"s")+" you set has come around.";
+    n.style.cursor="pointer"; n.onclick=()=>openReminders(); m.appendChild(n);
+  }
+  const chips=el("div","chips");
+  [["","Everything"],["fresh","Ring today"],["over","Well overdue"],["soon","Next 30 days"],
+   ["ok","Later"],["stale","Old barriers"]].forEach(([k,lab])=>{
+    const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.band===k));
+    c.onclick=()=>{S.band=k;render();}; chips.appendChild(c); });
+  const gc=el("button","chip","Lapsed clients too"); gc.setAttribute("aria-pressed",String(S.grp==="all"));
+  gc.onclick=()=>{S.grp=S.grp==="all"?"active":"all";render();}; chips.appendChild(gc);
+  m.appendChild(chips);
+  let list=L.filter(l=>band(l)!=="todo" && (S.band==="stale"||band(l)!=="stale"));
+  if(S.grp!=="all") list=list.filter(l=>{const g=cOf(l.pid).g; return g!=="lapsed"&&g!=="cold";});
+  const groups=[["fresh","Ready for a nudge",null],["over","Been a while",null],
+    ["soon","Coming up in the next 30 days",null],["ok","Further out",null],
+    ["stale","Barriers that never got followed up",null]];
+  let any=false;
+  for(const [k,title] of groups){
+    if(S.band&&S.band!==k) continue;
+    const g=groupLines(list.filter(l=>band(l)===k)); if(!g.length) continue;
+    any=true;
+    g.sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"));
+    const note=k==="fresh"?`Your invoices run to ${nice(S.settings.seedDataEnds)}. Ask Claude to refresh it and anything since then comes in.`
+      :k==="stale"?"Barriers from years back that never got a follow-up. A job on its own, not a daily chase. Most have no phone number."
+      :null;
+    section(m,title,g.length,g.slice(0,400).map(x=>rowFor(x)),note);
+    if(g.length>400) m.appendChild(el("div","note",`Showing the first 400 of ${g.length}. Use Clients to find someone.`));
+  }
+  if(!any){ const e=el("div","empty"); e.innerHTML="<h3>Nothing waiting</h3><p>Nobody to chase right now.</p>"; m.appendChild(e); }
+}
+function viewTodo(m,L){
+  const todo=L.filter(l=>band(l)==="todo");
+  m.appendChild(el("div","note","Nothing in your spreadsheet said how often these come back, so I haven't guessed. Tap one and pick."));
+  if(!todo.length){ const e=el("div","empty"); e.innerHTML="<h3>All sorted</h3><p>Every job has a repeat set.</p>"; m.appendChild(e); return; }
+  const g=groupLines(todo); g.sort((a,b)=>(b.lastDone||"").localeCompare(a.lastDone||""));
+  section(m,"Needs a repeat set",g.length,g.slice(0,400).map(x=>rowFor(x,"set it")));
+}
+
+/* ---------- sheets: a stack, so Back always works and nothing gets stuck ---------- */
+function openSheet(spec){ S.stack.push(spec); drawSheet(); }
+function closeSheet(all){ if(all) S.stack.length=0; else S.stack.pop(); drawSheet(); }
+function replaceSheet(spec){ S.stack.pop(); S.stack.push(spec); drawSheet(); }
+function drawSheet(){
+  const host=$("#sheet");
+  if(!S.stack.length){ host.innerHTML=""; document.body.style.overflow=""; return; }
+  const spec=S.stack[S.stack.length-1], back=S.stack.length>1;
+  host.innerHTML=`<div class="sheet"><div class="panel" role="dialog" aria-modal="true">
+    <div class="shhead">
+      ${back?`<button class="x" id="shback" aria-label="Back">${ico(SVG.l)}</button>`:""}
+      <div class="shttl"><h2>${esc(spec.title)}</h2><div class="sb">${esc(spec.sub||"")}</div></div>
+      <button class="x" id="shx" aria-label="Close">${ico(SVG.x)}</button>
+    </div><div class="shbody" id="shbody"></div></div></div>`;
+  document.body.style.overflow="hidden";
+  $("#shx").onclick=()=>closeSheet(true);
+  if(back) $("#shback").onclick=()=>closeSheet();
+  const sh=host.querySelector(".sheet");
+  sh.onclick=e=>{ if(e.target===sh) closeSheet(true); };
+  try{ spec.build($("#shbody")); }
+  catch(err){ $("#shbody").innerHTML=`<div class="banner bad">Something went wrong opening this. Close and try again.</div>`; }
+  $("#shbody").scrollTop=0;
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.stack.length) closeSheet(); });
+function kv(host,k,v){ const d=el("div","kv"); d.appendChild(el("dt",null,k)); d.appendChild(el("dd",null,v||"—")); host.appendChild(d); }
+function btn(label,svgp,cls,fn,enabled){
+  const b=el("button","btn"+(cls?" "+cls:""));
+  b.innerHTML=(svgp?ico(svgp):"")+"<span>"+esc(label)+"</span>";
+  if(enabled===false) b.disabled=true;
+  else b.onclick=async e=>{ try{ await fn(e); }catch(err){ reportErr(label,err); } };
+  return b;
+}
+let LASTERR=null;
+function reportErr(where,err){
+  LASTERR={where,msg:String(err&&err.message||err),t:new Date().toISOString()};
+  toast('"'+where+'" hit a snag: '+LASTERR.msg,true);
+}
+function ringUp(l){
+  const c=cOf(l.pid); if(!c.p){ toast("No phone number on file for this one.",true); return; }
+  const num=String(c.p).replace(/[^\d+]/g,"");
+  location.href="tel:"+num;
+  afterRing(l);
+}
+
+/* ---------- message composer with a real send confirmation ---------- */
+function openMsg(l,channel,firedWith){
+  const c=cOf(l.pid), p=pOf(l.pid);
+  const to=channel==="email"?c.e:c.p;
+  if(!to){ toast(channel==="email"?"No email on file for this one.":"No phone number on file for this one.",true); return; }
+  if(firedWith){
+    // the link has already fired - log it and go straight to "did that send?"
+    const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
+                 subject:channel==="email"?"Lighthouse Pest Control":"",
+                 msg:firedWith,svcs:(l.svcs||[l.svc]),st:"drafted"};
+    logContact(l.pid,entry);
+    openSheet(confirmSpec(l.pid,entry));
+    return;
+  }
+  openSheet({title:(channel==="email"?"Email ":"Text ")+c.n, sub:to, build:b=>{
+    b.appendChild(el("div","lbl","Message"));
+    const ta=el("textarea","msgbox"); ta.value=msgFor(l); b.appendChild(ta);
+    let subj=null;
+    if(channel==="email"){
+      b.appendChild(el("div","lbl","Subject"));
+      subj=el("input","inp"); subj.value="Lighthouse Pest Control"; b.appendChild(subj);
+    }
+    b.appendChild(el("div","note","Edit it however you like, then open it in "
+      +(channel==="email"?"Mail":"Messages")+". Nothing counts as sent until you say it went."));
+    const row=el("div","btns");
+    const hrefNow=()=>channel==="email"?mailHref(to,subj?subj.value:"",ta.value):smsHref(to,ta.value);
+    const go=document.createElement("a");
+    go.className="btn pri"; go.href=hrefNow();
+    go.innerHTML=ico(channel==="email"?SVG.mail:SVG.msg)
+      +"<span>Open in "+(channel==="email"?"Mail":"Messages")+"</span>";
+    go.onclick=()=>{                       // no preventDefault - the link must still fire
+      const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
+                   subject:subj?subj.value:"",msg:ta.value,svcs:(l.svcs||[l.svc]),st:"drafted"};
+      logContact(l.pid,entry);
+      setTimeout(()=>replaceSheet(confirmSpec(l.pid,entry)),700);
+    };
+    row.appendChild(go);
+    b.appendChild(row);
+    copyRow(b, channel==="email"?"Their email":"Their number", to, hrefNow(),
+      "Tap it to open "+(channel==="email"?"Mail":"Messages")+" with the message in it.");
+    const sync=()=>{ const h=hrefNow(); go.href=h;
+      const a=b.querySelector(".copylink"); if(a) a.href=h; };
+    ta.addEventListener("input",sync);
+    if(subj) subj.addEventListener("input",sync);
+  }});
+}
+function confirmSpec(pid,entry){
+  const c=cOf(pid);
+  const app=entry.ch==="email"?"Mail":"Messages";
+  return {title:"Did that send?",sub:c.n+" · "+(entry.ch==="email"?"email":"text"),build:b=>{
+    b.appendChild(el("div","note",app+" should have opened with the message in it. "
+      +"If it didn't, tap their "+(entry.ch==="email"?"address":"number")+" below."));
+    copyFallback(b,"Message",entry.msg,
+      entry.ch==="email"?"Their email":"Their number",entry.to,
+      entry.ch==="email"?mailHref(entry.to,entry.subject||"",entry.msg):smsHref(entry.to,entry.msg),
+      "Tap it to try "+app+" again.");
+    b.appendChild(el("div","note","I can't see inside "+app+", so you have to tell me. "
+      +"Until you do, this sits in the unconfirmed pile and doesn't count as contact."));
+    const q=el("div","quote",entry.msg); b.appendChild(q);
+    const row=el("div","btns");
+    row.appendChild(btn("Yes, I sent it",SVG.tick,"pri",async()=>{
+      closeSheet(true); await setLogStatus(pid,entry.id,"sent"); toast("Logged as sent."); }));
+    row.appendChild(btn("No, I didn't",SVG.x,"",async()=>{
+      closeSheet(true);
+      const o=S.ov[pid]||{}; await saveOv(pid,{log:(o.log||[]).filter(e=>e.id!==entry.id)});
+      toast("Dropped it."); }));
+    b.appendChild(row);
+    b.appendChild(btn("Decide later",null,"",()=>closeSheet(true)));
+  }};
+}
+function openUnconfirmed(){
+  openSheet({title:"Not confirmed sent",sub:"you opened these but didn't say if they went",build:b=>{
+    const list=unconfirmed();
+    if(!list.length){ b.appendChild(el("div","note","Nothing waiting.")); return; }
+    list.forEach(({pid,e})=>{
+      const c=cOf(pid), card=el("div","svc");
+      const top=el("div","top"); top.appendChild(el("b",null,c.n));
+      top.appendChild(el("span","pill soon",e.ch==="email"?"email":"text")); card.appendChild(top);
+      card.appendChild(el("div","mt",when(e.t)+" · to "+(e.to||"—")));
+      card.appendChild(el("div","quote",e.msg));
+      const row=el("div","btns");
+      row.appendChild(btn("It went",SVG.tick,"pri",async()=>{ await setLogStatus(pid,e.id,"sent"); drawSheet(); }));
+      row.appendChild(btn("It didn't",SVG.x,"",async()=>{
+        const o=S.ov[pid]||{}; await saveOv(pid,{log:(o.log||[]).filter(x=>x.id!==e.id)}); drawSheet(); }));
+      card.appendChild(row); b.appendChild(card);
+    });
+  }});
+}
+function recordSpec(l,ch){
+  const pid=l.pid||l, c=cOf(pid);
+  return {title:"Record contact",sub:c.n,build:b=>{
+    b.appendChild(el("div","note","Use this when you've already spoken to them, or texted from your phone, and just want it on the record."));
+    b.appendChild(el("div","lbl","How"));
+    const seg=el("div","ivgrid"); let how=ch||"call";
+    [["call","Phone call"],["text","Text"],["email","Email"],["inperson","In person"]].forEach(([k,lab])=>{
+      const x=el("button","iv",lab); x.setAttribute("aria-pressed",String(how===k));
+      x.onclick=()=>{ how=k; seg.querySelectorAll(".iv").forEach(y=>y.setAttribute("aria-pressed",String(y.textContent===lab))); };
+      seg.appendChild(x); });
+    b.appendChild(seg);
+    b.appendChild(el("div","lbl","What was said (optional)"));
+    const nt=el("textarea","msgbox"); nt.style.minHeight="86px"; b.appendChild(nt);
+    const row=el("div","btns");
+    row.appendChild(btn("Save it",SVG.tick,"pri",async()=>{
+      closeSheet(true);
+      await logContact(pid,{id:uid(),t:new Date().toISOString(),ch:how,msg:nt.value,st:"sent",manual:true});
+      toast("Put on the record."); }));
+    b.appendChild(row);
+  }};
+}
+function remindSpec(l){
+  const pid=l.pid||l, c=cOf(pid), cur=(S.ov[pid]||{}).remind||{};
+  return {title:"Remind me later",sub:c.n,build:b=>{
+    b.appendChild(el("div","note","This doesn't contact anyone. It just puts them back in front of you on the day you pick."));
+    b.appendChild(el("div","lbl","Bring them back up on"));
+    const d=el("input","inp"); d.type="date";
+    const soon=new Date(); soon.setDate(soon.getDate()+14);
+    d.value=cur.on||iso(soon); b.appendChild(d);
+    const quick=el("div","ivgrid");
+    [["In a week",7],["In 2 weeks",14],["In a month",30],["In 3 months",92]].forEach(([lab,n])=>{
+      const x=el("button","iv",lab); x.onclick=()=>{ const t=new Date(); t.setDate(t.getDate()+n); d.value=iso(t); };
+      quick.appendChild(x); });
+    b.appendChild(quick);
+    b.appendChild(el("div","lbl","Note to self (optional)"));
+    const nt=el("input","inp"); nt.value=cur.note||""; b.appendChild(nt);
+    const row=el("div","btns");
+    row.appendChild(btn("Set the reminder",SVG.bell,"pri",async()=>{
+      closeSheet(true); await saveOv(pid,{remind:{on:d.value,note:nt.value}}); toast("Reminder set for "+nice(d.value)+"."); }));
+    if(cur.on) row.appendChild(btn("Clear it",SVG.x,"",async()=>{
+      closeSheet(true); await saveOv(pid,{remind:null}); toast("Reminder cleared."); }));
+    b.appendChild(row);
+  }};
+}
+function openReminders(){
+  openSheet({title:"Reminders",sub:"ones you set yourself",build:b=>{
+    const list=reminders();
+    if(!list.length){ b.appendChild(el("div","note","You haven't set any.")); return; }
+    list.forEach(({pid,r})=>{
+      const c=cOf(pid), p=pOf(pid), card=el("div","svc");
+      const top=el("div","top"); top.appendChild(el("b",null,c.n));
+      top.appendChild(el("span","pill "+(r.on<=TODAY?"fresh":"ok"),nice(r.on))); card.appendChild(top);
+      card.appendChild(el("div","mt",(p.l||"")+(r.note?" · "+r.note:"")));
+      const row=el("div","btns");
+      row.appendChild(btn("Open",null,"pri",()=>{ closeSheet(true); openProp(pid); }));
+      row.appendChild(btn("Clear",SVG.x,"",async()=>{ await saveOv(pid,{remind:null}); drawSheet(); }));
+      card.appendChild(row); b.appendChild(card);
+    });
+  }});
+}
+
+/* ---------- property sheet ---------- */
+function myLine(pid,svc){
+  const all=lines().filter(l=>l.pid===pid);
+  if(!all.length) return {pid,svc:svc||"pest control",svcs:[svc||"pest control"],lastDone:null,interval:null,nextDue:null};
+  const seed=all.find(l=>l.svc===svc)||all[0];
+  const near=all.filter(l=>l.nextDue&&seed.nextDue?Math.abs(days(l.nextDue,seed.nextDue))<=30:l.nextDue===seed.nextDue);
+  const g=near.length?near:[seed];
+  return {pid,svc:seed.svc,svcs:g.map(l=>l.svc),lines:g,
+          lastDone:g.map(l=>l.lastDone).filter(Boolean).sort().pop()||seed.lastDone,
+          interval:seed.interval,nextDue:seed.nextDue};
+}
+function openProp(pid,focusSvc){
+  const c=cOf(pid), p=pOf(pid);
+  openSheet({title:c.n, sub:p.l||"(no address)", build:b=>{
+    if(!c.p&&!c.e) b.appendChild(el("div","banner warn","No phone or email on file. You'll need to dig up a number before you can reach them."));
+    const L=myLine(pid,focusSvc);
+    const acts=el("div","btns");
+    acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(L),!!c.p));
+    acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(L,"text"),!!c.p));
+    acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(L,"email"),!!c.e));
+    b.appendChild(acts);
+    const acts2=el("div","btns");
+    acts2.appendChild(btn("Record contact",SVG.note,"",()=>openSheet(recordSpec({pid}))));
+    acts2.appendChild(btn("Remind me later",SVG.bell,"",()=>openSheet(remindSpec({pid}))));
+    acts2.appendChild(btn("Book it in",SVG.cal,"",()=>openBook(pid,focusSvc)));
+    b.appendChild(acts2);
+
+    kv(b,"Phone",c.p||"—"); kv(b,"Email",c.e||"—");
+    kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||p.l||"—");
+    kv(b,"On the books",{active:"Active client",lapsed:"Haven't seen in a while",
+      barrier:"Barrier follow-up",cold:"Cold pre-purchase contact"}[c.g||"active"]);
+    const rem=(S.ov[pid]||{}).remind;
+    if(rem&&rem.on) kv(b,"Reminder",nice(rem.on)+(rem.note?" · "+rem.note:""));
+
+    b.appendChild(el("div","lbl","Repeat work here"));
+    const mine=lines().filter(l=>l.pid===pid);
+    if(!mine.length) b.appendChild(el("div","note","No repeat work recorded at this address."));
+    mine.forEach(l=>{
+      const card=el("div","svc");
+      const top=el("div","top"); top.appendChild(el("b",null,l.svc));
+      top.appendChild(el("span","pill "+band(l),l.nextDue?nice(l.nextDue):"not set")); card.appendChild(top);
+      card.appendChild(el("div","mt","Last done "+nice(l.lastDone)
+        +(l.interval?" · "+l.interval.toLowerCase():" · no repeat set")
+        +(l.manual?" · date you picked":"")));
+
+      card.appendChild(el("div","lbl2","How often it comes back"));
+      const sel=el("select","inp sel");
+      const ph=document.createElement("option");
+      ph.value=""; ph.textContent=l.interval?l.interval:"Pick one…"; sel.appendChild(ph);
+      INTERVAL_GROUPS.forEach(g=>{
+        const og=document.createElement("optgroup"); og.label=g.label;
+        g.items.forEach(o=>{ const op=document.createElement("option");
+          op.value=o.k; op.textContent=o.k;
+          if(l.interval===o.k) op.selected=true;
+          og.appendChild(op); });
+        sel.appendChild(og);
+      });
+      sel.onchange=async()=>{
+        const k=sel.value; if(!k) return;
+        const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
+        if(k==="One-off") svc[l.svc]={skip:true};
+        else { svc[l.svc]=Object.assign({},svc[l.svc],{interval:k,lastDone:l.lastDone});
+               delete svc[l.svc].nextDue; }   // a repeat takes over from a hand-picked date
+        closeSheet(true);
+        const ok=await saveOv(pid,{svc});
+        if(ok) toast(k==="One-off"?"Taken off the list.":l.svc+" set to "+k.toLowerCase()+".");
+      };
+      card.appendChild(sel);
+
+      card.appendChild(el("div","lbl2","Or pick the exact date"));
+      const dr=el("div","daterow");
+      const dp=el("input","inp"); dp.type="date"; dp.value=l.nextDue||"";
+      const set=btn("Set date",SVG.cal,"pri",async()=>{
+        if(!dp.value){ toast("Pick a date first.",true); return; }
+        const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
+        svc[l.svc]=Object.assign({},svc[l.svc],{nextDue:dp.value,lastDone:l.lastDone});
+        closeSheet(true);
+        const ok=await saveOv(pid,{svc});
+        if(ok) toast(l.svc+" set to "+nice(dp.value)+".");
+      });
+      dr.appendChild(dp); dr.appendChild(set); card.appendChild(dr);
+
+      const done=btn("Did this one today",SVG.tick,"",async()=>{
+        const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
+        const iv=l.interval&&monthsOf(l.interval)?l.interval:null;
+        svc[l.svc]=Object.assign({},svc[l.svc],{lastDone:TODAY,interval:iv||undefined});
+        delete svc[l.svc].nextDue;
+        closeSheet(true);
+        const ok=await saveOv(pid,{svc});
+        if(ok) toast(iv?("Next one "+nice(addMonths(TODAY,monthsOf(iv)))+"."):"Marked as done today.");
+      });
+      done.style.marginTop="10px"; card.appendChild(done);
+      b.appendChild(card);
+    });
+
+    contactHistory(b,p.c,pid);
+
+    b.appendChild(el("div","lbl","Job history"));
+    const js2=(S.jobs[pid]||[]);
+    if(!js2.length) b.appendChild(el("div","note","No invoices on record for this address."));
+    js2.slice(0,14).forEach(j=>{
+      const h=el("div","hist");
+      h.appendChild(el("div","hd",nice(j.d)+" · "+j.i+(j.t?" · $"+Math.round(Number(j.t)):"")));
+      h.appendChild(el("div",null,j.s.map(x=>x.s).join(", ")));
+      b.appendChild(h);
+    });
+    if(js2.length>14) b.appendChild(el("div","note",`${js2.length-14} older invoices not shown.`));
+  }});
+}
+/* one timeline: what you sent (from here) and what they sent you (off your Mac) */
+function contactHistory(b,clientId,pid){
+    const log=pid?((S.ov[pid]||{}).log||[]):[];
+    const inbound=(S.replies[clientId]||[]).map(r=>({inbound:true,t:r.t,ch:r.ch,msg:r.msg,subject:r.subject}));
+    const timeline=log.map(e=>Object.assign({},e)).concat(inbound)
+      .sort((a,b)=>String(b.t||"").localeCompare(String(a.t||"")));
+    b.appendChild(el("div","lbl","Contact history"));
+    if(inbound.length) b.appendChild(el("div","note",
+      inbound.length+" message"+(inbound.length===1?"":"s")+" they sent you, pulled off your Mac. "
+      +"Anything you send from here shows alongside."));
+    if(!timeline.length) b.appendChild(el("div","note","Nothing logged with this one yet."));
+    timeline.slice(0,16).forEach(e=>{
+      if(e.inbound){
+        const h=el("div","hist inrow");
+        h.appendChild(el("div","hd",when(e.t)+" · they "+(e.ch==="email"?"emailed":"texted")+" you"));
+        if(e.subject) h.appendChild(el("div","subj",e.subject));
+        if(e.msg) h.appendChild(el("div","quote",e.msg));
+        b.appendChild(h); return;
+      }
+      const h=el("div","hist"+(e.st==="drafted"?" warnrow":""));
+      const label={text:"Text",email:"Email",call:"Phone call",inperson:"In person",note:"Note"}[e.ch]||e.ch;
+      h.appendChild(el("div","hd",when(e.t)+" · "+label
+        +(e.st==="drafted"?" · NOT CONFIRMED SENT":e.st==="replied"?" · they replied":"")));
+      if(e.subject) h.appendChild(el("div","subj",e.subject));
+      if(e.msg) h.appendChild(el("div","quote",e.msg));
+      if(e.reply){ const r=el("div","reply");
+        r.appendChild(el("div","hd",when(e.reply.t)+" · their reply"));
+        r.appendChild(el("div","quote",e.reply.msg)); h.appendChild(r); }
+      if(e.st==="drafted"){
+        const row=el("div","btns");
+        row.appendChild(btn("It went",SVG.tick,"pri",async()=>{ await setLogStatus(pid,e.id,"sent"); drawSheet(); }));
+        row.appendChild(btn("It didn't",SVG.x,"",async()=>{
+          const o=S.ov[pid]||{}; await saveOv(pid,{log:(o.log||[]).filter(x=>x.id!==e.id)}); drawSheet(); }));
+        h.appendChild(row);
+      }
+      b.appendChild(h);
+    });
+    if(timeline.length>16) b.appendChild(el("div","note",(timeline.length-16)+" older ones not shown."));
+}
+function openClient(id){
+  const props=Object.keys(S.props).filter(p=>S.props[p].c===id);
+  if(props.length===1) return openProp(props[0]);
+  const c=S.clients[id];
+  openSheet({title:c.n, sub:props.length+" properties", build:b=>{
+    kv(b,"Phone",c.p||"—"); kv(b,"Email",c.e||"—");
+    kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||"—");
+    const acts=el("div","btns");
+    const seed=props.length?myLine(props[0]):{pid:null};
+    acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(seed),!!c.p&&!!props.length));
+    acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(seed,"text"),!!c.p&&!!props.length));
+    acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(seed,"email"),!!c.e&&!!props.length));
+    b.appendChild(acts);
+    b.appendChild(el("div","lbl","Properties"));
+    if(!props.length) b.appendChild(el("div","note","No properties on record."));
+    props.forEach(pid=>{
+      const p=S.props[pid], r=el("div","row ok"), hit=el("button","rowhit");
+      hit.appendChild(el("div","stripe"));
+      const main=el("div","rowmain"), tx=el("div","rowtext");
+      tx.appendChild(el("div","nm",p.l||"(no address)"));
+      tx.appendChild(el("div","mt",(p.n||0)+" job"+(p.n===1?"":"s")));
+      main.appendChild(tx); hit.appendChild(main);
+      hit.onclick=()=>openProp(pid);
+      r.appendChild(hit); b.appendChild(r);
+    });
+    contactHistory(b,id,null);
+  }});
+}
+function openBook(pid,svc){
+  const c=cOf(pid), p=pOf(pid);
+  openSheet({title:"Book in "+c.n, sub:p.l||"", build:b=>{
+    b.appendChild(el("div","lbl","When"));
+    const dt=el("input","inp"); dt.type="datetime-local";
+    const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
+    dt.value=iso(d)+"T09:00"; b.appendChild(dt);
+    b.appendChild(el("div","lbl","What"));
+    const what=el("input","inp"); what.value=svc||"General Pest Treatment"; b.appendChild(what);
+    b.appendChild(el("div","lbl","Notes"));
+    const nt=el("textarea","msgbox"); nt.style.minHeight="72px";
+    nt.value=[c.p,(c.a||[]).filter(Boolean).join(", ")].filter(Boolean).join("\n"); b.appendChild(nt);
+    const row=el("div","btns");
+    row.appendChild(btn("Save booking",SVG.cal,"pri",async()=>{
+      if(!dt.value){ toast("Pick a date and time first.",true); return; }
+      const id="b"+Date.now().toString(36);
+      S.bookings[id]={id,pid,clientId:p.c,svc:what.value,start:dt.value,notes:nt.value,
+                      summary:c.n+" · "+what.value+(p.l?" · "+p.l:"")};
+      const d2=new Date(dt.value);
+      closeSheet(true); S.view="cal";
+      S.cal=isNaN(d2.getTime())?new Date():d2;
+      S.calDay=isNaN(d2.getTime())?null:iso(d2);
+      render();
+      const ok=await saveBookings();
+      if(ok) toast("Booked in"+(isNaN(d2.getTime())?"":" for "+nice(dt.value.slice(0,10)))+".");
+    }));
+    b.appendChild(row);
+    b.appendChild(el("div","note","Saves here and shows on the calendar. It does not go into Google Calendar."));
+  }});
+}
+
+/* ---------- clients ---------- */
+function viewClients(m){
+  const s=el("input","search"); s.type="search"; s.placeholder="Search name, address, phone or email";
+  s.value=S.q; s.oninput=()=>{S.q=s.value; renderClientList();}; m.appendChild(s);
+  const chips=el("div","chips");
+  [["active","Active"],["lapsed","Haven't seen in a while"],["barrier","Barriers"],
+   ["cold","Cold list"],["*","Everyone"]].forEach(([k,lab])=>{
+    const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.grp===k));
+    c.onclick=()=>{S.grp=k; render();}; chips.appendChild(c); });
+  m.appendChild(chips);
+  const host=el("div"); host.id="clist"; m.appendChild(host); renderClientList();
+}
+function renderClientList(){
+  const host=$("#clist"); if(!host) return;
+  const q=S.q.trim().toLowerCase();
+  let ids=Object.keys(S.clients);
+  if(S.grp!=="*") ids=ids.filter(i=>(S.clients[i].g||"active")===S.grp);
+  if(q) ids=ids.filter(i=>{const c=S.clients[i];
+    return (c.n+" "+(c.e||"")+" "+(c.p||"")+" "+((c.a||[]).join(" "))).toLowerCase().includes(q);});
+  ids.sort((a,b)=>S.clients[a].n.localeCompare(S.clients[b].n));
+  host.innerHTML="";
+  const h=el("div","sechead"); h.appendChild(el("h2",null,"Clients"));
+  h.appendChild(el("span","n",ids.length+(ids.length===1?" person":" people"))); host.appendChild(h);
+  if(!ids.length){ const e=el("div","empty"); e.innerHTML="<h3>Nobody found</h3><p>Try a different search.</p>"; host.appendChild(e); return; }
+  ids.slice(0,300).forEach(id=>{
+    const c=S.clients[id], pid=Object.keys(S.props).find(p=>S.props[p].c===id);
+    const r=el("div","row ok"), hit=el("button","rowhit");
+    hit.appendChild(el("div","stripe"));
+    const main=el("div","rowmain"), tx=el("div","rowtext");
+    tx.appendChild(el("div","nm",c.n));
+    tx.appendChild(el("div","pl",(c.a&&c.a[0])?c.a.filter(Boolean).slice(0,2).join(", "):(c.e||"(no address)")));
+    const bits=[]; if(c.ic) bits.push(c.ic+" invoice"+(c.ic===1?"":"s"));
+    if(c.lt) bits.push(c.lt); if(c.ls) bits.push("last "+nice(c.ls));
+    if(!c.p&&!c.e) bits.push("no phone or email on file");
+    tx.appendChild(el("div","mt",bits.join(" · ")||"—"));
+    main.appendChild(tx);
+    main.appendChild(el("span","pill",{active:"Active",lapsed:"Lapsed",barrier:"Barrier",cold:"Cold"}[c.g||"active"]));
+    hit.appendChild(main); hit.onclick=()=>openClient(id);
+    r.appendChild(hit);
+    if(pid) r.appendChild(actionBtns(myLine(pid)));
+    host.appendChild(r);
+  });
+  if(ids.length>300) host.appendChild(el("div","note",`Showing 300 of ${ids.length}. Narrow it with the search box.`));
+}
+
+/* ---------- calendar ---------- */
+function viewCal(m,L){
+  let cur=S.cal;
+  if(!(cur instanceof Date)||isNaN(cur.getTime())){ cur=new Date(); S.cal=cur; }
+  const y=cur.getFullYear(), mo=cur.getMonth();
+  const head=el("div","calhead");
+  head.appendChild(el("h2",null,cur.toLocaleDateString("en-AU",{month:"long",year:"numeric"})));
+  const nav=el("div","calnav");
+  const mk=(svgp,title,fn)=>{const b=el("button"); b.innerHTML=ico(svgp); b.title=title;
+    b.setAttribute("aria-label",title); b.onclick=fn; return b;};
+  nav.appendChild(mk(SVG.l,"Previous month",()=>{S.cal=new Date(y,mo-1,1);render();}));
+  nav.appendChild(mk(SVG.cal,"Back to today",()=>{S.cal=new Date();render();}));
+  nav.appendChild(mk(SVG.r,"Next month",()=>{S.cal=new Date(y,mo+1,1);render();}));
+  head.appendChild(nav); m.appendChild(head);
+  const first=new Date(y,mo,1), last=new Date(y,mo+1,0), tag=iso(first).slice(0,7);
+  const dueBy={}, jobBy={};
+  L.forEach(l=>{ if(l.nextDue&&l.nextDue.slice(0,7)===tag) (dueBy[l.nextDue]=dueBy[l.nextDue]||[]).push(l); });
+  Object.values(S.bookings).forEach(bk=>{ const d=(bk.start||"").slice(0,10);
+    if(d.slice(0,7)===tag) (jobBy[d]=jobBy[d]||[]).push(bk); });
+  const g=el("div","grid");
+  ["M","T","W","T","F","S","S"].forEach(d=>g.appendChild(el("div","dow",d)));
+  const lead=(first.getDay()+6)%7;
+  for(let i=0;i<lead;i++) g.appendChild(el("div","day pad"));
+  for(let d=1;d<=last.getDate();d++){
+    const ds=iso(new Date(y,mo,d));
+    const cell=el("button","day"+(ds===TODAY?" today":""));
+    cell.appendChild(el("div","d",String(d)));
+    const dots=el("div","dots");
+    (jobBy[ds]||[]).slice(0,4).forEach(()=>dots.appendChild(el("i","dot job")));
+    (dueBy[ds]||[]).slice(0,4).forEach(()=>dots.appendChild(el("i","dot due")));
+    cell.appendChild(dots);
+    cell.onclick=()=>showDay(ds,dueBy[ds]||[],jobBy[ds]||[]);
+    g.appendChild(cell);
+  }
+  m.appendChild(g);
+  const lg=el("div","legend");
+  lg.innerHTML=`<span><i class="dot job"></i>Booked in</span><span><i class="dot due"></i>Coming due</span>`;
+  m.appendChild(lg);
+  m.appendChild(el("div","note","What's coming due, plus anything you book in here. Your Google Calendar is deliberately left out."));
+  const host=el("div","daylist"); host.id="dayhost"; m.appendChild(host);
+  const focus=(S.calDay&&S.calDay.slice(0,7)===tag)?S.calDay
+             :(tag===TODAY.slice(0,7)?TODAY:iso(first));
+  S.calDay=null;
+  showDay(focus,dueBy[focus]||[],jobBy[focus]||[]);
+}
+function showDay(ds,due,jobs){
+  const host=$("#dayhost"); if(!host) return;
+  host.innerHTML="";
+  const h=el("div","sechead"); h.appendChild(el("h2",null,nice(ds)));
+  h.appendChild(el("span","n",(due.length+jobs.length)+" on")); host.appendChild(h);
+  if(!due.length&&!jobs.length){ host.appendChild(el("div","empty","Nothing on this day.")); return; }
+  jobs.forEach(j=>{
+    const r=el("div","row ok"), hit=el("button","rowhit");
+    hit.appendChild(el("div","stripe"));
+    const main=el("div","rowmain"), tx=el("div","rowtext");
+    tx.appendChild(el("div","nm",j.summary||"Job"));
+    if(j.notes) tx.appendChild(el("div","pl",String(j.notes).split("\n")[0]));
+    tx.appendChild(el("div","mt","Booked in"));
+    main.appendChild(tx);
+    main.appendChild(el("span","pill ok",(j.start||"").slice(11,16)||"—"));
+    hit.appendChild(main); if(j.pid) hit.onclick=()=>openProp(j.pid);
+    r.appendChild(hit); host.appendChild(r);
+  });
+  groupLines(due).forEach(x=>host.appendChild(rowFor(x)));
+}
+/* ---------- sync from Xero ---------- */
+const NON_SERVICE={"B":1,"":1};
+const CODE={CAS:"General Pest Treatment",CRI:"Cockroach Treatment",CA:"Cockroach & Ant Treatment",
+ ANT:"Ant Treatment",A:"Ant Treatment",ANTEXT:"Ant Treatment",SPE:"Spider Treatment",
+ TI:"Termite Inspection","TI - New Build":"Termite Inspection","TIC/MITE":"Termite Inspection",
+ PPI:"Pre-Purchase Inspection",PI:"Pre-Purchase Inspection",RD:"Rodent Treatment",RDINS:"Rodent Treatment",
+ RDBOX:"Rodent Boxes (supply)",PC:"Pre-Construction Barrier",PCTB:"Post-Construction Barrier",
+ HGB:"Pre-Construction Barrier",HGDPC:"Pre-Construction Barrier",GZ:"Pre-Construction Barrier",
+ NEWRNEW:"Nemesis Renewal","Nemisis New":"Nemesis New",TRELBAIT:"Trelona Baiting",TRELBASE:"Trelona Baiting",
+ TRELMNT:"Trelona Baiting",TRELSTAT:"Trelona Baiting","TERM-NEST":"Termite Treatment",
+ MOS:"Mosquito Treatment",WASP:"Wasp/Bee Treatment",BEE:"Wasp/Bee Treatment",FL:"Flea Treatment",
+ BB:"Bed Bug Treatment",BBI:"Bed Bug Treatment",DF:"Drain Fly Treatment",Fly:"Drain Fly Treatment",
+ CM:"Clothes Moth Treatment",CO:"Carpet Beetle Treatment",LG:"Lawn Grub Treatment",TT:"Termite Treatment",
+ Dust:"Termite Treatment","Termite foaming":"Termite Treatment",TDF:"Termite Treatment",
+ OCINSP:"OC Site Assessment"};
+const RECUR={"General Pest Treatment":1,"Cockroach Treatment":1,"Cockroach & Ant Treatment":1,
+ "Ant Treatment":1,"Spider Treatment":1,"Termite Inspection":1,"Rodent Treatment":1,
+ "Pre-Construction Barrier":1,"Post-Construction Barrier":1,"Nemesis Renewal":1,"Nemesis New":1,"Trelona Baiting":1};
+const ANNUAL={"Nemesis Renewal":1,"Nemesis New":1,"Trelona Baiting":1};
+const slug=s=>String(s||"").normalize("NFKD").replace(/[̀-ͯ]/g,"")
+  .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
+const SUB=/\b(byron bay|ballina|lennox head|bangalow|brunswick heads|mullumbimby|ocean shores|alstonville|suffolk park|ewingsdale|possum creek|tumbulgam|skinners shoot|nsw|australia)\b/g;
+function pkeyOf(a){
+  let s=String(a||"").toLowerCase()
+    .replace(/\d{1,2}[/-]\d{1,2}[/-]\d{2,4}.*$/," ").replace(/\(.*?\)/g," ")
+    .replace(SUB," ")
+    .replace(/\b(street|st|road|rd|drive|dr|avenue|ave|lane|ln|crescent|cres|court|ct|place|pl|way|parade|pde|close|cl|terrace|tce|highway|hwy)\b/g," ")
+    .replace(/[^a-z0-9/ ]/g," ").replace(/\s+/g," ").trim();
+  const m=s.match(/^([0-9]+[a-z]?(?:\/[0-9]+[a-z]?)?)\s+(.*)$/);
+  let k;
+  if(m){ const w=(m[2]||"").split(" ")[0].replace(/[^a-z]/g,""); k=m[1].replace(/ /g,"")+(w?w.slice(0,5):""); }
+  else k=s.split(" ").filter(Boolean).slice(0,2).map(x=>x.slice(0,5)).join("")||"main";
+  return k.replace(/[^A-Za-z0-9_\-.~:@+]/g,"-");
+}
+const addrFrom=d=>{const m=/\b(?:re|ref)\b[:.\s]+(.{3,80})/i.exec(d||""); if(!m)return null;
+  const a=m[1].split(/\n|\s+\(/)[0].trim().replace(/^[.\-\s]+|[.\-\s]+$/g,"");
+  return a.length>=4&&/[A-Za-z]/.test(a)?a:null;};
+
+function viewSync(m){
+  const last=(S.sync&&S.sync.lastSyncedDate)||S.settings.seedDataEnds;
+  m.appendChild(el("div","sechead")).appendChild(el("h2",null,"Keeping it current"));
+  m.appendChild(el("div","note","Your client list and job history come from your Xero invoices, "
+    +"up to "+nice(last)+". This page can't reach Xero on its own, so ask Claude to refresh it "
+    +"and it'll pull in everything you've invoiced since."));
+  const box=el("div","copybox");
+  box.appendChild(el("div","copyval","refresh my job book from Xero"));
+  const cb=el("button","btn"); cb.innerHTML=ico(SVG.tick)+"<span>Copy</span>";
+  cb.onclick=async()=>{ const ok=await copyText("refresh my job book from Xero");
+    cb.querySelector("span").textContent=ok?"Copied":"Select it and copy";
+    setTimeout(()=>{cb.querySelector("span").textContent="Copy";},2500); };
+  box.appendChild(cb); m.appendChild(box);
+  m.appendChild(el("div","hint","Say that to Claude and it updates the whole thing."));
+
+  m.appendChild(el("div","lbl","Your changes on this device"));
+  const mine=STORE.read();
+  const nOv=Object.keys(mine.ov||{}).length, nBk=Object.keys(mine.bookings||{}).length;
+  m.appendChild(el("div","note",nOv||nBk
+    ? nOv+" propert"+(nOv===1?"y":"ies")+" changed and "+nBk+" booking"+(nBk===1?"":"s")
+      +", saved on this device. Back it up if you want it on your other one."
+    : "Nothing changed on this device yet. Anything you set gets saved here."));
+  const row=el("div","btns");
+  row.appendChild(btn("Back up my changes",SVG.note,"",()=>{
+    const blob=new Blob([JSON.stringify(STORE.read(),null,1)],{type:"application/json"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+    a.download="jobbook-backup-"+TODAY+".json"; document.body.appendChild(a); a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+  }));
+  const imp=el("input"); imp.type="file"; imp.accept="application/json"; imp.hidden=true;
+  imp.onchange=async()=>{ const f=imp.files&&imp.files[0]; if(!f) return;
+    try{ const o=JSON.parse(await f.text());
+      S.ov=o.ov||{}; S.bookings=o.bookings||{}; persist(); render();
+      toast("Brought your changes across."); }
+    catch(e){ toast("That file didn't read properly.",true); } };
+  row.appendChild(btn("Restore a backup",null,"",()=>imp.click()));
+  m.appendChild(row); m.appendChild(imp);
+
+  m.appendChild(el("div","lbl","If something's not working"));
+  const dbtn=el("button","btn"); dbtn.style.maxWidth="200px";
+  dbtn.innerHTML=ico(SVG.note)+"<span>Run a check</span>";
+  const dout=el("div"); dout.id="diagout";
+  dbtn.onclick=async()=>{
+    dout.innerHTML=""; const L=[];
+    L.push("build "+BUILD);
+    L.push("data: "+Object.keys(S.clients).length+" clients, "+Object.keys(S.props).length
+      +" properties, "+S.due.length+" due rows, "+Object.keys(S.replies).length+" with replies");
+    L.push("saving to this device: "+(STORE.write(STORE.read())?"works":"BLOCKED"));
+    L.push("clipboard: "+((navigator.clipboard&&navigator.clipboard.writeText)?"available":"not available"));
+    L.push("last error: "+(LASTERR?LASTERR.where+" - "+LASTERR.msg:"none"));
+    const box=el("div","diag",L.join("\n")); dout.appendChild(box);
+    const cb2=el("button","btn"); cb2.style.maxWidth="180px"; cb2.style.marginTop="8px";
+    cb2.innerHTML=ico(SVG.tick)+"<span>Copy this</span>";
+    cb2.onclick=async()=>{ const ok=await copyText(L.join("\n"));
+      cb2.querySelector("span").textContent=ok?"Copied":"Select it and copy"; };
+    dout.appendChild(cb2);
+  };
+  m.appendChild(dbtn); m.appendChild(dout);
+}
+
+/* ---------- wiring ---------- */
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-go]"); if(!b) return;
+  S.stack.length=0; drawSheet();
+  S.view=b.dataset.go;
+  if(b.dataset.band!==undefined) S.band=b.dataset.band;
+  else if(b.dataset.go==="due") S.band="";
+  window.scrollTo(0,0); render();
+});
+window.addEventListener("error",ev=>{ try{ toast("Something glitched: "+(ev.message||"unknown"),true); }catch(_){} });
+loadAll().catch(()=>boot("Something went wrong","Reload the page and it should come good."));
+})();
+</script>
+
+</body>
+</html>
