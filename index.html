@@ -189,6 +189,9 @@
   .obsnote:focus{border-color:var(--timber)}
   .qgbtn.access{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
   .qgbtn.access .qglabel{color:var(--timber);font-weight:700}
+  .qgbtn.compass{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
+  .qgbtn.compass .qglabel{color:var(--timber);font-weight:700}
+  .qgbtn.compass.rec{opacity:.6}
   .pickwrap{display:flex;flex-direction:column;gap:8px;max-height:56vh;overflow:auto;margin:6px 0 16px}
   .pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:13px 14px;
     border:1.5px solid var(--edge);border-radius:11px;background:var(--paper);color:var(--ink);font-size:.95rem;font-weight:600;cursor:pointer}
@@ -257,8 +260,6 @@
 </style>
 </head>
 <body>
-
-
 <header>
   <div class="wrap">
     <div class="hrow">
@@ -408,19 +409,37 @@ function scheduleSave(){
 }
 
 /* ---------- photo handling: shrink on capture ---------- */
-function shrink(file,max=1600,q=0.72){return new Promise((res)=>{
-  const img=new Image();const url=URL.createObjectURL(file);
-  img.onload=()=>{
-    let{width:w,height:h}=img;
+async function shrink(file,max=1600,q=0.72){
+  // createImageBitmap with imageOrientation:'from-image' bakes in the photo's
+  // EXIF rotation before we ever touch pixels - the old new Image()+canvas
+  // path below draws raw sensor pixels and ignores EXIF, so portrait phone
+  // photos could come out rotated 90°/upside-down in the saved data-URL even
+  // though they looked right in the camera preview. Supported on iOS Safari
+  // 15+; falls back to the old method (still no rotation fix) if it throws.
+  try{
+    const bmp=await createImageBitmap(file,{imageOrientation:"from-image"});
+    let w=bmp.width,h=bmp.height;
     if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s)}
     const c=document.createElement("canvas");c.width=w;c.height=h;
-    c.getContext("2d").drawImage(img,0,0,w,h);
-    URL.revokeObjectURL(url);
-    res(c.toDataURL("image/jpeg",q));   // store as data-URL string (iOS-safe)
-  };
-  img.onerror=()=>{URL.revokeObjectURL(url);res(null)};
-  img.src=url;
-});}
+    c.getContext("2d").drawImage(bmp,0,0,w,h);
+    bmp.close();
+    return c.toDataURL("image/jpeg",q);
+  }catch(e){
+    return new Promise((res)=>{
+      const img=new Image();const url=URL.createObjectURL(file);
+      img.onload=()=>{
+        let{width:w,height:h}=img;
+        if(Math.max(w,h)>max){const s=max/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s)}
+        const c=document.createElement("canvas");c.width=w;c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        URL.revokeObjectURL(url);
+        res(c.toDataURL("image/jpeg",q));
+      };
+      img.onerror=()=>{URL.revokeObjectURL(url);res(null)};
+      img.src=url;
+    });
+  }
+}
 
 /* ---------- rendering ---------- */
 const main=document.getElementById("main");
@@ -494,9 +513,10 @@ function buildDetails(){
       <div class="field"><label class="notelabel"><span>Other timber building elements</span>
         <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
         <input data-c="othertimber" placeholder="e.g. timber verandas, decking, flooring" value="${escv(c.othertimber)}"></div>
-      <div class="field"><label class="notelabel"><span>Orientation</span>
-        <button class="mic" type="button" data-compass><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg>Compass</button></label>
-        <input data-c="orientation" placeholder="The façade faces the street" value="${escv(c.orientation)}"></div>
+      <div class="field"><label>Occupancy status</label>
+        <select data-c="occupancy">${opts(["","Occupied and fully furnished","Occupied and partly furnished","Occupied and unfurnished","Unoccupied but fully furnished","Unoccupied but partly furnished","Unoccupied and unfurnished","Other"],c.occupancy)}</select>
+        <input class="otherline" data-c="occupancyOther" placeholder="Type the other occupancy status" value="${escv(c.occupancyOther)}" style="margin-top:8px;display:${c.occupancy==='Other'?'block':'none'}"></div>
+      <!-- Orientation/Compass moved up to the Cover shots section, right where the front-of-property photos are taken -->
     </div>`;
   return b;
 }
@@ -531,6 +551,9 @@ function buildSection(item,isExtra){
       <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
     </div>
     <div class="block-b">
+      ${code==="COVER"?`<div class="field"><label class="notelabel"><span>Orientation</span>
+        <button class="mic" type="button" data-compass><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg>Compass</button></label>
+        <input data-c="orientation" placeholder="The façade faces the street" value="${escv(STATE.customer.orientation)}"></div>`:''}
       ${hasSub?`<div class="subqs">
         <div class="subqlead">Answer each — a <b>photo</b> on a question auto-answers it <b>Yes</b>. Photos are kept separate per question.</div>
         ${item.subQs.map((q,i)=>{const a=(s.subq||{})[i];return `<div class="subq">
@@ -579,6 +602,15 @@ function buildQuickGrid(){
   s.innerHTML=`<div class="qgtitle">Quick photos — tap to shoot any section</div><div class="quickgrid" id="quickgrid"></div>`;
   const g=s.querySelector("#quickgrid");
   const CAMPATH=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>`;
+  // Orientation/compass up front with the quick photos - captured standing
+  // at the property the same moment as the cover shots, not buried later
+  // in Section A. Reuses the same data-compass handler as the field inside
+  // Cover shots (getHeading() now looks the orientation input up by
+  // attribute rather than via this button's ancestry, so either trigger
+  // updates the same underlying value).
+  const cb=document.createElement("button");cb.className="qgbtn compass";cb.type="button";cb.dataset.compass="1";
+  cb.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z"/></svg><span class="qglabel">Orientation</span><span class="qgcount" id="qgc-ORIENT"></span>`;
+  g.appendChild(cb);
   [COVER].concat(ITEMS.filter(it=>!it.nophoto),EXTRAS).forEach(it=>{
     if(it.subQs){
       it.subQs.forEach((q,i)=>{
@@ -794,7 +826,7 @@ function render(){
   main.appendChild(buildCommentsBlock());
   main.appendChild(buildAnnexBlock());
   [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
-  renderReportPhotos();renderComments();renderAnnex();
+  renderReportPhotos();renderComments();renderAnnex();updateOrientBadge();
   buildJump();updateProgress();
 }
 
@@ -1129,6 +1161,16 @@ function compassPoint(deg){
   const dirs=["North","North East","East","South East","South","South West","West","North West"];
   return dirs[Math.round(((deg%360)/45))%8];
 }
+function compassAbbr(deg){
+  const dirs=["N","NE","E","SE","S","SW","W","NW"];
+  return dirs[Math.round(((deg%360)/45))%8];
+}
+function updateOrientBadge(){
+  const el=document.getElementById("qgc-ORIENT");if(!el)return;
+  const hd=STATE.customer.heading;
+  if(hd==null){el.textContent="";el.classList.remove("on");return;}
+  el.textContent=compassAbbr(hd);el.classList.add("on");
+}
 function getHeading(btn){
   const read=()=>{
     btn.classList.add("rec");toast("Point the phone the way the front faces…");
@@ -1138,9 +1180,10 @@ function getHeading(btn){
       if(hd==null||done)return;
       done=true;window.removeEventListener("deviceorientation",handler,true);
       const pt=compassPoint(hd);
-      const inp=btn.closest(".field").querySelector('[data-c="orientation"]');
+      const inp=document.querySelector('[data-c="orientation"]');
       inp.value=`The façade faces ${pt}`;
       STATE.customer.orientation=inp.value;STATE.customer.heading=Math.round(hd);
+      updateOrientBadge();
       btn.classList.remove("rec");scheduleSave();toast(`Façade faces ${pt} (${Math.round(hd)}°)`);
     };
     window.addEventListener("deviceorientation",handler,true);
