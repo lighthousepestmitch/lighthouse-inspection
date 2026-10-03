@@ -60,7 +60,7 @@ header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepI
 
 /* tabs / nav */
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
-  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
   padding-bottom:env(safe-area-inset-bottom)}
 nav.bottom button{padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10.5px;font-weight:600;color:var(--ink3);letter-spacing:.02em}
@@ -260,6 +260,7 @@ a.btn{text-decoration:none}
   <button data-go="due" aria-current="true"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Due</button>
   <button data-go="cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
   <button data-go="clients"><svg viewBox="0 0 24 24"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17 11h4M19 9v4"/></svg>Clients</button>
+  <button data-go="reviews"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>Reviews</button>
   <button data-go="sync"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Setup</button>
 </nav>
 <div id="sheet"></div>
@@ -267,7 +268,7 @@ a.btn{text-decoration:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-09-23a";
+const BUILD="2026-10-04a";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -285,7 +286,9 @@ const SVG={phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 12l5 2v4a2 2 0 
  msg:'<path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 3.7 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/>',
  mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
  cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
- tick:'<path d="m5 13 4 4L19 7"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
+ tick:'<path d="m5 13 4 4L19 7"/>',
+ star:'<path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/>',
+ bin:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>', x:'<path d="M6 6l12 12M18 6L6 18"/>',
  bell:'<path d="M18 9a6 6 0 1 0-12 0c0 6-2 7-2 7h16s-2-1-2-7"/><path d="M10.5 20a2 2 0 0 0 3 0"/>',
  note:'<path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5M8 13h8M8 17h5"/>',
  l:'<path d="m15 6-6 6 6 6"/>', r:'<path d="m9 6 6 6-6 6"/>'};
@@ -321,7 +324,7 @@ const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
 const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
-  ov:{},bookings:{},replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
+  ov:{},bookings:{},gone:{},reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
 
 /* ---------- storage ----------
    Client list and job history are static files served with the page - they only change
@@ -350,7 +353,7 @@ async function loadAll(){
     else if(k==="replies") Object.assign(S.replies,d.rows||{});
     else Object.assign(S[k==="clients"?"clients":k==="properties"?"props":"jobs"],d.rows||{}); });
   const mine=STORE.read();
-  S.ov=mine.ov||{}; S.bookings=mine.bookings||{};
+  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||"";
   S.ready=true; $("#nav").hidden=false; render();
 }
 function boot(h,p){ $("#main").innerHTML=`<div class="boot"><h2>${esc(h)}</h2><p>${esc(p)}</p></div>`; }
@@ -358,7 +361,7 @@ function boot(h,p){ $("#main").innerHTML=`<div class="boot"><h2>${esc(h)}</h2><p
 /* every write goes through here: updates memory first so the screen is never a lie,
    then persists. A failed write shouts instead of failing silently. */
 function persist(){
-  const ok=STORE.write({ov:S.ov,bookings:S.bookings,at:new Date().toISOString()});
+  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,reviewLink:S.reviewLink,at:new Date().toISOString()});
   if(!ok) toast("Couldn't save to this device. If you're in a private window, storage is turned off.",true);
   return ok;
 }
@@ -380,7 +383,7 @@ function lines(){
   const out=[];
   for(const d of S.due){
     const o=S.ov[d.p]||{}, so=(o.svc&&o.svc[d.s])||{};
-    if(so.skip) continue;
+    if(so.skip||S.gone[pOf(d.p).c]) continue;
     const interval=so.interval!==undefined?normIv(so.interval):normIv(d.iv);
     const lastDone=so.lastDone||d.ld;
     let nextDue;
@@ -470,10 +473,11 @@ async function setLogStatus(pid,id,st){
 }
 const uid=()=>"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const unconfirmed=()=>{const out=[];
-  for(const pid in S.ov) (S.ov[pid].log||[]).forEach(e=>{ if(e.st==="drafted") out.push({pid,e}); });
+  for(const pid in S.ov){ if(S.gone[pOf(pid).c]) continue;
+    (S.ov[pid].log||[]).forEach(e=>{ if(e.st==="drafted") out.push({pid,e}); }); }
   return out.sort((a,b)=>(b.e.t||"").localeCompare(a.e.t||""));};
 const reminders=()=>{const out=[];
-  for(const pid in S.ov){ const r=S.ov[pid].remind; if(r&&r.on) out.push({pid,r}); }
+  for(const pid in S.ov){ const r=S.ov[pid].remind; if(r&&r.on&&!S.gone[pOf(pid).c]) out.push({pid,r}); }
   return out.sort((a,b)=>(a.r.on||"").localeCompare(b.r.on||""));};
 
 /* ---------- render ---------- */
@@ -489,6 +493,7 @@ function render(){
     else if(S.view==="todo") viewTodo(m,L);
     else if(S.view==="cal") viewCal(m,L);
     else if(S.view==="clients") viewClients(m);
+    else if(S.view==="reviews") viewReviews(m);
     else if(S.view==="sync") viewSync(m);
   }catch(err){
     reportErr("the "+S.view+" screen",err);
@@ -681,7 +686,7 @@ function ringUp(l){
 }
 
 /* ---------- message composer with a real send confirmation ---------- */
-function openMsg(l,channel,firedWith){
+function openMsg(l,channel,firedWith,preset){
   const c=cOf(l.pid), p=pOf(l.pid);
   const to=channel==="email"?c.e:c.p;
   if(!to){ toast(channel==="email"?"No email on file for this one.":"No phone number on file for this one.",true); return; }
@@ -694,9 +699,9 @@ function openMsg(l,channel,firedWith){
     openSheet(confirmSpec(l.pid,entry));
     return;
   }
-  openSheet({title:(channel==="email"?"Email ":"Text ")+c.n, sub:to, build:b=>{
+  openSheet({title:(preset&&preset.title)||((channel==="email"?"Email ":"Text ")+c.n), sub:to, build:b=>{
     b.appendChild(el("div","lbl","Message"));
-    const ta=el("textarea","msgbox"); ta.value=msgFor(l); b.appendChild(ta);
+    const ta=el("textarea","msgbox"); ta.value=preset?preset.msg:msgFor(l); b.appendChild(ta);
     let subj=null;
     if(channel==="email"){
       b.appendChild(el("div","lbl","Subject"));
@@ -712,7 +717,8 @@ function openMsg(l,channel,firedWith){
       +"<span>Open in "+(channel==="email"?"Mail":"Messages")+"</span>";
     go.onclick=()=>{                       // no preventDefault - the link must still fire
       const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
-                   subject:subj?subj.value:"",msg:ta.value,svcs:(l.svcs||[l.svc]),st:"drafted"};
+                   subject:subj?subj.value:"",msg:ta.value,svcs:(l.svcs||[l.svc]),st:"drafted",
+                   kind:preset?preset.kind:undefined};
       logContact(l.pid,entry);
       setTimeout(()=>replaceSheet(confirmSpec(l.pid,entry)),700);
     };
@@ -829,6 +835,69 @@ function openReminders(){
   }});
 }
 
+
+/* ---------- delete a client (this device only) ----------
+   The list comes from Xero, so a delete can't take them out of Xero. It hides them here
+   by client id, which survives a refresh. Bring-back lives under Clients > Deleted. */
+function deleteSpec(id){
+  const c=S.clients[id]||{n:"(unknown)"};
+  return {title:"Delete "+c.n+"?",sub:"takes them off the Job Book",build:b=>{
+    b.appendChild(el("div","note","They come off your due list, client list and reminders. "
+      +"Xero isn't touched, and if you change your mind they're under Clients, Deleted."));
+    const row=el("div","btns");
+    row.appendChild(btn("Yes, delete them",SVG.bin,"warn",()=>{
+      S.gone[id]={t:new Date().toISOString()};
+      closeSheet(true);
+      if(persist()){ render(); toast(c.n+" deleted."); }
+      else { delete S.gone[id]; render(); }
+    }));
+    row.appendChild(btn("Cancel",null,"",()=>closeSheet()));
+    b.appendChild(row);
+  }};
+}
+function restoreClient(id){
+  const c=S.clients[id]||{n:"them"}, was=S.gone[id];
+  delete S.gone[id]; closeSheet(true);
+  if(persist()){ render(); toast(c.n+" is back."); } else { S.gone[id]=was; render(); }
+}
+function deleteBtn(b,id){
+  b.appendChild(el("div","lbl",S.gone[id]?"Deleted":"Done with them?"));
+  b.appendChild(S.gone[id]
+    ? btn("Bring them back",SVG.tick,"pri",()=>restoreClient(id))
+    : btn("Delete this client",SVG.bin,"",()=>openSheet(deleteSpec(id))));
+}
+
+/* ---------- Google review ask ----------
+   His wording from the UpScale class (voice-and-decisions.md), sent ~5 days after the job. */
+function reviewMsg(pid,link){
+  return `Hey ${firstName(cOf(pid).n)}, thanks again for having us out, good to get that sorted for you. `
+    +`Two quick things if you've got a sec: a Google review helps us out no end, here's the link:\n${link}\n\n`
+    +`And if you know anyone who needs pest or termite work, send them our way. No worries either way. Cheers, Mitch`;
+}
+const reviewSkipped=pid=>!!(S.ov[pid]||{}).noReview;
+const lastReviewAsk=pid=>((S.ov[pid]||{}).log||[]).find(e=>e.kind==="review"&&e.st!=="drafted");
+function askReview(l){
+  if(!S.reviewLink) return openSheet(reviewLinkSpec(()=>askReview(l)));
+  openMsg(l,"text",null,{msg:reviewMsg(l.pid,S.reviewLink),kind:"review",title:"Ask "+cOf(l.pid).n+" for a review"});
+}
+function reviewLinkSpec(then){
+  return {title:"Your Google review link",sub:"one-off setup",build:b=>{
+    b.appendChild(el("div","note","On your phone, open Google Maps, tap your profile picture, "
+      +"Your business profiles, Lighthouse Pest Control, then Ask for reviews (or Share profile). "
+      +"Copy the link it gives you and paste it here. It starts with g.page or maps.app.goo.gl."));
+    const i=el("input","inp"); i.type="url"; i.placeholder="https://g.page/r/.../review"; i.value=S.reviewLink;
+    b.appendChild(i);
+    const row=el("div","btns");
+    row.appendChild(btn("Save link",SVG.tick,"pri",()=>{
+      const v=i.value.trim();
+      if(!/^https?:\/\/\S+\.\S+/.test(v)){ toast("That doesn't look like a link. Paste the whole thing.",true); return; }
+      S.reviewLink=v; persist(); closeSheet(); toast("Review link saved.");
+      if(then) then();
+    }));
+    b.appendChild(row);
+  }};
+}
+
 /* ---------- property sheet ---------- */
 function myLine(pid,svc){
   const all=lines().filter(l=>l.pid===pid);
@@ -854,6 +923,7 @@ function openProp(pid,focusSvc){
     acts2.appendChild(btn("Record contact",SVG.note,"",()=>openSheet(recordSpec({pid}))));
     acts2.appendChild(btn("Remind me later",SVG.bell,"",()=>openSheet(remindSpec({pid}))));
     acts2.appendChild(btn("Book it in",SVG.cal,"",()=>openBook(pid,focusSvc)));
+    acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(L),!!c.p));
     b.appendChild(acts2);
 
     kv(b,"Phone",c.p||"—"); kv(b,"Email",c.e||"—");
@@ -862,6 +932,8 @@ function openProp(pid,focusSvc){
       barrier:"Barrier follow-up",cold:"Cold pre-purchase contact"}[c.g||"active"]);
     const rem=(S.ov[pid]||{}).remind;
     if(rem&&rem.on) kv(b,"Reminder",nice(rem.on)+(rem.note?" · "+rem.note:""));
+    const ra=lastReviewAsk(pid);
+    if(ra) kv(b,"Review",when(ra.t)+" · asked for one");
 
     b.appendChild(el("div","lbl","Repeat work here"));
     const mine=lines().filter(l=>l.pid===pid);
@@ -941,6 +1013,7 @@ function openProp(pid,focusSvc){
       b.appendChild(h);
     });
     if(js2.length>14) b.appendChild(el("div","note",`${js2.length-14} older invoices not shown.`));
+    deleteBtn(b,p.c);
   }});
 }
 /* one timeline: what you sent (from here) and what they sent you (off your Mac) */
@@ -964,7 +1037,7 @@ function contactHistory(b,clientId,pid){
       }
       const h=el("div","hist"+(e.st==="drafted"?" warnrow":""));
       const label={text:"Text",email:"Email",call:"Phone call",inperson:"In person",note:"Note"}[e.ch]||e.ch;
-      h.appendChild(el("div","hd",when(e.t)+" · "+label
+      h.appendChild(el("div","hd",when(e.t)+" · "+label+(e.kind==="review"?" · review ask":"")
         +(e.st==="drafted"?" · NOT CONFIRMED SENT":e.st==="replied"?" · they replied":"")));
       if(e.subject) h.appendChild(el("div","subj",e.subject));
       if(e.msg) h.appendChild(el("div","quote",e.msg));
@@ -995,6 +1068,9 @@ function openClient(id){
     acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(seed,"text"),!!c.p&&!!props.length));
     acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(seed,"email"),!!c.e&&!!props.length));
     b.appendChild(acts);
+    const acts2=el("div","btns");
+    acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(seed),!!c.p&&!!props.length));
+    b.appendChild(acts2);
     b.appendChild(el("div","lbl","Properties"));
     if(!props.length) b.appendChild(el("div","note","No properties on record."));
     props.forEach(pid=>{
@@ -1008,6 +1084,7 @@ function openClient(id){
       r.appendChild(hit); b.appendChild(r);
     });
     contactHistory(b,id,null);
+    deleteBtn(b,id);
   }});
 }
 function openBook(pid,svc){
@@ -1047,7 +1124,9 @@ function viewClients(m){
   s.value=S.q; s.oninput=()=>{S.q=s.value; renderClientList();}; m.appendChild(s);
   const chips=el("div","chips");
   [["active","Active"],["lapsed","Haven't seen in a while"],["barrier","Barriers"],
-   ["cold","Cold list"],["*","Everyone"]].forEach(([k,lab])=>{
+   ["cold","Cold list"],["*","Everyone"]]
+   .concat(Object.keys(S.gone).length?[["gone","Deleted ("+Object.keys(S.gone).length+")"]]:[])
+   .forEach(([k,lab])=>{
     const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.grp===k));
     c.onclick=()=>{S.grp=k; render();}; chips.appendChild(c); });
   m.appendChild(chips);
@@ -1057,7 +1136,9 @@ function renderClientList(){
   const host=$("#clist"); if(!host) return;
   const q=S.q.trim().toLowerCase();
   let ids=Object.keys(S.clients);
-  if(S.grp!=="*") ids=ids.filter(i=>(S.clients[i].g||"active")===S.grp);
+  if(S.grp==="gone") ids=ids.filter(i=>S.gone[i]);
+  else { ids=ids.filter(i=>!S.gone[i]);
+    if(S.grp!=="*") ids=ids.filter(i=>(S.clients[i].g||"active")===S.grp); }
   if(q) ids=ids.filter(i=>{const c=S.clients[i];
     return (c.n+" "+(c.e||"")+" "+(c.p||"")+" "+((c.a||[]).join(" "))).toLowerCase().includes(q);});
   ids.sort((a,b)=>S.clients[a].n.localeCompare(S.clients[b].n));
@@ -1084,6 +1165,59 @@ function renderClientList(){
     host.appendChild(r);
   });
   if(ids.length>300) host.appendChild(el("div","note",`Showing 300 of ${ids.length}. Narrow it with the search box.`));
+}
+
+
+/* ---------- reviews tab ----------
+   Its own list, nothing to do with the due/reminder system. Every recent job, newest
+   first, so he can ask the same day. Jobs only arrive here on a Xero refresh, so for a
+   job done today he can also ask from the client's own screen. */
+function viewReviews(m){
+  const h=el("div","sechead"); h.appendChild(el("h2",null,"Google reviews"));
+  m.appendChild(h);
+  const top=el("div","note",S.reviewLink
+    ? "Recent jobs, newest first. Tap Ask and it opens Messages with your review link in it."
+    : "Add your Google review link first, then every Ask opens Messages ready to go.");
+  m.appendChild(top);
+  m.appendChild(btn(S.reviewLink?"Change review link":"Add your review link",SVG.star,S.reviewLink?"":"pri",
+    ()=>openSheet(reviewLinkSpec(()=>render()))));
+  const since=addMonths(TODAY,-1), recent=[];
+  for(const pid in S.jobs){
+    const p=pOf(pid); if(!p.c||S.gone[p.c]) continue;
+    const j=(S.jobs[pid]||[]).filter(x=>x.d).sort((a,b)=>b.d.localeCompare(a.d))[0];
+    if(j&&j.d>=since) recent.push({pid,j});
+  }
+  recent.sort((a,b)=>b.j.d.localeCompare(a.j.d));
+  const todo=recent.filter(r=>!lastReviewAsk(r.pid)&&!reviewSkipped(r.pid));
+  const done=recent.filter(r=>lastReviewAsk(r.pid)||reviewSkipped(r.pid));
+  const row=(r,asked)=>{
+    const c=cOf(r.pid), p=pOf(r.pid), w=el("div","row "+(asked?"ok":"soon")), hit=el("button","rowhit"); w.style.flexWrap="wrap"; hit.style.flexBasis="100%";
+    hit.appendChild(el("div","stripe"));
+    const main=el("div","rowmain"), tx=el("div","rowtext");
+    tx.appendChild(el("div","nm",c.n));
+    tx.appendChild(el("div","pl",p.l||""));
+    const ra=lastReviewAsk(r.pid);
+    tx.appendChild(el("div","mt","Job "+nice(r.j.d)+" · "+[...new Set(r.j.s.map(x=>x.s))].join(", ")
+      +(ra?" · asked "+when(ra.t):reviewSkipped(r.pid)?" · not asking":"")
+      +(c.p?"":" · no mobile on file")));
+    main.appendChild(tx); hit.appendChild(main); hit.onclick=()=>openProp(r.pid);
+    w.appendChild(hit);
+    if(!asked){
+      const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
+      acts.appendChild(btn("Ask",SVG.star,"pri",()=>askReview(myLine(r.pid)),!!c.p));
+      acts.appendChild(btn("Not this one",SVG.x,"",async()=>{
+        await saveOv(r.pid,{noReview:true}); toast("Won't ask "+c.n+"."); }));
+      w.appendChild(acts);
+    } else if(reviewSkipped(r.pid)){
+      const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
+      acts.appendChild(btn("Put back",null,"",async()=>{ await saveOv(r.pid,{noReview:false}); }));
+      w.appendChild(acts);
+    }
+    return w;
+  };
+  section(m,"Not asked yet",todo.length,todo.map(r=>row(r,false)),
+    todo.length?"":"Nobody waiting. Jobs from the last month show up here after a Xero refresh.");
+  if(done.length) section(m,"Asked or skipped",done.length,done.map(r=>row(r,true)));
 }
 
 /* ---------- calendar ---------- */
@@ -1221,7 +1355,8 @@ function viewSync(m){
   const imp=el("input"); imp.type="file"; imp.accept="application/json"; imp.hidden=true;
   imp.onchange=async()=>{ const f=imp.files&&imp.files[0]; if(!f) return;
     try{ const o=JSON.parse(await f.text());
-      S.ov=o.ov||{}; S.bookings=o.bookings||{}; persist(); render();
+      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{};
+      S.reviewLink=o.reviewLink||S.reviewLink; persist(); render();
       toast("Brought your changes across."); }
     catch(e){ toast("That file didn't read properly.",true); } };
   row.appendChild(btn("Restore a backup",null,"",()=>imp.click()));
