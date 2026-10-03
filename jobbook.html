@@ -217,6 +217,9 @@ a.btn{text-decoration:none}
   background:var(--surface2);border:1px solid var(--line);border-radius:9px;
   padding:10px 12px;white-space:pre-wrap;word-break:break-word;-webkit-user-select:text;user-select:text}
 .hist .hd{font-family:"Spline Sans Mono",monospace;font-size:11px;color:var(--ink3);font-weight:600}
+.jline{margin-top:4px;line-height:1.4}
+.jsvc{font-weight:700;color:var(--ink);font-size:12.5px}
+.jdesc{display:block;font-size:12px;color:var(--ink2);margin-top:1px}
 .msgbox{width:100%;min-height:118px;padding:11px;border-radius:10px;border:1px solid var(--line2);
   background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;resize:vertical}
 .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;
@@ -929,7 +932,12 @@ function openProp(pid,focusSvc){
     js2.slice(0,14).forEach(j=>{
       const h=el("div","hist");
       h.appendChild(el("div","hd",nice(j.d)+" · "+j.i+(j.t?" · $"+Math.round(Number(j.t)):"")));
-      h.appendChild(el("div",null,j.s.map(x=>x.s).join(", ")));
+      j.s.forEach(x=>{
+        const line=el("div","jline");
+        line.appendChild(el("span","jsvc",x.s));
+        if(x.d) line.appendChild(el("span","jdesc",x.d));
+        h.appendChild(line);
+      });
       b.appendChild(h);
     });
     if(js2.length>14) b.appendChild(el("div","note",`${js2.length-14} older invoices not shown.`));
