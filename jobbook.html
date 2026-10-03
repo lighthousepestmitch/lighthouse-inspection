@@ -244,7 +244,7 @@ a.btn{text-decoration:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04e";
+const BUILD="2026-10-04f";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -300,7 +300,7 @@ const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
 const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
-  ov:{},bookings:{},gone:{},reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
+  ov:{},bookings:{},gone:{},asked:{},rq:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
 
 /* ---------- storage ----------
    Client list and job history are static files served with the page - they only change
@@ -320,6 +320,7 @@ async function loadAll(){
   if(!S.settings){ boot("Couldn't load your clients",
     "The data files didn't come down. Check you're online and pull to reload."); return; }
   S.sync=await g("sync")||{lastSyncedDate:S.settings.seedDataEnds};
+  S.asked=((await g("review_asks"))||{}).rows||{};   // review texts already sent, pulled off his Mac
   const m=Object.assign({clients:5,properties:3,jobs:4,due:3,replies:0},S.settings.manifest||{});
   const want=[]; for(const k of ["clients","properties","jobs","due","replies"])
     for(let i=0;i<m[k];i++) want.push([k,k+"_"+i]);
@@ -571,9 +572,10 @@ function rowFor(l,extra){
   r.appendChild(actionBtns(l));
   return r;
 }
-function section(host,title,n,rows,note){
+function section(host,title,n,rows,note,unit){
+  const u=unit||["job","jobs"];
   const h=el("div","sechead"); h.appendChild(el("h2",null,title));
-  h.appendChild(el("span","n",n+(n===1?" job":" jobs"))); host.appendChild(h);
+  h.appendChild(el("span","n",n+" "+(n===1?u[0]:u[1]))); host.appendChild(h);
   if(note) host.appendChild(el("div","note",note));
   rows.forEach(r=>host.appendChild(r));
 }
@@ -1123,55 +1125,70 @@ function renderClientList(){
 
 
 /* ---------- reviews tab ----------
-   Its own list, nothing to do with the due/reminder system. Every recent job, newest
-   first, so he can ask the same day. Jobs only arrive here on a Xero refresh, so for a
-   job done today he can also ask from the client's own screen. */
+   Its own list, nothing to do with the due/reminder system. Every client with a mobile,
+   most recent job first, so he can ask the same day. "Asked" counts a text sent from here
+   or one found in Messages on his Mac (review_asks.json, tools/import_review_asks.py). */
+function clientAsked(id,pids){
+  let best=S.asked[id]||"";
+  pids.forEach(p=>{ const e=lastReviewAsk(p); if(e&&e.t.slice(0,10)>best) best=e.t.slice(0,10); });
+  return best;
+}
 function viewReviews(m){
   const h=el("div","sechead"); h.appendChild(el("h2",null,"Google reviews"));
   m.appendChild(h);
-  const top=el("div","note",S.reviewLink
-    ? "Recent jobs, newest first. Tap Ask and it opens Messages with your review link in it."
-    : "Add your Google review link first, then every Ask opens Messages ready to go.");
-  m.appendChild(top);
-  m.appendChild(btn(S.reviewLink?"Change review link":"Add your review link",SVG.star,S.reviewLink?"":"pri",
-    ()=>openSheet(reviewLinkSpec(()=>render()))));
-  const since=addMonths(TODAY,-1), recent=[];
-  for(const pid in S.jobs){
-    const p=pOf(pid); if(!p.c||S.gone[p.c]) continue;
-    const j=(S.jobs[pid]||[]).filter(x=>x.d).sort((a,b)=>b.d.localeCompare(a.d))[0];
-    if(j&&j.d>=since) recent.push({pid,j});
+  m.appendChild(el("div","note","Everyone with a mobile, most recent job first. Tap Ask and it opens Messages "
+    +"with your review link in it. Texts you've already sent from your Mac show as asked."));
+  const sb=el("input","search"); sb.type="search"; sb.placeholder="Search name or address";
+  sb.value=S.rq; m.appendChild(sb);
+  const host=el("div"); m.appendChild(host);
+  const all=[];
+  for(const id in S.clients){
+    const c=S.clients[id]; if(S.gone[id]||!c.p) continue;
+    const pids=Object.keys(S.props).filter(p=>S.props[p].c===id); if(!pids.length) continue;
+    let last=null, pid=pids[0];
+    pids.forEach(p=>(S.jobs[p]||[]).forEach(j=>{ if(j.d&&(!last||j.d>last.d)){ last=j; pid=p; } }));
+    const asked=clientAsked(id,pids), skip=pids.some(reviewSkipped);
+    all.push({id,c,pid,pids,last,ld:last?last.d:(c.ls||""),asked,skip});
   }
-  recent.sort((a,b)=>b.j.d.localeCompare(a.j.d));
-  const todo=recent.filter(r=>!lastReviewAsk(r.pid)&&!reviewSkipped(r.pid));
-  const done=recent.filter(r=>lastReviewAsk(r.pid)||reviewSkipped(r.pid));
-  const row=(r,asked)=>{
-    const c=cOf(r.pid), p=pOf(r.pid), w=el("div","row "+(asked?"ok":"soon")), hit=el("button","rowhit"); w.style.flexWrap="wrap"; hit.style.flexBasis="100%";
+  all.sort((a,b)=>b.ld.localeCompare(a.ld)||a.c.n.localeCompare(b.c.n));
+  const row=r=>{
+    const p=pOf(r.pid), w=el("div","row "+(r.asked||r.skip?"ok":"soon")), hit=el("button","rowhit");
+    w.style.flexWrap="wrap"; hit.style.flexBasis="100%";
     hit.appendChild(el("div","stripe"));
     const main=el("div","rowmain"), tx=el("div","rowtext");
-    tx.appendChild(el("div","nm",c.n));
+    tx.appendChild(el("div","nm",r.c.n));
     tx.appendChild(el("div","pl",p.l||""));
-    const ra=lastReviewAsk(r.pid);
-    tx.appendChild(el("div","mt","Job "+nice(r.j.d)+" · "+[...new Set(r.j.s.map(x=>x.s))].join(", ")
-      +(ra?" · asked "+when(ra.t):reviewSkipped(r.pid)?" · not asking":"")
-      +(c.p?"":" · no mobile on file")));
+    const what=r.last?[...new Set(r.last.s.map(x=>x.s))].join(", "):(r.c.lt||"");
+    tx.appendChild(el("div","mt",(r.ld?"Last job "+nice(r.ld):"No job date")+(what?" · "+what:"")
+      +(r.asked?" · asked "+nice(r.asked):r.skip?" · not asking":"")));
     main.appendChild(tx); hit.appendChild(main); hit.onclick=()=>openProp(r.pid);
     w.appendChild(hit);
-    if(!asked){
-      const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
-      acts.appendChild(btn("Ask",SVG.star,"pri",()=>askReview(myLine(r.pid)),!!c.p));
+    const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
+    if(!r.asked&&!r.skip){
+      acts.appendChild(btn("Ask",SVG.star,"pri",()=>askReview(myLine(r.pid))));
       acts.appendChild(btn("Not this one",SVG.x,"",async()=>{
-        await saveOv(r.pid,{noReview:true}); toast("Won't ask "+c.n+"."); }));
-      w.appendChild(acts);
-    } else if(reviewSkipped(r.pid)){
-      const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
-      acts.appendChild(btn("Put back",null,"",async()=>{ await saveOv(r.pid,{noReview:false}); }));
-      w.appendChild(acts);
-    }
+        await saveOv(r.pid,{noReview:true}); toast("Won't ask "+r.c.n+"."); }));
+    } else if(r.skip){
+      acts.appendChild(btn("Put back",null,"",async()=>{
+        for(const p of r.pids) if(reviewSkipped(p)) S.ov[p]=Object.assign({},S.ov[p],{noReview:false});
+        persist(); render(); }));
+    } else acts.appendChild(btn("Ask again",SVG.star,"",()=>askReview(myLine(r.pid))));
+    w.appendChild(acts);
     return w;
   };
-  section(m,"Not asked yet",todo.length,todo.map(r=>row(r,false)),
-    todo.length?"":"Nobody waiting. Jobs from the last month show up here after a Xero refresh.");
-  if(done.length) section(m,"Asked or skipped",done.length,done.map(r=>row(r,true)));
+  const draw=()=>{
+    host.innerHTML="";
+    const q=S.rq.trim().toLowerCase();
+    const list=q?all.filter(r=>(r.c.n+" "+(pOf(r.pid).l||"")+" "+(r.c.a||[]).join(" ")).toLowerCase().includes(q)):all;
+    const todo=list.filter(r=>!r.asked&&!r.skip), done=list.filter(r=>r.asked||r.skip);
+    const cap=150;
+    section(host,"Not asked yet",todo.length,todo.slice(0,cap).map(row),
+      todo.length?"":"Nobody left to ask"+(q?" with that search.":"."),["person","people"]);
+    if(todo.length>cap) host.appendChild(el("div","note",`Showing the ${cap} most recent of ${todo.length}. Search to find anyone else.`));
+    if(done.length) section(host,"Asked or skipped",done.length,done.slice(0,cap).map(row),null,["person","people"]);
+  };
+  sb.oninput=()=>{ S.rq=sb.value; draw(); };
+  draw();
 }
 
 function viewSync(m){
