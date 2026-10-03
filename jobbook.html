@@ -244,7 +244,7 @@ a.btn{text-decoration:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04b";
+const BUILD="2026-10-04c";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -329,7 +329,7 @@ async function loadAll(){
     else if(k==="replies") Object.assign(S.replies,d.rows||{});
     else Object.assign(S[k==="clients"?"clients":k==="properties"?"props":"jobs"],d.rows||{}); });
   const mine=STORE.read();
-  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||"";
+  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK;
   S.ready=true; $("#nav").hidden=false; render();
 }
 function boot(h,p){ $("#main").innerHTML=`<div class="boot"><h2>${esc(h)}</h2><p>${esc(p)}</p></div>`; }
@@ -843,11 +843,12 @@ function deleteBtn(b,id){
 }
 
 /* ---------- Google review ask ----------
-   His wording from the UpScale class (voice-and-decisions.md), sent ~5 days after the job. */
+   Mitch's own wording, the one that's worked for him. His GBP review link is built in. */
+const REVIEW_LINK="https://g.page/r/CYF7d8dUejtsEAE/review";
 function reviewMsg(pid,link){
-  return `Hey ${firstName(cOf(pid).n)}, thanks again for having us out, good to get that sorted for you. `
-    +`Two quick things if you've got a sec: a Google review helps us out no end, here's the link:\n${link}\n\n`
-    +`And if you know anyone who needs pest or termite work, send them our way. No worries either way. Cheers, Mitch`;
+  return `Hey ${firstName(cOf(pid).n)}, bit awkward asking this \u{1F605} but if you've got a sec, `
+    +`a quick Google review would help me out heaps. It really helps me show up on Google. `
+    +`Totally no stress at all if not\n${link}\nCheers, Mitch`;
 }
 const reviewSkipped=pid=>!!(S.ov[pid]||{}).noReview;
 const lastReviewAsk=pid=>((S.ov[pid]||{}).log||[]).find(e=>e.kind==="review"&&e.st!=="drafted");
