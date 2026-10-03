@@ -244,7 +244,7 @@ a.btn{text-decoration:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04d";
+const BUILD="2026-10-04e";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -328,6 +328,11 @@ async function loadAll(){
     if(k==="due") S.due=S.due.concat(d.rows||[]);
     else if(k==="replies") Object.assign(S.replies,d.rows||{});
     else Object.assign(S[k==="clients"?"clients":k==="properties"?"props":"jobs"],d.rows||{}); });
+  /* Lapsed and cold clients come off the old QuickBooks list with no property, and
+     everything (ring, text, contact log) hangs off a property. Give them one. */
+  const has=new Set(Object.values(S.props).map(p=>p.c));
+  for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
+    S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
   const mine=STORE.read();
   S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK;
   S.ready=true; $("#nav").hidden=false; render();
@@ -388,6 +393,11 @@ function firstName(n){
 const joinNat=a=>a.length===1?a[0]:a.slice(0,-1).join(", ")+" and "+a[a.length-1];
 function msgFor(l){
   const c=cOf(l.pid);
+  if(c.g==="lapsed"&&!(l.lines&&l.lines.length)){
+    const st=(c.a&&c.a[0]&&!/^\s*(po box|p\.?o\.?\s)/i.test(c.a[0]))?" at "+c.a[0]:"";
+    return `Hi ${firstName(c.n)}, Mitch here from Lighthouse Pest Control. It's been a while since we were out${st}, `
+      +`just checking in to see if there's any pest or termite work you need a hand with. Reach out whenever you need. Cheers, Mitch`;
+  }
   const svcs=(l.svcs||[l.svc]).map(plain);
   return `Hey ${firstName(c.n)}, hope you're going well! Just checking if you'd like me to book you in for `
        + joinNat(svcs) + ` to keep on top of things. Let me know what suits. Cheers, Mitch`;
