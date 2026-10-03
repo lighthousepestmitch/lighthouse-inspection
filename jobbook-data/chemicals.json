@@ -1,0 +1,529 @@
+{
+ "note": "Product library for records.html. Names/actives from Mitch's shelf photos and Garrards history 2026-10-04. Blank apvma/active = not on the photo, fill in the app.",
+ "operator": {
+  "business": "Lighthouse Pest Control",
+  "address": "Skinners Shoot NSW 2481",
+  "phone": "0432 181 689",
+  "techs": [
+   {
+    "name": "Mitch",
+    "licence": "5085573"
+   }
+  ]
+ },
+ "products": [
+  {
+   "id": "bif-lo",
+   "name": "Country Bifenthrin 100 Low Odour Termiticide & Insecticide",
+   "active": "Bifenthrin 100 g/L",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Power spray rig"
+   ]
+  },
+  {
+   "id": "aquastar",
+   "name": "Aquastar 100SC Termiticide & Insecticide",
+   "active": "Bifenthrin 100 g/L",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Power spray rig"
+   ]
+  },
+  {
+   "id": "biflex",
+   "name": "Biflex",
+   "active": "Bifenthrin",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Power spray rig"
+   ]
+  },
+  {
+   "id": "fipforce",
+   "name": "Fipforce HP Termiticide & Insecticide",
+   "active": "Fipronil 100 g/L",
+   "apvma": "63799/140889",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Power spray rig"
+   ]
+  },
+  {
+   "id": "ultrathor",
+   "name": "Ultrathor X Water-Based Termiticide and Insecticide",
+   "active": "Fipronil 100 g/L",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Power spray rig"
+   ]
+  },
+  {
+   "id": "country-fip",
+   "name": "Country Fipronil Residual Termiticide and Insecticide",
+   "active": "Fipronil 100 g/L",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Power spray rig"
+   ]
+  },
+  {
+   "id": "demand-duo",
+   "name": "Demand Duo Insecticide",
+   "active": "Lambda-cyhalothrin 38 g/L, Thiamethoxam 125 g/L",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "L of mix",
+   "equip": [
+    "Backpack sprayer"
+   ]
+  },
+  {
+   "id": "astro",
+   "name": "Astro Aerosol Residual Insecticide",
+   "active": "Permethrin 10 g/kg",
+   "apvma": "",
+   "type": "aerosol",
+   "unit": "cans",
+   "equip": [
+    "Aerosol (direct spray)"
+   ]
+  },
+  {
+   "id": "coopex",
+   "name": "Coopex Insecticidal Dusting Powder",
+   "active": "Permethrin 10 g/kg",
+   "apvma": "",
+   "type": "dust",
+   "unit": "g",
+   "equip": [
+    "Bulb duster"
+   ]
+  },
+  {
+   "id": "seclira",
+   "name": "Seclira Gel Cockroach Bait",
+   "active": "",
+   "apvma": "",
+   "type": "gel",
+   "unit": "g",
+   "equip": [
+    "Gel bait gun"
+   ]
+  },
+  {
+   "id": "termidor-foam",
+   "name": "Termidor Foam Termiticide and Insecticide",
+   "active": "Fipronil 0.05 g/kg",
+   "apvma": "70346/63237",
+   "type": "foam",
+   "unit": "cans",
+   "equip": [
+    "Foam applicator"
+   ]
+  },
+  {
+   "id": "fipforce-dust",
+   "name": "Fipforce Dust",
+   "active": "Fipronil",
+   "apvma": "",
+   "type": "dust",
+   "unit": "g",
+   "equip": [
+    "Rega duster / hand duster"
+   ]
+  },
+  {
+   "id": "trelona",
+   "name": "Trelona Termite Bait",
+   "active": "",
+   "apvma": "",
+   "type": "bait",
+   "unit": "cartridges",
+   "equip": [
+    "Termite bait stations"
+   ]
+  },
+  {
+   "id": "nemesis",
+   "name": "Nemesis Termite Bait",
+   "active": "",
+   "apvma": "",
+   "type": "bait",
+   "unit": "cartridges",
+   "equip": [
+    "Termite bait stations"
+   ]
+  },
+  {
+   "id": "talon-gt",
+   "name": "Talon GT Pro Rodenticide Grain Block",
+   "active": "",
+   "apvma": "",
+   "type": "bait",
+   "unit": "blocks",
+   "equip": [
+    "Bait stations (rodent)"
+   ]
+  },
+  {
+   "id": "talon-xt",
+   "name": "Talon XT Pro",
+   "active": "",
+   "apvma": "",
+   "type": "bait",
+   "unit": "blocks",
+   "equip": [
+    "Bait stations (rodent)"
+   ]
+  },
+  {
+   "id": "roban",
+   "name": "Roban Rodenticide Blocks",
+   "active": "Difenacoum 0.05 g/kg",
+   "apvma": "",
+   "type": "bait",
+   "unit": "blocks",
+   "equip": [
+    "Bait stations (rodent)"
+   ]
+  },
+  {
+   "id": "fastrac",
+   "name": "Fastrac Blox Rodenticide",
+   "active": "Bromethalin 0.1 g/kg",
+   "apvma": "",
+   "type": "bait",
+   "unit": "blocks",
+   "equip": [
+    "Bait stations (rodent)"
+   ]
+  },
+  {
+   "id": "first-strike",
+   "name": "Generation First Strike Single-Feed Rodenticide",
+   "active": "Difethialone 0.025 g/kg",
+   "apvma": "",
+   "type": "bait",
+   "unit": "baits",
+   "equip": [
+    "Bait stations (rodent)"
+   ]
+  },
+  {
+   "id": "selontra",
+   "name": "Selontra Soft Bait Rodenticide",
+   "active": "Cholecalciferol 0.75 g/kg",
+   "apvma": "",
+   "type": "bait",
+   "unit": "baits",
+   "equip": [
+    "Bait stations (rodent)"
+   ]
+  },
+  {
+   "id": "waspforce",
+   "name": "Wasp Force Insecticide",
+   "active": "d-Allethrin 1.3 g/kg, d-Phenothrin 1.2 g/kg",
+   "apvma": "",
+   "type": "aerosol",
+   "unit": "cans",
+   "equip": [
+    "Aerosol (direct spray)"
+   ]
+  },
+  {
+   "id": "vectobac",
+   "name": "VectoBac WG",
+   "active": "Bacillus thuringiensis subsp. israelensis",
+   "apvma": "",
+   "type": "granule",
+   "unit": "g",
+   "equip": [
+    "Mister / fogger"
+   ]
+  },
+  {
+   "id": "bioplus",
+   "name": "Bio Plus drain treatment",
+   "active": "Biological (bacteria)",
+   "apvma": "",
+   "type": "liquid",
+   "unit": "mL",
+   "equip": [
+    "Hand-held compression sprayer"
+   ]
+  },
+  {
+   "id": "polesaver",
+   "name": "Preschem Polesaver Rods 10 mm",
+   "active": "Boron, Fluoride",
+   "apvma": "",
+   "type": "rod",
+   "unit": "rods",
+   "equip": [
+    "Drill and inject"
+   ]
+  },
+  {
+   "id": "hg-tmb",
+   "name": "Homeguard White TMB 2 mm sheet",
+   "active": "Bifenthrin (impregnated)",
+   "apvma": "",
+   "type": "membrane",
+   "unit": "m2",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  },
+  {
+   "id": "hg-dpc",
+   "name": "Homeguard White DPC 350 mm",
+   "active": "Bifenthrin (impregnated)",
+   "apvma": "",
+   "type": "membrane",
+   "unit": "lm",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  },
+  {
+   "id": "hg-blue",
+   "name": "Homeguard Light Blue PB (150/300 mm)",
+   "active": "Bifenthrin (impregnated)",
+   "apvma": "",
+   "type": "membrane",
+   "unit": "lm",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  },
+  {
+   "id": "hg-collar",
+   "name": "Homeguard Flexicollars 100 mm",
+   "active": "Bifenthrin (impregnated)",
+   "apvma": "",
+   "type": "membrane",
+   "unit": "each",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  },
+  {
+   "id": "hg-cuts",
+   "name": "Homeguard cuts",
+   "active": "Bifenthrin (impregnated)",
+   "apvma": "",
+   "type": "membrane",
+   "unit": "each",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  },
+  {
+   "id": "greenzone",
+   "name": "Greenzone Termite Barrier foam 100 x 10 mm",
+   "active": "",
+   "apvma": "",
+   "type": "membrane",
+   "unit": "lm",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  },
+  {
+   "id": "precon10",
+   "name": "Garrards Pre-Con 10 Adhesive",
+   "active": "",
+   "apvma": "",
+   "type": "other",
+   "unit": "cans",
+   "equip": [
+    "Membrane / collar install"
+   ]
+  }
+ ],
+ "jobProducts": {
+  "General Pest Treatment": [
+   "bif-lo",
+   "aquastar",
+   "astro",
+   "coopex",
+   "seclira",
+   "demand-duo"
+  ],
+  "Cockroach & Ant Treatment": [
+   "bif-lo",
+   "aquastar",
+   "astro",
+   "coopex",
+   "seclira",
+   "demand-duo"
+  ],
+  "Other": [
+   "bif-lo",
+   "aquastar",
+   "astro",
+   "coopex",
+   "seclira",
+   "demand-duo",
+   "polesaver"
+  ],
+  "Ant Treatment": [
+   "bif-lo",
+   "aquastar",
+   "demand-duo",
+   "coopex"
+  ],
+  "Cockroach Treatment": [
+   "seclira",
+   "astro",
+   "coopex"
+  ],
+  "Spider Treatment": [
+   "bif-lo",
+   "aquastar",
+   "astro",
+   "coopex"
+  ],
+  "Flea Treatment": [
+   "bif-lo",
+   "aquastar",
+   "coopex"
+  ],
+  "Bed Bug Treatment": [
+   "demand-duo",
+   "coopex"
+  ],
+  "Carpet Beetle Treatment": [
+   "astro",
+   "coopex"
+  ],
+  "Clothes Moth Treatment": [
+   "astro",
+   "coopex"
+  ],
+  "Specialist Treatment": [
+   "astro",
+   "coopex",
+   "termidor-foam",
+   "fipforce-dust",
+   "fipforce",
+   "polesaver"
+  ],
+  "Drain Fly Treatment": [
+   "bioplus"
+  ],
+  "Mosquito Treatment": [
+   "vectobac",
+   "bif-lo",
+   "aquastar"
+  ],
+  "Lawn Grub Treatment": [
+   "bif-lo",
+   "aquastar",
+   "biflex"
+  ],
+  "Wasp/Bee Treatment": [
+   "waspforce",
+   "coopex"
+  ],
+  "Rodent Treatment": [
+   "talon-gt",
+   "talon-xt",
+   "roban",
+   "fastrac",
+   "first-strike",
+   "selontra"
+  ],
+  "Rodent Boxes (supply)": [
+   "talon-gt",
+   "talon-xt",
+   "roban",
+   "fastrac",
+   "first-strike",
+   "selontra"
+  ],
+  "Termite Treatment": [
+   "termidor-foam",
+   "fipforce-dust",
+   "fipforce"
+  ],
+  "Post-Construction Barrier": [
+   "fipforce",
+   "ultrathor",
+   "country-fip",
+   "bif-lo",
+   "aquastar"
+  ],
+  "Pre-Construction Barrier": [
+   "hg-tmb",
+   "hg-dpc",
+   "hg-blue",
+   "hg-collar",
+   "hg-cuts",
+   "greenzone",
+   "precon10",
+   "bif-lo",
+   "fipforce"
+  ],
+  "Trelona Baiting": [
+   "trelona"
+  ],
+  "Nemesis New": [
+   "nemesis"
+  ],
+  "Nemesis Renewal": [
+   "nemesis"
+  ],
+  "Termite Inspection": [],
+  "Pre-Purchase Inspection": [],
+  "OC Site Assessment": []
+ },
+ "equipment": [
+  "Power spray rig",
+  "Backpack sprayer",
+  "Hand-held compression sprayer",
+  "Rega sprayer / termite injection rod",
+  "Drill and inject",
+  "Trench and treat",
+  "Bulb duster",
+  "Rega duster / hand duster",
+  "Foam applicator",
+  "Gel bait gun",
+  "Aerosol (direct spray)",
+  "Mister / fogger",
+  "Bait stations (rodent)",
+  "Termite bait stations",
+  "Membrane / collar install"
+ ],
+ "areas": [
+  "Inside",
+  "Roof void",
+  "Subfloor",
+  "Perimeter",
+  "Garden beds",
+  "Eaves",
+  "Bait stations",
+  "Slab cuts",
+  "Penetrations",
+  "Other"
+ ],
+ "airTypes": [
+  "liquid",
+  "aerosol",
+  "dust",
+  "granule"
+ ]
+}

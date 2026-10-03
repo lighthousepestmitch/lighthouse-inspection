@@ -328,3 +328,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    import build_service_lists; build_service_lists.main()

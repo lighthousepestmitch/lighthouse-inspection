@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Service Records">
+<meta name="theme-color" content="#0E4F54">
+<title>Lighthouse Service Records</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+/* Same look as jobbook.html: same variables, header, chips, buttons. */
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --surface2:#EDF0EC; --raise:0 1px 2px rgba(20,32,30,.06),0 4px 14px rgba(20,32,30,.05);
+  --ink:#14201E; --ink2:#4B5B57; --ink3:#7E8D88; --line:#DCE1DD; --line2:#C9D1CC;
+  --deep:#0E4F54; --deepInk:#FFFFFF; --accent:#B4701F;
+  --over:#A23C29; --overBg:#F8E8E3; --soon:#8C6314; --soonBg:#F8F0DC; --ok:#276B59; --okBg:#E2EFE9;
+  --focus:#0E4F54;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
+  --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D;
+  --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+  --focus:#57B3BA;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
+.mono{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.wrap{max-width:880px;margin:0 auto;padding:0 14px}
+
+/* header + top tabs */
+header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepInk);padding:12px 0 0;box-shadow:var(--raise)}
+.brand{display:flex;align-items:baseline;gap:9px;padding-bottom:10px}
+.brand h1{font-size:19px;color:var(--deepInk);letter-spacing:-.01em}
+.brand .sub{font-size:11px;opacity:.72;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.16);border-radius:10px 10px 0 0;overflow:hidden}
+.tabs button{background:var(--deep);padding:11px 10px;font-weight:700;font-size:14px;color:var(--deepInk);opacity:.7}
+.tabs button[aria-current="true"]{opacity:1;box-shadow:inset 0 -3px 0 var(--deepInk)}
+
+/* chips (wrap, big tap targets) */
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 4px}
+.chip{flex:0 0 auto;max-width:100%;min-height:42px;padding:8px 14px;border-radius:999px;border:1px solid var(--line2);
+  background:var(--surface);font-size:14px;font-weight:600;color:var(--ink2);text-align:left;line-height:1.25}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.ghost{border-style:dashed;color:var(--deep)}
+.chip.desc{border-radius:12px;font-weight:500;font-size:13px}
+.chipx{display:inline-flex;align-items:stretch;max-width:100%}
+.chipx .chip{border-radius:999px 0 0 999px}
+.chipx .rm{width:40px;border:1px solid var(--over);background:var(--overBg);color:var(--over);border-radius:0 999px 999px 0;font-weight:700;font-size:16px}
+
+/* sections and cards */
+.sechead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.sechead h2{font-size:16px}
+.sechead .n{font-size:12px;color:var(--ink3);font-weight:500}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-bottom:8px;box-shadow:var(--raise)}
+.card .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:6px}
+.card .top b{font-size:14px}
+.small{font-size:12px;color:var(--ink3)}
+.hint{font-size:12px;color:var(--ink3);margin:4px 0 6px}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;margin:14px 0 6px}
+.inp{width:100%;padding:12px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);font:inherit;font-size:16px;min-height:46px}
+.inp::placeholder{color:var(--ink3)}
+textarea.inp{min-height:96px;resize:vertical}
+select.inp{appearance:none;-webkit-appearance:none}
+.search{margin-top:6px}
+.grid3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}
+.grid3 label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;display:block;margin-bottom:4px}
+.amt{display:flex;gap:8px;align-items:center}
+.amt .inp{flex:1;min-width:0}
+.amt .unit{font-size:13px;color:var(--ink2);font-weight:600;white-space:nowrap}
+.mixrow{margin-top:8px}
+
+/* rows (records list) */
+.row{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--line);border-radius:10px;
+  margin-bottom:7px;overflow:hidden;box-shadow:var(--raise);width:100%;text-align:left}
+.row .stripe{flex:0 0 4px;background:var(--line2)}
+.row.pend .stripe{background:var(--accent)}
+.row .main{flex:1;min-width:0;padding:10px 12px}
+.row .nm{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .pl{font-size:12.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .mt{font-size:11.5px;color:var(--ink3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick{display:block;width:100%;text-align:left;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:6px}
+.pick:hover{border-color:var(--deep)}
+.pick .nm{font-weight:700;font-size:14.5px}
+.pick .pl{font-size:12.5px;color:var(--ink2)}
+.empty{text-align:center;padding:36px 20px;color:var(--ink3)}
+
+/* buttons, banners */
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.btn{flex:1;min-width:112px;padding:13px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);
+  font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;color:var(--ink)}
+.btn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.btn.warn{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.bad{background:var(--overBg);color:var(--over);border-color:var(--over)}
+.btn[disabled]{opacity:.4;cursor:default}
+.banner{padding:11px 13px;border-radius:10px;font-size:13px;margin-bottom:12px;border:1px solid}
+.banner.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.banner.ok{background:var(--okBg);border-color:var(--ok);color:var(--ok)}
+.banner.bad{background:var(--overBg);border-color:var(--over);color:var(--over)}
+.banner ul{margin:4px 0 0;padding-left:18px}
+.savebar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.savebar .btn{max-width:852px;margin:0 auto;width:100%;font-size:16px;padding:15px}
+.mic{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--surface2);font-weight:600;font-size:13px}
+.mic svg{width:16px;height:16px;stroke:currentColor;fill:none}
+.mic.rec{background:var(--over);color:#fff;border-color:var(--over)}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.thumb{position:relative;width:84px;height:84px}
+.thumb img{width:100%;height:100%;object-fit:cover;border-radius:8px;border:1px solid var(--line2)}
+.thumb button{position:absolute;top:-6px;right:-6px;width:26px;height:26px;border-radius:50%;background:var(--over);color:#fff;font-weight:700}
+.spin{width:19px;height:19px;border:2px solid var(--line2);border-top-color:var(--deep);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.boot{display:grid;place-items:center;min-height:60vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+.wxline{font-size:15px;font-weight:600;padding:4px 0}
+
+/* read-only record view (also the print layout) */
+.rec{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--raise)}
+.rec h2{font-size:20px}
+.rec .biz{font-size:12.5px;color:var(--ink2);margin:2px 0 10px}
+.kv{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv dt{flex:0 0 108px;color:var(--ink3);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding-top:1px}
+.kv dd{margin:0;flex:1;min-width:0;word-break:break-word;white-space:pre-wrap}
+.rec .thumbs .thumb{width:72px;height:72px}
+
+@media print{
+  @page{margin:12mm}
+  header,.savebar,.noprint,#bnr,.toast{display:none!important}
+  body{background:#fff;color:#000;padding:0;font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  .rec{border:none;box-shadow:none;padding:0;background:#fff;color:#000}
+  .kv{padding:3px 0;font-size:10pt;border-color:#bbb}
+  .kv dt{color:#444}
+  .rec .thumbs .thumb{width:60px;height:60px}
+  .rec .thumbs .thumb button{display:none}
+  .rec .thumbs{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand"><h1>Service records</h1><span class="sub">Lighthouse Pest</span></div>
+    <div class="tabs">
+      <button data-a="tab" data-v="new" id="t-new" aria-current="true">New</button>
+      <button data-a="tab" data-v="records" id="t-records">Records</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="main">
+  <div class="boot"><div><span class="spin"></span></div><div>Opening service records…</div></div>
+</main>
+<div id="savebar"></div>
+
+<script>
+(function(){
+"use strict";
+const BUILD="2026-10-04r1";   // same cache-buster as jobbook.html
+const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
+  if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const iso=d=>{const z=new Date(d); z.setMinutes(z.getMinutes()-z.getTimezoneOffset()); return z.toISOString().slice(0,10);};
+const TODAY=iso(new Date());
+const parse=s=>{const p=String(s).split("-").map(Number); return new Date(p[0],p[1]-1,p[2]);};
+const AU=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const nice=s=>{if(!s)return "";const d=parse(s);return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear();};
+const pad=n=>String(n).padStart(2,"0");
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes());};
+const mailHref=(em,subj,body)=>"mailto:"+em+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
+const MY_EMAIL="mitch@lighthousepest.com.au";
+const ABN="54 684 642 448";
+const titleCase=s=>String(s||"").toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());
+const uid=()=>"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ---------- state ---------- */
+const S={clients:{},props:{},jobs:{},services:[],chem:null,prefs:{},records:[],index:[],
+  tab:"new",openId:null,justSaved:false,rq:""};
+let F=null;          // the form being filled in
+let W=null;          // weather state for the form
+let UI={};           // little UI toggles (edit mode, add-product box...)
+
+/* ---------- storage ----------
+   Small settings (product lists, amounts, mix rates) live in localStorage.
+   The records themselves (with photos) live in IndexedDB. Every call is wrapped so a
+   failure shouts instead of failing silently. */
+const STORE={
+  key:"lpc-records-prefs",
+  read(){ try{ return JSON.parse(localStorage.getItem(this.key)||"{}")||{}; }catch(e){ return {}; } },
+  write(o){ try{ localStorage.setItem(this.key,JSON.stringify(o)); return true; }catch(e){ return false; } }
+};
+function savePrefs(){
+  const ok=STORE.write(S.prefs);
+  if(!ok) toast("Couldn't save your settings to this device. If you're in a private window, storage is turned off.",true);
+  return ok;
+}
+function openDB(){
+  return new Promise(function(res,rej){
+    if(!window.indexedDB){ rej(new Error("IndexedDB not available")); return; }
+    const r=indexedDB.open("lpc-records",1);
+    r.onupgradeneeded=function(){ r.result.createObjectStore("records",{keyPath:"id"}); };
+    r.onsuccess=function(){ res(r.result); };
+    r.onerror=function(){ rej(r.error||new Error("open failed")); };
+  });
+}
+async function dbDo(mode,fn){
+  const db=await openDB();
+  return new Promise(function(res,rej){
+    const tx=db.transaction("records",mode), st=tx.objectStore("records");
+    let out; const rq=fn(st); if(rq) rq.onsuccess=function(){ out=rq.result; };
+    tx.oncomplete=function(){ db.close(); res(out); };
+    tx.onerror=function(){ db.close(); rej(tx.error||new Error("transaction failed")); };
+    tx.onabort=function(){ db.close(); rej(tx.error||new Error("transaction aborted")); };
+  });
+}
+const dbAll=()=>dbDo("readonly",st=>st.getAll());
+const dbPut=r=>dbDo("readwrite",st=>st.put(r));
+const dbDel=id=>dbDo("readwrite",st=>st.delete(id));
+
+function toast(m,bad){ const t=el("div","banner toast "+(bad?"bad":"ok"),m);
+  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"96px",zIndex:99,
+    maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
+  document.body.appendChild(t); setTimeout(()=>t.remove(),bad?6000:3200); }
+
+/* ---------- loading the job book data ---------- */
+const DATA="jobbook-data/";
+async function loadAll(){
+  const g=async f=>{ try{ const r=await fetch(DATA+f+".json?v="+BUILD); return r.ok?await r.json():null; }catch(e){ return null; } };
+  const settings=await g("settings");
+  S.chem=await g("chemicals");
+  const sv=await g("services");
+  if(!settings||!S.chem||!sv){ boot("Couldn't load the data","The data files didn't come down. Check you're online and reload."); return false; }
+  S.services=sv.services||[];
+  const m=Object.assign({clients:5,properties:3,jobs:4},settings.manifest||{});
+  const want=[]; ["clients","properties","jobs"].forEach(k=>{ for(let i=0;i<m[k];i++) want.push([k,k+"_"+i]); });
+  const got=await Promise.all(want.map(w=>g(w[1])));
+  want.forEach((w,i)=>{ const d=got[i]; if(!d)return;
+    Object.assign(S[w[0]==="clients"?"clients":w[0]==="properties"?"props":"jobs"],d.rows||{}); });
+  /* clients with no property get one, same as the Job Book does */
+  const has=new Set(Object.values(S.props).map(p=>p.c));
+  for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
+    S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
+  buildIndex();
+  return true;
+}
+function boot(h,p){ $("#main").innerHTML='<div class="boot"><h2>'+esc(h)+'</h2><p>'+esc(p)+'</p></div>'; }
+
+/* search index: name, street line, suburb */
+function suburbOf(pid){ const p=S.props[pid]||{}, c=S.clients[p.c]||{}; return titleCase((c.a||[])[1]||""); }
+function addressOf(pid){
+  const p=S.props[pid]||{}, c=S.clients[p.c]||{}, a=c.a||[];
+  const sub=titleCase(a[1]||""); let s=p.l||"";
+  if(sub && s.toLowerCase().indexOf(sub.toLowerCase())<0) s+=", "+sub;
+  const tail=[a[2],a[3]].filter(Boolean).join(" ");
+  if(tail && s.indexOf(tail)<0 && sub && s.toLowerCase().indexOf(sub.toLowerCase())>=0 && !/\d{4}$/.test(s)) s+=" "+tail;
+  else if(tail && sub && !/\d{4}$/.test(s)) s+=" "+tail;
+  return s;
+}
+function buildIndex(){
+  S.index=Object.keys(S.props).map(pid=>{
+    const p=S.props[pid], c=S.clients[p.c]||{};
+    return {pid:pid,name:c.n||"(unknown)",line:p.l||"",sub:suburbOf(pid),
+      hay:((c.n||"")+" | "+(p.l||"")+" | "+((c.a||[])[1]||"")).toLowerCase()};
+  });
+}
+
+/* ---------- weather helpers ---------- */
+const COMPASS=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+const compass=d=>d==null?"":COMPASS[Math.round((((d%360)+360)%360)/22.5)%16];
+function beaufort(k){ k=Number(k)||0;
+  return k<1?"calm":k<6?"light air":k<12?"light breeze":k<20?"gentle breeze":k<29?"moderate breeze":k<39?"fresh breeze":"strong wind"; }
+function wcode(c){
+  if(c===0)return "clear"; if(c===1)return "mostly clear"; if(c===2)return "partly cloudy"; if(c===3)return "overcast";
+  if(c===45||c===48)return "foggy"; if(c>=51&&c<=57)return "drizzle"; if(c>=61&&c<=67)return "rain";
+  if(c>=71&&c<=77)return "snow"; if(c>=80&&c<=82)return "showers"; if(c>=95)return "thunderstorms"; return "";
+}
+function weatherFrom(c){
+  return {tempC:c.temperature_2m==null?null:Math.round(c.temperature_2m*10)/10,
+    windKmh:c.wind_speed_10m==null?null:Math.round(c.wind_speed_10m),
+    windDir:compass(c.wind_direction_10m), beaufort:beaufort(c.wind_speed_10m),
+    conditions:wcode(c.weather_code), rain:c.precipitation==null?null:c.precipitation};
+}
+function wxText(w){
+  if(!w) return "";
+  if(w.pending) return "Weather pending (will fill in when online)";
+  const p=[];
+  if(w.tempC!=null) p.push(Math.round(w.tempC)+"°C");
+  if(w.beaufort){ let s=w.beaufort; if(w.windKmh!=null) s+=" ("+w.windKmh+" km/h)"; if(w.windDir&&w.beaufort!=="calm") s+=" from the "+w.windDir; p.push(s); }
+  else if(w.windDir) p.push("wind from the "+w.windDir);
+  if(w.conditions) p.push(w.conditions);
+  if(w.rain!=null) p.push(w.rain>0?"rain "+w.rain+" mm":"no rain");
+  return p.join(", ");
+}
+function getLoc(){
+  return new Promise(function(res){
+    if(!navigator.geolocation){ res(null); return; }
+    let done=false; const fin=v=>{ if(!done){ done=true; res(v); } };
+    setTimeout(()=>fin(null),9000);
+    try{ navigator.geolocation.getCurrentPosition(
+      p=>fin({lat:Math.round(p.coords.latitude*1e4)/1e4,lon:Math.round(p.coords.longitude*1e4)/1e4}),
+      ()=>fin(null),{timeout:8000,maximumAge:600000}); }catch(e){ fin(null); }
+  });
+}
+async function geocode(name){
+  if(!name) return null;
+  try{ const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(name)+"&count=1&country_code=AU");
+    if(!r.ok) return null; const j=await r.json(); const x=j.results&&j.results[0];
+    return x?{lat:x.latitude,lon:x.longitude}:null; }catch(e){ return null; }
+}
+const FCURL="https://api.open-meteo.com/v1/forecast?";
+const FCTAIL="&wind_speed_unit=kmh&timezone=Australia%2FSydney";
+function newWx(){ return {auto:null,pend:null,loc:null,man:{wind:"",dir:"",cond:""},status:"",tok:0}; }
+/* work out what weather goes on the record: auto, with any manual picks laid over the top */
+function curWeather(){
+  const m=W.man, anyMan=!!(m.wind||m.dir||m.cond);
+  if(!W.auto && !anyMan) return W.pend||null;
+  const w=Object.assign({tempC:null,windKmh:null,windDir:"",beaufort:"",conditions:"",rain:null},W.auto||{});
+  if(m.wind){ w.beaufort=m.wind; w.windKmh=null; }
+  if(m.dir){ w.windDir=m.dir; }
+  if(m.cond){ w.conditions=m.cond; w.rain=null; }
+  w.text=wxText(w); w.lat=W.loc?W.loc.lat:null; w.lon=W.loc?W.loc.lon:null;
+  w.source=anyMan?"manual":"auto"; w.pending=false;
+  return w;
+}
+const wxOK=w=>!!w&&(w.pending||(w.beaufort&&w.conditions));
+async function fetchWx(){
+  const tok=++W.tok; W.status="Getting the weather…"; W.auto=null; W.pend=null; renderWx();
+  let loc=await getLoc();
+  if(!loc) loc=await geocode(suburbOf(F.propId));
+  if(tok!==W.tok) return;
+  if(!loc){ W.status="Couldn't work out where you are. Pick the weather below."; renderWx(); return; }
+  W.loc=loc;
+  try{
+    const r=await fetch(FCURL+"latitude="+loc.lat+"&longitude="+loc.lon+
+      "&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,wind_direction_10m,weather_code"+FCTAIL);
+    if(!r.ok) throw new Error("bad");
+    const j=await r.json();
+    if(tok!==W.tok) return;
+    W.auto=weatherFrom(j.current); W.status="";
+  }catch(e){
+    if(tok!==W.tok) return;
+    W.pend={pending:true,lat:loc.lat,lon:loc.lon,time:F.date+"T"+(F.start||nowHM()),source:"auto",text:"",tempC:null};
+    W.pend.text=wxText(W.pend);
+    W.status="No signal. The weather will fill in on this record when you're back online. You can also pick it below.";
+  }
+  renderWx();
+}
+/* fill in weather for records saved while offline */
+async function backfill(){
+  if(!navigator.onLine) return 0;
+  let n=0;
+  for(const r of S.records){
+    const w=r.weather; if(!w||!w.pending||w.lat==null) continue;
+    try{
+      const ago=Math.max(3,Math.min(92,Math.ceil((Date.now()-new Date(r.date+"T00:00:00").getTime())/864e5)+1));
+      const res=await fetch(FCURL+"latitude="+w.lat+"&longitude="+w.lon+
+        "&hourly=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m,weather_code&past_days="+ago+FCTAIL);
+      if(!res.ok) continue;
+      const j=await res.json(), h=j.hourly; if(!h) continue;
+      const want=r.date+"T"+pad(parseInt((r.start||"12:00").slice(0,2),10))+":00";
+      const i=h.time.indexOf(want); if(i<0) continue;
+      const nw=weatherFrom({temperature_2m:h.temperature_2m[i],precipitation:h.precipitation[i],
+        wind_speed_10m:h.wind_speed_10m[i],wind_direction_10m:h.wind_direction_10m[i],weather_code:h.weather_code[i]});
+      nw.lat=w.lat; nw.lon=w.lon; nw.source="auto"; nw.pending=false; nw.text=wxText(nw);
+      r.weather=nw; await dbPut(r); n++;
+    }catch(e){}
+  }
+  return n;
+}
+const pendingCount=()=>S.records.filter(r=>r.weather&&r.weather.pending).length;
+function renderBanner(){
+  const n=pendingCount(), b=$("#bnr");
+  if(!n){ if(b) b.remove(); return; }
+  const html='<b>'+n+' record'+(n>1?"s":"")+' still waiting on weather.</b> It fills in once you have signal. <button class="mic" data-a="retrywx">Try now</button>';
+  if(b){ b.innerHTML=html; return; }
+  const d=el("div","banner warn"); d.id="bnr"; d.innerHTML=html;
+  const m=$("#main"); m.parentNode.insertBefore(d,m);
+  d.style.margin="12px auto 0"; d.style.maxWidth="852px";
+}
+
+/* ---------- product library and per-service lists ---------- */
+function P(){ const p=S.prefs; p.svcAdd=p.svcAdd||{}; p.svcRemove=p.svcRemove||{}; p.customProducts=p.customProducts||[];
+  p.customEquip=p.customEquip||[]; p.amounts=p.amounts||{}; p.mix=p.mix||{}; return p; }
+const library=()=>S.chem.products.concat(P().customProducts);
+const prodById=id=>library().find(p=>p.id===id);
+function svcProducts(s){
+  const base=(S.chem.jobProducts||{})[s]||[], add=P().svcAdd[s]||[], rem=P().svcRemove[s]||[];
+  return base.concat(add.filter(x=>base.indexOf(x)<0)).filter(x=>rem.indexOf(x)<0);
+}
+function unionProducts(){
+  const out=[]; F.services.forEach(sv=>svcProducts(sv.s).forEach(id=>{ if(out.indexOf(id)<0&&prodById(id)) out.push(id); }));
+  return out;
+}
+function listAdd(id){ F.services.forEach(sv=>{ const p=P();
+  p.svcAdd[sv.s]=p.svcAdd[sv.s]||[]; if(p.svcAdd[sv.s].indexOf(id)<0) p.svcAdd[sv.s].push(id);
+  p.svcRemove[sv.s]=(p.svcRemove[sv.s]||[]).filter(x=>x!==id); }); savePrefs(); }
+function listRemove(id){ F.services.forEach(sv=>{ const p=P();
+  if(svcProducts(sv.s).indexOf(id)>=0){ p.svcRemove[sv.s]=p.svcRemove[sv.s]||[]; p.svcRemove[sv.s].push(id); }
+  p.svcAdd[sv.s]=(p.svcAdd[sv.s]||[]).filter(x=>x!==id); }); savePrefs(); }
+const allEquip=()=>S.chem.equipment.concat(P().customEquip.filter(e=>S.chem.equipment.indexOf(e)<0));
+function lastAmount(id){ for(const sv of F.services){ const v=P().amounts[sv.s+"|"+id]; if(v!=null&&v!=="") return v; } return ""; }
+
+/* ---------- form model ---------- */
+function newForm(){
+  const t=S.chem.operator.techs||[];
+  return {id:null,savedAt:null,propId:"",client:"",address:"",date:TODAY,start:"",finish:"",finishTouched:false,
+    services:[],products:[],areas:[],equipment:[],appliedBy:t.length===1?[t[0].name]:[],
+    next:{k:"",date:""},notes:"",photos:[],q:"",errors:[]};
+}
+function resetForm(){ F=newForm(); W=newWx(); UI={}; }
+/* drop the address off a Xero description ("... re 3 Hayter St"), same rule as tools/build_service_lists.py */
+function cutTail(d){ return d.replace(/\s+(re\.?:?|at|for|as per)\s+\d.*$|\s+re\.?:?\s*$/i,"").replace(/[\s.\-–]+$/,"").trim(); }
+function pickProperty(pid){
+  const p=S.props[pid]; if(!p) return;
+  F.propId=pid; F.client=(S.clients[p.c]||{}).n||"(unknown)"; F.address=addressOf(pid);
+  F.start=nowHM(); F.date=TODAY; F.finish=""; F.finishTouched=false; F.q="";
+  F.services=[];F.products=[];F.areas=[];F.equipment=[]; F.next={k:"",date:""};
+  /* 1. last saved record for this property on this device, else 2. last Xero job */
+  const mine=S.records.filter(r=>r.propId===pid).sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""))[0];
+  if(mine){
+    F.services=mine.services.map(x=>({s:x.s,d:x.d||"",custom:false}));
+    F.areas=(mine.areas||[]).slice(); F.equipment=(mine.equipment||[]).slice();
+    F.products=(mine.products||[]).map(x=>Object.assign({},x));
+  }else{
+    const jobs=(S.jobs[pid]||[]).slice().sort((a,b)=>b.d.localeCompare(a.d)), j=jobs[0];
+    if(j){ const known=S.services.map(x=>x.s);
+      (j.s||[]).forEach(x=>{ if(known.indexOf(x.s)>=0&&!F.services.some(y=>y.s===x.s)) F.services.push({s:x.s,d:cutTail(x.d||""),custom:false}); }); }
+  }
+  F.services.forEach(sv=>{ const info=S.services.find(x=>x.s===sv.s); sv.custom=!!sv.d&&!(info&&info.d.indexOf(sv.d)>=0); });
+  W=newWx(); UI={};
+  render(); fetchWx();
+}
+function addProduct(id){
+  const lib=prodById(id); if(!lib||F.products.some(x=>x.id===id)) return;
+  F.products.push({id:id,name:lib.name,active:lib.active||"",apvma:lib.apvma||"",type:lib.type||"",
+    amount:lastAmount(id),unit:lib.unit||"",mix:lib.type==="liquid"?(P().mix[id]||""):""});
+  (lib.equip||[]).forEach(e=>{ if(F.equipment.indexOf(e)<0) F.equipment.push(e); });
+}
+function nextDate(){
+  const k=F.next.k; if(!k||k==="None") return ""; if(k==="Custom date") return F.next.date;
+  const d=parse(F.date), n=parseInt(k,10);
+  if(/week/.test(k)) d.setDate(d.getDate()+n*7); else d.setMonth(d.getMonth()+n);
+  return iso(d);
+}
+function nextObj(){ const k=F.next.k; return {label:k==="Custom date"?"Custom date":k,date:nextDate()}; }
+const toggle=(arr,v)=>{ const i=arr.indexOf(v); if(i>=0) arr.splice(i,1); else arr.push(v); };
+
+/* ---------- rendering the form ---------- */
+const chip=(label,on,attrs,cls)=>'<button type="button" class="chip '+(cls||"")+'" aria-pressed="'+(on?"true":"false")+'" '+attrs+'>'+esc(label)+'</button>';
+const sec=(h,n)=>'<div class="sechead"><h2>'+esc(h)+'</h2>'+(n?'<span class="n">'+esc(n)+'</span>':'')+'</div>';
+
+function render(){
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===S.tab?"true":"false"));
+  const y=window.scrollY;
+  if(S.tab==="records"){ if(S.openId) renderView(); else renderList(); $("#savebar").innerHTML=""; }
+  else if(S.justSaved&&S.openId){ renderView(); $("#savebar").innerHTML=""; }
+  else renderForm();
+  renderBanner();
+  window.scrollTo(0,y);
+}
+function renderForm(){
+  const m=$("#main");
+  let h="";
+  if(F.errors.length) h+='<div class="banner bad" id="errs"><b>Not saved yet. Still needed:</b><ul>'+F.errors.map(e=>'<li>'+esc(e)+'</li>').join("")+'</ul></div>';
+  if(F.id) h+='<div class="banner warn">Editing a saved record. Saving replaces it.</div>';
+  /* 1. customer */
+  h+=sec("Customer");
+  if(F.propId){
+    h+='<div class="card"><div class="top"><b>'+esc(F.client)+'</b><button class="mic" data-a="clearcust">Change</button></div>'
+      +'<div>'+esc(F.address)+'</div></div>';
+  }else{
+    h+='<input class="inp search" id="q" data-f="q" placeholder="Start typing a name or street" autocomplete="off" autocapitalize="off" value="'+esc(F.q)+'">'
+      +'<div id="qres"></div>';
+  }
+  if(F.propId){
+    /* 3. services */
+    h+=sec("Services","tap all that apply");
+    h+='<div class="chips">'+S.services.map(x=>chip(x.s,F.services.some(y=>y.s===x.s),'data-a="svc" data-s="'+esc(x.s)+'"')).join("")+'</div>';
+    F.services.forEach(sv=>{
+      const info=S.services.find(x=>x.s===sv.s)||{d:[]}; let ds=info.d.slice(0,8);
+      if(sv.d&&!sv.custom&&ds.indexOf(sv.d)<0) ds.unshift(sv.d);
+      h+='<div class="card"><div class="top"><b>'+esc(sv.s)+'</b></div><div class="chips">'
+        +ds.map(d=>chip(d,!sv.custom&&sv.d===d,'data-a="desc" data-s="'+esc(sv.s)+'" data-d="'+esc(d)+'"',"desc")).join("")
+        +chip("Custom",sv.custom,'data-a="custdesc" data-s="'+esc(sv.s)+'"',"desc ghost")+'</div>'
+        +(sv.custom?'<input class="inp" style="margin-top:8px" data-f="cd" data-s="'+esc(sv.s)+'" placeholder="Describe the work" value="'+esc(sv.d)+'">':'')
+        +'</div>';
+    });
+    /* 4. products */
+    h+=sec("Products used");
+    h+=productsHTML();
+    /* 5. areas */
+    h+=sec("Areas treated");
+    h+='<div class="chips">'+S.chem.areas.map(a=>chip(a,F.areas.indexOf(a)>=0,'data-a="area" data-v="'+esc(a)+'"')).join("")+'</div>';
+    /* 6. equipment */
+    h+=sec("Equipment");
+    h+='<div class="chips">'+allEquip().map(a=>chip(a,F.equipment.indexOf(a)>=0,'data-a="equip" data-v="'+esc(a)+'"')).join("")
+      +chip("+ Add",false,'data-a="equipadd"',"ghost")+'</div>';
+    if(UI.equipAdd) h+='<div class="card" style="margin-top:8px"><input class="inp" id="neweq" placeholder="Equipment name"><div class="btns"><button class="btn pri" data-a="equipsave">Add equipment</button><button class="btn" data-a="equipadd">Cancel</button></div></div>';
+    /* 7. weather */
+    h+=sec("Weather","needed for outdoor spraying");
+    h+='<div id="wx">'+wxHTML()+'</div>';
+    /* 8. applied by */
+    h+=sec("Applied by");
+    h+='<div class="chips">'+(S.chem.operator.techs||[]).map(t=>chip(t.name+" ("+t.licence+")",F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>';
+    /* 9. next service */
+    h+=sec("Next service","no default, pick one");
+    h+='<div class="chips">'+["6 weeks","3 months","6 months","12 months","Custom date","None"].map(k=>chip(k,F.next.k===k,'data-a="nxt" data-v="'+k+'"')).join("")+'</div>';
+    if(F.next.k==="Custom date") h+='<input class="inp" style="margin-top:8px" type="date" data-f="nextdate" value="'+esc(F.next.date)+'">';
+    else if(F.next.k&&F.next.k!=="None") h+='<div class="hint">'+esc(nice(nextDate()))+'</div>';
+    /* 10. photos */
+    h+=sec("Photos");
+    h+='<div class="chips"><button class="chip ghost" data-a="photo" type="button">📷 Photo</button></div>'
+      +'<input type="file" id="photoIn" accept="image/*" capture="environment" multiple hidden>'
+      +'<div class="thumbs">'+F.photos.map((p,i)=>'<div class="thumb"><img src="'+p+'" alt="Photo '+(i+1)+'"><button data-a="photorm" data-i="'+i+'" aria-label="Remove photo">✕</button></div>').join("")+'</div>';
+    /* 11. notes */
+    h+=sec("Notes");
+    h+='<textarea class="inp" id="notes" data-f="notes" placeholder="Anything worth recording">'+esc(F.notes)+'</textarea>'
+      +'<div style="margin-top:6px"><button class="mic" type="button" data-a="mic">'
+      +'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></div>';
+    /* 12. date and times */
+    h+=sec("Date and times");
+    h+='<div class="grid3"><div><label>Date</label><input class="inp" type="date" data-f="date" value="'+esc(F.date)+'"></div>'
+      +'<div><label>Start</label><input class="inp" type="time" data-f="start" value="'+esc(F.start)+'"></div>'
+      +'<div><label>Finish</label><input class="inp" type="time" data-f="finish" value="'+esc(F.finish)+'"></div></div>'
+      +'<div class="hint">Finish is set to the time you tap Save, unless you change it.</div>';
+    $("#savebar").innerHTML='<div class="btns" style="margin:0"><button class="btn pri" data-a="save">Save record</button></div>';
+  }else{ $("#savebar").innerHTML=""; }
+  m.innerHTML=h;
+  if(!F.propId){ renderQres(); }
+}
+function productsHTML(){
+  if(!F.services.length) return '<div class="hint">Pick a service first and its usual products show up here.</div>';
+  const ids=unionProducts();
+  let h='<div class="chips">'+ids.map(id=>{ const p=prodById(id), on=F.products.some(x=>x.id===id);
+    const c=chip(p.name,on,'data-a="prod" data-id="'+esc(id)+'"');
+    return UI.pedit?'<span class="chipx">'+c+'<button class="rm" data-a="prem" data-id="'+esc(id)+'" aria-label="Remove from list">✕</button></span>':c; }).join("")+'</div>';
+  h+='<div class="chips" style="margin-top:6px">'
+    +chip("+ Add product",false,'data-a="addopen"',"ghost")+chip("+ New product",false,'data-a="newopen"',"ghost")
+    +chip(UI.pedit?"Done":"Edit",!!UI.pedit,'data-a="pedit"',"ghost")+'</div>';
+  if(UI.pedit) h+='<div class="hint">Tap ✕ to take a product off this list for good. It stays in the library.</div>';
+  if(UI.add) h+='<div class="card" style="margin-top:8px"><input class="inp" id="aq" data-f="aq" placeholder="Search the whole library" autocomplete="off"><div id="ares" style="margin-top:8px"></div>'
+    +'<div class="btns" style="margin-bottom:0"><button class="btn" data-a="addopen">Close</button></div></div>';
+  if(UI.newp) h+='<div class="card" style="margin-top:8px"><div class="lbl" style="margin-top:0">New product</div>'
+    +'<input class="inp" id="np-name" placeholder="Full product name (required)" style="margin-bottom:8px">'
+    +'<input class="inp" id="np-active" placeholder="Active ingredient (optional)" style="margin-bottom:8px">'
+    +'<input class="inp" id="np-apvma" placeholder="APVMA number (optional)" style="margin-bottom:8px">'
+    +'<div class="grid3" style="grid-template-columns:1fr 1fr"><input class="inp" id="np-unit" placeholder="Unit (L of mix, g, cans)">'
+    +'<select class="inp" id="np-type"><option value="liquid">Liquid</option><option value="aerosol">Aerosol</option><option value="dust">Dust</option><option value="granule">Granule</option><option value="gel">Gel</option><option value="foam">Foam</option><option value="bait">Bait</option><option value="other">Other</option></select></div>'
+    +'<div class="btns" style="margin-bottom:0"><button class="btn pri" data-a="newsave">Save product</button><button class="btn" data-a="newopen">Cancel</button></div></div>';
+  /* cards for the products on this record */
+  F.products.forEach(p=>{
+    h+='<div class="card"><div class="top"><b>'+esc(p.name)+'</b><button class="mic" data-a="prod" data-id="'+esc(p.id)+'" aria-label="Remove from record">Remove</button></div>'
+      +((p.active||p.apvma)?'<div class="small">'+esc([p.active,p.apvma?"APVMA "+p.apvma:""].filter(Boolean).join("  |  "))+'</div>':'')
+      +'<div class="amt" style="margin-top:8px"><input class="inp" type="number" inputmode="decimal" min="0" step="any" data-f="amt" data-id="'+esc(p.id)+'" placeholder="Amount used" value="'+esc(p.amount)+'"><span class="unit">'+esc(p.unit||"units")+'</span></div>'
+      +(p.type==="liquid"?'<div class="mixrow"><input class="inp" data-f="mix" data-id="'+esc(p.id)+'" placeholder="Mix rate, e.g. 50 mL per 10 L" value="'+esc(p.mix)+'"></div>':'')
+      +'</div>';
+  });
+  return h;
+}
+function wxHTML(){
+  const w=curWeather(), m=W.man;
+  let h='<div class="card">';
+  if(w&&w.pending) h+='<div class="wxline">'+esc(wxText(w))+'</div>';
+  else if(w) h+='<div class="wxline">'+esc(w.text||wxText(w))+'</div><div class="small">'+(w.source==="manual"?"Picked by hand":"From the weather service")+'</div>';
+  else if(W.status&&/^Getting/.test(W.status)) h+='<div class="wxline"><span class="spin"></span> '+esc(W.status)+'</div>';
+  else h+='<div class="wxline small">No weather yet.</div>';
+  if(W.status&&!/^Getting/.test(W.status)) h+='<div class="hint">'+esc(W.status)+'</div>';
+  h+='<div class="lbl">Wind</div><div class="chips">'+["Calm","Light breeze","Moderate","Strong"].map(x=>chip(x,m.wind===x.toLowerCase(),'data-a="wwind" data-v="'+x.toLowerCase()+'"')).join("")+'</div>'
+    +'<div class="lbl">Wind from</div><div class="chips">'+["N","NE","E","SE","S","SW","W","NW"].map(x=>chip(x,m.dir===x,'data-a="wdir" data-v="'+x+'"')).join("")+'</div>'
+    +'<div class="lbl">Conditions</div><div class="chips">'+["Fine","Overcast","Showers","Rain"].map(x=>chip(x,m.cond===x.toLowerCase(),'data-a="wcond" data-v="'+x.toLowerCase()+'"')).join("")+'</div>'
+    +'<div class="btns" style="margin-bottom:0"><button class="btn" data-a="wxagain">Get weather again</button></div></div>';
+  return h;
+}
+function renderWx(){ const e=$("#wx"); if(e) e.innerHTML=wxHTML(); }
+function renderQres(){
+  const box=$("#qres"); if(!box) return;
+  const q=F.q.trim().toLowerCase();
+  if(q.length<2){ box.innerHTML='<div class="hint">Type 2 or more letters.</div>'; return; }
+  const words=q.split(/\s+/); const hits=[];
+  for(const x of S.index){ if(words.every(w=>x.hay.indexOf(w)>=0)){ hits.push(x); if(hits.length>=25) break; } }
+  box.innerHTML=hits.length?hits.map(x=>'<button class="pick" data-a="pick" data-pid="'+esc(x.pid)+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line+(x.sub?", "+x.sub:""))+'</div></button>').join("")
+    :'<div class="empty">No match. Try a different spelling.</div>';
+}
+function renderAres(){
+  const box=$("#ares"); if(!box) return;
+  const q=(UI.aq||"").trim().toLowerCase(), have=unionProducts();
+  const hits=library().filter(p=>have.indexOf(p.id)<0&&(!q||(p.name+" "+(p.active||"")).toLowerCase().indexOf(q)>=0)).slice(0,12);
+  box.innerHTML=hits.length?hits.map(p=>'<button class="pick" data-a="addpick" data-id="'+esc(p.id)+'"><div class="nm">'+esc(p.name)+'</div><div class="pl">'+esc(p.active||"")+'</div></button>').join("")
+    :'<div class="hint">Nothing else matches.</div>';
+}
+
+/* ---------- validate and save ---------- */
+function problems(){
+  const e=[];
+  if(!F.propId) e.push("Pick a customer.");
+  if(!F.services.length) e.push("Pick at least one service.");
+  F.products.forEach(p=>{ if(p.amount===""||p.amount==null||isNaN(Number(p.amount))) e.push("Amount used for "+p.name+"."); });
+  if(!F.appliedBy.length) e.push("Who applied it.");
+  if(!F.next.k) e.push("Next service (pick None if there isn't one).");
+  else if(F.next.k==="Custom date"&&!F.next.date) e.push("A date for the next service.");
+  const air=(S.chem.airTypes||[]);
+  if(F.products.some(p=>air.indexOf(p.type)>=0)&&!wxOK(curWeather()))
+    e.push("Weather: wind and conditions (needed for outdoor spraying).");
+  return e;
+}
+async function save(){
+  F.errors=problems();
+  if(F.errors.length){ render(); const e=$("#errs"); if(e) e.scrollIntoView({block:"start"}); toast("Missing: "+F.errors.length+" thing"+(F.errors.length>1?"s":"")+". See the top of the form.",true); return; }
+  const op=S.chem.operator, techs=(op.techs||[]).filter(t=>F.appliedBy.indexOf(t.name)>=0);
+  const finish=F.finishTouched&&F.finish?F.finish:(F.id&&F.finish?F.finish:nowHM());
+  const rec={id:F.id||uid(),propId:F.propId,client:F.client,address:F.address,date:F.date,start:F.start,finish:finish,
+    services:F.services.map(x=>({s:x.s,d:x.d})),
+    products:F.products.map(p=>({id:p.id,name:p.name,active:p.active,apvma:p.apvma,type:p.type,amount:p.amount,unit:p.unit,mix:p.mix})),
+    areas:F.areas.slice(),equipment:F.equipment.slice(),
+    weather:curWeather(),
+    appliedBy:{name:techs.map(t=>t.name).join(" / "),licence:techs.map(t=>t.licence).join(" / ")},
+    business:{name:op.business,address:op.address,phone:op.phone,abn:ABN},
+    nextService:nextObj(),notes:F.notes.trim(),photos:F.photos.slice(),savedAt:new Date().toISOString()};
+  if(F.id) rec.editedAt=rec.savedAt;
+  try{ await dbPut(rec); }
+  catch(e){ toast("Couldn't save the record to this device ("+(e&&e.message?e.message:"storage error")+"). Nothing was lost on screen. Take a screenshot as a backup.",true); return; }
+  /* remember amounts and mix rates for next time */
+  rec.products.forEach(p=>{ F.services.forEach(sv=>{ if(svcProducts(sv.s).indexOf(p.id)>=0) P().amounts[sv.s+"|"+p.id]=p.amount; });
+    if(p.mix) P().mix[p.id]=p.mix; });
+  F.services.forEach(sv=>rec.products.forEach(p=>{ if(P().amounts[sv.s+"|"+p.id]==null&&svcProducts(sv.s).indexOf(p.id)<0) P().amounts[sv.s+"|"+p.id]=p.amount; }));
+  savePrefs();
+  S.records=S.records.filter(r=>r.id!==rec.id); S.records.push(rec);
+  toast("Record saved.");
+  S.openId=rec.id; S.justSaved=true; render();
+}
+
+/* ---------- read-only record view, email, print, CSV ---------- */
+const byId=id=>S.records.find(r=>r.id===id);
+const listPlain=a=>(a||[]).join(", ");
+const nextText=n=>!n||!n.label?"":(n.label==="None"?"None":n.label+(n.date?" ("+nice(n.date)+")":""));
+function prodLine(p){ return p.name+(p.active?" ["+p.active+"]":"")+(p.apvma?" APVMA "+p.apvma:"")+": "+p.amount+" "+(p.unit||"")+(p.mix?", mix "+p.mix:""); }
+function recText(r){
+  const w=r.weather, L=[];
+  L.push("SERVICE RECORD");
+  L.push(r.business.name+", "+r.business.address+", ABN "+(r.business.abn||ABN));
+  L.push("Date: "+nice(r.date)+"   Start: "+(r.start||"")+"   Finish: "+(r.finish||""));
+  L.push("Customer: "+r.client); L.push("Address: "+r.address);
+  L.push("Services:"); r.services.forEach(x=>L.push("  - "+x.s+(x.d?": "+x.d:"")));
+  L.push("Products:"); if(r.products.length) r.products.forEach(p=>L.push("  - "+prodLine(p))); else L.push("  - none");
+  L.push("Areas: "+listPlain(r.areas)); L.push("Equipment: "+listPlain(r.equipment));
+  L.push("Weather: "+(w?(w.text||wxText(w)):"not recorded"));
+  L.push("Applied by: "+r.appliedBy.name+" (licence "+r.appliedBy.licence+"), "+r.business.phone);
+  L.push("Next service: "+nextText(r.nextService));
+  if(r.notes) L.push("Notes: "+r.notes);
+  L.push("Photos: "+(r.photos||[]).length+" (not included)");
+  return L.join("\n");
+}
+const subjFor=r=>"Service record: "+r.address+", "+nice(r.date);
+function recHTML(r){
+  const w=r.weather, kv=(k,v)=>'<div class="kv"><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>';
+  let h='<div class="rec"><h2>Pesticide service record</h2><div class="biz">'+esc(r.business.name)+', '+esc(r.business.address)+'. ABN '+esc(r.business.abn||ABN)+'. Phone '+esc(r.business.phone)+'.</div>';
+  h+=kv("Date",nice(r.date))+kv("Start / finish",(r.start||"")+" to "+(r.finish||""))+kv("Customer",r.client)+kv("Address",r.address);
+  h+=kv("Services",r.services.map(x=>x.s+(x.d?": "+x.d:"")).join("\n"));
+  h+=kv("Products",r.products.length?r.products.map(prodLine).join("\n"):"None");
+  h+=kv("Areas",listPlain(r.areas))+kv("Equipment",listPlain(r.equipment));
+  h+=kv("Weather",w?(w.text||wxText(w)):"Not recorded");
+  h+=kv("Applied by",r.appliedBy.name+"\nLicence "+r.appliedBy.licence);
+  h+=kv("Next service",nextText(r.nextService));
+  if(r.notes) h+=kv("Notes",r.notes);
+  h+=kv("Saved",new Date(r.savedAt).toLocaleString("en-AU"));
+  if((r.photos||[]).length) h+='<div class="thumbs">'+r.photos.map((p,i)=>'<div class="thumb"><img src="'+p+'" alt="Photo '+(i+1)+'"></div>').join("")+'</div>';
+  return h+'</div>';
+}
+function renderView(){
+  const r=byId(S.openId); if(!r){ S.openId=null; S.justSaved=false; render(); return; }
+  let h='';
+  if(S.justSaved) h+='<div class="banner ok noprint" style="margin-top:14px"><b>Saved.</b> It stays on this device for the 3 years you have to keep it.</div>';
+  else h+='<div class="btns noprint" style="margin-bottom:0"><button class="btn" data-a="back">Back to list</button></div>';
+  h+=recHTML(r);
+  h+='<div class="btns noprint">'
+    +'<a class="btn pri" href="'+esc(mailHref(MY_EMAIL,subjFor(r),recText(r)))+'">Email me a copy</a>'
+    +(S.justSaved?'<button class="btn" data-a="newrec">New record</button>':'')
+    +'<button class="btn" data-a="edit" data-id="'+esc(r.id)+'">Edit</button>'
+    +'<button class="btn" data-a="print">Make PDF</button>'
+    +'<button class="btn bad" data-a="del" data-id="'+esc(r.id)+'">Delete</button></div>';
+  $("#main").innerHTML=h;
+}
+function renderList(){
+  const q=S.rq.trim().toLowerCase();
+  const list=S.records.slice().sort((a,b)=>(b.date+(b.start||"")).localeCompare(a.date+(a.start||"")))
+    .filter(r=>!q||(r.client+" "+r.address+" "+r.date+" "+nice(r.date)).toLowerCase().indexOf(q)>=0);
+  let h='<input class="inp search" id="rq" data-f="rq" placeholder="Search customer, address or date" value="'+esc(S.rq)+'" autocomplete="off">';
+  h+='<div class="btns"><button class="btn" data-a="export"'+(S.records.length?'':' disabled')+'>Export all (CSV)</button></div>';
+  h+='<div id="rlist">'+listHTML(list)+'</div>';
+  $("#main").innerHTML=h;
+}
+function listHTML(list){
+  if(!list.length) return '<div class="empty"><h3>No records</h3><p>'+(S.records.length?'Nothing matches that search.':'Saved records show up here.')+'</p></div>';
+  return list.map(r=>'<button class="row'+(r.weather&&r.weather.pending?' pend':'')+'" data-a="open" data-id="'+esc(r.id)+'"><span class="stripe"></span><span class="main">'
+    +'<div class="nm">'+esc(r.client)+'</div><div class="pl">'+esc(r.address)+'</div>'
+    +'<div class="mt">'+esc(nice(r.date)+"  "+(r.start||"")+"  |  "+r.services.map(x=>x.s).join(", "))+'</div></span></button>').join("");
+}
+function exportCSV(){
+  const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
+  const head=["Record ID","Date","Start","Finish","Customer","Address","Services","Areas","Equipment","Applied by","Licence","Weather","Temp C","Wind km/h","Wind from","Conditions","Rain mm","Weather source","Next service","Notes","Product","Active","APVMA","Amount","Unit","Mix rate"];
+  const rows=[head.map(q).join(",")];
+  S.records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+    const w=r.weather||{};
+    const base=[r.id,r.date,r.start,r.finish,r.client,r.address,r.services.map(x=>x.s+(x.d?": "+x.d:"")).join("; "),
+      listPlain(r.areas),listPlain(r.equipment),r.appliedBy.name,r.appliedBy.licence,w.text||wxText(w),w.tempC,w.windKmh,w.windDir,w.conditions,w.rain,
+      w.pending?"pending":w.source,nextText(r.nextService),r.notes];
+    const ps=r.products.length?r.products:[null];
+    ps.forEach(p=>rows.push(base.concat(p?[p.name,p.active,p.apvma,p.amount,p.unit,p.mix]:["","","","","",""]).map(q).join(",")));
+  });
+  try{
+    const blob=new Blob(["﻿"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="service-records-"+TODAY+".csv";
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  }catch(e){ toast("Couldn't make the CSV file.",true); }
+}
+
+/* ---------- photos: resize to 1600px max, JPEG 0.7 ---------- */
+function shrink(file){
+  return new Promise(function(res,rej){
+    const url=URL.createObjectURL(file), img=new Image();
+    img.onload=function(){
+      const k=Math.min(1,1600/Math.max(img.width,img.height)), c=document.createElement("canvas");
+      c.width=Math.round(img.width*k); c.height=Math.round(img.height*k);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",0.7));
+    };
+    img.onerror=function(){ URL.revokeObjectURL(url); rej(new Error("bad image")); };
+    img.src=url;
+  });
+}
+
+/* ---------- voice dictation (same approach as index.html) ---------- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recog=null,recBtn=null;
+function stopRec(){ if(recog){ try{ recog.stop(); }catch(e){} } }
+function toggleMic(btn){
+  const ta=$("#notes"); if(!ta) return;
+  if(recBtn===btn&&recog){ stopRec(); return; }
+  stopRec();
+  if(!SR){ ta.focus(); toast("Keyboard up. Tap the mic key on it to dictate."); return; }
+  try{ recog=new SR(); }catch(e){ recog=null; ta.focus(); return; }
+  recog.lang="en-AU"; recog.continuous=true; recog.interimResults=true;
+  recBtn=btn; btn.classList.add("rec");
+  let base=ta.value?ta.value.replace(/\s+$/,"")+" ":"";
+  recog.onresult=function(ev){
+    let fin="",intr="";
+    for(let i=ev.resultIndex;i<ev.results.length;i++){ const r=ev.results[i]; if(r.isFinal) fin+=r[0].transcript; else intr+=r[0].transcript; }
+    if(fin) base=(base+fin+" ").replace(/\s+/g," ");
+    ta.value=(base+intr).trim(); F.notes=ta.value;
+  };
+  recog.onend=function(){ btn.classList.remove("rec"); F.notes=ta.value; recog=null; recBtn=null; };
+  recog.onerror=function(ev){ btn.classList.remove("rec"); recog=null; recBtn=null;
+    const c=ev&&ev.error;
+    if(c==="not-allowed"||c==="service-not-allowed"){ ta.focus(); toast("Mic blocked. Use the keyboard mic key instead."); }
+    else if(c==="no-speech"){ toast("Didn't catch that. Tap Speak and try again."); }
+    else{ ta.focus(); toast("Use the keyboard mic key to dictate."); } };
+  try{ recog.start(); toast("Listening. Tap Speak again to stop."); }
+  catch(e){ btn.classList.remove("rec"); recog=null; recBtn=null; ta.focus(); }
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",function(e){
+  const t=e.target.closest("[data-a]"); if(!t) return;
+  const a=t.dataset.a, d=t.dataset, svOf=s=>F.services.find(x=>x.s===s);
+  if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
+  if(a==="pick"){ pickProperty(d.pid); return; }
+  if(a==="clearcust"){ resetForm(); render(); return; }
+  if(a==="svc"){ const i=F.services.findIndex(x=>x.s===d.s);
+    if(i>=0) F.services.splice(i,1); else F.services.push({s:d.s,d:"",custom:false}); render(); return; }
+  if(a==="desc"){ const sv=svOf(d.s); if(sv){ sv.custom=false; sv.d=(sv.d===d.d)?"":d.d; } render(); return; }
+  if(a==="custdesc"){ const sv=svOf(d.s); if(sv){ sv.custom=!sv.custom; if(sv.custom) sv.d=""; } render(); return; }
+  if(a==="prod"){ const i=F.products.findIndex(x=>x.id===d.id); if(i>=0) F.products.splice(i,1); else addProduct(d.id); render(); return; }
+  if(a==="pedit"){ UI.pedit=!UI.pedit; render(); return; }
+  if(a==="prem"){ const p=prodById(d.id); if(p&&confirm("Take "+p.name+" off this service's list for good?")){ listRemove(d.id); render(); } return; }
+  if(a==="addopen"){ UI.add=!UI.add; UI.newp=false; UI.aq=""; render(); renderAres(); return; }
+  if(a==="addpick"){ listAdd(d.id); addProduct(d.id); UI.add=false; render(); return; }
+  if(a==="newopen"){ UI.newp=!UI.newp; UI.add=false; render(); return; }
+  if(a==="newsave"){
+    const name=($("#np-name").value||"").trim(); if(!name){ toast("Give the product a name.",true); return; }
+    const np={id:"c"+Date.now().toString(36),name:name,active:($("#np-active").value||"").trim(),apvma:($("#np-apvma").value||"").trim(),
+      type:$("#np-type").value,unit:($("#np-unit").value||"").trim()||"units",equip:[]};
+    P().customProducts.push(np); listAdd(np.id); addProduct(np.id); UI.newp=false; render(); return; }
+  if(a==="area"){ toggle(F.areas,d.v); render(); return; }
+  if(a==="equip"){ toggle(F.equipment,d.v); render(); return; }
+  if(a==="equipadd"){ UI.equipAdd=!UI.equipAdd; render(); return; }
+  if(a==="equipsave"){ const n=($("#neweq").value||"").trim(); if(!n) return;
+    if(allEquip().indexOf(n)<0){ P().customEquip.push(n); savePrefs(); } if(F.equipment.indexOf(n)<0) F.equipment.push(n);
+    UI.equipAdd=false; render(); return; }
+  if(a==="wwind"){ W.man.wind=W.man.wind===d.v?"":d.v; renderWx(); return; }
+  if(a==="wdir"){ W.man.dir=W.man.dir===d.v?"":d.v; renderWx(); return; }
+  if(a==="wcond"){ W.man.cond=W.man.cond===d.v?"":d.v; renderWx(); return; }
+  if(a==="wxagain"){ fetchWx(); return; }
+  if(a==="tech"){ toggle(F.appliedBy,d.v); render(); return; }
+  if(a==="nxt"){ F.next.k=F.next.k===d.v?"":d.v; render(); return; }
+  if(a==="photo"){ const i=$("#photoIn"); if(i) i.click(); return; }
+  if(a==="photorm"){ F.photos.splice(+d.i,1); render(); return; }
+  if(a==="mic"){ toggleMic(t); return; }
+  if(a==="save"){ save(); return; }
+  if(a==="open"){ S.openId=d.id; S.justSaved=false; render(); window.scrollTo(0,0); return; }
+  if(a==="back"){ S.openId=null; render(); return; }
+  if(a==="newrec"){ S.justSaved=false; S.openId=null; S.tab="new"; resetForm(); render(); window.scrollTo(0,0); return; }
+  if(a==="print"){ window.print(); return; }
+  if(a==="export"){ exportCSV(); return; }
+  if(a==="retrywx"){ backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); else toast("Still pending. Needs signal, and the record can't be older than the weather service holds.",true); renderBanner(); }); return; }
+  if(a==="del"){ const r=byId(d.id); if(!r) return;
+    if(!confirm("Delete the record for "+r.client+" on "+nice(r.date)+"? You're meant to keep these for 3 years. This can't be undone.")) return;
+    dbDel(d.id).then(()=>{ S.records=S.records.filter(x=>x.id!==d.id); S.openId=null; S.justSaved=false; S.tab="records"; toast("Record deleted."); render(); })
+      .catch(()=>toast("Couldn't delete the record.",true)); return; }
+  if(a==="edit"){ const r=byId(d.id); if(r) loadForEdit(r); return; }
+});
+document.addEventListener("input",function(e){
+  const t=e.target, f=t.dataset&&t.dataset.f; if(!f) return;
+  if(f==="q"){ F.q=t.value; renderQres(); }
+  else if(f==="rq"){ S.rq=t.value; const q=S.rq.trim().toLowerCase();
+    const list=S.records.slice().sort((a,b)=>(b.date+(b.start||"")).localeCompare(a.date+(a.start||"")))
+      .filter(r=>!q||(r.client+" "+r.address+" "+r.date+" "+nice(r.date)).toLowerCase().indexOf(q)>=0);
+    $("#rlist").innerHTML=listHTML(list); }
+  else if(f==="aq"){ UI.aq=t.value; renderAres(); }
+  else if(f==="cd"){ const sv=F.services.find(x=>x.s===t.dataset.s); if(sv) sv.d=t.value; }
+  else if(f==="amt"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.amount=t.value; }
+  else if(f==="mix"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.mix=t.value; }
+  else if(f==="notes"){ F.notes=t.value; }
+  else if(f==="date"){ F.date=t.value; }
+  else if(f==="start"){ F.start=t.value; }
+  else if(f==="finish"){ F.finish=t.value; F.finishTouched=true; }
+  else if(f==="nextdate"){ F.next.date=t.value; }
+});
+document.addEventListener("change",async function(e){
+  if(e.target.id!=="photoIn") return;
+  const files=Array.prototype.slice.call(e.target.files||[]);
+  for(const f of files){ try{ F.photos.push(await shrink(f)); }catch(err){ toast("Couldn't read one of the photos.",true); } }
+  render();
+});
+
+/* open a saved record back in the form */
+function loadForEdit(r){
+  F=newForm(); W=newWx(); UI={};
+  F.id=r.id; F.propId=r.propId; F.client=r.client; F.address=r.address; F.date=r.date; F.start=r.start||""; F.finish=r.finish||"";
+  F.finishTouched=!!r.finish;
+  F.services=r.services.map(x=>{ const info=S.services.find(y=>y.s===x.s);
+    return {s:x.s,d:x.d||"",custom:!!x.d&&!(info&&info.d.indexOf(x.d)>=0)}; });
+  F.products=r.products.map(x=>Object.assign({},x)); F.areas=(r.areas||[]).slice(); F.equipment=(r.equipment||[]).slice();
+  const names=(r.appliedBy.name||"").split(" / "); F.appliedBy=names.filter(Boolean);
+  const ns=r.nextService||{}; F.next={k:ns.label||"",date:ns.label==="Custom date"?(ns.date||""):""};
+  F.notes=r.notes||""; F.photos=(r.photos||[]).slice();
+  const w=r.weather;
+  if(w){
+    if(w.pending) W.pend=w;
+    else if(w.source==="manual"){ W.man={wind:w.beaufort||"",dir:w.windDir||"",cond:w.conditions||""}; }
+    else W.auto={tempC:w.tempC,windKmh:w.windKmh,windDir:w.windDir,beaufort:w.beaufort,conditions:w.conditions,rain:w.rain};
+    if(w.lat!=null) W.loc={lat:w.lat,lon:w.lon};
+  }
+  S.tab="new"; S.openId=null; S.justSaved=false; render(); window.scrollTo(0,0);
+}
+
+/* ---------- start up ---------- */
+(async function init(){
+  resetForm_pre();
+  const ok=await loadAll(); if(!ok) return;
+  S.prefs=STORE.read(); P();
+  try{ S.records=(await dbAll())||[]; }
+  catch(e){ S.records=[]; toast("Couldn't open the saved records on this device ("+(e&&e.message?e.message:"storage error")+"). New records may not save.",true); }
+  resetForm(); render();
+  if(pendingCount()) backfill().then(()=>renderBanner());
+  window.addEventListener("online",()=>{ if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
+})();
+function resetForm_pre(){}
+})();
+</script>
+</body>
+</html>
