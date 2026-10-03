@@ -60,7 +60,7 @@ header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepI
 
 /* tabs / nav */
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
-  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
   padding-bottom:env(safe-area-inset-bottom)}
 nav.bottom button{padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10.5px;font-weight:600;color:var(--ink3);letter-spacing:.02em}
@@ -124,29 +124,6 @@ nav.bottom .badge{position:absolute;transform:translate(13px,-4px);background:va
 .search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line2);
   background:var(--surface);color:var(--ink);font-size:15px;margin-top:12px}
 .search::placeholder{color:var(--ink3)}
-
-/* calendar */
-.calhead{display:flex;align-items:center;justify-content:space-between;margin:14px 0 10px}
-.calhead h2{font-size:17px}
-.calnav{display:flex;gap:6px}
-.calnav button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line2);
-  background:var(--surface);display:grid;place-items:center}
-.calnav svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
-.dow{text-align:center;font-size:10px;font-weight:700;color:var(--ink3);text-transform:uppercase;
-  letter-spacing:.06em;padding-bottom:4px}
-.day{aspect-ratio:1;border:1px solid var(--line);border-radius:8px;background:var(--surface);
-  padding:4px 3px 3px;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:44px}
-.day.pad{background:transparent;border-color:transparent}
-.day .d{font-family:"Spline Sans Mono",monospace;font-size:12px;font-weight:600;color:var(--ink2)}
-.day.today{border-color:var(--deep);border-width:2px}
-.day.today .d{color:var(--deep)}
-.dots{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}
-.dot{width:5px;height:5px;border-radius:50%}
-.dot.job{background:var(--deep)} .dot.due{background:var(--over)}
-.daylist{margin-top:16px}
-.legend{display:flex;gap:14px;font-size:11.5px;color:var(--ink2);margin-top:10px;align-items:center}
-.legend i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
 
 /* sheet */
 .sheet{position:fixed;inset:0;z-index:60;background:rgba(10,20,18,.42);display:flex;
@@ -258,7 +235,6 @@ a.btn{text-decoration:none}
 
 <nav class="bottom" id="nav" hidden>
   <button data-go="due" aria-current="true"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Due</button>
-  <button data-go="cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
   <button data-go="clients"><svg viewBox="0 0 24 24"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17 11h4M19 9v4"/></svg>Clients</button>
   <button data-go="reviews"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>Reviews</button>
   <button data-go="sync"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Setup</button>
@@ -268,7 +244,7 @@ a.btn{text-decoration:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04a";
+const BUILD="2026-10-04b";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -491,7 +467,6 @@ function render(){
   try{
     if(S.view==="due") viewDue(m,L);
     else if(S.view==="todo") viewTodo(m,L);
-    else if(S.view==="cal") viewCal(m,L);
     else if(S.view==="clients") viewClients(m);
     else if(S.view==="reviews") viewReviews(m);
     else if(S.view==="sync") viewSync(m);
@@ -922,7 +897,6 @@ function openProp(pid,focusSvc){
     const acts2=el("div","btns");
     acts2.appendChild(btn("Record contact",SVG.note,"",()=>openSheet(recordSpec({pid}))));
     acts2.appendChild(btn("Remind me later",SVG.bell,"",()=>openSheet(remindSpec({pid}))));
-    acts2.appendChild(btn("Book it in",SVG.cal,"",()=>openBook(pid,focusSvc)));
     acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(L),!!c.p));
     b.appendChild(acts2);
 
@@ -1087,37 +1061,6 @@ function openClient(id){
     deleteBtn(b,id);
   }});
 }
-function openBook(pid,svc){
-  const c=cOf(pid), p=pOf(pid);
-  openSheet({title:"Book in "+c.n, sub:p.l||"", build:b=>{
-    b.appendChild(el("div","lbl","When"));
-    const dt=el("input","inp"); dt.type="datetime-local";
-    const d=new Date(); d.setDate(d.getDate()+1); d.setHours(9,0,0,0);
-    dt.value=iso(d)+"T09:00"; b.appendChild(dt);
-    b.appendChild(el("div","lbl","What"));
-    const what=el("input","inp"); what.value=svc||"General Pest Treatment"; b.appendChild(what);
-    b.appendChild(el("div","lbl","Notes"));
-    const nt=el("textarea","msgbox"); nt.style.minHeight="72px";
-    nt.value=[c.p,(c.a||[]).filter(Boolean).join(", ")].filter(Boolean).join("\n"); b.appendChild(nt);
-    const row=el("div","btns");
-    row.appendChild(btn("Save booking",SVG.cal,"pri",async()=>{
-      if(!dt.value){ toast("Pick a date and time first.",true); return; }
-      const id="b"+Date.now().toString(36);
-      S.bookings[id]={id,pid,clientId:p.c,svc:what.value,start:dt.value,notes:nt.value,
-                      summary:c.n+" · "+what.value+(p.l?" · "+p.l:"")};
-      const d2=new Date(dt.value);
-      closeSheet(true); S.view="cal";
-      S.cal=isNaN(d2.getTime())?new Date():d2;
-      S.calDay=isNaN(d2.getTime())?null:iso(d2);
-      render();
-      const ok=await saveBookings();
-      if(ok) toast("Booked in"+(isNaN(d2.getTime())?"":" for "+nice(dt.value.slice(0,10)))+".");
-    }));
-    b.appendChild(row);
-    b.appendChild(el("div","note","Saves here and shows on the calendar. It does not go into Google Calendar."));
-  }});
-}
-
 /* ---------- clients ---------- */
 function viewClients(m){
   const s=el("input","search"); s.type="search"; s.placeholder="Search name, address, phone or email";
@@ -1219,109 +1162,6 @@ function viewReviews(m){
     todo.length?"":"Nobody waiting. Jobs from the last month show up here after a Xero refresh.");
   if(done.length) section(m,"Asked or skipped",done.length,done.map(r=>row(r,true)));
 }
-
-/* ---------- calendar ---------- */
-function viewCal(m,L){
-  let cur=S.cal;
-  if(!(cur instanceof Date)||isNaN(cur.getTime())){ cur=new Date(); S.cal=cur; }
-  const y=cur.getFullYear(), mo=cur.getMonth();
-  const head=el("div","calhead");
-  head.appendChild(el("h2",null,cur.toLocaleDateString("en-AU",{month:"long",year:"numeric"})));
-  const nav=el("div","calnav");
-  const mk=(svgp,title,fn)=>{const b=el("button"); b.innerHTML=ico(svgp); b.title=title;
-    b.setAttribute("aria-label",title); b.onclick=fn; return b;};
-  nav.appendChild(mk(SVG.l,"Previous month",()=>{S.cal=new Date(y,mo-1,1);render();}));
-  nav.appendChild(mk(SVG.cal,"Back to today",()=>{S.cal=new Date();render();}));
-  nav.appendChild(mk(SVG.r,"Next month",()=>{S.cal=new Date(y,mo+1,1);render();}));
-  head.appendChild(nav); m.appendChild(head);
-  const first=new Date(y,mo,1), last=new Date(y,mo+1,0), tag=iso(first).slice(0,7);
-  const dueBy={}, jobBy={};
-  L.forEach(l=>{ if(l.nextDue&&l.nextDue.slice(0,7)===tag) (dueBy[l.nextDue]=dueBy[l.nextDue]||[]).push(l); });
-  Object.values(S.bookings).forEach(bk=>{ const d=(bk.start||"").slice(0,10);
-    if(d.slice(0,7)===tag) (jobBy[d]=jobBy[d]||[]).push(bk); });
-  const g=el("div","grid");
-  ["M","T","W","T","F","S","S"].forEach(d=>g.appendChild(el("div","dow",d)));
-  const lead=(first.getDay()+6)%7;
-  for(let i=0;i<lead;i++) g.appendChild(el("div","day pad"));
-  for(let d=1;d<=last.getDate();d++){
-    const ds=iso(new Date(y,mo,d));
-    const cell=el("button","day"+(ds===TODAY?" today":""));
-    cell.appendChild(el("div","d",String(d)));
-    const dots=el("div","dots");
-    (jobBy[ds]||[]).slice(0,4).forEach(()=>dots.appendChild(el("i","dot job")));
-    (dueBy[ds]||[]).slice(0,4).forEach(()=>dots.appendChild(el("i","dot due")));
-    cell.appendChild(dots);
-    cell.onclick=()=>showDay(ds,dueBy[ds]||[],jobBy[ds]||[]);
-    g.appendChild(cell);
-  }
-  m.appendChild(g);
-  const lg=el("div","legend");
-  lg.innerHTML=`<span><i class="dot job"></i>Booked in</span><span><i class="dot due"></i>Coming due</span>`;
-  m.appendChild(lg);
-  m.appendChild(el("div","note","What's coming due, plus anything you book in here. Your Google Calendar is deliberately left out."));
-  const host=el("div","daylist"); host.id="dayhost"; m.appendChild(host);
-  const focus=(S.calDay&&S.calDay.slice(0,7)===tag)?S.calDay
-             :(tag===TODAY.slice(0,7)?TODAY:iso(first));
-  S.calDay=null;
-  showDay(focus,dueBy[focus]||[],jobBy[focus]||[]);
-}
-function showDay(ds,due,jobs){
-  const host=$("#dayhost"); if(!host) return;
-  host.innerHTML="";
-  const h=el("div","sechead"); h.appendChild(el("h2",null,nice(ds)));
-  h.appendChild(el("span","n",(due.length+jobs.length)+" on")); host.appendChild(h);
-  if(!due.length&&!jobs.length){ host.appendChild(el("div","empty","Nothing on this day.")); return; }
-  jobs.forEach(j=>{
-    const r=el("div","row ok"), hit=el("button","rowhit");
-    hit.appendChild(el("div","stripe"));
-    const main=el("div","rowmain"), tx=el("div","rowtext");
-    tx.appendChild(el("div","nm",j.summary||"Job"));
-    if(j.notes) tx.appendChild(el("div","pl",String(j.notes).split("\n")[0]));
-    tx.appendChild(el("div","mt","Booked in"));
-    main.appendChild(tx);
-    main.appendChild(el("span","pill ok",(j.start||"").slice(11,16)||"—"));
-    hit.appendChild(main); if(j.pid) hit.onclick=()=>openProp(j.pid);
-    r.appendChild(hit); host.appendChild(r);
-  });
-  groupLines(due).forEach(x=>host.appendChild(rowFor(x)));
-}
-/* ---------- sync from Xero ---------- */
-const NON_SERVICE={"B":1,"":1};
-const CODE={CAS:"General Pest Treatment",CRI:"Cockroach Treatment",CA:"Cockroach & Ant Treatment",
- ANT:"Ant Treatment",A:"Ant Treatment",ANTEXT:"Ant Treatment",SPE:"Spider Treatment",
- TI:"Termite Inspection","TI - New Build":"Termite Inspection","TIC/MITE":"Termite Inspection",
- PPI:"Pre-Purchase Inspection",PI:"Pre-Purchase Inspection",RD:"Rodent Treatment",RDINS:"Rodent Treatment",
- RDBOX:"Rodent Boxes (supply)",PC:"Pre-Construction Barrier",PCTB:"Post-Construction Barrier",
- HGB:"Pre-Construction Barrier",HGDPC:"Pre-Construction Barrier",GZ:"Pre-Construction Barrier",
- NEWRNEW:"Nemesis Renewal","Nemisis New":"Nemesis New",TRELBAIT:"Trelona Baiting",TRELBASE:"Trelona Baiting",
- TRELMNT:"Trelona Baiting",TRELSTAT:"Trelona Baiting","TERM-NEST":"Termite Treatment",
- MOS:"Mosquito Treatment",WASP:"Wasp/Bee Treatment",BEE:"Wasp/Bee Treatment",FL:"Flea Treatment",
- BB:"Bed Bug Treatment",BBI:"Bed Bug Treatment",DF:"Drain Fly Treatment",Fly:"Drain Fly Treatment",
- CM:"Clothes Moth Treatment",CO:"Carpet Beetle Treatment",LG:"Lawn Grub Treatment",TT:"Termite Treatment",
- Dust:"Termite Treatment","Termite foaming":"Termite Treatment",TDF:"Termite Treatment",
- OCINSP:"OC Site Assessment"};
-const RECUR={"General Pest Treatment":1,"Cockroach Treatment":1,"Cockroach & Ant Treatment":1,
- "Ant Treatment":1,"Spider Treatment":1,"Termite Inspection":1,"Rodent Treatment":1,
- "Pre-Construction Barrier":1,"Post-Construction Barrier":1,"Nemesis Renewal":1,"Nemesis New":1,"Trelona Baiting":1};
-const ANNUAL={"Nemesis Renewal":1,"Nemesis New":1,"Trelona Baiting":1};
-const slug=s=>String(s||"").normalize("NFKD").replace(/[̀-ͯ]/g,"")
-  .toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")||"unknown";
-const SUB=/\b(byron bay|ballina|lennox head|bangalow|brunswick heads|mullumbimby|ocean shores|alstonville|suffolk park|ewingsdale|possum creek|tumbulgam|skinners shoot|nsw|australia)\b/g;
-function pkeyOf(a){
-  let s=String(a||"").toLowerCase()
-    .replace(/\d{1,2}[/-]\d{1,2}[/-]\d{2,4}.*$/," ").replace(/\(.*?\)/g," ")
-    .replace(SUB," ")
-    .replace(/\b(street|st|road|rd|drive|dr|avenue|ave|lane|ln|crescent|cres|court|ct|place|pl|way|parade|pde|close|cl|terrace|tce|highway|hwy)\b/g," ")
-    .replace(/[^a-z0-9/ ]/g," ").replace(/\s+/g," ").trim();
-  const m=s.match(/^([0-9]+[a-z]?(?:\/[0-9]+[a-z]?)?)\s+(.*)$/);
-  let k;
-  if(m){ const w=(m[2]||"").split(" ")[0].replace(/[^a-z]/g,""); k=m[1].replace(/ /g,"")+(w?w.slice(0,5):""); }
-  else k=s.split(" ").filter(Boolean).slice(0,2).map(x=>x.slice(0,5)).join("")||"main";
-  return k.replace(/[^A-Za-z0-9_\-.~:@+]/g,"-");
-}
-const addrFrom=d=>{const m=/\b(?:re|ref)\b[:.\s]+(.{3,80})/i.exec(d||""); if(!m)return null;
-  const a=m[1].split(/\n|\s+\(/)[0].trim().replace(/^[.\-\s]+|[.\-\s]+$/g,"");
-  return a.length>=4&&/[A-Za-z]/.test(a)?a:null;};
 
 function viewSync(m){
   const last=(S.sync&&S.sync.lastSyncedDate)||S.settings.seedDataEnds;
