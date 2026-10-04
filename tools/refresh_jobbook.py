@@ -22,6 +22,7 @@ from collections import defaultdict, Counter
 
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(REPO, "jobbook-data")
+HERE_TOOLS = os.path.dirname(os.path.abspath(__file__))
 DOWN = os.path.expanduser("~/Downloads")
 TODAY = dt.date.today()
 
@@ -259,6 +260,15 @@ def main():
         k = (d["p"], d["s"])
         if k not in merged or (d.get("ld") or "") > (merged[k].get("ld") or ""): merged[k] = d
     due = list(merged.values())
+
+    # Intervals the client confirmed with Mitch beat every default (tools/confirmed_intervals.json)
+    conf = json.load(open(os.path.join(HERE_TOOLS, "confirmed_intervals.json"))) \
+        if os.path.exists(os.path.join(HERE_TOOLS, "confirmed_intervals.json")) else {}
+    for d in due:
+        c = conf.get(d["p"] + "|" + d["s"])
+        if c and d.get("ld") and MONTHS.get(c["iv"]):
+            d["iv"], d["nd"] = c["iv"], add_months(d["ld"], MONTHS[c["iv"]])
+            d["src"] = "client confirmed " + c["on"]
 
     # ---- fill in phone / email / address from the contacts export
     filled = 0
