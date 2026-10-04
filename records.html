@@ -31,7 +31,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;
-  padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+  padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
 .mono{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -111,6 +111,34 @@ select.inp{appearance:none;-webkit-appearance:none}
 .savebar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);
   padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 .savebar .btn{max-width:852px;margin:0 auto;width:100%;font-size:16px;padding:15px}
+/* quick-job tiles (same idea as the quick-photo grid in index.html) */
+.tilegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px}
+.tile{position:relative;min-height:96px;padding:10px 6px;border:1px solid var(--line2);background:var(--surface);border-radius:13px;
+  box-shadow:var(--raise);display:flex;align-items:center;justify-content:center;text-align:center;font-weight:700;font-size:14px;line-height:1.2;color:var(--ink)}
+.tile:active{transform:scale(.96)}
+.tile[aria-pressed="true"]{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.tile[aria-pressed="true"]::after{content:"\2713";position:absolute;top:5px;right:9px;font-size:15px}
+.tile.more{border-style:dashed;color:var(--deep);font-weight:600}
+.same{width:100%;margin:10px 0 0;font-size:16px;padding:16px}
+.jobline{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.jobline:last-of-type{border-bottom:none}
+.jobline span{flex:1;min-width:0;font-size:14px}
+.autorow{display:flex;gap:8px;align-items:center;width:100%;text-align:left;padding:12px;margin-top:14px;border:1px solid var(--ok);
+  background:var(--okBg);color:var(--ok);border-radius:10px;font-size:13px}
+.autorow b{flex:0 0 auto;white-space:nowrap}
+.autorow .sum{flex:1;min-width:0;color:var(--ink2)}
+.autorow.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.fold{width:100%;text-align:left;padding:12px;margin-top:10px;border:1px solid var(--line2);background:var(--surface);border-radius:10px;font-weight:600;font-size:14px}
+#savebar{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--line);
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+#savebar:empty{display:none}
+.qbar{max-width:880px;margin:0 auto}
+.qrow{display:flex;gap:7px;align-items:center}
+.qrow .chip{min-height:44px;padding:6px 11px;font-size:13px}
+.qphoto{position:relative;flex:0 0 auto;width:48px;height:48px;border:1px solid var(--line2);border-radius:12px;background:var(--surface2);font-size:21px}
+.qphoto .bd{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;border-radius:10px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;line-height:19px;padding:0 4px}
+.qsave{flex:1;min-width:84px;height:48px;padding:0 10px;font-size:17px}
+.qother{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .mic{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:9px;border:1px solid var(--line2);background:var(--surface2);font-weight:600;font-size:13px}
 .mic svg{width:16px;height:16px;stroke:currentColor;fill:none}
 .mic.rec{background:var(--over);color:#fff;border-color:var(--over)}
@@ -135,7 +163,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 
 @media print{
   @page{margin:12mm}
-  header,.savebar,.noprint,#bnr,.toast{display:none!important}
+  header,.savebar,#savebar,.noprint,#bnr,.toast{display:none!important}
   body{background:#fff;color:#000;padding:0;font-size:11pt}
   .wrap{max-width:none;padding:0}
   .rec{border:none;box-shadow:none;padding:0;background:#fff;color:#000}
@@ -167,7 +195,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04r1";   // same cache-buster as jobbook.html
+const BUILD="2026-10-04r3";   // same cache-buster as jobbook.html
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -391,7 +419,7 @@ function renderBanner(){
 
 /* ---------- product library and per-service lists ---------- */
 function P(){ const p=S.prefs; p.svcAdd=p.svcAdd||{}; p.svcRemove=p.svcRemove||{}; p.customProducts=p.customProducts||[];
-  p.customEquip=p.customEquip||[]; p.amounts=p.amounts||{}; p.mix=p.mix||{}; return p; }
+  p.customEquip=p.customEquip||[]; p.amounts=p.amounts||{}; p.mix=p.mix||{}; p.lastProducts=p.lastProducts||{}; p.lastAreas=p.lastAreas||{}; p.lastDesc=p.lastDesc||{}; return p; }
 const library=()=>S.chem.products.concat(P().customProducts);
 const prodById=id=>library().find(p=>p.id===id);
 function svcProducts(s){
@@ -400,6 +428,7 @@ function svcProducts(s){
 }
 function unionProducts(){
   const out=[]; F.services.forEach(sv=>svcProducts(sv.s).forEach(id=>{ if(out.indexOf(id)<0&&prodById(id)) out.push(id); }));
+  F.products.forEach(x=>{ if(out.indexOf(x.id)<0&&prodById(x.id)) out.push(x.id); });
   return out;
 }
 function listAdd(id){ F.services.forEach(sv=>{ const p=P();
@@ -421,24 +450,53 @@ function newForm(){
 function resetForm(){ F=newForm(); W=newWx(); UI={}; }
 /* drop the address off a Xero description ("... re 3 Hayter St"), same rule as tools/build_service_lists.py */
 function cutTail(d){ return d.replace(/\s+(re\.?:?|at|for|as per)\s+\d.*$|\s+re\.?:?\s*$/i,"").replace(/[\s.\-–]+$/,"").trim(); }
+/* ---------- job tiles and services ---------- */
+const alias=n=>(S.chem.serviceAlias||{})[n]||n;
+const hiddenSvc=n=>(S.chem.hideServices||[]).indexOf(n)>=0;
+const tileList=()=>S.chem.tiles||[];
+const isTile=n=>tileList().some(t=>t.service===n);
+const moreList=()=>S.services.map(x=>x.s).filter(n=>!isTile(n)&&!hiddenSvc(n));
+const offered=n=>isTile(n)||moreList().indexOf(n)>=0;
+const TRE="Trelona/Nemesis Baiting";
+function descList(n){ const info=S.services.find(x=>x.s===n); const l=info?info.d.slice():[]; if(n===TRE&&l.indexOf("Trelona/Nemesis termite baiting")<0) l.unshift("Trelona/Nemesis termite baiting"); return l; }
+function defaultDesc(n){ return P().lastDesc[n]||descList(n)[0]||n; }
+function isCustomDesc(n,d){ return !!d&&descList(n).indexOf(d)<0; }
+const belongs=(n,id)=>svcProducts(n).indexOf(id)>=0||(P().lastProducts[n]||[]).indexOf(id)>=0;
+/* turning a service on loads what you used last time for it on this device */
+function svcOn(n,desc){
+  if(F.services.some(x=>x.s===n)) return;
+  const d=desc||defaultDesc(n);
+  F.services.push({s:n,d:d,custom:isCustomDesc(n,d)});
+  (P().lastProducts[n]||[]).forEach(id=>addProduct(id));
+  (P().lastAreas[n]||[]).forEach(a=>{ if(F.areas.indexOf(a)<0) F.areas.push(a); });
+}
+/* turning it off drops the service and any products that only belonged to it */
+function svcOff(n){
+  F.services=F.services.filter(x=>x.s!==n);
+  F.products=F.products.filter(p=>F.services.some(sv=>belongs(sv.s,p.id)));
+}
+function lastRecord(pid){ return S.records.filter(r=>r.propId===pid).sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""))[0]; }
+function sameAsLast(){
+  const mine=lastRecord(F.propId); if(!mine) return;
+  F.services=[]; mine.services.forEach(x=>{ const n=alias(x.s); if(hiddenSvc(n)||F.services.some(y=>y.s===n)) return;
+    const d=n===x.s?(x.d||""):defaultDesc(n); F.services.push({s:n,d:d,custom:isCustomDesc(n,d)}); });
+  F.areas=(mine.areas||[]).slice(); F.equipment=(mine.equipment||[]).slice();
+  F.products=(mine.products||[]).map(x=>Object.assign({},x));
+  UI.sameDone=true; render();
+}
 function pickProperty(pid){
   const p=S.props[pid]; if(!p) return;
   F.propId=pid; F.client=(S.clients[p.c]||{}).n||"(unknown)"; F.address=addressOf(pid);
   F.start=nowHM(); F.date=TODAY; F.finish=""; F.finishTouched=false; F.q="";
   F.services=[];F.products=[];F.areas=[];F.equipment=[]; F.next={k:"",date:""};
-  /* 1. last saved record for this property on this device, else 2. last Xero job */
-  const mine=S.records.filter(r=>r.propId===pid).sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""))[0];
-  if(mine){
-    F.services=mine.services.map(x=>({s:x.s,d:x.d||"",custom:false}));
-    F.areas=(mine.areas||[]).slice(); F.equipment=(mine.equipment||[]).slice();
-    F.products=(mine.products||[]).map(x=>Object.assign({},x));
-  }else{
-    const jobs=(S.jobs[pid]||[]).slice().sort((a,b)=>b.d.localeCompare(a.d)), j=jobs[0];
-    if(j){ const known=S.services.map(x=>x.s);
-      (j.s||[]).forEach(x=>{ if(known.indexOf(x.s)>=0&&!F.services.some(y=>y.s===x.s)) F.services.push({s:x.s,d:cutTail(x.d||""),custom:false}); }); }
-  }
-  F.services.forEach(sv=>{ const info=S.services.find(x=>x.s===sv.s); sv.custom=!!sv.d&&!(info&&info.d.indexOf(sv.d)>=0); });
   W=newWx(); UI={};
+  /* With a saved record, the "Same as last time" button does the loading. Without one,
+     start from the last Xero job (old names mapped to the new ones, hidden ones dropped). */
+  if(!lastRecord(pid)){
+    const jobs=(S.jobs[pid]||[]).slice().sort((a,b)=>b.d.localeCompare(a.d)), j=jobs[0];
+    if(j) (j.s||[]).forEach(x=>{ const n=alias(x.s); if(!offered(n)||F.services.some(y=>y.s===n)) return;
+      svcOn(n,n===x.s?cutTail(x.d||""):""); });
+  }
   render(); fetchWx();
 }
 function addProduct(id){
@@ -469,6 +527,31 @@ function render(){
   renderBanner();
   window.scrollTo(0,y);
 }
+const needWx=()=>F.products.some(p=>(S.chem.airTypes||[]).indexOf(p.type)>=0)&&!wxOK(curWeather());
+function autoSummary(){
+  const w=curWeather(); let ws;
+  if(!w) ws=(W.status&&/^Getting/.test(W.status))?"getting weather…":"no weather yet";
+  else if(w.pending) ws="weather pending";
+  else ws=[w.tempC!=null?Math.round(w.tempC)+"°C":"",w.windDir,w.beaufort,w.conditions].filter(Boolean).join(" ")||"weather";
+  const d=parse(F.date), dt=d.getDate()+" "+AU[d.getMonth()]+(F.start?" "+F.start:"");
+  return [ws,F.appliedBy.join(", ")||"no applicator",dt,F.equipment.join(", ")||"no equipment"].join(" · ");
+}
+function barHTML(){
+  const nk=F.next.k, main=nk==="6 months"||nk==="12 months", other=!!nk&&!main;
+  let h='<div class="qbar">';
+  if(UI.nextOther){
+    h+='<div class="qother"><div class="chips">'+["6 weeks","3 months","Custom date","None"].map(k=>chip(k,nk===k,'data-a="nxt" data-v="'+k+'"')).join("")+'</div>'
+      +(nk==="Custom date"?'<input class="inp" style="margin-top:6px" type="date" data-f="nextdate" value="'+esc(F.next.date)+'">':'')
+      +((nk&&nk!=="None"&&nk!=="Custom date")?'<div class="hint">'+esc(nice(nextDate()))+'</div>':'')+'</div>';
+  }
+  h+='<div class="qrow"><button class="qphoto" type="button" data-a="photo" aria-label="Add photo">📷'+(F.photos.length?'<span class="bd">'+F.photos.length+'</span>':'')+'</button>'
+    +'<input type="file" id="photoIn" accept="image/*" capture="environment" multiple hidden>'
+    +chip("6 m",nk==="6 months",'data-a="nxt" data-v="6 months"')+chip("12 m",nk==="12 months",'data-a="nxt" data-v="12 months"')
+    +chip(other?nk+" ▾":"Other ▾",other||!!UI.nextOther,'data-a="nextother"')
+    +'<button class="btn pri qsave" data-a="save">Save</button></div>'
+    +(nk?'':'<div class="hint" style="margin:4px 0 0">Next service: pick one (None is fine).</div>')+'</div>';
+  return h;
+}
 function renderForm(){
   const m=$("#main");
   let h="";
@@ -479,62 +562,66 @@ function renderForm(){
   if(F.propId){
     h+='<div class="card"><div class="top"><b>'+esc(F.client)+'</b><button class="mic" data-a="clearcust">Change</button></div>'
       +'<div>'+esc(F.address)+'</div></div>';
+    const mine=lastRecord(F.propId);
+    if(mine&&!F.id&&!UI.sameDone) h+='<button class="btn pri same" data-a="sameas">Same as last time <span class="small" style="color:inherit;opacity:.8">('+esc(nice(mine.date))+')</span></button>';
   }else{
     h+='<input class="inp search" id="q" data-f="q" placeholder="Start typing a name or street" autocomplete="off" autocapitalize="off" value="'+esc(F.q)+'">'
       +'<div id="qres"></div>';
   }
   if(F.propId){
-    /* 3. services */
-    h+=sec("Services","tap all that apply");
-    h+='<div class="chips">'+S.services.map(x=>chip(x.s,F.services.some(y=>y.s===x.s),'data-a="svc" data-s="'+esc(x.s)+'"')).join("")+'</div>';
-    F.services.forEach(sv=>{
-      const info=S.services.find(x=>x.s===sv.s)||{d:[]}; let ds=info.d.slice(0,8);
-      if(sv.d&&!sv.custom&&ds.indexOf(sv.d)<0) ds.unshift(sv.d);
-      h+='<div class="card"><div class="top"><b>'+esc(sv.s)+'</b></div><div class="chips">'
-        +ds.map(d=>chip(d,!sv.custom&&sv.d===d,'data-a="desc" data-s="'+esc(sv.s)+'" data-d="'+esc(d)+'"',"desc")).join("")
-        +chip("Custom",sv.custom,'data-a="custdesc" data-s="'+esc(sv.s)+'"',"desc ghost")+'</div>'
-        +(sv.custom?'<input class="inp" style="margin-top:8px" data-f="cd" data-s="'+esc(sv.s)+'" placeholder="Describe the work" value="'+esc(sv.d)+'">':'')
-        +'</div>';
-    });
-    /* 4. products */
-    h+=sec("Products used");
-    h+=productsHTML();
-    /* 5. areas */
-    h+=sec("Areas treated");
-    h+='<div class="chips">'+S.chem.areas.map(a=>chip(a,F.areas.indexOf(a)>=0,'data-a="area" data-v="'+esc(a)+'"')).join("")+'</div>';
-    /* 6. equipment */
-    h+=sec("Equipment");
-    h+='<div class="chips">'+allEquip().map(a=>chip(a,F.equipment.indexOf(a)>=0,'data-a="equip" data-v="'+esc(a)+'"')).join("")
-      +chip("+ Add",false,'data-a="equipadd"',"ghost")+'</div>';
-    if(UI.equipAdd) h+='<div class="card" style="margin-top:8px"><input class="inp" id="neweq" placeholder="Equipment name"><div class="btns"><button class="btn pri" data-a="equipsave">Add equipment</button><button class="btn" data-a="equipadd">Cancel</button></div></div>';
-    /* 7. weather */
-    h+=sec("Weather","needed for outdoor spraying");
-    h+='<div id="wx">'+wxHTML()+'</div>';
-    /* 8. applied by */
-    h+=sec("Applied by");
-    h+='<div class="chips">'+(S.chem.operator.techs||[]).map(t=>chip(t.name+" ("+t.licence+")",F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>';
-    /* 9. next service */
-    h+=sec("Next service","no default, pick one");
-    h+='<div class="chips">'+["6 weeks","3 months","6 months","12 months","Custom date","None"].map(k=>chip(k,F.next.k===k,'data-a="nxt" data-v="'+k+'"')).join("")+'</div>';
-    if(F.next.k==="Custom date") h+='<input class="inp" style="margin-top:8px" type="date" data-f="nextdate" value="'+esc(F.next.date)+'">';
-    else if(F.next.k&&F.next.k!=="None") h+='<div class="hint">'+esc(nice(nextDate()))+'</div>';
-    /* 10. photos */
-    h+=sec("Photos");
-    h+='<div class="chips"><button class="chip ghost" data-a="photo" type="button">📷 Photo</button></div>'
-      +'<input type="file" id="photoIn" accept="image/*" capture="environment" multiple hidden>'
-      +'<div class="thumbs">'+F.photos.map((p,i)=>'<div class="thumb"><img src="'+p+'" alt="Photo '+(i+1)+'"><button data-a="photorm" data-i="'+i+'" aria-label="Remove photo">✕</button></div>').join("")+'</div>';
-    /* 11. notes */
-    h+=sec("Notes");
-    h+='<textarea class="inp" id="notes" data-f="notes" placeholder="Anything worth recording">'+esc(F.notes)+'</textarea>'
-      +'<div style="margin-top:6px"><button class="mic" type="button" data-a="mic">'
-      +'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></div>';
-    /* 12. date and times */
-    h+=sec("Date and times");
-    h+='<div class="grid3"><div><label>Date</label><input class="inp" type="date" data-f="date" value="'+esc(F.date)+'"></div>'
-      +'<div><label>Start</label><input class="inp" type="time" data-f="start" value="'+esc(F.start)+'"></div>'
-      +'<div><label>Finish</label><input class="inp" type="time" data-f="finish" value="'+esc(F.finish)+'"></div></div>'
-      +'<div class="hint">Finish is set to the time you tap Save, unless you change it.</div>';
-    $("#savebar").innerHTML='<div class="btns" style="margin:0"><button class="btn pri" data-a="save">Save record</button></div>';
+    /* 2. job tiles */
+    h+=sec("Job","tap all that apply");
+    const more=moreList(), moreOn=F.services.filter(x=>more.indexOf(x.s)>=0).length;
+    h+='<div class="tilegrid">'+tileList().map(t=>'<button type="button" class="tile" aria-pressed="'+(F.services.some(x=>x.s===t.service)?"true":"false")+'" data-a="svc" data-s="'+esc(t.service)+'">'+esc(t.label)+'</button>').join("")
+      +'<button type="button" class="tile more" aria-pressed="false" data-a="moreopen">More…'+(moreOn?' ('+moreOn+')':'')+'</button></div>';
+    if(UI.more) h+='<div class="chips" style="margin-top:8px">'+more.map(n=>chip(n,F.services.some(x=>x.s===n),'data-a="svc" data-s="'+esc(n)+'"')).join("")+'</div>';
+    /* 3. this job */
+    if(F.services.length){
+      h+=sec("This job");
+      h+='<div class="card">';
+      F.services.forEach(sv=>{
+        h+='<div class="jobline"><span><b>'+esc(sv.s)+'</b>: '+esc(sv.d||"(no description)")+'</span><button class="mic" data-a="dchg" data-s="'+esc(sv.s)+'">Change</button></div>';
+        if(UI.dchg&&UI.dchg[sv.s]){
+          const ds=descList(sv.s).slice(0,8); if(sv.d&&!sv.custom&&ds.indexOf(sv.d)<0) ds.unshift(sv.d);
+          h+='<div class="chips" style="margin:6px 0">'+ds.map(d=>chip(d,!sv.custom&&sv.d===d,'data-a="desc" data-s="'+esc(sv.s)+'" data-d="'+esc(d)+'"',"desc")).join("")
+            +chip("Custom",sv.custom,'data-a="custdesc" data-s="'+esc(sv.s)+'"',"desc ghost")+'</div>'
+            +(sv.custom?'<input class="inp" style="margin-bottom:6px" data-f="cd" data-s="'+esc(sv.s)+'" placeholder="Describe the work" value="'+esc(sv.d)+'">':'');
+        }
+      });
+      if(F.photos.length) h+='<div class="thumbs">'+F.photos.map((p,i)=>'<div class="thumb"><img src="'+p+'" alt="Photo '+(i+1)+'"><button data-a="photorm" data-i="'+i+'" aria-label="Remove photo">✕</button></div>').join("")+'</div>';
+      h+='</div>';
+      h+=sec("Products used");
+      h+=productsHTML();
+      h+=sec("Areas treated");
+      h+='<div class="chips">'+S.chem.areas.map(a=>chip(a,F.areas.indexOf(a)>=0,'data-a="area" data-v="'+esc(a)+'"')).join("")+'</div>';
+    }
+    /* 4. auto-filled row */
+    const nw=needWx(), open=!!UI.autoOpen||nw;
+    h+='<button class="autorow'+(nw?' warn':'')+'" id="autorow" data-a="autotoggle"><b>'+(nw?'Weather needed':'Auto-filled ✓')+'</b><span class="sum" id="autosum">'+esc(autoSummary())+'</span><span>'+(open?'▴':'▾')+'</span></button>';
+    if(open){
+      h+=sec("Weather","needed for outdoor spraying");
+      h+='<div id="wx">'+wxHTML()+'</div>';
+      h+=sec("Applied by");
+      h+='<div class="chips">'+(S.chem.operator.techs||[]).map(t=>chip(t.name+" ("+t.licence+")",F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>';
+      h+=sec("Date and times");
+      h+='<div class="grid3"><div><label>Date</label><input class="inp" type="date" data-f="date" value="'+esc(F.date)+'"></div>'
+        +'<div><label>Start</label><input class="inp" type="time" data-f="start" value="'+esc(F.start)+'"></div>'
+        +'<div><label>Finish</label><input class="inp" type="time" data-f="finish" value="'+esc(F.finish)+'"></div></div>'
+        +'<div class="hint">Finish is set to the time you tap Save, unless you change it.</div>';
+      h+=sec("Equipment");
+      h+='<div class="chips">'+allEquip().map(a=>chip(a,F.equipment.indexOf(a)>=0,'data-a="equip" data-v="'+esc(a)+'"')).join("")
+        +chip("+ Add",false,'data-a="equipadd"',"ghost")+'</div>';
+      if(UI.equipAdd) h+='<div class="card" style="margin-top:8px"><input class="inp" id="neweq" placeholder="Equipment name"><div class="btns"><button class="btn pri" data-a="equipsave">Add equipment</button><button class="btn" data-a="equipadd">Cancel</button></div></div>';
+    }
+    /* 5. notes */
+    if(UI.notesOpen){
+      h+='<textarea class="inp" id="notes" data-f="notes" style="margin-top:10px" placeholder="Anything worth recording">'+esc(F.notes)+'</textarea>'
+        +'<div style="margin-top:6px"><button class="mic" type="button" data-a="mic">'
+        +'<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button> '
+        +'<button class="mic" data-a="notesopen">Close</button></div>';
+    }else h+='<button class="fold" data-a="notesopen">Notes'+(F.notes.trim()?' ✓ <span class="small">'+esc(F.notes.trim().slice(0,50))+'</span>':' (tap to add)')+'</button>';
+    /* 6. sticky bar */
+    $("#savebar").innerHTML=barHTML();
   }else{ $("#savebar").innerHTML=""; }
   m.innerHTML=h;
   if(!F.propId){ renderQres(); }
@@ -582,7 +669,10 @@ function wxHTML(){
     +'<div class="btns" style="margin-bottom:0"><button class="btn" data-a="wxagain">Get weather again</button></div></div>';
   return h;
 }
-function renderWx(){ const e=$("#wx"); if(e) e.innerHTML=wxHTML(); }
+function renderWx(){ const e=$("#wx"); if(e) e.innerHTML=wxHTML();
+  const u=$("#autosum"); if(u) u.textContent=autoSummary();
+  /* weather just arrived: flip the row from "Weather needed" back to "Auto-filled" */
+  const r=$("#autorow"); if(r&&!needWx()&&r.classList.contains("warn")){ r.classList.remove("warn"); r.querySelector("b").textContent="Auto-filled ✓"; } }
 function renderQres(){
   const box=$("#qres"); if(!box) return;
   const q=F.q.trim().toLowerCase();
@@ -634,6 +724,9 @@ async function save(){
   rec.products.forEach(p=>{ F.services.forEach(sv=>{ if(svcProducts(sv.s).indexOf(p.id)>=0) P().amounts[sv.s+"|"+p.id]=p.amount; });
     if(p.mix) P().mix[p.id]=p.mix; });
   F.services.forEach(sv=>rec.products.forEach(p=>{ if(P().amounts[sv.s+"|"+p.id]==null&&svcProducts(sv.s).indexOf(p.id)<0) P().amounts[sv.s+"|"+p.id]=p.amount; }));
+  F.services.forEach(sv=>{
+    const mine=rec.products.filter(p=>belongs(sv.s,p.id)||!F.services.some(o=>belongs(o.s,p.id))).map(p=>p.id);
+    P().lastProducts[sv.s]=mine; P().lastAreas[sv.s]=F.areas.slice(); if(sv.d) P().lastDesc[sv.s]=sv.d; });
   savePrefs();
   S.records=S.records.filter(r=>r.id!==rec.id); S.records.push(rec);
   toast("Record saved.");
@@ -776,8 +869,13 @@ document.addEventListener("click",function(e){
   if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
   if(a==="clearcust"){ resetForm(); render(); return; }
-  if(a==="svc"){ const i=F.services.findIndex(x=>x.s===d.s);
-    if(i>=0) F.services.splice(i,1); else F.services.push({s:d.s,d:"",custom:false}); render(); return; }
+  if(a==="svc"){ if(F.services.some(x=>x.s===d.s)) svcOff(d.s); else svcOn(d.s); render(); return; }
+  if(a==="sameas"){ sameAsLast(); return; }
+  if(a==="moreopen"){ UI.more=!UI.more; render(); return; }
+  if(a==="dchg"){ UI.dchg=UI.dchg||{}; UI.dchg[d.s]=!UI.dchg[d.s]; render(); return; }
+  if(a==="autotoggle"){ UI.autoOpen=!UI.autoOpen; render(); return; }
+  if(a==="notesopen"){ UI.notesOpen=!UI.notesOpen; render(); return; }
+  if(a==="nextother"){ UI.nextOther=!UI.nextOther; render(); return; }
   if(a==="desc"){ const sv=svOf(d.s); if(sv){ sv.custom=false; sv.d=(sv.d===d.d)?"":d.d; } render(); return; }
   if(a==="custdesc"){ const sv=svOf(d.s); if(sv){ sv.custom=!sv.custom; if(sv.custom) sv.d=""; } render(); return; }
   if(a==="prod"){ const i=F.products.findIndex(x=>x.id===d.id); if(i>=0) F.products.splice(i,1); else addProduct(d.id); render(); return; }
@@ -802,7 +900,7 @@ document.addEventListener("click",function(e){
   if(a==="wcond"){ W.man.cond=W.man.cond===d.v?"":d.v; renderWx(); return; }
   if(a==="wxagain"){ fetchWx(); return; }
   if(a==="tech"){ toggle(F.appliedBy,d.v); render(); return; }
-  if(a==="nxt"){ F.next.k=F.next.k===d.v?"":d.v; render(); return; }
+  if(a==="nxt"){ F.next.k=F.next.k===d.v?"":d.v; if(d.v==="6 months"||d.v==="12 months") UI.nextOther=false; render(); return; }
   if(a==="photo"){ const i=$("#photoIn"); if(i) i.click(); return; }
   if(a==="photorm"){ F.photos.splice(+d.i,1); render(); return; }
   if(a==="mic"){ toggleMic(t); return; }

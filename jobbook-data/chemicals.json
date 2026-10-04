@@ -489,7 +489,11 @@
   ],
   "Termite Inspection": [],
   "Pre-Purchase Inspection": [],
-  "OC Site Assessment": []
+  "OC Site Assessment": [],
+  "Trelona/Nemesis Baiting": [
+   "trelona",
+   "nemesis"
+  ]
  },
  "equipment": [
   "Power spray rig",
@@ -525,5 +529,64 @@
   "aerosol",
   "dust",
   "granule"
- ]
+ ],
+ "tiles": [
+  {
+   "label": "General Pest",
+   "service": "General Pest Treatment"
+  },
+  {
+   "label": "Rodent",
+   "service": "Rodent Treatment"
+  },
+  {
+   "label": "Ant",
+   "service": "Ant Treatment"
+  },
+  {
+   "label": "Cockroach",
+   "service": "Cockroach Treatment"
+  },
+  {
+   "label": "Spider",
+   "service": "Spider Treatment"
+  },
+  {
+   "label": "Wasp/Bee",
+   "service": "Wasp/Bee Treatment"
+  },
+  {
+   "label": "Termite Treat",
+   "service": "Termite Treatment"
+  },
+  {
+   "label": "Trelona/Nemesis Baiting",
+   "service": "Trelona/Nemesis Baiting"
+  },
+  {
+   "label": "Post-con",
+   "service": "Post-Construction Barrier"
+  },
+  {
+   "label": "Pre-con",
+   "service": "Pre-Construction Barrier"
+  },
+  {
+   "label": "Mosquito",
+   "service": "Mosquito Treatment"
+  }
+ ],
+ "hideServices": [
+  "Termite Inspection",
+  "Pre-Purchase Inspection",
+  "OC Site Assessment",
+  "Trelona Baiting",
+  "Nemesis New",
+  "Nemesis Renewal"
+ ],
+ "serviceAlias": {
+  "Trelona Baiting": "Trelona/Nemesis Baiting",
+  "Nemesis New": "Trelona/Nemesis Baiting",
+  "Nemesis Renewal": "Trelona/Nemesis Baiting"
+ }
 }
