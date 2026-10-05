@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Job Calendar">
+<meta name="theme-color" content="#0E4F54">
+<title>Lighthouse Job Calendar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<style>
+/* Look is a placeholder (same palette as the Job Book). Mitch brings the design later. */
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --surface2:#EDF0EC; --raise:0 1px 2px rgba(20,32,30,.06),0 4px 14px rgba(20,32,30,.05);
+  --ink:#14201E; --ink2:#4B5B57; --ink3:#7E8D88; --line:#DCE1DD; --line2:#C9D1CC; --lineq:#EBEEEA;
+  --deep:#0E4F54; --deepInk:#FFFFFF; --accent:#B4701F;
+  --over:#A23C29; --overBg:#F8E8E3; --soon:#8C6314; --soonBg:#F8F0DC; --ok:#276B59; --okBg:#E2EFE9;
+  --focus:#0E4F54; --now:#C0392B;
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
+  --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D; --lineq:#1C2824;
+  --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+  --focus:#57B3BA; --now:#EE7B6B;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
+  --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D; --lineq:#1C2824;
+  --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+  --focus:#57B3BA; --now:#EE7B6B;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+html.sheet-open body{overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45}
+body.isdrag{cursor:grabbing;-webkit-user-select:none;user-select:none}
+h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:none;cursor:pointer;padding:0}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+a{color:var(--deep)}
+[hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);opacity:0;pointer-events:none}
+.ic{width:1.15em;height:1.15em;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-.2em;flex:0 0 auto}
+.spin{width:19px;height:19px;border:2px solid var(--line2);border-top-color:var(--deep);
+  border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-4px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepInk);
+  padding:calc(6px + env(safe-area-inset-top)) 14px 6px;display:flex;align-items:center;gap:10px;box-shadow:var(--raise)}
+.top h1{font-size:18px;color:var(--deepInk);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .who{font-size:13px;opacity:.88;white-space:nowrap;max-width:34vw;overflow:hidden;text-overflow:ellipsis}
+.top .out{min-height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.45);border-radius:10px;font-weight:600;font-size:14px;color:var(--deepInk)}
+
+/* toolbar */
+.tb{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 14px}
+.tb .grp{display:flex;gap:6px;align-items:center}
+.tbtn{min-height:44px;min-width:44px;padding:0 14px;border-radius:10px;border:1px solid var(--line2);
+  background:var(--surface);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.tbtn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.tbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dlabel{font-family:Newsreader,Georgia,serif;font-size:20px;font-weight:600;flex:1 1 200px;min-width:0}
+.tbdate{min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-size:16px}
+.chk{display:inline-flex;align-items:center;gap:7px;min-height:44px;font-size:13.5px;color:var(--ink2)}
+.chk input{width:20px;height:20px}
+.live{font-size:12px;font-weight:600;color:var(--ink3);display:inline-flex;align-items:center;gap:5px}
+.live:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ink3)}
+.live.on{color:var(--ok)} .live.on:before{background:var(--ok)}
+.banner{padding:11px 13px;border-radius:10px;font-size:14px;margin:0 14px 12px;border:1px solid}
+.banner.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.banner.ok{background:var(--okBg);border-color:var(--ok);color:var(--ok)}
+.banner.bad{background:var(--overBg);border-color:var(--over);color:var(--over)}
+.linkbtn{text-decoration:underline;font-weight:600;color:inherit;min-height:44px;padding:0 6px}
+#sh-msg .banner{margin:0 0 12px}
+
+/* day view */
+.dayline{display:flex;gap:12px;padding:0 14px 14px;align-items:flex-start}
+.gridwrap{flex:1;min-width:0;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  height:calc(100vh - 190px);height:calc(100dvh - 190px);min-height:420px;position:relative;-webkit-overflow-scrolling:touch}
+.grid{--cw:150px;min-width:calc(52px + var(--n) * var(--cw))}
+.grow{display:grid;grid-template-columns:52px repeat(var(--n),minmax(var(--cw),1fr))}
+.gtop{position:sticky;top:0;z-index:6;background:var(--surface);border-bottom:1px solid var(--line2)}
+.gut{position:sticky;left:0;z-index:4;background:var(--surface);border-right:1px solid var(--line);font-size:11.5px;color:var(--ink3);font-weight:600}
+.gtop .gut{z-index:7;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
+.ch{padding:10px 8px;font-weight:700;font-size:14px;border-left:1px solid var(--line);display:flex;align-items:center;gap:7px;min-width:0}
+.ch span.nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;background:var(--unas,#7E8D88)}
+/* "No time yet" strip: jobs that have a person but no start time. Sits under the names (stays put while the grid scrolls, on a computer or iPad)
+   and is a drop target: drop a job on a time to set it, drop a timed job here to clear its time. */
+.ntrow{border-top:2px solid var(--soon)}
+.ntrow .gut{background:var(--soonBg);color:var(--soon);font-size:11px;line-height:1.15;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3px 2px;gap:2px}
+.ntn{display:inline-block;min-width:19px;padding:0 5px;border-radius:999px;background:var(--soon);color:var(--soonBg);font-size:11px;line-height:18px}
+.ntc{border-left:1px solid var(--line);padding:5px;min-height:52px;display:flex;flex-direction:column;gap:5px;background:var(--soonBg);
+  max-height:min(26vh,200px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ntc>*{flex-shrink:0}
+.ntadd{flex:1;min-height:44px;border:1.5px dashed var(--soon);border-radius:8px;color:var(--soon);font-weight:700;font-size:13px;background:transparent}
+.ntc.dropover{outline-color:var(--soon);background-color:var(--soonBg)}
+/* jobs with no time show as slim cards (the strip and the Unassigned list already say there is no time) */
+.jm.nt{padding:5px 8px;min-height:44px}
+.jm.nt .l1{display:none}
+.jm.nt.st-booked .stl{display:none}
+.jm.nt .nm{font-size:13px}
+.hl{position:absolute;left:0;right:0;padding-right:6px;text-align:right;transform:translateY(-1px)}
+.col{position:relative;border-left:1px solid var(--line);cursor:cell;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(var(--lineq) 1px,transparent 1px);
+  background-size:100% var(--hr),100% calc(var(--hr) / 4)}
+.now{position:absolute;left:0;right:0;height:2px;background:var(--now);z-index:2;pointer-events:none}
+.dropmark{position:absolute;left:2px;right:2px;border:2px dashed var(--deep);background:rgba(14,79,84,.14);
+  border-radius:8px;pointer-events:none;z-index:3;font-size:12px;font-weight:700;color:var(--deep);padding:2px 6px}
+.dropover{outline:2px dashed var(--deep);outline-offset:-3px;background-color:rgba(14,79,84,.08)}
+
+/* job cards (day grid) */
+.jc,.jm{--sc:#7E8D88;border-left:5px solid var(--sc);background:var(--surface);border-radius:8px;
+  box-shadow:0 1px 3px rgba(20,32,30,.2);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  cursor:pointer;overflow:hidden;font-size:12.5px;line-height:1.3}
+.is-master .jc,.is-master .jm{touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
+.jc{position:absolute;padding:3px 6px;z-index:1}
+.jc .l1,.jm .l1{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11.5px;font-weight:600;color:var(--ink2);display:flex;gap:4px;align-items:center}
+.jc .nm,.jm .nm{font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jc .ds,.jm .ds{color:var(--ink2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stl{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:5px;
+  background:var(--surface2);color:var(--ink2);margin-top:2px}
+.stl.done{background:var(--okBg);color:var(--ok)} .stl.cancelled{background:var(--overBg);color:var(--over)}
+.jc.short .ds,.jc.short .stl,.jc.short .te{display:none}
+.jc.tiny{display:flex;gap:6px;align-items:center;white-space:nowrap;padding-top:1px;padding-bottom:1px}
+.jc.tiny .l1{flex:0 0 auto}
+.jc.st-done,.jm.st-done,.tcard.st-done{opacity:.6;filter:grayscale(.7)}
+.jc.st-cancelled,.jm.st-cancelled,.tcard.st-cancelled{opacity:.55;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.05) 6px 12px)}
+.jc.st-cancelled .nm,.jm.st-cancelled .nm{text-decoration:line-through}
+.jc.dragging,.jm.dragging{opacity:.3}
+.ghost{box-shadow:0 10px 28px rgba(0,0,0,.35)!important;opacity:.92}
+.jm{padding:6px 8px;position:relative}
+
+/* tray */
+.tray{flex:0 0 230px;border:1px dashed var(--line2);border-radius:12px;padding:10px;background:var(--surface2);display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 190px);overflow:auto}
+.tray>*{flex-shrink:0}      /* without this the cards squash to fit instead of the tray scrolling (10 jobs in an iPad-portrait tray were 24px tall) */
+.tray .trayhead{display:flex;justify-content:space-between;align-items:baseline}
+.tray h2{font-size:16px}
+.tray h3{font-family:"Public Sans",sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);margin-top:6px}
+.n{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ink3)}
+.traynote{font-size:12.5px;color:var(--ink3);margin:2px 0}
+.tag{font-size:11px;color:var(--soon);font-weight:600}
+@media(max-width:900px){
+  .dayline{flex-direction:column}
+  .tray{order:-1;flex:none;width:100%;max-height:34vh}
+  .gridwrap{height:calc(100vh - 240px);height:calc(100dvh - 240px);width:100%}
+}
+
+/* week view */
+.wgrid{display:grid;grid-template-columns:112px repeat(var(--n),minmax(132px,1fr));min-width:calc(112px + var(--n) * 132px)}
+.wgrid .wh{position:sticky;top:0;z-index:6;background:var(--surface);border-bottom:1px solid var(--line2);padding:8px 6px;text-align:left;font-weight:700;
+  display:flex;flex-direction:column;align-items:flex-start;min-height:52px;border-left:1px solid var(--line)}
+.wgrid .wh.corner{left:0;z-index:8;border-left:none}
+.wgrid .wh.today{background:var(--okBg);color:var(--ok)}
+.wgrid .wh small{font-weight:500;color:var(--ink3);font-size:12px}
+.wgrid .wh.today small{color:var(--ok)}
+.wgrid .wh[data-act]{cursor:pointer}
+.wr{position:sticky;left:0;z-index:4;background:var(--surface);border-top:1px solid var(--line);border-right:1px solid var(--line);padding:8px 8px;font-weight:700;display:flex;gap:7px;align-items:flex-start;min-width:0}
+.wr span.nm{overflow:hidden;text-overflow:ellipsis}
+.wcell{border-top:1px solid var(--line);border-left:1px solid var(--line);padding:5px;min-height:76px;display:flex;flex-direction:column;gap:5px;cursor:cell}
+.wcell.today{background:rgba(39,107,89,.05)}
+.wcell .jm{cursor:pointer}
+
+/* tech list */
+.wrap{max-width:720px;margin:0 auto;padding:0 14px 40px}
+.tcard{--sc:#0e7490;background:var(--surface);border:1px solid var(--line);border-left:7px solid var(--sc);border-radius:12px;margin-bottom:12px;box-shadow:var(--raise);overflow:hidden}
+.tmain{padding:14px 14px 10px;cursor:pointer;min-height:44px}
+.ttime{font-family:"Spline Sans Mono",monospace;font-size:15px;font-weight:600;color:var(--ink2);display:flex;gap:6px;align-items:center}
+.tname{font-family:Newsreader,Georgia,serif;font-size:22px;font-weight:600;margin:2px 0}
+.taddr{font-size:16px;color:var(--ink)}
+.tsvc{font-size:15px;color:var(--ink2);font-weight:600;margin-top:2px}
+.tnote{font-size:14px;color:var(--ink2);margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.tacts{display:flex;gap:8px;padding:0 14px 14px;flex-wrap:wrap}
+.tacts a{flex:1;min-width:92px}
+.empty{text-align:center;padding:48px 20px;color:var(--ink3)}
+.empty h3{font-size:18px;color:var(--ink2);margin-bottom:5px}
+
+/* buttons */
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.btn{flex:1;min-width:104px;min-height:48px;padding:11px 12px;border-radius:10px;border:1px solid var(--line2);
+  background:var(--surface);font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:7px;
+  text-decoration:none;color:var(--ink);text-align:center}
+.btn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.btn.ok{background:var(--ok);color:var(--deepInk);border-color:var(--ok)}
+.btn.warn{background:var(--surface);color:var(--soon);border-color:var(--soon)}
+.btn.bad{background:var(--surface);color:var(--over);border-color:var(--over)}
+.btn[disabled],.btn.off{opacity:.4;cursor:default;pointer-events:none}
+.btn.sm{min-height:44px;flex:0 0 auto;font-size:14px}
+
+/* login / status screens */
+.authwrap{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.authcard{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;box-shadow:var(--raise)}
+.authcard h1{font-size:24px;margin-bottom:4px}
+.authcard p{color:var(--ink2);margin:6px 0 12px}
+.divider{margin:18px 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700}
+.boot{display:grid;place-items:center;min-height:50vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+
+/* job sheet */
+.sheet{position:fixed;top:0;right:0;bottom:0;left:0;z-index:60;background:rgba(10,20,18,.42);display:flex;align-items:flex-end;justify-content:center}
+.sheet .panel{background:var(--bg);width:100%;max-width:760px;height:100%;display:flex;flex-direction:column;overflow:hidden}
+@media(min-width:720px){.sheet{align-items:center}.sheet .panel{height:auto;max-height:92vh;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.35)}}
+.shhead{background:var(--bg);border-bottom:1px solid var(--line);padding:calc(12px + env(safe-area-inset-top)) 16px 10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+@media(min-width:720px){.shhead{padding-top:14px}}
+.shttl{flex:1;min-width:0}
+.shhead h2{font-size:21px;line-height:1.2;word-break:break-word}
+.shhead .sb{font-size:13.5px;color:var(--ink2);margin-top:2px}
+.x{width:44px;height:44px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;flex:0 0 auto}
+.x .ic{width:20px;height:20px}
+.shbody{flex:1;overflow-y:auto;padding:12px 16px 24px;-webkit-overflow-scrolling:touch}
+.shfoot{display:flex;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
+.shfoot .btn{margin:0}
+.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;margin:18px 0 8px}
+.fl{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin:0 0 4px}
+.fld{margin-bottom:10px;position:relative;min-width:0}
+.inp{width:100%;min-height:48px;padding:10px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);font:inherit;font-size:16px}
+textarea.inp{min-height:110px;resize:vertical}
+select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:36px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:2fr 1fr 1.2fr;gap:10px}
+.hint{font-size:12.5px;color:var(--ink3);margin:-4px 0 10px 2px}
+.hint.ok{color:var(--ok)} .hint.new{color:var(--accent);font-weight:600}
+.hint .linkbtn{font-size:12.5px;vertical-align:baseline}
+#f-addr-hint:empty{display:none}
+/* services (tick list, then a price and invoice wording for each ticked one) */
+.svlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:6px;margin-bottom:4px}
+.svrow{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 8px;border:1px solid var(--line2);border-radius:10px;background:var(--surface);cursor:pointer;font-size:14.5px;line-height:1.25;min-width:0}
+.svrow span{min-width:0;overflow-wrap:anywhere}
+.svrow input{width:22px;height:22px;flex:0 0 auto;margin:0}
+.svrow.on{border-color:var(--deep);background:var(--okBg)}
+#sv-list .linkbtn{display:block;margin:2px 0 6px -6px}
+.svcard{border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:10px 12px 2px;margin:8px 0}
+.svhead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.svhead b{font-size:15px;min-width:0;word-break:break-word}
+.pf{flex:0 0 auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--soon);background:var(--soonBg);padding:2px 8px;border-radius:5px}
+textarea.sdesc{min-height:64px}
+#sv-total:empty{display:none}
+/* a client's known job sites, tap to fill the job address */
+.sites{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 12px}
+.sitelbl{font-size:12.5px;color:var(--ink3);font-weight:600;margin-right:2px}
+.chip{min-height:44px;padding:8px 14px;border-radius:999px;border:1px solid var(--line2);background:var(--surface);font-size:14px;line-height:1.25;text-align:left}
+.chip.on{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.aclist{position:absolute;left:0;right:0;top:100%;z-index:20;background:var(--surface);border:1px solid var(--line2);border-radius:10px;box-shadow:var(--raise);margin-top:2px;max-height:300px;overflow:auto}
+.acitem{display:block;width:100%;text-align:left;padding:10px 12px;min-height:48px;border-bottom:1px solid var(--line);font-size:15px}
+.acitem:last-child{border-bottom:none}
+.acitem b{display:block}
+.acitem span{display:block;font-size:12.5px;color:var(--ink2)}
+.acitem:hover,.acitem:focus-visible{background:var(--surface2)}
+.ro{padding:10px 12px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-size:15px;min-height:44px}
+.recs{font-size:14px;color:var(--ink2);margin:2px 0 6px}
+.recs .y{color:var(--ok);font-weight:700}
+.phgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin:10px 0}
+.phgrid a{display:block;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--line2);background:var(--surface2)}
+.phgrid img{width:100%;height:100%;object-fit:cover;display:block}
+.photostat{font-size:13.5px;color:var(--ink2);min-height:20px}
+.danger{margin-top:22px;padding-top:6px;border-top:1px solid var(--line)}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:400;max-width:min(92vw,520px);
+  background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;font-size:14.5px;box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1} #toast.bad{background:var(--over);color:var(--deepInk)}
+#toast.act{pointer-events:auto}
+#toast .toastbtn{margin-left:10px;min-height:44px;padding:0 10px;font-weight:700;text-decoration:underline;color:inherit}
+
+/* segmented buttons (Quick add "Who", and the phone day view "Both | Mitch | ...") and rows of chips */
+.seg{display:flex;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--surface)}
+.segb{flex:1 1 0;min-width:0;min-height:44px;padding:0 8px;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-left:1px solid var(--line2);display:flex;align-items:center;justify-content:center;gap:6px}
+.segb:first-child{border-left:none}
+.segb[aria-pressed="true"]{background:var(--deep);color:var(--deepInk)}
+.segb .n{color:inherit;opacity:.85}
+.pfilter{padding:0 14px 10px}
+@media(min-width:720px){.pfilter{display:none}}
+.chiprow{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:1px 16px 3px;margin:0 -16px}
+.chiprow::-webkit-scrollbar{display:none}
+.chiprow>*{flex:0 0 auto}
+@media(hover:hover) and (pointer:fine){.chiprow{scrollbar-width:thin}.chiprow::-webkit-scrollbar{display:block;height:6px}}      /* on a computer the sideways scroll needs a visible bar */
+
+/* floating + button (master): Quick add */
+.fab{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:60px;height:60px;border-radius:50%;
+  background:var(--deep);color:var(--deepInk);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.34),0 1px 3px rgba(0,0,0,.3)}
+.fab .ic{width:28px;height:28px;stroke-width:2.6}
+.fab:active{transform:scale(.95)}
+body.isdrag .fab{pointer-events:none;opacity:.3}      /* so a card can be dropped on the spot under it */
+body.is-master main{padding-bottom:92px}
+body.is-master #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
+html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      /* with the keyboard up, a toast at the bottom would be hidden behind it */
+
+/* Quick add panel */
+.qa .panel{max-width:520px}
+.qa .shhead{align-items:center;padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:4px;gap:4px}
+.qa .shhead h2{flex:1;min-width:0}
+.qa .shhead .linkbtn{flex:0 0 auto;font-size:14px}
+.qa .shbody{padding:2px 16px 10px}
+.qa .lbl{margin:6px 0 3px;display:flex;align-items:center;gap:8px;min-height:18px}
+.qa .qname{margin-top:8px}
+.qa .lbl .qdl{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);font-size:13px}
+.qa .lbl .linkbtn{text-transform:none;letter-spacing:0;font-size:14px;margin:-13px -6px -13px 0}
+.qa .fld{margin-bottom:8px}
+.qa .aclist{max-height:230px}
+.qa .hint{margin:0 0 8px 2px}
+.qa .shfoot{gap:10px}
+.qa .shfoot .btn{min-width:0;padding:11px 8px}
+.qa .shfoot .btn.pri{flex:0 0 32%}
+.qa .shfoot .btn:not(.pri){flex:1}
+.chip.qc{text-align:center;padding:6px 14px;white-space:nowrap}
+.qdate{flex:0 0 156px;min-height:44px;padding:6px 10px}
+.qtime{display:flex;gap:6px;align-items:center}
+.qtime>.chip{flex:0 0 auto}
+.qtime .chiprow{flex:1;min-width:0;margin:0;padding:1px 1px 3px}
+.qsv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.qsv .chip{border-radius:12px;padding:4px 5px;text-align:center;font-size:13.5px;line-height:1.2;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere;min-width:0}
+.qsv .chip.on:before{content:"\2713\00a0"}
+.qsum{display:flex;gap:0 8px;align-items:center;flex-wrap:wrap;margin:-2px 0 6px;padding:5px 10px 0;border:1px solid var(--ok);background:var(--okBg);border-radius:10px}
+.qsum .qsl{flex:1 1 180px;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
+.qsum .qsa{display:flex;gap:2px;margin-right:-6px}
+.qsum .linkbtn{font-size:13.5px}
+.qhint{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-4px 0 0}
+.qhint .hint{margin:0}
+.qhint .linkbtn{flex:0 0 auto;font-size:14px;margin-right:-6px}
+.qsum .miss{color:var(--soon);font-weight:700}
+@media(max-width:719px){
+  .grid{--cw:136px}
+  /* phone toolbar in three rows instead of four: [< Today >] [Day Week] / [date label] [date box] / [New job] [Show cancelled] */
+  .tb{padding:6px 14px 8px;gap:6px 10px}
+  .tb>.grp:first-child{order:1}
+  .tb>.grp[aria-label="View"]{order:2}
+  .tb .dlabel{order:3;flex:1 1 150px;font-size:18px}
+  .tb .tbdate{order:4;flex:0 0 152px}
+  .tb .tbtn.pri{order:5}
+  .tb .chk{order:6}
+  .tb .live{order:7}
+  .tray{padding:8px 10px;gap:5px;max-height:26vh}
+  .tray .traynote{display:none}
+  .tray h3{margin-top:2px}
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:20px">This calendar needs JavaScript turned on.</p></noscript>
+<div id="app"></div>
+<div id="sheet"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="lpc-config.js"></script>
+<!-- Pinned on purpose (2.117.2, the build the old @2 tag gave on 5 Oct 2026). To upgrade: change the version, re-hash with
+     curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, week view, new/edit job, log out. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
+<script>
+(function(){
+"use strict";
+
+/* =====================================================================
+   Lighthouse shared job calendar.
+   Talks to Supabase (see ~/lighthouse-supabase/01_schema.sql). Row-level
+   security in the database is the real lock; this page just behaves.
+   ===================================================================== */
+
+/* ---------- settings ---------- */
+const PXMIN=1.25;            // pixels per minute on the day grid
+const SNAP=15;               // minutes
+const DAY_START=6*60, DAY_END=18*60;
+const UNAS="#7E8D88";
+const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
+const JOB_COLS="*, client:clients("+CLIENT_COLS+")";
+const PREF_KEY="lpc_calendar_prefs_v1", EMAIL_KEY="lpc_calendar_last_email", DRAFT_KEY="lpc-cal-draft-v1";
+const DRAFT_MAX_AGE=24*60*60*1000;
+const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","South Australia":"SA","Western Australia":"WA","Tasmania":"TAS","Northern Territory":"NT","Australian Capital Territory":"ACT"};
+// These two service types are the ones that get the Termite inspection button. Everything else gets the Service record button.
+const INSPECTION_TYPES=["Termite Inspection","Pre-Purchase Inspection"];
+const SVC_SHOW=8;           // services shown before "More services"
+const PHOTON_URL="https://photon.komoot.io/api/",PHOTON_LAT=-28.65,PHOTON_LON=153.56;     // address lookup, biased to the Northern Rivers
+const QUICK_KEY="lpc_quick_prefs_v1";   // Quick add remembers who the last job was for
+const QUICK_SVC=6;                      // service chips Quick add shows before "More"
+const QUICK_DUR=60;                     // minutes, same default as the full job sheet
+const QUICK_FIRST=6*60+30, QUICK_LAST=17*60, QUICK_STEP=30;      // time chips 6:30am to 5:00pm
+const NARROW="(max-width:719px)";       // phone width: below this the day view can show one person at a time
+
+/* ---------- tiny helpers ---------- */
+const $=(s,r)=>(r||document).querySelector(s);
+const byId=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>(n<10?"0":"")+n;
+const trim=s=>String(s==null?"":s).trim();
+const nn=s=>{s=trim(s);return s?s:null;};
+const DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const IC={
+  tick:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7"/></svg>',
+  x:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  l:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>',
+  r:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
+  plus:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  phone:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>',
+  msg:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 3.7 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>',
+  mail:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+  pin:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  cam:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
+};
+
+/* ---------- dates and times (local parts only, never toISOString for a date) ---------- */
+function ymd(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function parseYmd(s){const p=String(s).split("-").map(Number);return new Date(p[0],p[1]-1,p[2]);}
+function addDays(s,n){const d=parseYmd(s);d.setDate(d.getDate()+n);return ymd(d);}
+function todayYmd(){return ymd(new Date());}
+function validYmd(s){return /^\d{4}-\d{2}-\d{2}$/.test(String(s))&&ymd(parseYmd(s))===s;}
+function weekStart(s){const d=parseYmd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d);}
+function niceDate(s){const d=parseYmd(s);return DOW[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()]+" "+d.getFullYear();}
+function dayShort(s){const d=parseYmd(s);return DOW[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()];}
+function tmToMin(t){if(!t)return null;const m=/^(\d{1,2}):(\d{2})/.exec(String(t));return m?(+m[1])*60+(+m[2]):null;}
+function minToTm(m){return pad(Math.floor(m/60))+":"+pad(m%60)+":00";}
+function minToHM(m){return pad(Math.floor(m/60))+":"+pad(m%60);}
+function fmtMin(m){const h=Math.floor(m/60)%24,mi=m%60;return (h%12===0?12:h%12)+":"+pad(mi)+(h>=12?"pm":"am");}
+function hourLabel(m){const h=Math.floor(m/60)%24;return (h%12===0?12:h%12)+(h>=12?"pm":"am");}
+function fmtDur(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"");}
+function fmtStamp(iso){const d=new Date(iso);if(isNaN(d))return "";return d.getDate()+" "+MON[d.getMonth()]+", "+fmtMin(d.getHours()*60+d.getMinutes());}
+
+/* ---------- state ---------- */
+const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster:false,staff:[],staffById:{},types:[],typesByName:{},
+  view:"day",date:todayYmd(),showCancelled:false,jobs:[],byId:{},loaded:false,loadErr:"",range:null,
+  fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
+  scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:DAY_START,ge:DAY_END},starting:false,
+  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both"};
+let SH=null;     // the open job sheet, or null
+
+function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||"{}")||{};if(p.view==="week"||p.view==="day")S.view=p.view;S.showCancelled=!!p.showCancelled;if(typeof p.phoneWho==="string"&&p.phoneWho)S.phoneWho=p.phoneWho;}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify({view:S.view,showCancelled:S.showCancelled,phoneWho:S.phoneWho}));}catch(e){}}
+
+function isNarrow(){try{return !!(window.matchMedia&&window.matchMedia(NARROW).matches);}catch(e){return false;}}
+
+/* ---------- messages ---------- */
+let toastT=0;
+function toast(msg,bad){const t=byId("toast");if(!t)return;t.textContent=msg;t.className="show"+(bad?" bad":"");clearTimeout(toastT);toastT=setTimeout(function(){t.className="";},bad?7000:2600);}
+// a toast with an Undo button in it. Stays up longer so there is time to tap it.
+function toastUndo(msg,onUndo){
+  const t=byId("toast");if(!t)return;
+  t.textContent="";
+  const s=document.createElement("span");s.textContent=msg;
+  const b=document.createElement("button");b.type="button";b.className="toastbtn";b.textContent="Undo";
+  b.addEventListener("click",function(){clearTimeout(toastT);t.className="";t.textContent="";onUndo();});
+  t.appendChild(s);t.appendChild(b);
+  t.className="show act";
+  clearTimeout(toastT);toastT=setTimeout(function(){t.className="";},8000);
+}
+function plainErr(m){const e=new Error(m);e.plain=true;return e;}
+function friendly(e){
+  if(e&&e.plain)return e.message;
+  const msg=trim(e&&(e.message||e.error_description||e.msg)||(typeof e==="string"?e:""));
+  const code=e&&e.code,status=e&&e.status;
+  if((typeof navigator!=="undefined"&&navigator.onLine===false)||/failed to fetch|networkerror|load failed|network request failed/i.test(msg))return "Can't reach the server. Check your signal and try again.";
+  if(status===401||/\bjwt\b|not authenticated|invalid.*token|refresh token/i.test(msg))return "You've been logged out. Log in again.";
+  if(code==="42501"||/row-level security|permission denied/i.test(msg)){return /^Only the master/.test(msg)?msg:"You're not allowed to do that.";}
+  if(code==="23505")return "That already exists.";
+  if(status===429||/rate limit|too many/i.test(msg))return "Too many tries. Wait a few minutes and try again.";
+  return "Something went wrong"+(msg?" ("+msg+")":"")+".";
+}
+
+function netErr(e){return (navigator.onLine===false)||(e&&(e.name==="AuthRetryableFetchError"||e.status===0))||/failed to fetch|networkerror|load failed|network request failed/i.test(String(e&&e.message||""));}
+
+/* ---------- staff, service types, small lookups ---------- */
+function sortStaff(a){return a.slice().sort(function(x,y){if(x.role!==y.role)return x.role==="master"?-1:1;return String(x.name).localeCompare(String(y.name));});}
+function safeColour(c){return /^#[0-9a-fA-F]{3,8}$/.test(String(c||""))?c:UNAS;}
+function staffColour(id){const s=id&&S.staffById[id];return safeColour(s&&s.colour);}
+function activeStaff(){return S.staff.filter(function(s){return s.active;});}
+function cName(j){return (j.client&&j.client.name)?j.client.name:"No client";}
+function composeAddr(street,suburb,state,pc){const tail=[suburb,state,pc].map(trim).filter(Boolean).join(" ");return [trim(street),tail].filter(Boolean).join(", ");}
+function suburbOf(j){
+  if(j.client&&j.client.suburb)return j.client.suburb;
+  const a=trim(j.address);if(a.indexOf(",")<0)return "";
+  const last=a.split(",").pop();
+  return trim(last.replace(/\b(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/i,"").replace(/\b\d{4}\b/,""));
+}
+function byTime(a,b){
+  const x=tmToMin(a.start_time),y=tmToMin(b.start_time);
+  if(x==null&&y==null)return cName(a).localeCompare(cName(b));
+  if(x==null)return 1;if(y==null)return -1;return x-y;
+}
+function visibleJobs(){return S.jobs.filter(function(j){return (S.isMaster&&S.showCancelled)||j.status!=="cancelled";});}
+const INSPECTION_KEYS=INSPECTION_TYPES.map(function(n){return n.toLowerCase();});
+function isInspectionType(name){return INSPECTION_KEYS.indexOf(String(name==null?"":name).trim().toLowerCase())>=0;}
+function slugify(name){
+  let s=String(name).toLowerCase();
+  try{s=s.normalize("NFKD").replace(/[̀-ͯ]/g,"");}catch(e){}
+  s=s.replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60).replace(/-+$/,"");
+  return s||"client";
+}
+function looksEmail(s){return /^[^\s@?&#,;]+@[^\s@?&#,;]+\.[^\s@?&#,;]+$/.test(trim(s));}
+function parsePrice(s){const t=String(s==null?"":s).replace(/[$,\s]/g,"");if(t==="")return null;if(!/^\d+(\.\d{1,2})?$/.test(t))return NaN;return Number(t);}
+function uuid(){
+  try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID();}catch(e){}
+  const b=new Uint8Array(16);(window.crypto||window.msCrypto).getRandomValues(b);
+  b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;
+  const h=Array.prototype.map.call(b,function(x){return (x+256).toString(16).slice(1);}).join("");
+  return h.slice(0,8)+"-"+h.slice(8,12)+"-"+h.slice(12,16)+"-"+h.slice(16,20)+"-"+h.slice(20);
+}
+
+/* ---------- services on a job ----------
+   A job can have several services. In the form each one is {type, description, price}, with the price kept as the text in the box.
+   Saved: jobs.services = [{type, description, price}] in tick order, jobs.service_type = the names joined with " + " (for showing),
+   jobs.price = the entered prices added up (null if none entered). */
+function priceStr(p){return p==null||p===""?"":String(p);}
+function typeDesc(name){const t=S.typesByName[name];return t&&t.xero_description?String(t.xero_description):"";}
+// What the form starts with for a job: its saved services, or, for an older job that only has service_type, that one service.
+function loadServices(j){
+  if(!j)return [];
+  if(Array.isArray(j.services)&&j.services.length){
+    const out=j.services.filter(function(e){return e&&trim(e.type);}).map(function(e){
+      // only a service with no wording saved at all gets the default Xero wording; wording that was cleared on purpose (saved as "") stays blank
+      return {type:trim(e.type),description:e.description===undefined?typeDesc(trim(e.type)):String(e.description||""),price:priceStr(e.price)};
+    });
+    // one service with no price of its own, but the job has one: that is the service's price (don't show it blank and risk wiping it on save)
+    if(out.length===1&&out[0].price===""&&j.price!=null)out[0].price=priceStr(j.price);
+    return out;
+  }
+  const st=trim(j.service_type);
+  return st?[{type:st,description:typeDesc(st),price:priceStr(j.price)}]:[];
+}
+// the form's services as they get saved (price as a number or null, blank wording as "" so it stays blank when the job is opened again)
+function canonServices(list){
+  return (list||[]).map(function(e){return {type:trim(e.type),description:trim(e.description),price:parsePrice(e.price)};});
+}
+function sumPrice(list){
+  let any=false,t=0;
+  list.forEach(function(e){if(e.price!=null&&!isNaN(e.price)){any=true;t+=e.price;}});
+  return any?Math.round(t*100)/100:null;
+}
+function svcNames(j){
+  if(Array.isArray(j.services)&&j.services.length){
+    const a=j.services.map(function(e){return trim(e&&e.type);}).filter(Boolean);
+    if(a.length)return a;
+  }
+  const st=trim(j.service_type);
+  return st?st.split(" + ").map(trim).filter(Boolean):[];
+}
+// for the cards: all the names joined, or, when that is too long for the card, the first one and how many more
+function svcLabel(j,max){
+  const n=svcNames(j),full=n.join(" + ");
+  if(n.length<2||full.length<=max)return full;
+  return n[0]+" +"+(n.length-1);
+}
+
+/* =====================================================================
+   SCREENS AND AUTH
+   ===================================================================== */
+function setApp(html,screen){S.screen=screen;byId("app").innerHTML=html;}
+
+function renderNotConnected(){
+  setApp('<div class="authwrap"><div class="authcard"><h1>Not connected yet</h1>'+
+    '<p>This calendar is not linked to its database yet. Ask Mitch to finish the setup.</p></div></div>',"notconnected");
+}
+function renderBoot(msg){
+  setApp('<div class="boot"><div><span class="spin"></span></div><div>'+esc(msg||"Opening the calendar...")+'</div></div>',"boot");
+}
+function renderFatal(msg,canRetry){
+  // No login tools (S.sb is null): Log out can't work, so the only useful button is Reload.
+  const btns=!S.sb?'<button class="btn pri" data-act="reload">Reload</button>'
+    :(canRetry?'<button class="btn pri" data-act="restart">Try again</button>':'')+'<button class="btn" data-act="signout">Log out</button>';
+  setApp('<div class="authwrap"><div class="authcard"><h1>Hang on</h1><p>'+esc(msg)+'</p>'+
+    '<div class="btns">'+btns+'</div></div></div>',"fatal");
+}
+function renderOffline(){
+  setApp('<div class="authwrap"><div class="authcard"><h1>No signal</h1><p>Can\'t reach the server. Check your signal and try again.</p>'+
+    '<div class="btns"><button class="btn pri" data-act="reboot">Try again</button><button class="btn" data-act="signout">Log out</button></div></div></div>',"offline");
+}
+function renderNotSetup(){
+  setApp('<div class="authwrap"><div class="authcard"><h1>Not set up yet</h1>'+
+    "<p>You're not set up yet, ask Mitch.</p>"+
+    '<div class="btns"><button class="btn" data-act="signout">Log out</button></div></div></div>',"notsetup");
+}
+// The page only ever shows its own fixed wording for a bad login link. Text that arrives in the link (error_description) is never shown.
+function hashError(){
+  try{
+    const h=String(location.hash||"").replace(/^#/,"");if(!h)return "";
+    const p=new URLSearchParams(h);if(!p.has("error")&&!p.has("error_code")&&!p.has("error_description"))return "";
+    const code=(p.get("error_code")||"").toLowerCase(),err=(p.get("error")||"").toLowerCase();
+    try{history.replaceState(null,"",location.pathname+location.search);}catch(e){}
+    if(code==="otp_expired"||code==="flow_state_expired"||code==="flow_state_not_found")
+      return "That login link has expired or was already used. Ask for a new one below.";
+    if(err==="access_denied")
+      return "That login link didn't work. Ask for a new one below.";
+    return "The login link didn't work. Ask for a new one below.";
+  }catch(e){return "";}
+}
+function renderLogin(notice,kind){
+  let last="";try{last=localStorage.getItem(EMAIL_KEY)||"";}catch(e){}
+  setApp('<div class="authwrap"><div class="authcard"><h1>Job Calendar</h1>'+
+    '<p>Log in with your email and password. Your phone can remember them for you.</p><div id="lg-msg" role="alert">'+(notice?'<div class="banner '+(kind||"warn")+'" style="margin:0 0 12px">'+esc(notice)+'</div>':'')+'</div>'+
+    '<form id="lg-form" action="#" autocomplete="on">'+
+    '<label class="fl" for="lg-email">Your email</label>'+
+    '<input class="inp" id="lg-email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" value="'+esc(last)+'">'+
+    '<label class="fl" for="lg-pass">Password</label>'+
+    '<input class="inp" id="lg-pass" name="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">'+
+    '<div class="btns"><button class="btn pri" id="lg-go" type="submit">Log in</button></div>'+
+    '</form>'+
+    '<div class="divider">Forgot your password?</div>'+
+    '<div class="btns"><button class="btn" id="lg-send" type="button" data-act="sendlink">Email me a login link instead</button></div>'+
+    '<p class="hint" style="margin:0">The link opens in Safari. Once you are in there, you are logged in on that browser.</p>'+
+'</div></div>',"login");
+}
+function loginMsg(text,kind){const m=byId("lg-msg");if(m)m.innerHTML=text?'<div class="banner '+(kind||"warn")+'" style="margin:0 0 12px">'+esc(text)+'</div>':"";}
+function loginBusy(on){["lg-send","lg-go"].forEach(function(id){const b=byId(id);if(b)b.disabled=!!on;});}
+
+async function sendLink(){
+  const email=trim(byId("lg-email").value).toLowerCase();
+  if(!looksEmail(email)){loginMsg("Type your email address first.","bad");return;}
+  try{localStorage.setItem(EMAIL_KEY,email);}catch(e){}
+  loginBusy(true);loginMsg("Sending...","ok");
+  try{
+    const redirect=String(location.href).split(/[?#]/)[0];
+    const r=await S.sb.auth.signInWithOtp({email:email,options:{shouldCreateUser:false,emailRedirectTo:redirect}});
+    if(r.error)throw r.error;
+    loginMsg("Sent. Check your email and tap the link. Only a few can be sent each hour, so don't keep asking.","ok");
+  }catch(e){
+    const m=trim(e&&e.message);
+    if(/signups? not allowed|not allowed for otp|user not found/i.test(m))loginMsg("That email isn't set up for this calendar. Ask Mitch.","bad");
+    else loginMsg(friendly(e),"bad");
+  }
+  loginBusy(false);
+}
+async function passwordLogin(){
+  const email=trim(byId("lg-email").value).toLowerCase(),pass=byId("lg-pass").value;
+  if(!looksEmail(email)){loginMsg("Type your email address first.","bad");return;}
+  if(!pass){loginMsg("Type your password.","bad");return;}
+  try{localStorage.setItem(EMAIL_KEY,email);}catch(e){}
+  loginBusy(true);loginMsg("Checking...","ok");
+  try{
+    const r=await S.sb.auth.signInWithPassword({email:email,password:pass});
+    if(r.error)throw r.error;
+    if(r.data&&r.data.session)onSession(r.data.session);
+  }catch(e){
+    const m=trim(e&&e.message);
+    loginMsg(/invalid login|invalid credentials|email not confirmed/i.test(m)?"That email and password don't match. Check them, or use the login link below.":friendly(e),"bad");
+    loginBusy(false);
+  }
+}
+async function signOut(){
+  if(SH){closeSheet(true);}
+  stopApp();
+  let r=null;
+  try{r=await S.sb.auth.signOut({scope:"local"});}catch(e){r={error:e};}
+  // auth-js hands back {error} instead of throwing. If the logout call failed (no signal), the stored session is still there,
+  // so clear the stored login keys ourselves, otherwise the next person to open the app lands in this account.
+  let partial=false;
+  if(r&&r.error){
+    partial=true;
+    try{
+      const k=(S.sb.auth&&S.sb.auth.storageKey)||"";
+      Object.keys(localStorage).forEach(function(key){
+        if((k&&key.indexOf(k)===0)||/^sb-.+-auth-token/.test(key))localStorage.removeItem(key);
+      });
+    }catch(e){}
+  }
+  S.userId=null;S.user=null;S.me=null;
+  renderLogin(partial?"Logged out on this device. No signal, so the login wasn't cancelled on the server. That's fine, it just runs out on its own.":"",partial?"warn":"");
+}
+
+function onSession(session){
+  if(!session||!session.user){
+    // INITIAL_SESSION comes through as null before getSession has finished (and when it can't reach the server): let checkSession decide.
+    if(!S.userId&&(S.screen==="boot"||S.screen==="offline"))return;
+    if(S.userId||S.screen==="boot"||S.screen==="fatal"||S.screen==="notsetup"||S.screen==="offline"){
+      const kept=stashDraft(S.userId);      // before anything is torn down, while the form is still on screen
+      stopApp();S.userId=null;S.user=null;S.me=null;if(SH)closeSheet(true);
+      renderLogin(kept?"You've been logged out. What you typed is kept and comes back after you log in.":(S.hashErr||""),"warn");S.hashErr="";
+    }
+    return;
+  }
+  S.hashErr="";
+  if(S.userId===session.user.id&&(S.screen==="cal"||S.screen==="notsetup"||S.starting))return;
+  if(S.userId&&S.userId!==session.user.id){stashDraft(S.userId);stopApp();if(SH)closeSheet(true);}
+  S.userId=session.user.id;S.user=session.user;
+  startApp();
+}
+
+/* ----- a job that was half typed when the login ran out: kept on this device and offered back after the next log in ----- */
+function stashDraft(uid){
+  if(!SH||!uid||!isDirty())return false;
+  try{
+    localStorage.setItem(DRAFT_KEY,JSON.stringify({uid:uid,jobId:SH.jobId||null,isNew:!!SH.isNew,init:SH.init,
+      clientId:SH.clientId||null,client:SH.client||null,form:readForm(),addrTouched:!!SH.addrTouched,
+      baseUpdatedAt:(SH.job&&SH.job.updated_at)||null,at:Date.now()}));
+    return true;
+  }catch(e){return false;}
+}
+function readDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");return d&&typeof d==="object"?d:null;}catch(e){return null;}}
+function hideDraftBar(){const el=byId("dr");if(el)el.innerHTML="";}
+function clearDraft(){try{localStorage.removeItem(DRAFT_KEY);}catch(e){}hideDraftBar();}
+function clearDraftForJob(jobId){const d=readDraft();if(d&&jobId&&d.jobId===jobId&&d.uid===S.userId)clearDraft();}
+function offerDraft(){
+  const d=readDraft();if(!d)return;
+  // never show one person's draft to another, and don't keep old ones around
+  if(d.uid!==S.userId||!d.form||!(Date.now()-d.at<DRAFT_MAX_AGE)){clearDraft();return;}
+  const el=byId("dr");if(!el)return;
+  const who=trim(d.form.name);
+  el.innerHTML='<div class="banner warn">You were logged out while editing '+(who?esc(who)+"'s job":"a job")+'. What you typed is kept. '+
+    '<button class="linkbtn" data-act="draftrestore">Restore</button><button class="linkbtn" data-act="draftdiscard">Discard</button></div>';
+}
+// a draft saved before jobs could have several services holds one "service" and one "price"
+function draftServices(F){
+  if(Array.isArray(F.services))return F.services.filter(function(e){return e&&trim(e.type);}).map(function(e){return {type:trim(e.type),description:String(e.description==null?"":e.description),price:priceStr(e.price)};});
+  const st=trim(F.service);
+  return st?[{type:st,description:typeDesc(st),price:priceStr(F.price)}]:[];
+}
+// Puts a form (as readForm gives it) into the job sheet that has just been opened. The baseline stays as the fresh snapshot taken in
+// openSheet, so the sheet counts as changed and still asks before it closes. Used by Restore (after a logout) and by Quick add's "More details".
+function fillSheet(F,o){
+  const vals={"f-name":F.name,"f-phone":F.phone,"f-email":F.email,"f-street":F.street,"f-suburb":F.suburb,"f-state":F.state,"f-postcode":F.postcode,
+    "f-addr":F.address,"f-notes":F.notes};
+  if(S.isMaster){vals["f-date"]=F.date;vals["f-time"]=F.time;vals["f-dur"]=F.dur;vals["f-staff"]=F.staff;}
+  Object.keys(vals).forEach(function(id){if(byId(id))setVal(id,vals[id]);});
+  if(S.isMaster){SH.clientId=o.clientId||null;SH.client=o.client?Object.assign({},o.client):null;}
+  SH.svc=draftServices(F);renderSvcList();renderSvcDetails();
+  if(o.addrTouched)SH.addrTouched=true;
+  if(SH.clientId&&SH.client&&(!o.job||SH.clientId!==o.job.client_id))loadSites(SH,SH.clientId);      // an open job already fetched its own client's sites
+  updateClientHint();updateLinks();renderRecs();
+}
+async function restoreDraft(){
+  const d=readDraft();
+  if(!d||d.uid!==S.userId||!d.form){clearDraft();return;}
+  if(SH){toast("Close the open job first, then tap Restore.",true);return;}
+  let job=null;
+  if(d.jobId&&!d.isNew){
+    job=S.byId[d.jobId]||null;
+    if(!job){      // on another date: go and get it
+      try{
+        const r=await S.sb.from("jobs").select(JOB_COLS).eq("id",d.jobId).maybeSingle();
+        if(r.error)throw r.error;
+        job=r.data||null;
+      }catch(e){toast("Couldn't get that job back. "+friendly(e),true);return;}
+      if(!job){toast("That job isn't there any more, so what you typed can't go back on it. Tap Discard to clear it.",true);return;}
+    }
+  }
+  if(SH)return;
+  const F=d.form;
+  if(job)openSheet(job,null);
+  else openSheet(null,{staff:F.staff||"",date:validYmd(F.date)?F.date:S.date,time:F.time||""});
+  if(!SH)return;
+  fillSheet(F,{clientId:d.clientId,client:d.client,addrTouched:d.addrTouched,job:job});
+  const changed=!!(job&&d.baseUpdatedAt&&job.updated_at&&job.updated_at!==d.baseUpdatedAt);
+  showMsg(changed?"You got logged out. Here's what you'd typed. This job was changed since, so check it before you tap Save."
+    :"You got logged out. Here's what you'd typed. Check it and tap Save.","warn");
+  clearDraft();
+}
+
+async function startApp(){
+  if(S.starting)return;
+  S.starting=true;
+  renderBoot("Loading your calendar...");
+  try{
+    const me=await S.sb.from("staff").select("id,name,role,colour,active").eq("id",S.userId).maybeSingle();
+    if(me.error)throw me.error;
+    if(!me.data||!me.data.active){S.starting=false;renderNotSetup();return;}
+    S.me=me.data;S.isMaster=me.data.role==="master";
+    const res=await Promise.all([
+      S.sb.from("staff").select("id,name,role,colour,active"),
+      S.sb.from("service_types").select("id,name,default_price,xero_description,sort").order("sort",{ascending:true})
+    ]);
+    if(res[0].error)throw res[0].error;if(res[1].error)throw res[1].error;
+    S.staff=sortStaff(res[0].data||[]);S.staffById={};S.staff.forEach(function(s){S.staffById[s.id]=s;});
+    S.types=res[1].data||[];S.typesByName={};S.types.forEach(function(t){S.typesByName[t.name]=t;});
+    document.body.classList.toggle("is-master",S.isMaster);
+    if(!S.isMaster)S.view="day";
+    S.date=todayYmd();S.loaded=false;S.loadErr="";S.jobs=[];S.byId={};S.range=null;S.scrollToWork=true;S.lastRenderKey="";
+    renderShell();
+    S.starting=false;
+    subscribe();
+    startPoll();
+    await fetchJobs(false);
+    offerDraft();
+  }catch(e){
+    S.starting=false;
+    renderFatal(friendly(e),true);
+  }
+}
+function stopApp(){
+  clearTimeout(S.refetchT);clearInterval(S.pollT);S.pollT=null;clearTimeout(S.tbDateT);S.tbDateT=0;S.tbDateV="";S.tbDateFocus=false;S.lastRenderKey="";
+  if(S.channel){try{S.sb.removeChannel(S.channel);}catch(e){}S.channel=null;}
+  S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
+  document.body.classList.remove("is-master");
+}
+
+/* =====================================================================
+   DATA: fetch, realtime, refetch
+   ===================================================================== */
+function currentRange(){
+  if(S.isMaster&&S.view==="week"){const ws=weekStart(S.date);return {from:ws,to:addDays(ws,6)};}
+  return {from:S.date,to:S.date};
+}
+function setJobs(rows){S.jobs=rows||[];S.byId={};S.jobs.forEach(function(j){S.byId[j.id]=j;});}
+async function fetchJobs(silent){
+  if(S.screen!=="cal")return;
+  if(S.pending>0){scheduleRefetch(500);return;}
+  const seq=++S.fetchSeq,range=currentRange();
+  if(!silent){S.loaded=false;renderBody();}
+  try{
+    let q=S.sb.from("jobs").select(JOB_COLS).gte("job_date",range.from).lte("job_date",range.to)
+      .order("job_date",{ascending:true}).order("start_time",{ascending:true,nullsFirst:false});
+    if(!S.isMaster)q=q.eq("staff_id",S.me.id);
+    const r=await q;
+    if(seq!==S.fetchSeq)return;
+    if(r.error)throw r.error;
+    setJobs(r.data||[]);S.range=range;S.loaded=true;S.loadErr="";
+    renderBody();
+  }catch(e){
+    if(seq!==S.fetchSeq)return;
+    S.loadErr=friendly(e)+(S.loaded?" Showing what was loaded earlier.":"");
+    if(!S.loaded&&!S.jobs.length)S.loaded=false;
+    renderBody();
+  }
+}
+function scheduleRefetch(delay){clearTimeout(S.refetchT);S.refetchT=setTimeout(function(){fetchJobs(true);},delay==null?400:delay);}
+function subscribe(){
+  if(S.channel){try{S.sb.removeChannel(S.channel);}catch(e){}S.channel=null;}
+  try{
+    S.channel=S.sb.channel("lpc-calendar")
+      .on("postgres_changes",{event:"*",schema:"public",table:"jobs"},function(){scheduleRefetch();})
+      .on("postgres_changes",{event:"*",schema:"public",table:"job_photos"},function(){if(SH&&SH.jobId)loadPhotos();})
+      .subscribe(function(status){S.live=status;updateLive();});
+  }catch(e){S.live="";updateLive();}
+}
+function updateLive(){
+  const l=byId("live");if(!l)return;
+  const on=S.live==="SUBSCRIBED";
+  l.className="live"+(on?" on":"");l.textContent=on?"Live":"Not live";
+  l.title=on?"Changes from other people show up by themselves.":"Changes show up when you come back to this page.";
+}
+function startPoll(){
+  clearInterval(S.pollT);
+  S.pollT=setInterval(function(){if(document.visibilityState==="visible"&&S.screen==="cal")scheduleRefetch(0);},120000);
+}
+
+/* =====================================================================
+   CALENDAR SHELL, TOOLBAR, BODY
+   ===================================================================== */
+function renderShell(){
+  setApp('<header class="top"><h1>Job Calendar</h1><span class="who">'+esc(S.me.name)+'</span>'+
+    '<button class="out" data-act="signout">Log out</button></header>'+
+    '<main><div id="tb"></div><div id="dr"></div><div id="cb"></div></main>'+
+    (S.isMaster?'<button type="button" class="fab" data-act="qadd" aria-label="Quick add a job">'+IC.plus+'</button>':""),"cal");
+  renderToolbar();renderBody();
+}
+function weekLabel(){const ws=weekStart(S.date),we=addDays(ws,5),y1=parseYmd(ws).getFullYear(),y2=parseYmd(we).getFullYear();return dayShort(ws)+(y1!==y2?" "+y1:"")+" to "+dayShort(we)+" "+y2;}
+// Is someone typing in the toolbar date box? Chrome moves focus between the day, month and year parts of the box, and for a moment
+// document.activeElement reads as <body> in the middle of that (seen on a plain page), so "has focus" is tracked from focusin/focusout.
+function dateBoxBusy(){
+  const c=byId("tb-date");
+  return !!c&&S.tbDateFocus&&(document.activeElement===c||document.activeElement===document.body);
+}
+function renderToolbar(){
+  const tb=byId("tb");if(!tb)return;
+  const wk=S.isMaster&&S.view==="week";
+  // Don't rebuild the toolbar under the date box while someone is typing in it, or the box is destroyed and the next digit goes nowhere.
+  // Changing the view or tapping a button takes focus off the box first, so those still get the full rebuild.
+  if(dateBoxBusy()){
+    const lbl=tb.querySelector(".dlabel");if(lbl)lbl.textContent=wk?weekLabel():niceDate(S.date);
+    updateLive();return;
+  }
+  let h='<div class="tb"><div class="grp">'+
+    '<button class="tbtn" data-act="prev" aria-label="Previous '+(wk?"week":"day")+'">'+IC.l+'</button>'+
+    '<button class="tbtn" data-act="today">Today</button>'+
+    '<button class="tbtn" data-act="next" aria-label="Next '+(wk?"week":"day")+'">'+IC.r+'</button></div>'+
+    '<div class="dlabel">'+esc(wk?weekLabel():niceDate(S.date))+'</div>'+
+    '<input class="tbdate" id="tb-date" type="date" value="'+esc(S.date)+'" aria-label="Pick a date">';
+  if(S.isMaster){
+    h+='<div class="grp" role="group" aria-label="View">'+
+      '<button class="tbtn" data-act="viewday" aria-pressed="'+(!wk)+'">Day</button>'+
+      '<button class="tbtn" data-act="viewweek" aria-pressed="'+wk+'">Week</button></div>'+
+      '<button class="tbtn pri" data-act="newjob">'+IC.plus+' New job</button>'+
+      '<label class="chk"><input type="checkbox" id="tb-canc"'+(S.showCancelled?" checked":"")+'> Show cancelled</label>'+
+      '<span class="live" id="live"></span>';
+  }
+  tb.innerHTML=h+'</div>';
+  updateLive();
+}
+function renderBody(){
+  if(S.dragging||S.pressing){S.dirtyRender=true;return;}     // a finger or mouse is down on a card: don't swap it out from under them
+  S.dirtyRender=false;
+  const cb=byId("cb");if(!cb||S.screen!=="cal")return;
+  const old=byId("gw");const sl=old?old.scrollLeft:0,stp=old?old.scrollTop:0;
+  const ot=$(".tray"),tst=ot?ot.scrollTop:0;
+  const key=S.date+"|"+S.view,sameDay=S.lastRenderKey===key;    // the tray only keeps its place on the same day and view
+  S.lastRenderKey=key;
+  let h="";
+  if(S.loadErr)h+='<div class="banner bad">'+esc(S.loadErr)+' <button class="linkbtn" data-act="retry">Try again</button></div>';
+  if(!S.loaded){if(!S.loadErr)h+='<div class="boot"><div><span class="spin"></span></div><div>Loading jobs...</div></div>';}
+  else if(!S.isMaster)h+=techHtml();
+  else if(S.view==="week")h+=weekHtml();
+  else h+=dayHtml();
+  cb.innerHTML=h;
+  const gw=byId("gw");
+  if(gw){
+    if(S.scrollToWork&&S.loaded){S.scrollToWork=false;gw.scrollTop=workScroll();gw.scrollLeft=0;}
+    else{gw.scrollLeft=sl;gw.scrollTop=stp;}
+  }
+  const tr=$(".tray");
+  if(tr&&sameDay&&tst)tr.scrollTop=tst;
+}
+function workScroll(){
+  if(S.view!=="day")return 0;
+  let t=7*60;
+  const jobs=visibleJobs().filter(function(j){return j.job_date===S.date&&tmToMin(j.start_time)!=null;});
+  if(S.date===todayYmd()){const n=new Date();t=n.getHours()*60+n.getMinutes()-60;}
+  else if(jobs.length){t=Math.min.apply(null,jobs.map(function(j){return tmToMin(j.start_time);}))-30;}
+  return Math.max(0,(t-S.grid.gs)*PXMIN);
+}
+
+/* ---------- cards ---------- */
+function stLabel(st){return st==="done"?"Done":st==="cancelled"?"Cancelled":"Booked";}
+function cardHtml(j,cls,style){
+  const s=tmToMin(j.start_time),done=j.status==="done";
+  const sub=[suburbOf(j),svcLabel(j,30)].filter(Boolean).join(" · ");
+  const subFull=[suburbOf(j),svcNames(j).join(" + ")].filter(Boolean).join(" · ");
+  const time=s==null?"No time":fmtMin(s);
+  const range=s==null?"":" to "+fmtMin(s+j.duration_min);
+  const tip=cName(j)+(s==null?"":", "+fmtMin(s)+range)+(subFull?", "+subFull:"")+", "+stLabel(j.status);
+  return '<div class="'+cls+' st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+(style||"")+'">'+
+    '<div class="l1"><span class="tm">'+esc(time)+'</span><span class="te">'+esc(range)+'</span>'+(done?IC.tick:"")+'</div>'+
+    '<div class="nm">'+esc(cName(j))+'</div>'+
+    '<div class="ds">'+esc(sub)+'</div>'+
+    '<span class="stl '+esc(j.status)+'">'+esc(stLabel(j.status))+'</span></div>';
+}
+function miniHtml(j,tag,extra){
+  const tagHtml=tag?'<div class="tag">'+esc(tag)+'</div>':"";
+  return cardHtml(j,"jm"+(extra?" "+extra:""),"").replace('<span class="stl',function(){return tagHtml+'<span class="stl';});
+}
+
+/* ---------- day view ---------- */
+function lanes(list){
+  list.sort(function(a,b){return a.s-b.s||a.e-b.e;});
+  let cluster=[],end=-1;
+  function close(){let n=1;cluster.forEach(function(x){n=Math.max(n,x.lane+1);});cluster.forEach(function(x){x.lanes=n;});cluster=[];}
+  list.forEach(function(it){
+    if(cluster.length&&it.s>=end){close();end=-1;}
+    const used=cluster.filter(function(c){return c.e>it.s;}).map(function(c){return c.lane;});
+    let l=0;while(used.indexOf(l)>=0)l++;
+    it.lane=l;cluster.push(it);end=Math.max(end,it.e);
+  });
+  if(cluster.length)close();
+  return list;
+}
+// On a phone (master, day view, two or more people) one person can be shown full width. Returns that person's id, or "" for everyone.
+function phoneSolo(act){
+  if(!S.isMaster||S.view!=="day"||!isNarrow()||act.length<2)return "";
+  return act.some(function(c){return c.id===S.phoneWho;})?S.phoneWho:"";
+}
+function phoneFilterHtml(act,all,solo){
+  if(!S.isMaster||S.view!=="day"||!isNarrow()||act.length<2)return "";
+  let h='<div class="pfilter"><div class="seg" role="group" aria-label="Who to show">'+
+    '<button type="button" class="segb" data-act="pwho" data-who="both" aria-pressed="'+(!solo)+'">'+(act.length>2?"All":"Both")+'</button>';
+  act.forEach(function(c){
+    const n=all.filter(function(j){return j.staff_id===c.id;}).length;
+    h+='<button type="button" class="segb" data-act="pwho" data-who="'+esc(c.id)+'" aria-pressed="'+(solo===c.id)+'" aria-label="'+esc(c.name+(n?", "+n+(n===1?" job":" jobs"):""))+'">'+
+      '<span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span>'+(n?'<span class="n">'+n+'</span>':"")+'</button>';
+  });
+  return h+'</div></div>';
+}
+function dayHtml(){
+  const all=visibleJobs().filter(function(j){return j.job_date===S.date;});
+  const act=activeStaff(),ids={};act.forEach(function(c){ids[c.id]=true;});
+  const solo=phoneSolo(act),cols=solo?act.filter(function(c){return c.id===solo;}):act;
+  const onGrid=all.filter(function(j){return j.staff_id&&ids[j.staff_id]&&(!solo||j.staff_id===solo);});
+  const tray=all.filter(function(j){return !(j.staff_id&&ids[j.staff_id]);});      // the tray is only ever unassigned jobs, even when one person is picked
+  let gs=DAY_START,ge=DAY_END;
+  onGrid.forEach(function(j){const s=tmToMin(j.start_time);if(s==null)return;gs=Math.min(gs,Math.floor(s/60)*60);ge=Math.max(ge,Math.ceil((s+j.duration_min)/60)*60);});
+  ge=Math.min(ge,24*60);
+  S.grid={gs:gs,ge:ge};
+  const hpx=(ge-gs)*PXMIN,hr=60*PXMIN;
+  let labels="";for(let m=gs;m<ge;m+=60)labels+='<div class="hl" style="top:'+((m-gs)*PXMIN)+'px">'+esc(hourLabel(m))+'</div>';
+  const isToday=S.date===todayYmd(),nowM=new Date().getHours()*60+new Date().getMinutes();
+  const nowLine=(isToday&&nowM>=gs&&nowM<ge)?'<div class="now" style="top:'+((nowM-gs)*PXMIN)+'px"></div>':"";
+  const ntCount=onGrid.filter(function(j){return tmToMin(j.start_time)==null;}).length;
+  let head='<div class="gut">Staff</div>',body="";
+  let nt='<div class="gut" title="Jobs with a person but no start time. Drag one onto a time to set it.">No time yet'+(ntCount?'<span class="ntn">'+ntCount+'</span>':"")+'</div>';
+  cols.forEach(function(c){
+    head+='<div class="ch"><span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span></div>';
+    const mine=onGrid.filter(function(j){return j.staff_id===c.id;});
+    const noTime=mine.filter(function(j){return tmToMin(j.start_time)==null;}).sort(byTime);
+    nt+='<div class="ntc" data-drop="notime" data-staff="'+esc(c.id)+'">'+
+      (noTime.length?noTime.map(function(j){return miniHtml(j,"","nt");}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'">+ Add</button>')+'</div>';
+    const items=mine.filter(function(j){return tmToMin(j.start_time)!=null;}).map(function(j){const s=tmToMin(j.start_time);return {j:j,s:s,e:s+Math.max(j.duration_min,SNAP)};});
+    lanes(items);
+    let cards="";
+    items.forEach(function(it){
+      const top=(it.s-gs)*PXMIN,h=Math.max((it.e-it.s)*PXMIN-2,22),w=100/it.lanes;
+      cards+=cardHtml(it.j,"jc"+(h<46?" short":"")+(h<30?" tiny":""),"top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - 3px)");
+    });
+    body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLine+cards+'</div>';
+  });
+  return phoneFilterHtml(act,all,solo)+'<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+cols.length+'">'+
+    '<div class="gtop"><div class="grow">'+head+'</div><div class="grow ntrow">'+nt+'</div></div>'+
+    '<div class="grow gb"><div class="gut" style="height:'+hpx+'px">'+labels+'</div>'+body+'</div></div></div>'+
+    trayHtml(tray)+'</div>';
+}
+function trayHtml(list){
+  const timed=list.filter(function(j){return tmToMin(j.start_time)!=null;}).sort(byTime);
+  const untimed=list.filter(function(j){return tmToMin(j.start_time)==null;}).sort(byTime);
+  function tagFor(j){const s=j.staff_id&&S.staffById[j.staff_id];return s?"Was "+s.name+" (not active)":"";}
+  let h='<aside class="tray" data-drop="tray" aria-label="Unassigned jobs"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
+  if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
+  h+=timed.map(function(j){return miniHtml(j,tagFor(j));}).join("");
+  if(untimed.length)h+='<h3>No start time</h3>'+untimed.map(function(j){return miniHtml(j,tagFor(j),"nt");}).join("");
+  return h+'</aside>';
+}
+
+/* ---------- week view ---------- */
+function weekHtml(){
+  const ws=weekStart(S.date),jobs=visibleJobs(),cols=activeStaff(),ids={};cols.forEach(function(c){ids[c.id]=true;});
+  const days=[];for(let i=0;i<6;i++)days.push(addDays(ws,i));
+  const sun=addDays(ws,6);
+  if(S.date===sun||jobs.some(function(j){return j.job_date===sun;}))days.push(sun);
+  const today=todayYmd();
+  const rows=cols.map(function(c){return {id:c.id,name:c.name,colour:safeColour(c.colour)};}).concat([{id:"",name:"Unassigned",colour:UNAS}]);
+  let h='<div class="dayline" style="display:block"><div class="gridwrap" id="gw"><div class="wgrid" style="--n:'+days.length+'">';
+  h+='<div class="wh corner">Staff</div>';
+  days.forEach(function(d){
+    const dd=parseYmd(d);
+    h+='<button class="wh'+(d===today?" today":"")+'" data-act="godate" data-date="'+esc(d)+'" aria-label="Open '+esc(niceDate(d))+'">'+DOW[dd.getDay()]+'<small>'+dd.getDate()+" "+MON[dd.getMonth()]+'</small></button>';
+  });
+  rows.forEach(function(r){
+    h+='<div class="wr"><span class="dot" style="background:'+r.colour+'"></span><span class="nm">'+esc(r.name)+'</span></div>';
+    days.forEach(function(d){
+      const list=jobs.filter(function(j){
+        if(j.job_date!==d)return false;
+        return r.id?j.staff_id===r.id:!(j.staff_id&&ids[j.staff_id]);
+      }).sort(byTime);
+      h+='<div class="wcell'+(d===today?" today":"")+'" data-drop="wcell" data-staff="'+esc(r.id)+'" data-date="'+esc(d)+'">'+
+        list.map(function(j){const s=!r.id&&j.staff_id&&S.staffById[j.staff_id];return miniHtml(j,s?"Was "+s.name+" (not active)":"");}).join("")+'</div>';
+    });
+  });
+  return h+'</div></div></div>';
+}
+
+/* ---------- tech view ---------- */
+function techHtml(){
+  const mine=visibleJobs().filter(function(j){return j.job_date===S.date&&j.staff_id===S.me.id;}).sort(byTime);
+  let h='<div class="wrap">';
+  if(!mine.length)h+='<div class="empty"><h3>Nothing booked</h3><p>No jobs for '+esc(niceDate(S.date))+'.</p></div>';
+  mine.forEach(function(j){h+=techCard(j);});
+  return h+'</div>';
+}
+function techCard(j){
+  const s=tmToMin(j.start_time),c=j.client||{};
+  const addr=trim(j.address)||composeAddr(c.street,c.suburb,c.state,c.postcode);
+  const num=String(c.phone||"").replace(/[^\d+]/g,"");
+  let h='<div class="tcard st-'+esc(j.status)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
+    '<div class="tmain" data-job="'+esc(j.id)+'" role="button" tabindex="0">'+
+    '<div class="ttime">'+(s==null?"No time set":esc(fmtMin(s)+" to "+fmtMin(s+j.duration_min)))+(j.status==="done"?" "+IC.tick:"")+'</div>'+
+    '<div class="tname">'+esc(cName(j))+'</div>'+
+    (addr?'<div class="taddr">'+esc(addr)+'</div>':"")+
+    (svcLabel(j,80)?'<div class="tsvc">'+esc(svcLabel(j,80))+'</div>':"")+
+    (j.notes?'<div class="tnote">'+esc(j.notes)+'</div>':"")+
+    '<span class="stl '+esc(j.status)+'">'+esc(stLabel(j.status))+'</span></div><div class="tacts">';
+  if(num.length>=3)h+='<a class="btn" href="tel:'+esc(num)+'">'+IC.phone+' Ring</a><a class="btn" href="sms:'+esc(num)+'">'+IC.msg+' Text</a>';
+  if(addr)h+='<a class="btn" target="_blank" rel="noopener" href="https://maps.apple.com/?q='+esc(encodeURIComponent(addr))+'">'+IC.pin+' Maps</a>';
+  return h+'</div></div>';
+}
+
+/* =====================================================================
+   NAVIGATION
+   ===================================================================== */
+function afterNav(){
+  S.scrollToWork=true;
+  renderToolbar();
+  const r=currentRange();
+  if(S.range&&r.from>=S.range.from&&r.to<=S.range.to&&S.loaded){renderBody();fetchJobs(true);}
+  else fetchJobs(false);
+}
+function go(delta){const step=(S.isMaster&&S.view==="week")?7*delta:delta;S.date=addDays(S.date,step);afterNav();}
+function setView(v){if(S.view===v)return;S.view=v;savePrefs();afterNav();}
+function gotoDate(d){if(!validYmd(d))return;S.date=d;afterNav();}
+function setPhoneWho(v){v=v||"both";if(S.phoneWho===v)return;S.phoneWho=v;savePrefs();S.scrollToWork=false;renderBody();}
+
+/* =====================================================================
+   DRAG AND DROP (Pointer Events: mouse, pen and touch)
+   ===================================================================== */
+const DR={on:false,started:false,id:null,pid:null,sx:0,sy:0,lx:0,ly:0,offX:0,offY:0,w:0,h:0,card:null,ghost:null,mark:null,over:null,raf:0,zoneT:0,pageT:0,trayT:0,touch:false,armT:0};
+const HOLD_MS=350;     // a finger has to rest on a card this long before it picks the job up; a quick swipe scrolls instead
+
+function onDown(e){
+  if(!S.isMaster||S.screen!=="cal"||SH)return;
+  // A press that never got its release (the card was swapped out, or the browser lost the touch) must not block dragging for good.
+  // The one case we leave alone is a second finger landing during a live drag.
+  if(DR.on){
+    if(DR.started&&DR.card&&DR.card.isConnected&&e.pointerId!==DR.pid)return;
+    endDrag();
+  }
+  if(e.pointerType==="mouse"&&e.button!==0)return;
+  const t=e.target;if(!t||!t.closest)return;
+  if(t.closest("a,button,input,select,textarea"))return;
+  const card=t.closest("[data-job]");if(!card)return;
+  const job=S.byId[card.getAttribute("data-job")];if(!job)return;
+  const r=card.getBoundingClientRect();
+  DR.on=true;DR.started=false;DR.id=job.id;DR.pid=e.pointerId;
+  S.pressing=true;       // from now until release, a refetch must not rebuild the cards
+  DR.sx=DR.lx=e.clientX;DR.sy=DR.ly=e.clientY;
+  DR.offX=e.clientX-r.left;DR.offY=e.clientY-r.top;DR.w=r.width;DR.h=r.height;DR.card=card;
+  DR.touch=e.pointerType==="touch";
+  try{card.setPointerCapture(e.pointerId);}catch(err){}
+  window.addEventListener("pointermove",onMove,{passive:false});
+  window.addEventListener("pointerup",onUp);
+  window.addEventListener("pointercancel",onCancel);
+  // also listen on the card itself, in case it is ever detached and the release never reaches window
+  card.addEventListener("pointerup",onUp);
+  card.addEventListener("pointercancel",onCancel);
+  if(DR.touch)DR.armT=setTimeout(armDrag,HOLD_MS);   // touch: press and hold to pick up. Mouse and pen: move 8px.
+}
+function armDrag(){
+  DR.armT=0;
+  if(!DR.on||DR.started||!DR.card||!DR.card.isConnected)return;
+  startDrag();
+  updateDrag();
+  try{if(navigator.vibrate)navigator.vibrate(12);}catch(err){}
+}
+function onMove(e){
+  if(!DR.on||e.pointerId!==DR.pid)return;
+  if(!DR.started){
+    if(Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)<8)return;     // small move threshold so a tap still opens the job
+    if(DR.touch){endDrag();return;}                              // finger moved before the hold finished: that is a scroll, leave it to the browser
+    startDrag();
+  }
+  DR.lx=e.clientX;DR.ly=e.clientY;
+  updateDrag();
+  if(e.cancelable)e.preventDefault();
+}
+function startDrag(){
+  DR.started=true;S.dragging=true;S.noClickUntil=Date.now()+900;DR.zoneT=0;DR.pageT=0;DR.trayT=0;
+  const g=DR.card.cloneNode(true);
+  g.removeAttribute("data-job");g.removeAttribute("tabindex");g.setAttribute("aria-hidden","true");
+  g.className=g.className.replace("dragging","")+" ghost";
+  g.setAttribute("style",(DR.card.getAttribute("style")||"")+";position:fixed;left:0;top:0;right:auto;bottom:auto;margin:0;width:"+DR.w+"px;height:"+DR.h+"px;z-index:300;pointer-events:none");
+  document.body.appendChild(g);DR.ghost=g;
+  DR.card.classList.add("dragging");document.body.classList.add("isdrag");
+  DR.raf=requestAnimationFrame(tick);
+}
+function dropTarget(x,y,ghostTop){
+  const el=document.elementFromPoint(x,y);
+  const z=el&&el.closest?el.closest("[data-drop]"):null;
+  if(!z)return null;
+  const kind=z.getAttribute("data-drop");
+  if(kind==="col"){
+    const r=z.getBoundingClientRect(),g=S.grid;
+    let min=g.gs+Math.round(((ghostTop-r.top)/PXMIN)/SNAP)*SNAP;
+    min=Math.max(g.gs,Math.min(min,g.ge-SNAP));
+    return {kind:kind,el:z,staff:z.getAttribute("data-staff"),min:min};
+  }
+  if(kind==="notime")return {kind:kind,el:z,staff:z.getAttribute("data-staff")};
+  if(kind==="tray")return {kind:kind,el:z};
+  if(kind==="wcell")return {kind:kind,el:z,staff:z.getAttribute("data-staff")||"",date:z.getAttribute("data-date")};
+  return null;
+}
+function clearMark(){
+  if(DR.mark&&DR.mark.parentNode)DR.mark.parentNode.removeChild(DR.mark);
+  if(DR.over){DR.over.classList.remove("dropover");DR.over=null;}
+}
+function markTarget(t){
+  if(!t){clearMark();return;}
+  if(t.kind==="col"){
+    if(DR.over){DR.over.classList.remove("dropover");DR.over=null;}
+    if(!DR.mark){DR.mark=document.createElement("div");DR.mark.className="dropmark";}
+    const j=S.byId[DR.id],h=Math.max(((j&&j.duration_min)||60)*PXMIN,20);
+    DR.mark.style.top=((t.min-S.grid.gs)*PXMIN)+"px";DR.mark.style.height=h+"px";
+    DR.mark.textContent=fmtMin(t.min);
+    if(DR.mark.parentNode!==t.el)t.el.appendChild(DR.mark);
+  }else{
+    if(DR.mark&&DR.mark.parentNode)DR.mark.parentNode.removeChild(DR.mark);
+    if(DR.over!==t.el){if(DR.over)DR.over.classList.remove("dropover");t.el.classList.add("dropover");DR.over=t.el;}
+  }
+}
+function updateDrag(){
+  if(!DR.ghost)return;
+  const gx=DR.lx-DR.offX,gy=DR.ly-DR.offY;
+  DR.ghost.style.left=gx+"px";DR.ghost.style.top=gy+"px";
+  markTarget(dropTarget(DR.lx,DR.ly,gy));
+}
+function tick(){
+  if(!DR.started)return;
+  let moved=false;
+  const gw=byId("gw");
+  if(gw){
+    const r=gw.getBoundingClientRect(),topEl=$(".gtop"),hh=topEl?topEl.offsetHeight:($(".wh")?$(".wh").offsetHeight:0),E=52;
+    if(DR.lx>=r.left-30&&DR.lx<=r.right+30&&DR.ly>=r.top-30&&DR.ly<=r.bottom+30){
+      let dy=0,dx=0;
+      // The sticky header (names, and the No time yet strip) is not an edge: a card held over it, or just picked up from it, must not scroll the grid. Only the band just under it scrolls up.
+      if(DR.ly>=r.top+hh&&DR.ly<r.top+hh+E)dy=-Math.min(18,Math.max(4,(r.top+hh+E-DR.ly)/3));
+      else if(DR.ly>=r.top+hh&&DR.ly>r.bottom-E)dy=Math.min(18,Math.max(4,(DR.ly-(r.bottom-E))/3));
+      if(DR.lx<r.left+60+E)dx=-Math.min(18,Math.max(4,(r.left+60+E-DR.lx)/3));
+      else if(DR.lx>r.right-E)dx=Math.min(18,Math.max(4,(DR.lx-(r.right-E))/3));
+      // only scroll once the pointer has been parked in an edge zone for a moment, so picking a card up near an edge doesn't shove the grid
+      if(dy||dx){if(!DR.zoneT)DR.zoneT=Date.now();}else DR.zoneT=0;
+      if((dy||dx)&&Date.now()-DR.zoneT>300){
+        if(dy){const b=gw.scrollTop;gw.scrollTop+=dy;if(gw.scrollTop!==b)moved=true;}
+        if(dx){const b=gw.scrollLeft;gw.scrollLeft+=dx;if(gw.scrollLeft!==b)moved=true;}
+      }
+    }else DR.zoneT=0;
+  }
+  // the Unassigned tray scrolls on its own too, so a card can be dragged down to the bottom of a long list
+  const tr=$(".tray");
+  if(tr&&tr.scrollHeight>tr.clientHeight+2){
+    const r=tr.getBoundingClientRect(),E=44;
+    let dy=0;
+    if(DR.lx>=r.left&&DR.lx<=r.right&&DR.ly>=r.top&&DR.ly<=r.bottom){
+      if(DR.ly<r.top+E)dy=-Math.min(18,Math.max(4,(r.top+E-DR.ly)/3));
+      else if(DR.ly>r.bottom-E)dy=Math.min(18,Math.max(4,(DR.ly-(r.bottom-E))/3));
+    }
+    if(dy){
+      if(!DR.trayT)DR.trayT=Date.now();
+      if(Date.now()-DR.trayT>300){const b=tr.scrollTop;tr.scrollTop+=dy;if(tr.scrollTop!==b)moved=true;}
+    }else DR.trayT=0;
+  }
+  const sy=window.pageYOffset;
+  if(DR.ly<48||DR.ly>window.innerHeight-48){
+    if(!DR.pageT)DR.pageT=Date.now();
+    if(Date.now()-DR.pageT>300){if(DR.ly<48)window.scrollBy(0,-12);else window.scrollBy(0,12);}
+  }else DR.pageT=0;
+  if(window.pageYOffset!==sy)moved=true;
+  if(moved)updateDrag();
+  DR.raf=requestAnimationFrame(tick);
+}
+function endDrag(){
+  const started=DR.started;      // read before it is reset below
+  window.removeEventListener("pointermove",onMove);
+  window.removeEventListener("pointerup",onUp);
+  window.removeEventListener("pointercancel",onCancel);
+  if(DR.card){DR.card.removeEventListener("pointerup",onUp);DR.card.removeEventListener("pointercancel",onCancel);}
+  clearTimeout(DR.armT);DR.armT=0;
+  cancelAnimationFrame(DR.raf);
+  clearMark();DR.mark=null;
+  if(DR.ghost&&DR.ghost.parentNode)DR.ghost.parentNode.removeChild(DR.ghost);
+  if(DR.card)DR.card.classList.remove("dragging");
+  document.body.classList.remove("isdrag");
+  DR.ghost=null;DR.card=null;DR.on=false;DR.started=false;DR.touch=false;
+  S.dragging=false;S.pressing=false;
+  if(S.dirtyRender){
+    // After a real drag the drop redraws the cards anyway. After a plain tap, a redraw right here would swap the card out before
+    // the browser sends mouseup and click, and the tap would be lost, so wait one tick.
+    if(started)renderBody();
+    else setTimeout(function(){if(S.dirtyRender)renderBody();},0);
+  }
+}
+function onUp(e){
+  if(!DR.on||e.pointerId!==DR.pid)return;
+  const started=DR.started,id=DR.id;
+  // let go within about 10px of where it started: nothing was moved, so don't treat it as a drop
+  const moved=Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)>=10;
+  const t=(started&&moved)?dropTarget(e.clientX,e.clientY,e.clientY-DR.offY):null;
+  endDrag();
+  if(started){S.noClickUntil=Date.now()+500;if(t)applyDrop(id,t);}
+}
+function onCancel(e){
+  if(!DR.on||e.pointerId!==DR.pid)return;
+  const started=DR.started;
+  endDrag();
+  if(started)S.noClickUntil=Date.now()+500;
+}
+function applyDrop(id,t){
+  const j=S.byId[id];if(!j)return;
+  const p={};
+  if(t.kind==="col"){p.staff_id=t.staff;p.job_date=S.date;p.start_time=minToTm(t.min);}
+  else if(t.kind==="notime"){p.staff_id=t.staff;p.job_date=S.date;p.start_time=null;}
+  else if(t.kind==="tray"){p.staff_id=null;}
+  else if(t.kind==="wcell"){p.staff_id=t.staff||null;p.job_date=t.date;}
+  Object.keys(p).forEach(function(k){if(p[k]===j[k]||(p[k]==null&&j[k]==null))delete p[k];});
+  if(!Object.keys(p).length)return;
+  moveJob(j,p);
+}
+function sameField(k,a,b){
+  if(k==="start_time")return tmToMin(a)===tmToMin(b);
+  return a===b||(a==null&&b==null);
+}
+function moveLabel(patch){
+  const parts=[];
+  if("start_time" in patch)parts.push(patch.start_time==null?"no start time":fmtMin(tmToMin(patch.start_time)));
+  if("job_date" in patch)parts.push(dayShort(patch.job_date));
+  if("staff_id" in patch){const s=patch.staff_id&&S.staffById[patch.staff_id];parts.push(patch.staff_id?(s?s.name:"someone else"):"Unassigned");}
+  return "Moved to "+parts.join(", ");
+}
+async function moveJob(j,patch,isUndo){
+  const id=j.id,old={};
+  Object.keys(patch).forEach(function(k){old[k]=j[k];});
+  Object.assign(j,patch);
+  renderBody();
+  S.pending++;
+  let done=false;
+  try{
+    const r=await S.sb.from("jobs").update(patch).eq("id",id).select("id");
+    if(r.error)throw r.error;
+    if(!r.data||!r.data.length)throw plainErr("That job could not be changed. It may have been moved or deleted by someone else.");
+    done=true;
+  }catch(e){
+    const cur=S.byId[id];if(cur)Object.assign(cur,old);
+    renderBody();
+    toast("Couldn't move that job. "+friendly(e),true);
+  }finally{
+    S.pending--;scheduleRefetch(300);
+  }
+  if(!done)return;
+  if(isUndo){toast("Put back.");return;}
+  toastUndo(moveLabel(patch),function(){
+    // only put it back if nobody has changed it since the move
+    const cur=S.byId[id];
+    if(!cur||!Object.keys(patch).every(function(k){return sameField(k,cur[k],patch[k]);})){toast("Can't undo that one, the job has changed since.",true);return;}
+    moveJob(cur,old,true);
+  });
+}
+
+/* =====================================================================
+   JOB SHEET
+   ===================================================================== */
+function newDefaults(o){
+  o=o||{};
+  let date=o.date;
+  if(!date){
+    if(S.view==="week"){const ws=weekStart(S.date),t=todayYmd();date=(t>=ws&&t<=addDays(ws,6))?t:ws;}
+    else date=S.date;
+  }
+  return {staff:o.staff!==undefined?o.staff:(S.me?S.me.id:""),date:date,time:o.time!==undefined?o.time:"08:00"};
+}
+function openJob(id){const j=S.byId[id];if(j)openSheet(j,null);}
+function openNew(o){if(!S.isMaster)return;openSheet(null,newDefaults(o));}
+
+function openSheet(job,defaults){
+  if(SH)return;
+  const isNew=!job,c=job&&job.client?job.client:null;
+  const init={
+    name:c?c.name:"",phone:c?c.phone||"":"",email:c?c.email||"":"",street:c?c.street||"":"",suburb:c?c.suburb||"":"",
+    state:c?c.state||"":"",postcode:c?c.postcode||"":"",
+    address:job?(job.address||""):"",notes:job?(job.notes||""):"",
+    date:job?job.job_date:defaults.date,
+    time:job?(job.start_time?minToHM(tmToMin(job.start_time)):""):(defaults.time||""),
+    dur:job?job.duration_min:60,staff:job?(job.staff_id||""):(defaults.staff||"")
+  };
+  const svc=loadServices(job);
+  SH={isNew:isNew,job:job?job:null,jobId:job?job.id:null,client:c?Object.assign({},c):null,clientId:job?(job.client_id||null):null,
+    init:init,addrTouched:!!(job&&job.address),baseline:"",busy:false,
+    recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
+    unlinked:null,renameTo:null,pendingN:0,
+    svc:svc,svcMemo:{},svcMore:false,
+    legacyPrice:(job&&job.price!=null&&!svc.length)?job.price:null,      // an old job with a price but no service: the only service ticked takes it (kept until the job saves)
+    legacyHeld:"",      // the service that currently holds that price
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null};
+  byId("sheet").innerHTML=sheetHtml();
+  document.documentElement.classList.add("sheet-open");
+  SH.prevFocus=document.activeElement;
+  const app=byId("app");app.setAttribute("inert","");app.setAttribute("aria-hidden","true");
+  const pn=$(".panel");if(pn){pn.setAttribute("tabindex","-1");try{pn.focus({preventScroll:true});}catch(e){}}
+  renderSvcList();renderSvcDetails();
+  updateClientHint();updateLinks();
+  SH.baseline=snap();
+  if(SH.jobId){loadRecs();loadPhotos();}      // loadPhotos also counts photos still waiting to upload
+  if(SH.clientId)loadSites(SH,SH.clientId);
+  try{if(S.isMaster&&isNew&&window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus();}}catch(e){}
+}
+function sheetTitle(){
+  if(SH.isNew)return "New job";
+  const n=(SH.client&&SH.client.name)||(SH.job&&SH.job.client&&SH.job.client.name);
+  return n||"Job";
+}
+function sheetSub(){
+  if(SH.isNew)return "Add a job to the calendar";
+  const j=SH.job,s=tmToMin(j.start_time);
+  let t=niceDate(j.job_date)+(s==null?", no start time":", "+fmtMin(s)+" to "+fmtMin(s+j.duration_min));
+  t+=" · "+stLabel(j.status);
+  if(j.status==="done"&&j.done_at)t+=" "+fmtStamp(j.done_at);
+  return t;
+}
+/* ----- services: tick list, then a price and invoice wording box for each ticked one ----- */
+// every service type in sort order, plus any ticked name that isn't a known type (an older job)
+function svcAllNames(){
+  const names=S.types.map(function(t){return t.name;});
+  SH.svc.forEach(function(e){if(names.indexOf(e.type)<0)names.push(e.type);});
+  return names;
+}
+// The list is only redrawn when the sheet opens or "More services" is tapped, not on every tick, so the box you just ticked keeps
+// focus and doesn't jump. Ticked services are always in it, even past the first few.
+function renderSvcList(){
+  const el=byId("sv-list");if(!el||!SH)return;
+  const names=svcAllNames(),ticked={};SH.svc.forEach(function(e){ticked[e.type]=1;});
+  let h='<div class="svlist">';
+  names.forEach(function(n,i){
+    if(!(SH.svcMore||i<SVC_SHOW||ticked[n]))return;
+    h+='<label class="svrow'+(ticked[n]?" on":"")+'"><input type="checkbox" data-svc="'+esc(n)+'"'+(ticked[n]?" checked":"")+'><span>'+esc(n)+'</span></label>';
+  });
+  h+='</div>';
+  if(names.length>SVC_SHOW)h+='<button type="button" class="linkbtn" data-sh="svcmore" aria-expanded="'+(SH.svcMore?"true":"false")+'">'+(SH.svcMore?"Fewer services":"More services")+'</button>';
+  el.innerHTML=h;
+}
+function renderSvcDetails(){
+  const el=byId("sv-det");if(!el||!SH)return;
+  el.innerHTML=SH.svc.map(function(e,i){
+    return '<div class="svcard"><div class="svhead"><b>'+esc(e.type)+'</b><span class="pf" id="sv-pf-'+i+'">price to fill</span></div>'+
+      '<div class="fld"><label class="fl" for="sv-p-'+i+'">Price (ex GST)</label>'+
+      '<input class="inp" id="sv-p-'+i+'" data-sv="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(e.price)+'" placeholder="Leave blank if not sure"></div>'+
+      '<div class="fld"><label class="fl" for="sv-d-'+i+'">What goes on the invoice</label>'+
+      '<textarea class="inp sdesc" id="sv-d-'+i+'" data-sv="d" data-i="'+i+'" autocapitalize="sentences">'+esc(e.description)+'</textarea></div></div>';
+  }).join("");
+  updateSvcMeta();
+}
+// the "price to fill" tags and the total line; touches only text, so it is safe to run on every keystroke in a price box
+function updateSvcMeta(){
+  if(!SH)return;
+  let blank=0,sum=0,any=false;
+  SH.svc.forEach(function(e,i){
+    const isBlank=trim(e.price)==="";
+    if(isBlank)blank++;
+    else{const n=parsePrice(e.price);if(n!=null&&!isNaN(n)){any=true;sum+=n;}}
+    const pf=byId("sv-pf-"+i);if(pf)pf.hidden=!isBlank;
+  });
+  const t=byId("sv-total");if(!t)return;
+  const parts=[];
+  if(any)parts.push("Total (ex GST): $"+(Math.round(sum*100)/100).toFixed(2));
+  if(blank)parts.push("Price to fill"+(blank>1?" on "+blank+" services":""));
+  t.className="hint"+(blank?" new":"");
+  t.textContent=parts.join(" · ");
+}
+// a service was ticked: it gets its default price (only if one is set) and its invoice wording. Unticking keeps what was typed, in case it was a slip.
+function newSvcEntry(name){
+  const m=SH.svcMemo[name];
+  let e;
+  if(m)e={type:name,description:m.description,price:m.price};
+  else{
+    const t=S.typesByName[name];
+    e={type:name,description:typeDesc(name),price:t&&t.default_price!=null?String(t.default_price):""};
+  }
+  // an old job with a price but no service: the only service ticked takes that price. It stays on offer until the job saves, so a wrong tick that gets undone doesn't lose it.
+  if(!SH.svc.length&&SH.legacyPrice!=null&&!SH.legacyHeld&&(!m||trim(m.price)==="")){e.price=String(SH.legacyPrice);SH.legacyHeld=name;}
+  return e;
+}
+function onSvcTick(cb){
+  const name=cb.getAttribute("data-svc"),i=SH.svc.findIndex(function(e){return e.type===name;});
+  if(cb.checked&&i<0)SH.svc.push(newSvcEntry(name));
+  else if(!cb.checked&&i>=0){
+    const gone=SH.svc[i];
+    // the old price was sitting on the service that just got unticked: take it back off (if it is still the untouched old price) so the next one can have it
+    if(SH.legacyHeld===name){SH.legacyHeld="";if(trim(gone.price)===String(SH.legacyPrice))gone.price="";}
+    SH.svcMemo[name]=gone;SH.svc.splice(i,1);
+    if(SH.legacyPrice!=null&&!SH.legacyHeld&&SH.svc.length===1&&trim(SH.svc[0].price)===""){SH.svc[0].price=String(SH.legacyPrice);SH.legacyHeld=SH.svc[0].type;}      // one service left with no price: it is the only one now
+  }
+  const row=cb.closest(".svrow");if(row)row.classList.toggle("on",cb.checked);
+  renderSvcDetails();updateLinks();renderRecs();
+}
+function onSvcField(el){
+  const e=SH.svc[+el.getAttribute("data-i")];if(!e)return;
+  if(el.getAttribute("data-sv")==="p"){e.price=el.value;updateSvcMeta();}else e.description=el.value;
+}
+function durOptions(cur){
+  let h="",found=false;
+  for(let m=15;m<=480;m+=15){const on=m===cur;if(on)found=true;h+='<option value="'+m+'"'+(on?" selected":"")+'>'+esc(fmtDur(m))+'</option>';}
+  if(!found&&cur>0)h+='<option value="'+cur+'" selected>'+esc(fmtDur(cur))+'</option>';
+  return h;
+}
+function staffOptions(cur){
+  let h='<option value="">Unassigned</option>',found=!cur;
+  activeStaff().forEach(function(s){const on=s.id===cur;if(on)found=true;h+='<option value="'+esc(s.id)+'"'+(on?" selected":"")+'>'+esc(s.name)+'</option>';});
+  if(!found){const s=S.staffById[cur];h+='<option value="'+esc(cur)+'" selected>'+esc(s?s.name+" (not active)":"Someone else")+'</option>';}
+  return h;
+}
+function sheetHtml(){
+  const M=S.isMaster,I=SH.init,j=SH.job||{};
+  let h='<div class="sheet" id="sh-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="sh-title">'+
+    '<div class="shhead"><div class="shttl"><h2 id="sh-title">'+esc(sheetTitle())+'</h2><div class="sb" id="sh-sub">'+esc(sheetSub())+'</div></div>'+
+    '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
+    '<div class="shbody"><div id="sh-msg" role="alert"></div>'+
+    '<div class="btns" id="sh-contact">'+
+      '<a class="btn" id="ln-ring">'+IC.phone+' Ring</a><a class="btn" id="ln-text">'+IC.msg+' Text</a>'+
+      '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>';
+  // client
+  h+='<div class="lbl">Client</div>';
+  if(M){
+    h+='<div class="fld"><label class="fl" for="f-name">Client name</label>'+
+      '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" value="'+esc(I.name)+'" placeholder="Start typing a name or phone number">'+
+      '<div class="aclist" id="f-name-list" role="listbox" hidden></div></div>'+
+      '<div class="hint" id="f-name-hint"></div>';
+  }else{
+    h+='<div class="fld"><div class="fl">Client name</div><div class="ro">'+esc(I.name||"No client")+'</div></div>';
+  }
+  // A tech can't add or link a client, so on a job with no client the contact boxes are shown read-only. Nothing typed there could be saved.
+  const lock=!M&&!SH.clientId;
+  const cf=function(id,label,attrs,v){
+    return '<div class="fld">'+(lock?'<div class="fl">'+label+'</div><div class="ro">'+(esc(v)||"&nbsp;")+'</div>'
+      :'<label class="fl" for="'+id+'">'+label+'</label><input class="inp" id="'+id+'" '+attrs+' value="'+esc(v)+'">')+'</div>';
+  };
+  if(lock)h+='<div class="hint" id="f-lock-hint">No client on this job. Put any contact details in the notes, or ask Mitch to add the client.</div>';
+  h+='<div class="g2">'+cf("f-phone","Phone",'type="tel" autocomplete="off" inputmode="tel"',I.phone)+
+     cf("f-email","Email",'type="email" autocomplete="off" inputmode="email" autocapitalize="none"',I.email)+'</div>'+
+     cf("f-street","Street",'type="text" autocomplete="off"',I.street)+
+     '<div class="g3">'+cf("f-suburb","Suburb",'type="text" autocomplete="off"',I.suburb)+
+     cf("f-state","State",'type="text" autocomplete="off" autocapitalize="characters"',I.state)+
+     cf("f-postcode","Postcode",'type="text" autocomplete="off" inputmode="numeric"',I.postcode)+'</div>';
+  // job
+  h+='<div class="lbl">Job</div>'+
+    '<div class="fld"><label class="fl" for="f-addr">Job address</label>'+
+    '<input class="inp" id="f-addr" type="text" autocomplete="off" value="'+esc(I.address)+'" placeholder="Where the job is. Start typing and it finds it.">'+
+    '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
+    '<div class="hint" id="f-addr-hint" role="status"></div>'+
+    '<div class="sites" id="f-addr-sites" hidden></div>'+
+    '<div class="fld"><div class="fl" id="sv-lbl">Services</div><div id="sv-list" role="group" aria-labelledby="sv-lbl"></div></div>'+
+    '<div id="sv-det"></div><div class="hint" id="sv-total" role="status"></div>';
+  if(M){
+    h+='<div class="g2"><div class="fld"><label class="fl" for="f-date">Date</label><input class="inp" id="f-date" type="date" value="'+esc(I.date)+'"></div>'+
+      '<div class="fld"><label class="fl" for="f-time">Start time</label><input class="inp" id="f-time" type="time" step="900" value="'+esc(I.time)+'"></div></div>'+
+      '<div class="g2"><div class="fld"><label class="fl" for="f-dur">How long</label><select class="inp" id="f-dur">'+durOptions(I.dur)+'</select></div>'+
+      '<div class="fld"><label class="fl" for="f-staff">Who</label><select class="inp" id="f-staff">'+staffOptions(I.staff)+'</select></div></div>';
+  }else{
+    const s=tmToMin(j.start_time),who=j.staff_id&&S.staffById[j.staff_id];
+    h+='<div class="g2"><div class="fld"><div class="fl">Date</div><div class="ro">'+esc(niceDate(j.job_date))+'</div></div>'+
+      '<div class="fld"><div class="fl">Start time</div><div class="ro">'+(s==null?"Not set":esc(fmtMin(s)+" to "+fmtMin(s+j.duration_min)))+'</div></div></div>'+
+      '<div class="g2"><div class="fld"><div class="fl">How long</div><div class="ro">'+esc(fmtDur(j.duration_min))+'</div></div>'+
+      '<div class="fld"><div class="fl">Who</div><div class="ro">'+esc(who?who.name:"Unassigned")+'</div></div></div>';
+  }
+  h+='<div class="fld"><label class="fl" for="f-notes">Notes</label><textarea class="inp" id="f-notes" placeholder="Anything to remember about this job">'+esc(I.notes)+'</textarea></div>';
+  // paperwork
+  h+='<div class="lbl">Paperwork</div><div class="btns"><a class="btn" id="ln-rec" hidden>Service record</a><a class="btn" id="ln-insp" hidden>Termite inspection</a></div>'+
+    '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
+  // photos
+  h+='<div class="lbl">Photos</div>'+
+    '<div class="fld"><label class="fl" for="f-caption">Caption for the photos you add (optional)</label><input class="inp" id="f-caption" type="text" autocomplete="off"></div>'+
+    '<div class="btns"><label class="btn" id="ph-cam-l" for="ph-cam">'+IC.cam+' Take photo</label><label class="btn" id="ph-lib-l" for="ph-lib">Choose photos</label></div>'+
+    '<input type="file" id="ph-cam" class="vh" accept="image/*" capture="environment" multiple>'+
+    '<input type="file" id="ph-lib" class="vh" accept="image/*" multiple>'+
+    '<div class="photostat" id="ph-stat"></div>'+
+    '<div class="btns" id="ph-retry-row" hidden><button type="button" class="btn sm warn" id="ph-retry" data-sh="retryphotos">Try again</button></div>'+
+    '<div class="phgrid" id="ph-grid"></div>';
+  // danger
+  if(M&&!SH.isNew){
+    h+='<div class="danger"><div class="btns">'+
+      (j.status==="cancelled"?'<button type="button" class="btn warn" data-sh="reopen">Reopen job</button>':'<button type="button" class="btn warn" data-sh="cancel">Cancel job</button>')+
+      '<button type="button" class="btn bad" data-sh="delete">Delete job</button></div></div>';
+  }
+  h+='</div><div class="shfoot"><button type="button" class="btn pri" id="sh-save" data-sh="save">Save</button>';
+  if(!SH.isNew){
+    h+=(j.status==="done")?'<button type="button" class="btn" id="sh-done" data-sh="undone">Undo done</button>'
+      :'<button type="button" class="btn ok" id="sh-done" data-sh="done">'+IC.tick+' Mark done</button>';
+  }
+  return h+'</div></div></div>';
+}
+
+/* ----- form reading, links, dirty check ----- */
+function val(id){const e=byId(id);return e?e.value:null;}
+function setVal(id,v){const e=byId(id);if(e)e.value=v==null?"":v;}
+function readForm(){
+  const I=SH.init,M=S.isMaster;
+  const f={
+    name:M?trim(val("f-name")):(SH.client?SH.client.name:""),
+    phone:trim(val("f-phone")),email:trim(val("f-email")),street:trim(val("f-street")),suburb:trim(val("f-suburb")),
+    state:trim(val("f-state")),postcode:trim(val("f-postcode")),address:trim(val("f-addr")),
+    services:SH.svc.map(function(e){return {type:e.type,description:e.description,price:trim(e.price)};}),
+    notes:String(val("f-notes")||"").replace(/\r\n/g,"\n")
+  };
+  if(M){f.date=val("f-date")||"";f.time=val("f-time")||"";f.dur=parseInt(val("f-dur"),10);f.staff=val("f-staff")||"";}
+  else{f.date=I.date;f.time=I.time;f.dur=I.dur;f.staff=I.staff;}
+  return f;
+}
+function snap(){
+  if(SH.quick){const f=readForm();return JSON.stringify([f.name,f.phone,f.email,f.street,f.suburb,f.state,f.postcode,f.address,f.services])+"|"+(SH.clientId||"");}
+  return JSON.stringify(readForm())+"|"+(SH.clientId||"");
+}
+function isDirty(){return !!SH&&snap()!==SH.baseline;}
+function setLink(id,href){
+  const a=byId(id);if(!a)return;
+  if(href){a.setAttribute("href",href);a.removeAttribute("aria-disabled");a.classList.remove("off");}
+  else{a.removeAttribute("href");a.setAttribute("aria-disabled","true");a.classList.add("off");}
+}
+function updateLinks(){
+  if(!SH)return;
+  if(SH.quick){quickSync();return;}      // Quick add has no Ring/Text/Maps buttons or paperwork: it only needs its own chips and summary refreshed
+  const f=readForm(),num=f.phone.replace(/[^\d+]/g,"");
+  setLink("ln-ring",num.length>=3?"tel:"+num:"");
+  setLink("ln-text",num.length>=3?"sms:"+num:"");
+  setLink("ln-mail",looksEmail(f.email)?"mailto:"+f.email:"");
+  const addr=f.address||composeAddr(f.street,f.suburb,f.state,f.postcode);
+  setLink("ln-map",addr?"https://maps.apple.com/?q="+encodeURIComponent(addr):"");
+  const id=SH.jobId,e=encodeURIComponent;
+  const upl=SH.uploading||S.uploads>0;      // S.uploads also counts a batch still running from a sheet that was closed
+  // Termite inspection button: any ticked service is an inspection. Service record button: any ticked service is NOT an inspection.
+  // A combo job (say General Pest Treatment + Termite Inspection) gets both. Nothing ticked: neither.
+  const types=f.services.map(function(x){return x.type;});
+  const recTypes=types.filter(function(t){return !isInspectionType(t);});
+  const hasInsp=types.some(isInspectionType),hasRec=recTypes.length>0;
+  const insp=byId("ln-insp"),rec=byId("ln-rec");
+  if(insp)insp.hidden=!hasInsp;
+  if(rec)rec.hidden=!hasRec;
+  // these two leave this page in the same tab, so they stay switched off while photos are going up (they come back by themselves when it finishes)
+  if(id&&!upl){
+    setLink("ln-rec",hasRec?"records.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr)+"&service="+e(recTypes.join(" + ")):"");
+    setLink("ln-insp",hasInsp?"index.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr):"");
+  }else{setLink("ln-rec","");setLink("ln-insp","");}
+  const hints=[];
+  if(!types.length)hints.push("Tick a service to get the record buttons.");
+  if(!id)hints.push(types.length?"Save the job first, then these open with the details filled in.":"Then save the job and they open with the details filled in.");
+  else if(upl)hints.push("Wait for the photos to finish uploading.");
+  const th=byId("sh-toolhint");if(th)th.textContent=hints.join(" ");
+  const dis=!id;
+  ["ph-cam","ph-lib"].forEach(function(x){const i=byId(x);if(i)i.disabled=dis||upl;});
+  ["ph-cam-l","ph-lib-l"].forEach(function(x){const l=byId(x);if(l)l.classList.toggle("off",dis||upl);});
+  const ps=byId("ph-stat");if(ps&&dis)ps.textContent="Save the job first, then you can add photos.";
+}
+function showMsg(text,kind){
+  const m=byId("sh-msg");if(!m)return;
+  m.innerHTML=text?'<div class="banner '+(kind||"warn")+'">'+esc(text)+'</div>':"";
+  if(text&&kind==="bad"){const b=$(".shbody");if(b)b.scrollTop=0;}
+}
+function setBusy(on){
+  SH.busy=!!on;
+  ["sh-save","sh-done","sh-saveadd"].forEach(function(id){const b=byId(id);if(b)b.disabled=!!on;});
+  $$all(".danger .btn").forEach(function(b){b.disabled=!!on;});
+}
+function $$all(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
+
+/* ----- closing ----- */
+function closeSheet(force){
+  if(!SH)return true;
+  // X, Escape and a tap on the backdrop all come through here. Closing in the middle of a save would leave it half done.
+  if(!force&&SH.busy){showMsg("Still saving, hang on a sec.","warn");return false;}
+  if(!force&&isDirty()&&!confirm("You have changes that are not saved. Close anyway?"))return false;
+  clearTimeout(SH.sT);clearTimeout(SH.acT);if(SH.acAbort){try{SH.acAbort.abort();}catch(e){}}
+  const pf=SH.prevFocus;
+  SH=null;
+  byId("sheet").innerHTML="";
+  document.documentElement.classList.remove("sheet-open","qa-open");
+  const app=byId("app");app.removeAttribute("inert");app.removeAttribute("aria-hidden");
+  if(S.dirtyRender)renderBody();
+  if(pf&&pf.focus&&document.contains(pf)){try{pf.focus({preventScroll:true});}catch(e){}}
+  return true;
+}
+
+/* ----- client name search (type-ahead) ----- */
+function escLike(s){return String(s).replace(/[\\%_]/g,"\\$&");}
+// Hiding the list also cancels any search that is waiting or on its way, so every caller (pick, too few letters, blur, Escape) gets that.
+function hideNameList(){const l=byId("f-name-list");if(l){l.hidden=true;l.innerHTML="";}if(SH){clearTimeout(SH.sT);SH.sSeq++;SH.nameResults=[];SH.nameMatch={};}}
+function onNameInput(){
+  const f=byId("f-name");if(!f)return;
+  // A quick save is running (the cursor is already in the box for "Save + add another"): this typing is for the next caller. It must not unlink or search on the
+  // booking being saved. quickReset keeps it when the save is done, and quickNameBack puts the old name back if the save fails.
+  if(SH.quick&&SH.busy)return;
+  // Typing in the name box does NOT unlink the client. Fixing a spelling keeps their phone, email and address, and the job address.
+  // Switching to someone else is done by picking from the list, or with the "Different client" button.
+  if(SH.quick&&SH.clientId&&SH.client&&trim(f.value)!==trim(SH.client.name))quickUnlink();      // Quick add has no rename: typing again means someone else
+  if(SH.renameTo!=null)SH.renameTo=trim(f.value);
+  updateClientHint();
+  clearTimeout(SH.sT);
+  const q=trim(f.value);
+  if(q.length<2){hideNameList();return;}
+  SH.sT=setTimeout(function(){searchClients(q);},250);
+}
+async function searchClients(q){
+  const sh=SH;if(!sh||(sh.quick&&sh.busy))return;      // a quick save is running: a client picked now would be lost when the panel resets
+  const seq=++sh.sSeq;
+  try{
+    const words=q.split(/\s+/).filter(Boolean).slice(0,4);
+    const digits=q.replace(/\D/g,"");
+    let nq=S.sb.from("clients").select(CLIENT_COLS);
+    words.forEach(function(w){nq=nq.ilike("name","%"+escLike(w)+"%");});
+    nq=nq.order("name",{ascending:true}).limit(8);
+    const jobs=[nq];
+    if(digits.length>=3){
+      // phones from the Xero seed are plain digits, so a straight match works for them
+      jobs.push(S.sb.from("clients").select(CLIENT_COLS).ilike("phone","%"+digits+"%").order("name",{ascending:true}).limit(8));
+      // phones typed in by hand may have spaces in them, so also try a looser pattern and keep only true digit matches
+      if(digits.length>=6)jobs.push(S.sb.from("clients").select(CLIENT_COLS).ilike("phone","%"+digits.split("").join("%")+"%").order("name",{ascending:true}).limit(100));
+    }
+    // also match the text of a job site address ("296 tyag", "paterson"), unless what was typed is clearly a phone number
+    let addrAt=-1;
+    if(q.length>=3&&!(digits.length>=6&&/^[\d\s()+.-]+$/.test(q))){
+      let aq=S.sb.from("client_properties").select("address,client:clients("+CLIENT_COLS+")");
+      words.forEach(function(w){aq=aq.ilike("address","%"+escLike(w)+"%");});
+      addrAt=jobs.length;
+      jobs.push(aq.order("job_count",{ascending:false}).limit(12));
+    }
+    const res=await Promise.all(jobs);
+    if(SH!==sh||seq!==sh.sSeq||(sh.quick&&sh.busy))return;      // a different sheet, or the list was hidden or a newer search started (or a quick save began meanwhile)
+    const seen={},prim=[],sec=[],match={};
+    res.forEach(function(r,i){
+      if(r.error)return;       // e.g. the sites table isn't set up yet: the name and phone matches still show
+      (r.data||[]).forEach(function(row){
+        if(i===addrAt){
+          const c=Array.isArray(row.client)?row.client[0]:row.client;
+          if(!c||!c.id||seen[c.id]||isPlaceholderAddr(row.address))return;
+          seen[c.id]=1;match[c.id]=trim(row.address);sec.push(c);return;
+        }
+        if(i===2&&String(row.phone||"").replace(/\D/g,"").indexOf(digits)<0)return;
+        if(!seen[row.id]){seen[row.id]=1;prim.push(row);}
+      });
+    });
+    // name and phone matches first, but keep a few places for address matches so a street typed in isn't crowded out
+    const room=Math.min(sec.length,3);
+    showNameList(prim.slice(0,8-room).concat(sec).slice(0,8),match);
+  }catch(e){if(SH===sh&&seq===sh.sSeq)hideNameList();}
+}
+function showNameList(list,match){
+  const l=byId("f-name-list");if(!l||!SH)return;
+  SH.nameResults=list;SH.nameMatch=match||{};
+  if(!list.length){l.hidden=true;l.innerHTML="";return;}
+  l.innerHTML=list.map(function(c,i){
+    const sub=(SH.nameMatch[c.id]?["Site: "+SH.nameMatch[c.id],c.phone]:[c.suburb,c.phone]).filter(Boolean).join(" · ");
+    return '<button type="button" class="acitem" role="option" data-sh="pickclient" data-i="'+i+'"><b>'+esc(c.name)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':"")+'</button>';
+  }).join("");
+  l.hidden=false;
+}
+// prefer = the site address the search matched on, so that site is the one filled in
+function applyClient(c,blankOnly,prefer){
+  SH.clientId=c.id;SH.client=Object.assign({},c);
+  SH.unlinked=null;SH.renameTo=null;       // picking a client settles who this job is for
+  const set=function(id,v){const e=byId(id);if(!e)return;if(blankOnly&&trim(e.value))return;e.value=v==null?"":v;};
+  if(S.isMaster)setVal("f-name",c.name);
+  set("f-phone",c.phone);set("f-email",c.email);set("f-street",c.street);set("f-suburb",c.suburb);set("f-state",c.state);set("f-postcode",c.postcode);
+  SH.preferAddr=prefer||"";
+  SH.sites=[];SH.sitesFor=null;SH.sitesOk=false;renderSites();      // the last client's sites don't belong to this one
+  hideNameList();updateClientHint();updateLinks();
+  loadSites(SH,c.id);       // fills the job address from their sites (or their own address) if the box is empty
+}
+// Only the "Different client" button calls this. It blanks the boxes that still hold the old client's details, but keeps a copy so
+// "Same client, just fixing the spelling" can put them back.
+function unlinkClient(){
+  const old=SH.client||{};
+  const map={"f-phone":"phone","f-email":"email","f-street":"street","f-suburb":"suburb","f-state":"state","f-postcode":"postcode"};
+  const vals={};
+  Object.keys(map).forEach(function(id){if(trim(val(id))===trim(old[map[id]])){vals[id]=val(id);setVal(id,"");}});
+  // the job address stays, unless it was only ever filled in from this client's details and nobody has touched it
+  const oldAddr=composeAddr(old.street,old.suburb,old.state,old.postcode),cur=trim(val("f-addr"));
+  if(!SH.addrTouched&&cur&&(cur===oldAddr||cur===SH.addrAuto)){vals["f-addr"]=val("f-addr");setVal("f-addr","");SH.addrAuto="";}
+  SH.unlinked=SH.client?{client:Object.assign({},SH.client),vals:vals}:null;
+  SH.renameTo=null;
+  SH.clientId=null;SH.client=null;
+  SH.sites=[];SH.sitesFor=null;SH.sitesOk=false;SH.sitesSeq++;SH.preferAddr="";renderSites();
+  updateLinks();
+}
+function diffClient(){
+  if(!SH||!SH.clientId)return;
+  unlinkClient();
+  updateClientHint();
+  const n=byId("f-name");if(n){try{n.focus();n.select();}catch(e){}}
+}
+// "Same client, just fixing the spelling": put the old client and their details back. What is typed in the name box becomes the new name.
+function sameClient(){
+  const u=SH&&SH.unlinked;if(!u)return;
+  Object.keys(u.vals).forEach(function(id){if(!trim(val(id)))setVal(id,u.vals[id]);});     // never overwrite something typed since
+  SH.clientId=u.client.id;SH.client=Object.assign({},u.client);
+  SH.renameTo=trim(val("f-name"));SH.unlinked=null;
+  hideNameList();updateClientHint();updateLinks();
+  loadSites(SH,SH.clientId);
+}
+function updateClientHint(){
+  if(SH&&SH.quick){quickSync();return;}
+  const h=byId("f-name-hint");if(!h||!SH)return;
+  const nm=trim(val("f-name"));
+  if(SH.clientId){
+    const renaming=!!(SH.client&&nm&&nm!==trim(SH.client.name));
+    h.className="hint "+(renaming?"new":"ok");
+    h.innerHTML=esc(renaming?"Renaming this client (save to apply). Changes to their phone, email and address are saved to their record too."
+      :"Existing client ("+SH.clientId+"). Changes to their phone, email and address are saved to their record.")+
+      ' <button type="button" class="linkbtn" data-sh="diffclient">Different client</button>';
+  }else if(nm){
+    h.className="hint new";
+    h.innerHTML=esc("New client. They get added to your client list when you save.")+
+      (SH.unlinked?' <button type="button" class="linkbtn" data-sh="sameclient">Same client, just fixing the spelling</button>':"");
+  }else{h.className="hint";h.textContent="";}
+}
+
+/* ----- a client's job sites -----
+   client_properties holds the places a client has had work done (seeded from Xero, plus any added here). Picking a client, or opening
+   one of their jobs, loads them: one site fills an empty job address, several show up as chips to tap. Their own contact address
+   counts as a site too (last in the list) if it isn't already one. */
+function normAddr(s){return String(s==null?"":s).toLowerCase().replace(/\s*,\s*/g,", ").replace(/\s+/g," ").trim();}
+function isPlaceholderAddr(a){const t=trim(a);return !t||/^\(.*\)$/.test(t);}      // the Xero seed has "(address unknown)" rows
+function siteLine(s){return composeAddr(s.address,s.suburb,s.state,s.postcode);}
+// "111 Paterson St, Byron Bay NSW 2481" -> street, suburb, state, postcode. Only splits when the tail has a state or a postcode, else it is all street.
+function splitAddr(line){
+  const a=trim(line);
+  const m=/^(.+),\s*([^,\d]+?)(?:\s+(NSW|VIC|QLD|SA|WA|TAS|NT|ACT))?(?:\s+(\d{4}))?$/i.exec(a);
+  if(m&&(m[3]||m[4]))return {street:trim(m[1]),suburb:trim(m[2]),state:m[3]?m[3].toUpperCase():"",postcode:m[4]||""};
+  return {street:a,suburb:"",state:"",postcode:""};
+}
+function siteSlug(a){return String(a).toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,24)||"site";}
+async function fetchSites(clientId,client){
+  let rows=null;
+  try{
+    const r=await S.sb.from("client_properties").select("id,address,suburb,state,postcode,job_count,source").eq("client_id",clientId)
+      .order("job_count",{ascending:false}).order("address",{ascending:true});
+    if(r.error)throw r.error;
+    rows=r.data||[];
+  }catch(e){console.warn("Couldn't load this client's job sites.",e);}
+  const seen={},list=[];
+  (rows||[]).forEach(function(r){
+    if(isPlaceholderAddr(r.address))return;
+    const k=normAddr(r.address);if(seen[k])return;
+    seen[k]=1;seen[normAddr(composeAddr(r.address,r.suburb,r.state,r.postcode))]=1;
+    list.push({id:r.id,address:trim(r.address),suburb:trim(r.suburb),state:trim(r.state),postcode:trim(r.postcode),source:r.source});
+  });
+  const c=client||{};
+  if(trim(c.street)&&!seen[normAddr(c.street)])
+    list.push({id:null,address:trim(c.street),suburb:trim(c.suburb),state:trim(c.state),postcode:trim(c.postcode),source:"contact"});
+  return {list:list,ok:rows!==null};
+}
+async function loadSites(sh,clientId){
+  if(!sh||!clientId)return;
+  const seq=++sh.sitesSeq;
+  const res=await fetchSites(clientId,sh.client);
+  if(SH!==sh||seq!==sh.sitesSeq||sh.clientId!==clientId)return;      // another client was picked, or the sheet was closed
+  sh.sites=res.list;sh.sitesFor=clientId;sh.sitesOk=res.ok;
+  renderSites();
+  applySitePrefill(sh);
+}
+// the job address box counts as empty if it is blank, or was only ever filled in by this page (an earlier client's site)
+function addrBoxEmpty(){return !trim(val("f-addr"))||!SH.addrTouched;}
+function applySitePrefill(sh){
+  if(SH!==sh||!addrBoxEmpty())return;
+  const list=sh.sites;
+  let line="";
+  if(list.length){
+    let pick=list[0];
+    if(sh.preferAddr){const k=normAddr(sh.preferAddr);pick=list.filter(function(x){return normAddr(x.address)===k||normAddr(siteLine(x))===k;})[0]||pick;}
+    line=siteLine(pick);
+  }else if(sh.client){line=composeAddr(sh.client.street,sh.client.suburb,sh.client.state,sh.client.postcode);}     // no street on file: their suburb, as before
+  if(!line){
+    // nothing to fill in for this client: an earlier client's site that was only auto-filled doesn't stay in the box (not if their sites failed to load: then we don't know)
+    if(sh.sitesOk&&trim(val("f-addr"))&&!sh.addrTouched){
+      const dirty=isDirty();
+      setVal("f-addr","");sh.addrAuto="";
+      if(!dirty)sh.baseline=snap();
+      updateLinks();renderSites();
+    }
+    return;
+  }
+  if(normAddr(val("f-addr"))===normAddr(line))return;
+  const wasDirty=isDirty();
+  setVal("f-addr",line);sh.addrTouched=false;sh.addrAuto=line;
+  if(!wasDirty)sh.baseline=snap();       // filling it in isn't a change the person made, so closing the job shouldn't ask about it
+  updateLinks();renderSites();
+}
+function renderSites(){
+  const el=byId("f-addr-sites");if(!el||!SH)return;
+  if(SH.quick)quickSync();      // Quick add: the sites have just loaded (or been cleared), so its summary can stop saying it is still looking
+  const list=SH.sites||[];
+  if(list.length<2){el.hidden=true;el.innerHTML="";return;}
+  const cur=normAddr(val("f-addr"));
+  el.innerHTML='<span class="sitelbl">Their sites:</span>'+list.map(function(s,i){
+    const line=siteLine(s),on=!!cur&&(cur===normAddr(line)||cur===normAddr(s.address));
+    return '<button type="button" class="chip'+(on?" on":"")+'" data-sh="picksite" data-i="'+i+'" aria-pressed="'+(on?"true":"false")+'">'+esc(line)+'</button>';
+  }).join("");
+  el.hidden=false;
+}
+function pickSite(i){
+  const s=SH.sites[i];if(!s)return;
+  setVal("f-addr",siteLine(s));SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;
+  hideAddrList();updateLinks();renderSites();
+}
+// A real site has a street number in it (12 Smith St, 3/45 Smith St, Lot 4 Smith Rd). A suburb on its own ("Bangalow", "Byron Bay NSW 2481") isn't one.
+function hasStreetNumber(street){
+  const s=trim(street).replace(/\b(?:NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/gi," ").replace(/\s\d{4}\s*$/,"");
+  return /\d/.test(s);
+}
+// On save: if the job's address isn't one of the client's saved sites, add it as one. The caller catches any failure, so the job save never fails over this.
+async function saveNewSite(sh,clientId,addr){
+  const line=trim(addr);
+  if(!clientId||!line||isPlaceholderAddr(line))return;
+  const pick=sh.addrPick&&normAddr(sh.addrPick.line)===normAddr(line)?sh.addrPick:null;
+  const parts=pick||splitAddr(line);
+  if(!pick&&!hasStreetNumber(parts.street))return;       // just a suburb (the contact-box fallback): the job keeps it, but it isn't a place to go back to
+  let sites=sh.sites;
+  if(sh.sitesFor!==clientId||!sh.sitesOk){
+    const r=await fetchSites(clientId,sh.client);
+    if(!r.ok)throw new Error("couldn't read this client's sites");
+    sites=r.list;
+  }
+  const keys={};keys[normAddr(line)]=1;keys[normAddr(parts.street)]=1;
+  const savedRows=function(list){return list.filter(function(x){return x.id;});};       // saved rows only: their contact address showing in the chips doesn't count as saved
+  const isThere=function(rows){return rows.some(function(x){return keys[normAddr(x.address)]||keys[normAddr(siteLine(x))];});};
+  let real=savedRows(sites);
+  if(isThere(real))return;
+  const base=clientId+"::"+siteSlug(parts.street),taken={};
+  real.forEach(function(x){taken[x.id]=1;});
+  let id=base,n=1;
+  for(let attempt=0;attempt<8;attempt++){
+    while(taken[id]){n++;id=base+"-"+n;}
+    const row={id:id,client_id:clientId,address:parts.street,suburb:nn(parts.suburb),state:nn(parts.state),postcode:nn(parts.postcode),source:"calendar"};
+    const ins=await S.sb.from("client_properties").insert(row);
+    if(!ins.error){
+      sh.sites=real.concat([{id:id,address:row.address,suburb:trim(row.suburb),state:trim(row.state),postcode:trim(row.postcode),source:"calendar"}]);
+      sh.sitesFor=clientId;sh.sitesOk=true;
+      if(SH===sh)renderSites();
+      return;
+    }
+    if(ins.error.code!=="23505")throw ins.error;
+    // That id is already used. Usually that is this same address, added from another device since this list loaded, so look again before
+    // trying -2, -3 ... (otherwise the same address gets saved twice).
+    taken[id]=1;
+    const fresh=await fetchSites(clientId,sh.client);
+    if(!fresh.ok)throw new Error("couldn't read this client's sites");
+    sh.sites=fresh.list;sh.sitesFor=clientId;sh.sitesOk=true;
+    real=savedRows(fresh.list);
+    if(SH===sh)renderSites();
+    if(isThere(real))return;
+    real.forEach(function(x){taken[x.id]=1;});
+  }
+  throw new Error("no free id for the new site");
+}
+
+/* ----- job address lookup (Photon) -----
+   Photon is a public address search built for searching as you type. Nothing goes out until 350ms after typing stops (and 4+ letters),
+   a newer search cancels an older one, answers are remembered for the session, and a late answer never touches the box: results only
+   go into the pick-list, and the box only changes when someone taps one.
+   Photon rarely has house numbers in regional NSW, and a number in the search tends to push the street out of the 8 answers, so the
+   search is for the street part and the number that was typed goes back in front of the street name when one is picked.
+   Photon matches by word prefix, so "Rd" finds nothing where "Road" would: the usual street-type shorthand is spelled out before searching.
+   A shop or car park that Photon found by its NAME is left out (it is not an address on the street that was typed), so every line in the
+   list is a street, or a real address on the street that was typed. */
+function addrHint(t){const h=byId("f-addr-hint");if(h)h.textContent=t||"";}
+// Hiding the list also cancels a lookup that is waiting or on its way, so every caller gets that.
+function hideAddrList(){
+  const l=byId("f-addr-list");if(l){l.hidden=true;l.innerHTML="";}
+  addrHint("");
+  if(SH){clearTimeout(SH.acT);if(SH.acAbort){try{SH.acAbort.abort();}catch(e){}SH.acAbort=null;}SH.acSeq++;SH.acResults=[];}
+}
+function onAddrInput(){
+  SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;
+  // Quick add has no street, suburb ... boxes to see or fix for a NEW client. They only ever hold the lookup pick for this address, so they go as soon as the text is changed
+  // (otherwise a cleared or corrected address comes back from them on save).
+  if(SH.quick&&!SH.clientId)["f-street","f-suburb","f-state","f-postcode"].forEach(function(id){setVal(id,"");});
+  hideAddrList();       // whatever was showing belongs to the old text
+  renderSites();
+  const q=trim(val("f-addr"));
+  if(q.length<4)return;
+  const sh=SH;
+  sh.acT=setTimeout(function(){if(SH===sh)addrLookup(q);},350);
+}
+// Enter: search now instead of waiting
+function findAddr(){
+  if(!SH)return;
+  const q=trim(val("f-addr"));
+  clearTimeout(SH.acT);
+  if(q.length<4){addrHint("Type a bit more of the address.");return;}
+  addrLookup(q);
+}
+const NUMTOK="\\d+[a-z]?",NUMSEQ=NUMTOK+"(?:\\s*[/&-]\\s*"+NUMTOK+")*";
+const LEAD_RE=new RegExp("^\\s*((?:(?:unit|u|apt|apartment|flat|shop|suite|ste|lot|level|lvl|villa)\\.?\\s*)?"+NUMSEQ+"(?:\\s*,?\\s+"+NUMSEQ+")?)(?=\\s|,|$)","i");
+// "5/296 Tyagarah Rd" -> {num:"5/296", rest:"Tyagarah Rd"}. Handles 111, 3a, 5/296, 283-285, 3 & 3a, Lot 4, Unit 11 70.
+function splitTyped(q){
+  const t=String(q==null?"":q).replace(/\s+/g," ").trim(),m=LEAD_RE.exec(t);
+  if(!m)return {num:"",rest:t};
+  let num=m[1].replace(/,/g," ").replace(/\s*&\s*/g," & ").replace(/\s*([\/-])\s*/g,"$1").replace(/\s+/g," ").trim();
+  num=num.charAt(0).toUpperCase()+num.slice(1);
+  return {num:num,rest:t.slice(m[0].length).replace(/^[\s,]+/,"")};
+}
+function hasToken(text,tok){
+  const e=String(tok).replace(/[.*+?^${}()|[\]\\\/]/g,"\\$&");
+  return new RegExp("(^|[^0-9a-z])"+e+"($|[^0-9a-z])","i").test(String(text));
+}
+// "5/296" -> "296", "Unit 11 70" -> "70", "Lot 4" -> "4". A range ("283-285") or "3 & 3a" stays whole. This is the part that is the house number on the street.
+function typedHouseNum(num){
+  const seqs=String(num==null?"":num).match(new RegExp(NUMSEQ,"gi"))||[];
+  const last=seqs.length?seqs[seqs.length-1]:"";
+  const i=last.lastIndexOf("/");
+  return i>=0?last.slice(i+1):last;
+}
+const STREET_TYPES={rd:"Road",cct:"Circuit",ct:"Court",ln:"Lane",pde:"Parade",hwy:"Highway",tce:"Terrace",cres:"Crescent",pl:"Place",dr:"Drive",ave:"Avenue",cl:"Close",st:"Street"};
+// "Tyagarah Rd" -> "Tyagarah Road". Whole words only, any case. The first word is left alone: "St Helena Rd" starts with a saint, not a street.
+function expandStreetTypes(text){
+  return String(text==null?"":text).replace(/(^|[\s,])([a-z]+)\.?(?=$|[\s,])/gi,function(m,pre,w){
+    const e=pre?STREET_TYPES[w.toLowerCase()]:null;
+    return e?pre+e:m;
+  });
+}
+function stateAbbr(st){
+  const t=trim(st);if(!t)return "";
+  if(STATE_ABBR[t])return STATE_ABBR[t];
+  return /^(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)$/i.test(t)?t.toUpperCase():t;
+}
+// Only Australian answers that are addresses: streets, and things with a house number or a name on a street. Parks, suburbs and bus stops are left out.
+function usableFeature(f){
+  const p=(f&&f.properties)||{};
+  if(p.countrycode!=="AU")return false;
+  if(p.type==="street")return !!trim(p.name);
+  if(p.type!=="house")return false;
+  if(trim(p.housenumber))return !!(trim(p.street)||trim(p.name));
+  if(/^(public_transport|highway|railway|aeroway|waterway|natural)$/.test(String(p.osm_key||"")))return false;
+  return !!(trim(p.street)||trim(p.name));
+}
+// A street always stays. Anything else (a shop, a fuel station, a car park) only stays when it is on the street that was typed: its street has a word that
+// starts with the first word typed. One that Photon found by its name ("Pat" finding the Patagonia shop on Jonson Street) is left out.
+function onTypedStreet(f,typedStreet){
+  const p=(f&&f.properties)||{};
+  if(p.type==="street")return true;
+  const first=(String(typedStreet==null?"":typedStreet).toLowerCase().match(/[a-z0-9]+/)||[""])[0];
+  if(!first)return true;
+  return (String(p.street==null?"":p.street).toLowerCase().match(/[a-z0-9]+/g)||[]).some(function(w){return w.indexOf(first)===0;});
+}
+// "<number> <street or name>, <suburb> <STATE> <postcode>". The result's own house number wins; with none, the number that was typed goes in front of the street.
+function photonParts(f,typedNum){
+  const p=(f&&f.properties)||{},hn=trim(p.housenumber),nameT=trim(p.name),streetT=trim(p.street);
+  const streetName=p.type==="street"?nameT:(streetT||nameT);
+  let n="";
+  // typed "5/296" and the result says 296: keep the 5/. Only the house number part is compared (296), never the unit (5).
+  if(hn)n=(typedNum&&typedNum!==hn&&hasToken(typedHouseNum(typedNum),hn))?typedNum:hn;
+  else if(typedNum&&(p.type==="street"||streetT))n=typedNum;
+  const street=(n?n+" ":"")+streetName;
+  let suburb=trim(p.city)||trim(p.town)||trim(p.village)||trim(p.locality)||trim(p.district);
+  if(suburb&&suburb.toLowerCase()===streetName.toLowerCase())suburb="";
+  const state=stateAbbr(p.state),pc=trim(p.postcode);
+  return {street:street,suburb:suburb,state:state,postcode:pc,line:composeAddr(street,suburb,state,pc)};
+}
+async function addrLookup(q){
+  const sh=SH;if(!sh)return;
+  const parts=splitTyped(q),sendQ=expandStreetTypes(parts.num?parts.rest:q);       // "Rd" -> "Road": Photon matches whole-word prefixes
+  if(sendQ.length<3){addrHint("Type a bit more of the street.");return;}       // "111 Pa": wait for more of the street
+  const key=sendQ.toLowerCase();
+  if(sh.acAbort){try{sh.acAbort.abort();}catch(e){}sh.acAbort=null;}
+  const seq=++sh.acSeq;
+  const hit=S.addrCache.get(key);
+  if(hit){showAddrList(hit,q);return;}
+  const ctl=("AbortController" in window)?new AbortController():null;sh.acAbort=ctl;
+  addrHint("Looking...");
+  try{
+    const url=PHOTON_URL+"?q="+encodeURIComponent(sendQ)+"&limit=8&lang=en&lat="+PHOTON_LAT+"&lon="+PHOTON_LON;
+    const r=await fetch(url,ctl?{signal:ctl.signal}:{});
+    if(!r.ok)throw plainErr("Address lookup answered with an error.");
+    const data=await r.json();
+    if(!data||!Array.isArray(data.features))throw plainErr("Address lookup answered with something odd.");
+    const feats=data.features.filter(function(f){return f&&f.properties&&f.properties.countrycode==="AU";});
+    S.addrCache.set(key,feats);
+    if(S.addrCache.size>80)S.addrCache.delete(S.addrCache.keys().next().value);
+    if(SH!==sh||seq!==sh.acSeq)return;       // the sheet changed, or newer typing / a pick / a blur has cancelled this
+    if(trim(val("f-addr"))!==q)return;       // the text has moved on since this was asked
+    showAddrList(feats,q);
+  }catch(e){
+    if(SH!==sh||seq!==sh.acSeq)return;
+    if(e&&e.name==="AbortError")return;
+    addrHint("Address lookup unavailable, type it in.");
+  }
+}
+function showAddrList(feats,q){
+  const l=byId("f-addr-list");if(!l||!SH)return;
+  const sp=splitTyped(q),num=sp.num,typedStreet=expandStreetTypes(sp.num?sp.rest:q),seen={},out=[];
+  feats.forEach(function(f){
+    if(!usableFeature(f)||!onTypedStreet(f,typedStreet))return;
+    const pp=photonParts(f,num);
+    if(!pp.street)return;
+    const k=pp.line.toLowerCase();if(seen[k])return;seen[k]=1;out.push(pp);
+  });
+  SH.acResults=out.slice(0,8);
+  if(!SH.acResults.length){l.hidden=true;l.innerHTML="";addrHint("No match found. Type it in.");return;}
+  addrHint("");
+  l.innerHTML=SH.acResults.map(function(p,i){return '<button type="button" class="acitem" role="option" data-sh="pickaddr" data-i="'+i+'">'+esc(p.line)+'</button>';}).join("");
+  l.hidden=false;
+}
+function pickAddr(i){
+  const p=SH.acResults[i];if(!p)return;
+  setVal("f-addr",p.line);SH.addrTouched=true;SH.addrAuto="";
+  // the client's street, suburb ... boxes only get filled when there is a client (or a name typed for one): with no client they would block the save
+  // Quick add, new client: those boxes are hidden and only ever hold the latest pick, so a second pick replaces the first (in the full sheet they are visible and stay as they are).
+  const qNew=!!(SH.quick&&!SH.clientId);
+  if((SH.clientId||trim(val("f-name")))&&(qNew||(!trim(val("f-street"))&&!trim(val("f-suburb"))))){setVal("f-street",p.street);setVal("f-suburb",p.suburb);setVal("f-state",p.state);setVal("f-postcode",p.postcode);}
+  hideAddrList();
+  SH.addrPick={line:p.line,street:p.street,suburb:p.suburb,state:p.state,postcode:p.postcode};     // remembered so a save can store the suburb, state and postcode with the site
+  updateLinks();renderSites();
+}
+
+/* ----- paperwork status and photos ----- */
+async function loadRecs(){
+  const id=SH&&SH.jobId;if(!id)return;
+  try{
+    const r=await Promise.all([
+      S.sb.from("service_records").select("id").eq("job_id",id).limit(1),
+      S.sb.from("inspections").select("id").eq("job_id",id).limit(1)]);
+    if(!SH||SH.jobId!==id)return;
+    SH.recs={service:r[0].error?null:(r[0].data||[]).length>0,insp:r[1].error?null:(r[1].data||[]).length>0,err:!!(r[0].error||r[1].error)};
+    renderRecs();
+  }catch(e){}
+}
+function renderRecs(){
+  const el=byId("sh-recs");if(!el||!SH)return;
+  const r=SH.recs,types=SH.svc.map(function(e){return e.type;});let h="";
+  const line=function(label,v){return '<div>'+esc(label)+': '+(v===true?'<span class="y">done</span>':v===false?'not done yet':'unknown')+'</div>';};
+  // a line shows when the job needs that paperwork, or when that paperwork already exists
+  if(r.service||types.some(function(t){return !isInspectionType(t);}))h+=line("Service record",r.service);
+  if(r.insp||types.some(isInspectionType))h+=line("Termite inspection",r.insp);
+  el.innerHTML=h;
+}
+/* ----- photo queue -----
+   Every photo is shrunk and kept on the device (IndexedDB, or in memory if the browser won't allow that) BEFORE it is uploaded,
+   and is only removed once both the file upload and the job_photos row have worked. A dropped signal, a crash or leaving the
+   page mid-batch no longer loses a photo. On an iPhone a camera shot isn't saved to the camera roll, so this is the only copy. */
+const PQ_DB="lpc-cal-photos-v1",PQ_STORE="pendingPhotos";
+let pqDb=null;      // null = not opened yet, false = this browser won't give us IndexedDB
+function pqOpen(){
+  if(pqDb!==null)return Promise.resolve(pqDb||null);
+  return new Promise(function(res){
+    try{
+      if(!window.indexedDB){pqDb=false;res(null);return;}
+      const rq=indexedDB.open(PQ_DB,1);
+      rq.onupgradeneeded=function(){const d=rq.result;if(!d.objectStoreNames.contains(PQ_STORE))d.createObjectStore(PQ_STORE,{keyPath:"id"});};
+      rq.onsuccess=function(){pqDb=rq.result;pqDb.onversionchange=function(){try{pqDb.close();}catch(e){}pqDb=null;};res(pqDb);};
+      rq.onerror=function(){pqDb=false;res(null);};
+      rq.onblocked=function(){res(null);};
+    }catch(e){pqDb=false;res(null);}
+  });
+}
+function pqRun(mode,fn){
+  return pqOpen().then(function(db){
+    if(!db)throw new Error("no indexeddb");
+    return new Promise(function(res,rej){
+      let rq=null;
+      try{
+        const tx=db.transaction(PQ_STORE,mode);
+        rq=fn(tx.objectStore(PQ_STORE));
+        tx.oncomplete=function(){res(rq?rq.result:undefined);};
+        tx.onerror=tx.onabort=function(){rej(tx.error||new Error("indexeddb failed"));};
+      }catch(e){rej(e);}
+    });
+  });
+}
+async function pqPut(it){
+  try{await pqRun("readwrite",function(st){return st.put(it);});}
+  catch(e){S.pendingPhotos.push(it);}       // memory fallback: lasts until the page is closed
+}
+async function pqDel(id){
+  S.pendingPhotos=S.pendingPhotos.filter(function(x){return x.id!==id;});
+  try{await pqRun("readwrite",function(st){return st.delete(id);});}catch(e){}
+}
+async function pqList(jobId){
+  let out=S.pendingPhotos.slice();
+  try{const all=await pqRun("readonly",function(st){return st.getAll();});out=out.concat(all||[]);}catch(e){}
+  return jobId?out.filter(function(x){return x.jobId===jobId;}):out;
+}
+// how many photos for this job are saved on the device but not uploaded yet; shows or hides the "Try again (N)" button
+async function refreshPending(){
+  const sh=SH;if(!sh||!sh.jobId)return;
+  let n=0;
+  try{n=(await pqList(sh.jobId)).length;}catch(e){}
+  if(SH!==sh)return;
+  sh.pendingN=n;
+  const row=byId("ph-retry-row"),b=byId("ph-retry");
+  if(row)row.hidden=!n;
+  if(b)b.textContent="Try again ("+n+")";
+}
+// one stored photo: upload the file, add the job_photos row, then (and only then) forget the stored copy.
+// The path comes from the stored id, so a retry after a half-finished go picks up where it left off instead of doubling up.
+async function uploadOne(it){
+  const path=it.jobId+"/"+it.id+".jpg";
+  let existed=false;
+  const up=await S.sb.storage.from("job-photos").upload(path,it.blob,{contentType:"image/jpeg",upsert:false});
+  if(up.error){
+    if(String(up.error.statusCode||up.error.status||"")==="409"||/already exists|duplicate/i.test(String(up.error.message||"")))existed=true;
+    else throw up.error;
+  }
+  if(existed){
+    const ex=await S.sb.from("job_photos").select("id").eq("job_id",it.jobId).eq("path",path).limit(1);
+    if(ex.error)throw ex.error;
+    if(ex.data&&ex.data.length){await pqDel(it.id);return;}
+  }
+  const ins=await S.sb.from("job_photos").insert({job_id:it.jobId,path:path,caption:it.caption});
+  if(ins.error)throw ins.error;
+  await pqDel(it.id);
+}
+function photoStat(sh,jobId,t){if(SH===sh&&sh.jobId===jobId){const ps=byId("ph-stat");if(ps)ps.textContent=t;}}
+// after a batch: tidy up, say what happened. If the sheet was closed in the meantime, a toast tells them the photos landed.
+async function afterUploads(sh,jobId,ok,bad,unread,lastErr){
+  sh.uploading=false;
+  if(SH)updateLinks();
+  if(SH===sh){
+    await loadPhotos();
+    await refreshPending();  // recount the photos still waiting, so the message below is right
+    if(SH===sh){
+      const ps=byId("ph-stat"),parts=[];
+      if(ok)parts.push(ok+" added.");
+      if(bad)parts.push(bad+" didn't upload yet. "+(sh.pendingN?"They're kept on this device, tap Try again when you have signal. ":"")+lastErr);
+      if(unread)parts.push(unread+" couldn't be read.");
+      if(ps&&parts.length)ps.textContent=parts.join(" ");
+    }
+  }else if(ok>0){toast(ok+" photo"+(ok===1?"":"s")+" added.");}
+  if(bad||unread)toast((bad?bad+" photo"+(bad===1?"":"s")+" didn't upload. They're kept to try again. ":"")+(unread?unread+" couldn't be read. ":"")+lastErr,true);
+}
+async function loadPhotos(){
+  const id=SH&&SH.jobId;if(!id)return;
+  refreshPending();
+  try{
+    const r=await S.sb.from("job_photos").select("id,path,caption,created_at").eq("job_id",id).order("created_at",{ascending:true});
+    if(r.error)throw r.error;
+    let urls={};
+    const paths=(r.data||[]).map(function(p){return p.path;});
+    if(paths.length){
+      const s=await S.sb.storage.from("job-photos").createSignedUrls(paths,3600);
+      if(!s.error)(s.data||[]).forEach(function(x){if(x&&x.signedUrl)urls[x.path]=x.signedUrl;});
+    }
+    if(!SH||SH.jobId!==id)return;
+    SH.photos=(r.data||[]).map(function(p){return {id:p.id,path:p.path,caption:p.caption,url:urls[p.path]||""};});
+    renderPhotos();
+  }catch(e){const ps=byId("ph-stat");if(ps&&SH&&!SH.uploading)ps.textContent="Couldn't load the photos. "+friendly(e);}
+}
+function renderPhotos(){
+  const g=byId("ph-grid");if(!g||!SH)return;
+  g.innerHTML=SH.photos.map(function(p){
+    return p.url?'<a href="'+esc(p.url)+'" target="_blank" rel="noopener"><img src="'+esc(p.url)+'" alt="'+esc(p.caption||"Job photo")+'" loading="lazy"></a>':"";
+  }).join("");
+  const ps=byId("ph-stat");
+  if(ps&&!SH.uploading)ps.textContent=SH.photos.length?SH.photos.length+" photo"+(SH.photos.length===1?"":"s")+" on this job.":"No photos yet.";
+}
+function loadImg(file){
+  return new Promise(function(res,rej){
+    const u=URL.createObjectURL(file),im=new Image();
+    im.onload=function(){URL.revokeObjectURL(u);res(im);};
+    im.onerror=function(){URL.revokeObjectURL(u);rej(plainErr("Couldn't read that photo."));};
+    im.src=u;
+  });
+}
+async function toJpeg(file){
+  let src=null;
+  try{if(window.createImageBitmap)src=await createImageBitmap(file,{imageOrientation:"from-image"});}catch(e){src=null;}
+  if(!src)src=await loadImg(file);
+  const w=src.width||src.naturalWidth,h=src.height||src.naturalHeight;
+  if(!w||!h)throw plainErr("Couldn't read that photo.");
+  const k=Math.min(1,1600/Math.max(w,h)),cw=Math.max(1,Math.round(w*k)),ch=Math.max(1,Math.round(h*k));
+  const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+  const cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cw,ch);cx.drawImage(src,0,0,cw,ch);
+  if(src.close){try{src.close();}catch(e){}}
+  const blob=await new Promise(function(res){cv.toBlob(res,"image/jpeg",0.82);});
+  cv.width=cv.height=0;
+  if(!blob)throw plainErr("Couldn't shrink that photo.");
+  return blob;
+}
+async function addPhotos(fileList){
+  if(!SH||!SH.jobId||SH.uploading||S.uploads>0)return;
+  const files=Array.prototype.slice.call(fileList||[]).filter(function(f){return /^image\//.test(f.type)||/\.(jpe?g|png|heic|heif|webp)$/i.test(f.name||"");});
+  if(!files.length)return;
+  const sh=SH,jobId=sh.jobId,caption=nn(val("f-caption"));
+  sh.uploading=true;S.uploads++;updateLinks();      // S.uploads is page-wide, so it still counts after the sheet is closed
+  let ok=0,bad=0,unread=0,lastErr="";
+  try{
+    for(let i=0;i<files.length;i++){
+      photoStat(sh,jobId,"Uploading photo "+(i+1)+" of "+files.length+"...");
+      let item=null;
+      try{
+        const blob=await toJpeg(files[i]);
+        item={id:uuid(),jobId:jobId,caption:caption,blob:blob,ts:Date.now()};
+        await pqPut(item);          // saved on the device first
+      }catch(e){unread++;lastErr=friendly(e);continue;}
+      try{await uploadOne(item);ok++;}
+      catch(e){bad++;lastErr=friendly(e);}
+    }
+    await afterUploads(sh,jobId,ok,bad,unread,lastErr);
+  }finally{
+    sh.uploading=false;S.uploads--;
+    if(SH)updateLinks();
+  }
+}
+// "Try again (N)": send what is still waiting for this job
+async function retryPhotos(){
+  const sh=SH;if(!sh||!sh.jobId||sh.uploading||S.uploads>0)return;
+  const jobId=sh.jobId;
+  let items=[];
+  try{items=await pqList(jobId);}catch(e){}
+  if(!items.length){refreshPending();return;}
+  if(SH!==sh)return;
+  sh.uploading=true;S.uploads++;updateLinks();
+  let ok=0,bad=0,lastErr="";
+  try{
+    for(let i=0;i<items.length;i++){
+      photoStat(sh,jobId,"Uploading photo "+(i+1)+" of "+items.length+"...");
+      try{await uploadOne(items[i]);ok++;}
+      catch(e){bad++;lastErr=friendly(e);}
+    }
+    await afterUploads(sh,jobId,ok,bad,0,lastErr);
+  }finally{
+    sh.uploading=false;S.uploads--;
+    if(SH)updateLinks();
+  }
+}
+
+/* ----- validation, patches, saving ----- */
+// Contact details that would have nowhere to go on a job with no client. Street, suburb, state and postcode only count when the job
+// address box is filled in, because with that box empty they are folded into the job address and saved there.
+function hasContact(f){return !!(f.phone||f.email||(f.address&&(f.street||f.suburb||f.state||f.postcode)));}
+function validate(f){
+  if(S.isMaster){
+    if(!validYmd(f.date))return "Pick a date for the job.";
+    if(!(f.dur>0))return "Pick how long the job takes.";
+    if(!SH.clientId&&!f.name&&SH.isNew)return "Type the client's name.";
+  }
+  // a client-less job can't keep a phone, email or address, so say so instead of saving "Saved" and quietly dropping them
+  if(!SH.clientId&&!f.name&&hasContact(f))
+    return S.isMaster?"Type the client's name so the phone, email and address have somewhere to save, or clear those boxes."
+      :"This job has no client, so phone, email and address can't be saved. Clear those boxes, or ask Mitch to add the client.";
+  for(let i=0;i<f.services.length;i++){
+    if(isNaN(parsePrice(f.services[i].price)))return "The price for "+f.services[i].type+" needs to be a number, like 250 or 250.50.";
+  }
+  if(f.email&&!looksEmail(f.email))return "That email address doesn't look right.";
+  return "";
+}
+function buildJobPatch(sh,f,clientId,extra){
+  const j=sh.job||{},isNew=sh.isNew,p={};
+  if(S.isMaster){
+    const staff=f.staff||null;
+    if(isNew||staff!==(j.staff_id||null))p.staff_id=staff;
+    if(isNew||f.date!==j.job_date)p.job_date=f.date;
+    const tm=f.time?minToTm(tmToMin(f.time)):null,otm=j.start_time?minToTm(tmToMin(j.start_time)):null;
+    if(isNew||tm!==otm)p.start_time=tm;
+    if(isNew||f.dur!==j.duration_min)p.duration_min=f.dur;
+    if(isNew||(clientId||null)!==(j.client_id||null))p.client_id=clientId||null;
+  }
+  // services, service_type and price are written together, and only when the services (or a price or wording) changed
+  const svcNew=canonServices(f.services);
+  if(isNew||JSON.stringify(svcNew)!==JSON.stringify(canonServices(loadServices(j)))){
+    p.services=svcNew;
+    p.service_type=svcNew.length?svcNew.map(function(e){return e.type;}).join(" + "):null;
+    p.price=sumPrice(svcNew);
+  }
+  // never null out an address nobody touched (a client change blanks the street boxes, but that isn't the person clearing the job address)
+  const addr=nn(f.address);if(isNew||(addr!==nn(j.address)&&(addr!==null||sh.addrTouched)))p.address=addr;
+  const notes=nn(f.notes);if(isNew||notes!==nn(j.notes))p.notes=notes;
+  if(extra)Object.assign(p,extra);
+  return p;
+}
+async function findClientByName(name){
+  const r=await S.sb.from("clients").select(CLIENT_COLS).ilike("name",escLike(name)).limit(3);
+  if(r.error)throw r.error;
+  return r.data||[];
+}
+async function createClientRow(f){
+  const base=slugify(f.name);
+  const r=await S.sb.from("clients").select("id").or("id.eq."+base+",id.like."+base+"-*");
+  if(r.error)throw r.error;
+  const taken={};(r.data||[]).forEach(function(x){taken[x.id]=1;});
+  let n=1,id=base;
+  for(let attempt=0;attempt<6;attempt++){
+    while(taken[id]){n++;id=base+"-"+n;}
+    const row={id:id,name:f.name,phone:nn(f.phone),email:nn(f.email),street:nn(f.street),suburb:nn(f.suburb),state:nn(f.state),postcode:nn(f.postcode),source:"calendar"};
+    const ins=await S.sb.from("clients").insert(row);
+    if(!ins.error)return row;
+    if(ins.error.code==="23505"){taken[id]=1;continue;}
+    throw ins.error;
+  }
+  throw plainErr("Couldn't find a free id for that new client. Try again.");
+}
+// rename=true only after the person has said yes to renaming this client (see saveSheet). The name is only sent when it isn't blank.
+async function updateClientRow(sh,f,rename){
+  const base=sh.client||{},p={};
+  ["name","phone","email","street","suburb","state","postcode"].forEach(function(k){
+    const nv=nn(f[k]);
+    if(k==="name"){if(S.isMaster&&rename&&nv&&nv!==trim(base.name))p.name=nv;return;}
+    if(nv!==nn(base[k]))p[k]=nv;
+  });
+  if(!Object.keys(p).length)return;
+  const r=await S.sb.from("clients").update(p).eq("id",sh.clientId).select("id");
+  if(r.error)throw r.error;
+  if(!r.data||!r.data.length)throw plainErr("The client details didn't save. You may not be allowed to change this client.");
+  Object.assign(sh.client,p);
+  if(sh.job&&sh.job.client)Object.assign(sh.job.client,p);
+}
+function upsertLocal(row){
+  const r=currentRange();
+  const inR=row.job_date>=r.from&&row.job_date<=r.to&&(S.isMaster||row.staff_id===S.me.id);
+  const i=S.jobs.findIndex(function(x){return x.id===row.id;});
+  if(inR){if(i>=0)S.jobs[i]=row;else S.jobs.push(row);}else if(i>=0)S.jobs.splice(i,1);
+  S.byId={};S.jobs.forEach(function(x){S.byId[x.id]=x;});
+  renderBody();
+}
+async function saveSheet(extra,opts){
+  opts=opts||{};
+  if(!SH||SH.busy)return false;
+  // Everything below reads and writes THIS sheet (sh), even if the screen has moved on by the time a request comes back.
+  const sh=SH;
+  let f=readForm();const bad=validate(f);
+  if(bad){showMsg(bad,"bad");return false;}
+  setBusy(true);showMsg("Saving...","ok");
+  S.pending++;
+  let okSave=false,lostContact=false,siteFailed=false;
+  try{
+    // 1. the client
+    let clientId=sh.clientId,rename=false;
+    if(S.isMaster&&clientId&&sh.client&&f.name&&f.name!==trim(sh.client.name)){
+      // The name box was changed on a linked client. Never rename silently: ask.
+      if(sh.renameTo===f.name||confirm('Rename "'+sh.client.name+'" to "'+f.name+'" on their client record?\n\nOK = rename them.\nCancel = add a separate new client from what is on screen.'))rename=true;
+      else clientId=null;           // Cancel: a new client, made from the fields as they are now (nothing gets blanked)
+    }
+    if(S.isMaster&&!clientId&&f.name&&sh.unlinked&&f.name.toLowerCase()!==trim(sh.unlinked.client.name).toLowerCase()){
+      // Backstop: the client was unlinked earlier and a different name is now typed. Is this just a spelling fix?
+      const u=sh.unlinked;
+      if(confirm('Rename "'+u.client.name+'" to "'+f.name+'"? OK = rename this client. Cancel = add a separate new client.')){
+        sh.clientId=clientId=u.client.id;sh.client=Object.assign({},u.client);
+        if(SH===sh){Object.keys(u.vals).forEach(function(id){if(!trim(val(id)))setVal(id,u.vals[id]);});f=readForm();}
+        sh.unlinked=null;sh.renameTo=f.name;rename=true;
+      }
+    }
+    if(S.isMaster&&!clientId&&f.name){
+      if(sh.dupDeclined!==f.name.toLowerCase()){
+        const dup=await findClientByName(f.name);
+        if(dup.length){
+          const d=dup[0];
+          if(confirm('There is already a client called "'+d.name+'"'+(d.suburb?" ("+d.suburb+")":"")+".\n\nOK = use that client.\nCancel = add a separate new client.")){
+            if(SH===sh){
+              applyClient(d,true);
+              if(sh.quick)quickTakeClient(d);
+              showMsg("Using the existing client. Check the details, then save again.","warn");
+            }
+            return false;
+          }
+          sh.dupDeclined=f.name.toLowerCase();
+        }
+      }
+      if(sh.quick)quickClientAddr(sh,f);
+      const row=await createClientRow(f);
+      sh.clientId=clientId=row.id;sh.client=Object.assign({},row);sh.unlinked=null;sh.renameTo=null;
+      if(SH===sh)updateClientHint();
+    }else if(clientId){
+      await updateClientRow(sh,f,rename);
+      sh.renameTo=null;
+    }
+    lostContact=!clientId&&hasContact(f);
+    // 2. the job
+    // (Quick add: a job address that was cleared on purpose stays blank. Its hidden client boxes must not put it back.)
+    if(!f.address&&!(sh.quick&&sh.addrTouched)){const a=composeAddr(f.street,f.suburb,f.state,f.postcode);if(a){f.address=a;if(SH===sh)setVal("f-addr",a);}}
+    const patch=buildJobPatch(sh,f,clientId,extra);
+    let row=null;
+    if(sh.isNew){
+      patch.status=patch.status||"booked";
+      const r=await S.sb.from("jobs").insert(patch).select(JOB_COLS).single();
+      if(r.error)throw r.error;
+      row=r.data;
+      sh.isNew=false;sh.jobId=row.id;
+    }else if(Object.keys(patch).length){
+      const r=await S.sb.from("jobs").update(patch).eq("id",sh.jobId).select(JOB_COLS);
+      if(r.error)throw r.error;
+      if(!r.data||!r.data.length)throw plainErr("That job didn't save. It may have been deleted or moved to someone else.");
+      row=r.data[0];
+    }
+    if(row){sh.job=row;if(row.client)sh.client=Object.assign({},row.client);}
+    else if(sh.job&&sh.client){sh.job.client=Object.assign({},sh.job.client||{},sh.client);}
+    if(sh.job)upsertLocal(sh.job);       // the calendar shows what was written, whether or not this sheet is still open
+    if(SH===sh)sh.baseline=snap();
+    if(sh.svc.length){sh.legacyPrice=null;sh.legacyHeld="";}      // the old price now lives on a saved service
+    okSave=true;
+    // The job is saved. If its address isn't one of the client's sites yet, add it. A failure here is logged and mentioned, never a failed save.
+    try{await saveNewSite(sh,clientId,f.address);}
+    catch(e){siteFailed=true;console.warn("The job saved, but its address couldn't be added to the client's sites.",e);}
+    scheduleRefetch(300);
+  }catch(e){
+    if(SH===sh){showMsg(friendly(e),"bad");if(sh.quick)quickNameBack(sh);}
+  }finally{
+    S.pending--;
+    if(SH===sh)setBusy(false);
+  }
+  if(!okSave)return false;
+  clearDraftForJob(sh.jobId);
+  const siteNote="The address couldn't be added to their list of sites.";
+  if(SH!==sh){toast("Saved"+(siteFailed?". "+siteNote:""),siteFailed);return true;}       // the sheet was closed while this was saving (logged out, for one); the write itself went through
+  if(opts.quick){quickDone(sh,opts,siteFailed,siteNote);return true;}
+  const warn=lostContact?" The phone, email and address weren't saved, because this job has no client.":"",kind=lostContact?"warn":"ok";
+  if(opts.fresh){
+    // First save of a new job: reopen it as a saved job so photos, paperwork and the done button appear.
+    const saved=sh.job;
+    closeSheet(true);
+    openSheet(saved,null);
+    showMsg("Saved."+(S.byId[saved.id]?"":" It is on "+niceDate(saved.job_date)+", so it isn't on this screen.")+warn+" You can add photos now.",kind);
+    if(siteFailed)toast(siteNote,true);
+  }else if(opts.keepOpen){
+    refreshSheetHead();showMsg("Saved."+warn,kind);updateLinks();
+    if(siteFailed)toast(siteNote,true);
+  }else{
+    const jid=sh.job&&sh.job.id,jd=sh.job&&sh.job.job_date;
+    closeSheet(true);
+    let msg=(!S.isMaster||!jid||S.byId[jid]?"Saved":"Saved. It is on "+niceDate(jd)+", so it isn't on this screen.")+warn;
+    if(siteFailed)msg+=(/\.$/.test(msg)?" ":". ")+siteNote;
+    toast(msg,lostContact||siteFailed);
+  }
+  return true;
+}
+function refreshSheetHead(){
+  const t=byId("sh-title"),s=byId("sh-sub");
+  if(t)t.textContent=sheetTitle();if(s)s.textContent=sheetSub();
+}
+function doSave(){
+  const wasNew=SH.isNew;
+  return saveSheet(null,wasNew?{keepOpen:true,fresh:true}:{});
+}
+async function setStatus(kind){
+  if(!SH||!SH.jobId)return;
+  let extra;
+  if(kind==="done")extra={status:"done",done_at:new Date().toISOString(),done_by:S.me.id};
+  else if(kind==="undone")extra={status:"booked",done_at:null,done_by:null};
+  else if(kind==="cancel"){if(!confirm("Cancel this job? It stays on file but drops off the calendar."))return;extra={status:"cancelled",done_at:null,done_by:null};}
+  else if(kind==="reopen")extra={status:"booked"};
+  else return;
+  await saveSheet(extra,{});
+}
+async function deleteJob(){
+  if(!SH||!SH.jobId||!S.isMaster)return;
+  if(!confirm("Delete this job for good?\n\nIts photos are deleted too. Any service records stay on file. This can't be undone."))return;
+  const sh=SH,id=sh.jobId;
+  setBusy(true);S.pending++;
+  let paths=[];
+  try{
+    try{const pr=await S.sb.from("job_photos").select("path").eq("job_id",id);if(!pr.error)paths=(pr.data||[]).map(function(x){return x.path;});}catch(e){}
+    const d=await S.sb.from("jobs").delete().eq("id",id).select("id");
+    if(d.error)throw d.error;
+    if(!d.data||!d.data.length)throw plainErr("That job wasn't deleted. It may already be gone.");
+    if(paths.length){try{await S.sb.storage.from("job-photos").remove(paths);}catch(e){}}
+    S.jobs=S.jobs.filter(function(x){return x.id!==id;});S.byId={};S.jobs.forEach(function(x){S.byId[x.id]=x;});
+    if(SH===sh)closeSheet(true);      // a delete that finishes late must not close some other sheet
+    renderBody();toast("Job deleted");
+  }catch(e){
+    if(SH===sh){showMsg(friendly(e),"bad");setBusy(false);}
+  }finally{S.pending--;scheduleRefetch(300);}
+}
+
+/* =====================================================================
+   QUICK ADD (master only)
+   A small panel for booking a job while on the phone to a customer: who, day, client, services and a time (or "Any time").
+   It is the same job sheet underneath: the same SH, the same field ids (f-name, f-phone, f-addr ...) and the same save path, so the
+   client type-ahead, address lookup, job sites and saving all behave as they do in the full sheet. The fields that have no box here
+   (street, suburb, state, postcode, time, how long, who) are hidden inputs that the chips and the client pick fill in.
+   ===================================================================== */
+function quickWhoLoad(){try{const p=JSON.parse(localStorage.getItem(QUICK_KEY)||"{}")||{};return typeof p.who==="string"?p.who:null;}catch(e){return null;}}
+function quickWhoSave(v){try{localStorage.setItem(QUICK_KEY,JSON.stringify({who:v}));}catch(e){}}
+// the last person a quick job was for ("later" = nobody yet); Mitch (the master) the first time, or if that person isn't active any more
+function quickWhoDefault(){
+  const w=quickWhoLoad();
+  if(w==="later")return "";
+  if(w&&activeStaff().some(function(s){return s.id===w;}))return w;
+  return S.me?S.me.id:"";
+}
+// the day being looked at, unless that is in the past
+function quickDayDefault(){const d=newDefaults({}).date,t=todayYmd();return d<t?t:d;}
+function quickInit(o){
+  return {name:"",phone:"",email:"",street:"",suburb:"",state:"",postcode:"",address:"",notes:"",date:o.date,time:o.time||"",dur:QUICK_DUR,staff:o.staff||""};
+}
+function quickState(init,prevFocus){
+  return {isNew:true,quick:true,job:null,jobId:null,client:null,clientId:null,init:init,addrTouched:false,baseline:"",busy:false,
+    recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
+    unlinked:null,renameTo:null,pendingN:0,svc:[],svcMemo:{},svcMore:false,legacyPrice:null,legacyHeld:"",
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,
+    qEdit:false,qEmail:false,qSum:null,saveName:null,prevFocus:prevFocus||null};
+}
+function quickDays(){
+  const t=todayYmd(),out=[];
+  for(let i=0;i<7;i++){const d=addDays(t,i),dd=parseYmd(d);out.push({v:d,l:i===0?"Today":i===1?"Tomorrow":DOW[dd.getDay()]+" "+dd.getDate()});}
+  return out;
+}
+function quickTimes(){const out=[];for(let m=QUICK_FIRST;m<=QUICK_LAST;m+=QUICK_STEP)out.push({v:minToHM(m),l:fmtMin(m)});return out;}
+function quickHtml(){
+  const I=SH.init;
+  let h='<div class="sheet qa" id="sh-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="sh-title">'+
+    '<div class="shhead"><h2 id="sh-title">Quick add</h2>'+
+    '<button type="button" class="linkbtn" data-sh="qmore">More details</button>'+
+    '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
+    '<div class="shbody"><div id="sh-msg" role="alert"></div>';
+  // who
+  h+='<div class="lbl">Who</div><div class="seg" id="q-who" role="group" aria-label="Who">';
+  activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
+  h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>';
+  // day
+  h+='<div class="lbl">Day<span class="qdl" id="q-daylbl"></span></div><div class="chiprow" id="q-days" role="group" aria-label="Day">';
+  quickDays().forEach(function(d){h+='<button type="button" class="chip qc" data-sh="qday" data-v="'+esc(d.v)+'" aria-pressed="false">'+esc(d.l)+'</button>';});
+  h+='<input class="inp qdate" id="f-date" type="date" aria-label="Pick another day" value="'+esc(I.date)+'"></div>';
+  // client
+  h+='<div class="fld qname"><label class="vh" for="f-name">Client name, phone or street</label>'+
+    '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Name, phone or street">'+
+    '<div class="aclist" id="f-name-list" role="listbox" hidden></div></div>'+
+    '<div id="q-sum" role="status"></div>'+
+    '<div class="sites" id="f-addr-sites" hidden></div>'+
+    '<div id="q-new" hidden>'+
+      '<div class="fld"><label class="vh" for="f-phone">Phone</label><input class="inp" id="f-phone" type="tel" autocomplete="off" inputmode="tel" placeholder="Phone (optional, but handy)"></div>'+
+      '<div class="fld"><label class="vh" for="f-addr">Address</label>'+
+        '<input class="inp" id="f-addr" type="text" autocomplete="off" placeholder="Address (optional)">'+
+        '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
+      '<div class="hint" id="f-addr-hint" role="status"></div>'+
+      '<div class="fld" id="q-em" hidden><label class="vh" for="f-email">Email</label>'+
+        '<input class="inp" id="f-email" type="email" autocomplete="off" inputmode="email" autocapitalize="none" placeholder="Email (optional)"></div>'+
+    '</div>';
+  // services
+  h+='<div class="lbl">Services<span class="qdl" id="q-svctot"></span><button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More</button></div>'+
+    '<div class="qsv" id="q-svc" role="group" aria-label="Services"></div>';
+  // time
+  h+='<div class="lbl">Time</div><div class="qtime"><button type="button" class="chip qc" data-sh="qtime" data-v="" aria-pressed="true">Any time</button>'+
+    '<div class="chiprow" id="q-times" role="group" aria-label="Start time">';
+  quickTimes().forEach(function(t){h+='<button type="button" class="chip qc" data-sh="qtime" data-v="'+esc(t.v)+'" aria-pressed="false">'+esc(t.l)+'</button>';});
+  h+='</div></div>';
+  // the fields this panel has no box for
+  h+='<input type="hidden" id="f-staff" value="'+esc(I.staff)+'"><input type="hidden" id="f-time" value="'+esc(I.time)+'"><input type="hidden" id="f-dur" value="'+esc(I.dur)+'">'+
+    '<input type="hidden" id="f-street"><input type="hidden" id="f-suburb"><input type="hidden" id="f-state"><input type="hidden" id="f-postcode">';
+  return h+'</div><div class="shfoot"><button type="button" class="btn pri" id="sh-save" data-sh="qsave">Save</button>'+
+    '<button type="button" class="btn" id="sh-saveadd" data-sh="qsaveadd">Save + add another</button></div></div></div>';
+}
+function openQuick(o){
+  if(!S.isMaster||SH||S.screen!=="cal")return;
+  o=o||{};
+  const staff=o.staff!==undefined?o.staff:quickWhoDefault();
+  // a day that was asked for (the "+ Add" under a name) follows the same rule as the + button: today or later, never a day that has gone
+  const today=todayYmd(),date=validYmd(o.date)?(o.date<today?today:o.date):quickDayDefault();
+  // an Undo toast left over from a drag would be moved to the top of this panel, over "More details", and a tap there would undo the move. It goes.
+  const tt=byId("toast");if(tt&&tt.classList.contains("act")){clearTimeout(toastT);tt.className="";tt.textContent="";}
+  SH=quickState(quickInit({date:date,time:o.time||"",staff:staff||""}),document.activeElement);
+  byId("sheet").innerHTML=quickHtml();
+  document.documentElement.classList.add("sheet-open","qa-open");
+  const app=byId("app");app.setAttribute("inert","");app.setAttribute("aria-hidden","true");
+  const pn=$(".panel");if(pn){pn.setAttribute("tabindex","-1");try{pn.focus({preventScroll:true});}catch(e){}}
+  quickRenderSvc();
+  SH.baseline=snap();
+  // a phone is left alone (the keyboard would hide Who and Day); on a computer the client box is ready to type in
+  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus();}}catch(e){}
+}
+// Service chips: the first QUICK_SVC service types (by their sort order), then the rest behind "More". A ticked one always stays showing.
+function quickRenderSvc(){
+  const el=byId("q-svc");if(!el||!SH)return;
+  const names=svcAllNames(),on={};SH.svc.forEach(function(e){on[e.type]=1;});
+  let h="";
+  names.forEach(function(n,i){
+    if(!(SH.svcMore||i<QUICK_SVC||on[n]))return;
+    h+='<button type="button" class="chip'+(on[n]?" on":"")+'" data-sh="qsvc" data-v="'+esc(n)+'" aria-pressed="'+(on[n]?"true":"false")+'">'+esc(n)+'</button>';
+  });
+  el.innerHTML=h;
+  const mb=byId("q-svcmore");
+  if(mb){mb.hidden=names.length<=QUICK_SVC;mb.textContent=SH.svcMore?"Fewer":"More";mb.setAttribute("aria-expanded",SH.svcMore?"true":"false");}
+  quickSync();
+}
+function setPressed(b,on){b.setAttribute("aria-pressed",on?"true":"false");b.classList.toggle("on",!!on);}
+// Brings everything on the panel into line with what is in the boxes and in SH: which chips are pressed, the client summary, which boxes show.
+// Runs on every keystroke, so it only touches text, attributes and a summary that changed.
+function quickSync(){
+  if(!SH||!SH.quick)return;
+  const nm=trim(val("f-name")),has=!!SH.clientId,isNewC=!has&&!!nm;
+  const nb=byId("q-new");if(nb)nb.hidden=!(isNewC||(has&&SH.qEdit));
+  const showEm=SH.qEmail||SH.qEdit||!!trim(val("f-email")),em=byId("q-em");
+  if(em)em.hidden=!showEm;
+  const sum=byId("q-sum");
+  if(sum){
+    let h="";
+    if(has){
+      const ph=trim(val("f-phone")),addr=trim(val("f-addr")),loaded=SH.sitesFor===SH.clientId;
+      h='<div class="qsum"><div class="qsl">'+(ph?esc(ph):'<span class="miss">No phone</span>')+" · "+
+        (addr?esc(addr):(loaded?'<span class="miss">No address</span>':"Finding address..."))+'</div>'+
+        '<div class="qsa"><button type="button" class="linkbtn" data-sh="qedit" aria-expanded="'+(SH.qEdit?"true":"false")+'">'+(SH.qEdit?"Done":"Edit")+'</button>'+
+        '<button type="button" class="linkbtn" data-sh="qchange">Change client</button></div></div>';
+    }else if(isNewC){
+      h='<div class="qhint"><span class="hint new">New client. Added to your list when you save.</span>'+
+        (showEm?"":'<button type="button" class="linkbtn" data-sh="qemail">+ email</button>')+'</div>';
+    }
+    if(SH.qSum!==h){
+      const ae=document.activeElement,k=(ae&&sum.contains(ae))?ae.getAttribute("data-sh"):null;
+      SH.qSum=h;sum.innerHTML=h;
+      if(k){const again=sum.querySelector('[data-sh="'+k+'"]');if(again){try{again.focus({preventScroll:true});}catch(e){}}}
+    }
+  }
+  const who=val("f-staff")||"",d=val("f-date")||"",tm=val("f-time")||"";
+  $$all('#sheet [data-sh="qwho"]').forEach(function(b){const v=b.getAttribute("data-v");setPressed(b,(v==="later"?"":v)===who);});
+  $$all('#sheet [data-sh="qday"]').forEach(function(b){setPressed(b,b.getAttribute("data-v")===d);});
+  $$all('#sheet [data-sh="qtime"]').forEach(function(b){setPressed(b,b.getAttribute("data-v")===tm);});
+  const on={};SH.svc.forEach(function(e){on[e.type]=1;});
+  $$all('#sheet [data-sh="qsvc"]').forEach(function(b){setPressed(b,!!on[b.getAttribute("data-v")]);});
+  const dl=byId("q-daylbl");if(dl)dl.textContent=validYmd(d)?niceDate(d):"Pick a day";
+  const tot=byId("q-svctot");
+  if(tot){
+    const sv=canonServices(SH.svc),sm=sumPrice(sv),blank=sv.some(function(e){return e.price==null||isNaN(e.price);});
+    tot.textContent=sm==null?"":"$"+sm.toFixed(2)+(blank?" so far":" ex GST");
+  }
+}
+// a banner (an error, or the "Booked: ..." note) goes as soon as the person taps or types something else; never while a save is running
+function quickClearMsg(){if(!SH||!SH.quick||SH.busy)return;const m=byId("sh-msg");if(m&&m.firstChild)m.innerHTML="";}
+function quickSet(k,a){
+  const v=a.getAttribute("data-v");
+  if(k==="qwho")setVal("f-staff",v==="later"?"":v);
+  else if(k==="qday")setVal("f-date",v);
+  else if(k==="qtime")setVal("f-time",v);
+  quickSync();
+}
+function quickToggleSvc(name){
+  const i=SH.svc.findIndex(function(e){return e.type===name;});
+  if(i<0)SH.svc.push(newSvcEntry(name));      // same as ticking it in the full sheet: its default price (only if one is set) and invoice wording
+  else{SH.svcMemo[name]=SH.svc[i];SH.svc.splice(i,1);}
+  quickSync();
+}
+// "Change client", or typing in the name box after picking one: back to a blank client. (The full sheet has Rename here; Quick add doesn't.)
+function quickUnlink(){
+  unlinkClient();SH.unlinked=null;
+  ["f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr"].forEach(function(id){setVal(id,"");});
+  SH.addrTouched=false;SH.addrAuto="";SH.addrPick=null;SH.qEdit=false;SH.qEmail=false;
+  hideAddrList();renderSites();
+}
+function quickChangeClient(){
+  if(!SH||!SH.clientId)return;
+  quickUnlink();setVal("f-name","");hideNameList();quickSync();
+  const n=byId("f-name");if(n){try{n.focus();}catch(e){}}
+}
+// A brand new client with a street address typed (or picked) for the job but none of their own: the client gets that address too, the same as
+// picking it from the lookup does. A bare suburb doesn't count (the job keeps it, the client doesn't).
+function quickClientAddr(sh,f){
+  if(f.street||f.suburb||f.state||f.postcode||!f.address)return;
+  const p=sh.addrPick&&normAddr(sh.addrPick.line)===normAddr(f.address)?sh.addrPick:splitAddr(f.address);
+  if(!hasStreetNumber(p.street))return;
+  f.street=p.street;f.suburb=p.suburb;f.state=p.state;f.postcode=p.postcode;
+}
+// "Use that client" (the name matched one already on file): the boxes were filled for a NEW client, and Quick add shows no address boxes to check,
+// so nothing from them may be written over the existing client's record on the next save. Their address goes back to what is on file. Phone and email
+// do too when the record has one (the summary shows what is kept, and Edit changes it); a typed one only stays where the record has nothing.
+function quickTakeClient(c){
+  ["street","suburb","state","postcode"].forEach(function(k){setVal("f-"+k,c[k]);});
+  ["phone","email"].forEach(function(k){if(trim(c[k]))setVal("f-"+k,c[k]);});
+  quickSync();
+}
+// A quick save failed. If a name was typed for the next caller while it was saving, it goes back to this booking's name, so that tapping Save
+// again can't book this job under someone else's name.
+function quickNameBack(sh){
+  if(SH!==sh||sh.saveName==null||trim(val("f-name"))===sh.saveName)return;
+  setVal("f-name",sh.saveName);hideNameList();quickSync();
+  const m=byId("sh-msg"),t=m?trim(m.textContent):"";
+  showMsg((t?t+" ":"")+"The name you typed was put back to this booking's. Tap Save to try again.","bad");
+}
+async function quickSave(another){
+  const sh=SH;if(!sh||!sh.quick||sh.busy)return false;
+  const f=readForm();
+  if(!sh.clientId&&!f.name){showMsg("Type the client's name.","bad");const n=byId("f-name");if(n){try{n.focus();}catch(e){}}return false;}
+  if(!sh.svc.length){showMsg("Tap at least one service.","bad");return false;}
+  sh.saveName=f.name;      // the name this booking is for: a different one in the box when the save is done was typed for the next caller
+  // On a phone the keyboard only comes up for a focus() made while the tap is still being handled, so the client box is focused now,
+  // not after the save: the keyboard is then already up for the next job.
+  if(another){const n=byId("f-name");if(n){try{n.focus({preventScroll:true});}catch(e){}}}
+  return saveSheet(null,{quick:true,another:!!another});
+}
+// after a good save (called from saveSheet)
+function quickDone(sh,opts,siteFailed,siteNote){
+  const j=sh.job||{},nm=trim((sh.client&&sh.client.name)||val("f-name"));
+  const msg="Booked: "+nm+" "+dayShort(j.job_date);
+  quickWhoSave(j.staff_id||"later");
+  if(opts.another){quickReset(sh);showMsg(msg+".","ok");}
+  else closeSheet(true);
+  toast(msg+(siteFailed?". "+siteNote:""),siteFailed);
+}
+// "Save + add another": a clean panel with the same Who and Day. The boxes are cleared in place (not rebuilt), so the client box keeps its focus and the keyboard stays up.
+function quickReset(old){
+  clearTimeout(old.sT);clearTimeout(old.acT);if(old.acAbort){try{old.acAbort.abort();}catch(e){}}
+  // Save + add another puts the cursor in the name box before the save, so a name may have been typed for the next caller while it was running. That one stays.
+  const typed=val("f-name"),keepName=(old.saveName!=null&&trim(typed)!==old.saveName)?typed:"";
+  SH=quickState(quickInit({date:val("f-date")||todayYmd(),time:"",staff:val("f-staff")||""}),old.prevFocus);
+  ["f-name","f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr","f-time"].forEach(function(id){setVal(id,"");});
+  hideNameList();hideAddrList();renderSites();
+  quickRenderSvc();
+  const tr=byId("q-times");if(tr)tr.scrollLeft=0;
+  const b=$(".shbody");if(b)b.scrollTop=0;
+  SH.baseline=snap();
+  const n=byId("f-name");if(n){try{n.focus({preventScroll:true});}catch(e){}}
+  if(keepName){setVal("f-name",keepName);onNameInput();}      // onNameInput brings up the new-client note and the type-ahead for it
+}
+// "More details": the full job sheet, with what has been typed so far filled in
+function quickMore(){
+  const q=SH;if(!q||!q.quick||q.busy)return;
+  const F=readForm();
+  if(!q.clientId&&F.name)quickClientAddr(q,F);      // a new client gets the same contact address from Save as from More details then Save, and the full sheet's boxes show it
+  const keep={clientId:q.clientId,client:q.client,addrTouched:q.addrTouched,addrAuto:q.addrAuto,addrPick:q.addrPick,preferAddr:q.preferAddr,svcMemo:q.svcMemo};
+  closeSheet(true);
+  openSheet(null,{staff:F.staff,date:validYmd(F.date)?F.date:S.date,time:F.time});
+  if(!SH)return;
+  fillSheet(F,{clientId:keep.clientId,client:keep.client,addrTouched:keep.addrTouched,job:null});
+  SH.addrAuto=keep.addrAuto;SH.addrPick=keep.addrPick;SH.preferAddr=keep.preferAddr;SH.svcMemo=keep.svcMemo;
+}
+
+/* =====================================================================
+   EVENTS
+   ===================================================================== */
+function handleSheetAction(a,e){
+  const k=a.getAttribute("data-sh");
+  if(SH&&SH.quick&&k!=="qsave"&&k!=="qsaveadd")quickClearMsg();
+  if(k==="close"){closeSheet(false);}
+  else if(k==="save"){doSave();}
+  else if(k==="done"||k==="undone"||k==="cancel"||k==="reopen"){setStatus(k);}
+  else if(k==="delete"){deleteJob();}
+  else if(k==="pickclient"){
+    if(SH.quick&&SH.busy)return;      // a quick save is running: a pick now would be wiped by the reset that follows it
+    const c=SH.nameResults[+a.getAttribute("data-i")];if(c)applyClient(c,false,SH.nameMatch[c.id]||"");
+    if(c&&SH.quick){const n=byId("f-name");if(n)n.blur();}      // put the keyboard away so the services and times are in view
+  }
+  else if(k==="pickaddr"){pickAddr(+a.getAttribute("data-i"));}
+  else if(k==="picksite"){pickSite(+a.getAttribute("data-i"));}
+  else if(k==="svcmore"){
+    SH.svcMore=!SH.svcMore;renderSvcList();
+    const b=$('#sv-list [data-sh="svcmore"]');if(b){try{b.focus({preventScroll:true});}catch(x){}}
+  }
+  else if(k==="diffclient"){diffClient();}
+  else if(k==="sameclient"){sameClient();}
+  else if(k==="retryphotos"){retryPhotos();}
+  else if(k==="qwho"||k==="qday"||k==="qtime"){quickSet(k,a);}
+  else if(k==="qsvc"){quickToggleSvc(a.getAttribute("data-v"));}
+  else if(k==="qsvcmore"){SH.svcMore=!SH.svcMore;quickRenderSvc();}
+  else if(k==="qemail"){SH.qEmail=true;quickSync();const e2=byId("f-email");if(e2){try{e2.focus();}catch(x){}}}
+  else if(k==="qedit"){SH.qEdit=!SH.qEdit;quickSync();}
+  else if(k==="qchange"){quickChangeClient();}
+  else if(k==="qsave"){quickSave(false);}
+  else if(k==="qsaveadd"){quickSave(true);}
+  else if(k==="qmore"){quickMore();}
+}
+function handleAct(k,el){
+  // a button tap must take focus off the toolbar date box first (Safari doesn't always do it), so a half-typed date is applied
+  // and the toolbar is allowed to rebuild
+  const tbd=byId("tb-date");if(tbd&&S.tbDateFocus){tbd.blur();S.tbDateFocus=false;}
+  if(k==="signout")signOut();
+  else if(k==="restart"){S.starting=false;if(S.userId)startApp();else renderLogin("","");}
+  else if(k==="reload"){location.reload();}
+  else if(k==="reboot"){checkSession();}
+  else if(k==="draftrestore"){restoreDraft();}
+  else if(k==="draftdiscard"){clearDraft();}
+  else if(k==="sendlink")sendLink();
+  else if(k==="prev")go(-1);
+  else if(k==="next")go(1);
+  else if(k==="today"){S.date=todayYmd();afterNav();}
+  else if(k==="viewday")setView("day");
+  else if(k==="viewweek")setView("week");
+  else if(k==="newjob")openNew({});
+  else if(k==="qadd"){if(Date.now()<S.noClickUntil)return;openQuick(el.hasAttribute("data-staff")?{staff:el.getAttribute("data-staff"),date:S.date}:{});}      // not the click that ends a drag onto an empty strip
+  else if(k==="pwho")setPhoneWho(el.getAttribute("data-who"));
+  else if(k==="godate"){S.view="day";savePrefs();gotoDate(el.getAttribute("data-date"));}
+  else if(k==="retry"){S.loadErr="";fetchJobs(false);}
+}
+function onClick(e){
+  const t=e.target;if(!t||!t.closest)return;
+  const sh=t.closest("[data-sh]");
+  if(sh&&SH){e.preventDefault();handleSheetAction(sh,e);return;}
+  if(SH){
+    if(t.id==="sh-back"&&SH.back){closeSheet(false);}
+    // Service record and Termite inspection open in this same tab. (Maps opens in its own tab, so the sheet and the day are never lost to it.)
+    const lk=t.closest("#ln-rec,#ln-insp");
+    if(lk){
+      if(S.uploads>0&&!confirm("Photos are still uploading. If you leave now, the rest won't be saved. Leave anyway?")){e.preventDefault();return;}
+      if(S.uploads<=0&&SH.pendingN>0&&!confirm("Some photos haven't uploaded yet. They stay saved on this device and you can send them the next time you open this job. Leave anyway?")){e.preventDefault();return;}
+      if(isDirty()&&!confirm("You have changes that are not saved. Leave without saving?"))e.preventDefault();
+    }
+    return;
+  }
+  const act=t.closest("[data-act]");
+  if(act){handleAct(act.getAttribute("data-act"),act);return;}
+  if(t.closest("a"))return;
+  const card=t.closest("[data-job]");
+  if(card){if(Date.now()<S.noClickUntil)return;openJob(card.getAttribute("data-job"));return;}
+  if(S.isMaster&&S.screen==="cal"&&Date.now()>=S.noClickUntil){
+    const col=t.closest(".col");
+    if(col){
+      const r=col.getBoundingClientRect(),g=S.grid;
+      const min=Math.max(g.gs,Math.min(g.gs+Math.floor((e.clientY-r.top)/PXMIN/SNAP)*SNAP,g.ge-SNAP));
+      openNew({staff:col.getAttribute("data-staff"),date:S.date,time:minToHM(min)});
+      return;
+    }
+    const wc=t.closest(".wcell");
+    if(wc){openNew({staff:wc.getAttribute("data-staff")||"",date:wc.getAttribute("data-date"),time:""});return;}
+  }
+}
+function onInput(e){
+  const id=e.target&&e.target.id;
+  if(SH){
+    if(SH.quick)quickClearMsg();
+    if(e.target.getAttribute&&e.target.getAttribute("data-sv")){onSvcField(e.target);return;}      // a service's price or invoice wording
+    if(id==="f-name")onNameInput();
+    else if(id==="f-addr")onAddrInput();
+    updateLinks();
+    return;
+  }
+}
+function onChange(e){
+  const id=e.target&&e.target.id;
+  if(SH){
+    if(SH.quick)quickClearMsg();
+    if(e.target.getAttribute&&e.target.getAttribute("data-svc")!=null){onSvcTick(e.target);}
+    else if(id==="ph-cam"||id==="ph-lib"){const files=e.target.files;addPhotos(files).catch(function(){}).then(function(){try{e.target.value="";}catch(x){}});}
+    else updateLinks();
+    return;
+  }
+  if(id==="tb-date"){
+    // Chrome fires "change" on every digit typed into a date box. While the box has focus, wait for typing to stop (one fetch per date).
+    const v=e.target.value;clearTimeout(S.tbDateT);S.tbDateT=0;S.tbDateV="";
+    if(!validYmd(v))return;
+    if(S.tbDateFocus){S.tbDateV=v;S.tbDateT=setTimeout(flushDate,500);}
+    else gotoDate(v);
+  }
+  else if(id==="tb-canc"){S.showCancelled=!!e.target.checked;savePrefs();renderBody();}
+}
+// apply a date that is waiting out the typing delay straight away (Enter, or leaving the box)
+function flushDate(){
+  const v=S.tbDateV;clearTimeout(S.tbDateT);S.tbDateT=0;S.tbDateV="";
+  if(v&&v!==S.date)gotoDate(v);
+}
+function onKey(e){
+  if(e.key==="Enter"&&!SH&&e.target&&e.target.id==="tb-date"){flushDate();return;}
+  if(e.key==="Enter"&&SH&&e.target&&e.target.id==="f-addr"){findAddr();return;}
+  if(e.key==="Escape"&&SH){
+    const l1=byId("f-name-list"),l2=byId("f-addr-list");
+    if((l1&&!l1.hidden)||(l2&&!l2.hidden)){hideNameList();hideAddrList();return;}
+    closeSheet(false);return;
+  }
+  if((e.key==="Enter"||e.key===" ")&&!SH){
+    const t=e.target;
+    if(t&&t.getAttribute&&t.hasAttribute("data-job")&&t.getAttribute("role")==="button"){e.preventDefault();openJob(t.getAttribute("data-job"));}
+  }
+}
+function onFocusIn(e){if(e.target&&e.target.id==="tb-date")S.tbDateFocus=true;}
+function onFocusOut(e){
+  if(e.target&&e.target.id==="tb-date"){S.tbDateFocus=false;flushDate();}
+  if(!SH)return;
+  const id=e.target&&e.target.id;
+  // only hide if focus really has left the box (a quick blur and refocus must not cancel a search that was just started)
+  if(id==="f-name")setTimeout(function(){if(document.activeElement!==byId("f-name"))hideNameList();},150);
+  if(id==="f-addr")setTimeout(function(){if(document.activeElement!==byId("f-addr"))hideAddrList();},150);
+}
+function wireGlobal(){
+  document.addEventListener("click",onClick);
+  document.addEventListener("submit",function(e){if(e.target&&e.target.id==="lg-form"){e.preventDefault();passwordLogin();}});
+  document.addEventListener("input",onInput);
+  document.addEventListener("change",onChange);
+  document.addEventListener("keydown",onKey);
+  document.addEventListener("focusin",onFocusIn);
+  document.addEventListener("focusout",onFocusOut);
+  document.addEventListener("pointerdown",function(e){
+    if(SH){SH.back=!!(e.target&&e.target.id==="sh-back");return;}
+    onDown(e);
+  });
+  // keep focus in the text box when tapping a suggestion, so the list is still there for the click
+  document.addEventListener("mousedown",function(e){if(SH&&e.target&&e.target.closest&&e.target.closest(".aclist"))e.preventDefault();});
+  // Once a card has been picked up (after the press-and-hold), the page must not scroll under the finger. Before that, swipes scroll normally.
+  document.addEventListener("touchmove",function(e){if(DR.on&&DR.started&&e.cancelable)e.preventDefault();},{passive:false});
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Enter"&&SH&&e.target&&e.target.tagName==="INPUT"){e.preventDefault();}
+  });
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&S.screen==="cal")scheduleRefetch(150);});
+  window.addEventListener("focus",function(){if(S.screen==="cal")scheduleRefetch(150);});
+  window.addEventListener("online",function(){if(S.screen==="cal")scheduleRefetch(150);else if(S.screen==="offline")checkSession();});
+  try{
+    const mq=window.matchMedia(NARROW),redraw=function(){if(S.screen==="cal")renderBody();};
+    if(mq.addEventListener)mq.addEventListener("change",redraw);else if(mq.addListener)mq.addListener(redraw);
+  }catch(e){}
+  window.addEventListener("beforeunload",function(e){if(S.uploads>0||(SH&&isDirty())){e.preventDefault();e.returnValue="";}});
+}
+
+/* =====================================================================
+   START
+   ===================================================================== */
+// Is someone already logged in? Asks the stored session. If the answer is "can't reach the server" the person is NOT logged out, so
+// say that instead of showing the login screen.
+function checkSession(){
+  renderBoot("Opening the calendar...");
+  S.sb.auth.getSession().then(function(r){
+    const s=r&&r.data&&r.data.session;
+    if(s)return onSession(s);
+    if(S.screen!=="boot"&&S.screen!=="offline")return;
+    if(r&&r.error&&netErr(r.error)&&!S.hashErr){renderOffline();return;}
+    renderLogin(S.hashErr||"",S.hashErr?"warn":"");S.hashErr="";
+  }).catch(function(e){if(netErr(e))renderOffline();else renderLogin(friendly(e),"bad");});
+}
+function boot(){
+  wireGlobal();      // first, so the buttons on the error screens below work
+  const cfg=window.LPC_SUPABASE||{};
+  if(!cfg.url||!cfg.anonKey){renderNotConnected();return;}            // nothing else runs until the project exists
+  if(!/^https?:\/\//i.test(cfg.url)){renderFatal("The database address in lpc-config.js doesn't look right. Ask Mitch.",false);return;}
+  if(!window.supabase||!window.supabase.createClient){renderFatal("Couldn't load the login tools. Check you're online, then tap Reload.",false);return;}
+  try{S.sb=window.supabase.createClient(cfg.url,cfg.anonKey);}
+  catch(e){renderFatal("Couldn't start the calendar. "+friendly(e),false);return;}
+  loadPrefs();
+  renderBoot("Opening the calendar...");
+  S.hashErr=hashError();
+  S.sb.auth.onAuthStateChange(function(ev,session){setTimeout(function(){onSession(session);},0);});
+  checkSession();
+}
+boot();
+})();
+</script>
+</body>
+</html>

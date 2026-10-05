@@ -1,0 +1,1 @@
+window.LPC_SUPABASE = { url: "https://spdmslujqakjtgmzgakm.supabase.co", anonKey: "sb_publishable_kkhHddcvH3Va_fnsrQv5QQ_ds25pV0a" };  // publishable key is public by design; the database rules do the locking
