@@ -68,13 +68,16 @@ a{color:var(--deep)}
   background:var(--surface);font-weight:600;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
 .tbtn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
 .tbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.dlabel{font-family:Newsreader,Georgia,serif;font-size:20px;font-weight:600;flex:1 1 200px;min-width:0}
+.dlabel{font-family:Newsreader,Georgia,serif;font-size:20px;font-weight:600;flex:1 1 150px;min-width:0}
 .tbdate{min-height:44px;padding:0 10px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);font-size:16px}
 .chk{display:inline-flex;align-items:center;gap:7px;min-height:44px;font-size:13.5px;color:var(--ink2)}
 .chk input{width:20px;height:20px}
 .live{font-size:12px;font-weight:600;color:var(--ink3);display:inline-flex;align-items:center;gap:5px}
 .live:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--ink3)}
 .live.on{color:var(--ok)} .live.on:before{background:var(--ok)}
+.top .live,.top .live.on{color:var(--deepInk);opacity:.85;white-space:nowrap}
+.top .live:before{background:currentColor;opacity:.45}
+.top .live.on:before{background:#7FE3B8;opacity:1}
 .banner{padding:11px 13px;border-radius:10px;font-size:14px;margin:0 14px 12px;border:1px solid}
 .banner.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
 .banner.ok{background:var(--okBg);border-color:var(--ok);color:var(--ok)}
@@ -82,57 +85,89 @@ a{color:var(--deep)}
 .linkbtn{text-decoration:underline;font-weight:600;color:inherit;min-height:44px;padding:0 6px}
 #sh-msg .banner{margin:0 0 12px}
 
-/* day view */
+/* day view. The grid's height is fitted to the screen by fitPpm()/sizeGrid() in the script: 7am to 5pm shows without scrolling. */
 .dayline{display:flex;gap:12px;padding:0 14px 14px;align-items:flex-start}
-.gridwrap{flex:1;min-width:0;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);
-  height:calc(100vh - 190px);height:calc(100dvh - 190px);min-height:420px;position:relative;-webkit-overflow-scrolling:touch}
-.grid{--cw:150px;min-width:calc(52px + var(--n) * var(--cw))}
-.grow{display:grid;grid-template-columns:52px repeat(var(--n),minmax(var(--cw),1fr))}
+.gridwrap{--gut:46px;flex:1;min-width:0;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  position:relative;-webkit-overflow-scrolling:touch}
+.grid{--cw:150px;min-width:calc(var(--gut) + var(--n) * var(--cw))}
+.grow{display:grid;grid-template-columns:var(--gut) repeat(var(--n),minmax(var(--cw),1fr))}
 .gtop{position:sticky;top:0;z-index:6;background:var(--surface);border-bottom:1px solid var(--line2)}
-.gut{position:sticky;left:0;z-index:4;background:var(--surface);border-right:1px solid var(--line);font-size:11.5px;color:var(--ink3);font-weight:600}
+.gut{position:sticky;left:0;z-index:4;background:var(--surface);border-right:1px solid var(--line);font-size:11px;color:var(--ink3);font-weight:600}
 .gtop .gut{z-index:7;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
-.ch{padding:10px 8px;font-weight:700;font-size:14px;border-left:1px solid var(--line);display:flex;align-items:center;gap:7px;min-width:0}
-.ch span.nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch{padding:6px 8px;font-weight:700;font-size:14px;border-left:1px solid var(--line);display:flex;align-items:center;gap:7px;min-width:0}
+.ch span.nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tot{font-size:12px;font-weight:600;color:var(--ink2);white-space:nowrap;margin-left:auto;flex:0 0 auto}
 .dot{width:11px;height:11px;border-radius:50%;flex:0 0 auto;background:var(--unas,#7E8D88)}
-/* "No time yet" strip: jobs that have a person but no start time. Sits under the names (stays put while the grid scrolls, on a computer or iPad)
-   and is a drop target: drop a job on a time to set it, drop a timed job here to clear its time. */
+/* "No time yet" strip: jobs that have a person but no start time, as small chips under the names (stays put while the grid scrolls)
+   and a drop target: drop a job on a time to set it, drop a timed job here to clear its time. */
 .ntrow{border-top:2px solid var(--soon)}
-.ntrow .gut{background:var(--soonBg);color:var(--soon);font-size:11px;line-height:1.15;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3px 2px;gap:2px}
+.ntrow .gut{background:var(--soonBg);color:var(--soon);font-size:10.5px;line-height:1.1;font-weight:700;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2px;gap:2px}
 .ntn{display:inline-block;min-width:19px;padding:0 5px;border-radius:999px;background:var(--soon);color:var(--soonBg);font-size:11px;line-height:18px}
-.ntc{border-left:1px solid var(--line);padding:5px;min-height:52px;display:flex;flex-direction:column;gap:5px;background:var(--soonBg);
-  max-height:min(26vh,200px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ntc{border-left:1px solid var(--line);padding:4px;min-height:34px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:4px;background:var(--soonBg);
+  max-height:64px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .ntc>*{flex-shrink:0}
-.ntadd{flex:1;min-height:44px;border:1.5px dashed var(--soon);border-radius:8px;color:var(--soon);font-weight:700;font-size:13px;background:transparent}
+.ntadd{flex:1;min-height:26px;border:1.5px dashed var(--soon);border-radius:7px;color:var(--soon);font-weight:700;font-size:12.5px;background:transparent}
 .ntc.dropover{outline-color:var(--soon);background-color:var(--soonBg)}
+/* a job as a small chip: no-time jobs, and the week's Unassigned row */
+.jt{--sc:#7E8D88;display:block;max-width:100%;min-width:0;padding:1px 7px 1px 5px;border-left:4px solid var(--sc);border-radius:6px;background:var(--surface);
+  border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);box-shadow:0 1px 2px rgba(20,32,30,.15);
+  font-size:12.5px;font-weight:700;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.jt .ct{font-family:"Spline Sans Mono",ui-monospace,monospace;font-weight:600;color:var(--ink2);font-size:11px;margin-right:5px}
+.jt.st-done{opacity:.6;filter:grayscale(.7)} .jt.st-cancelled{opacity:.55;text-decoration:line-through}
+.jt.dragging{opacity:.3}
 /* jobs with no time show as slim cards (the strip and the Unassigned list already say there is no time) */
 .jm.nt{padding:5px 8px;min-height:44px}
 .jm.nt .l1{display:none}
 .jm.nt.st-booked .stl{display:none}
 .jm.nt .nm{font-size:13px}
-.hl{position:absolute;left:0;right:0;padding-right:6px;text-align:right;transform:translateY(-1px)}
+.hl{position:absolute;left:0;right:0;padding-right:5px;text-align:right;transform:translateY(-1px);white-space:nowrap}
+/* hour lines, with a faint line on the half hour */
 .col{position:relative;border-left:1px solid var(--line);cursor:cell;
   background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(var(--lineq) 1px,transparent 1px);
-  background-size:100% var(--hr),100% calc(var(--hr) / 4)}
+  background-size:100% var(--hr),100% calc(var(--hr) / 2)}
 .now{position:absolute;left:0;right:0;height:2px;background:var(--now);z-index:2;pointer-events:none}
+.gb{overflow:clip}      /* a card stretched or dropped past the last hour must not grow the frame's scroll area (clip, not hidden: the sticky hour labels still work) */
 .dropmark{position:absolute;left:2px;right:2px;border:2px dashed var(--deep);background:rgba(14,79,84,.14);
-  border-radius:8px;pointer-events:none;z-index:3;font-size:12px;font-weight:700;color:var(--deep);padding:2px 6px}
+  border-radius:8px;pointer-events:none;z-index:3;font-size:12px;font-weight:700;color:var(--deep);padding:2px 6px;overflow:hidden;white-space:nowrap}
+.wk .dropmark{left:0;right:0;padding:1px 2px;font-size:11px;border-radius:5px}
 .dropover{outline:2px dashed var(--deep);outline-offset:-3px;background-color:rgba(14,79,84,.08)}
 
 /* job cards (day grid) */
 .jc,.jm{--sc:#7E8D88;border-left:5px solid var(--sc);background:var(--surface);border-radius:8px;
   box-shadow:0 1px 3px rgba(20,32,30,.2);border-top:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);
   cursor:pointer;overflow:hidden;font-size:12.5px;line-height:1.3}
-.is-master .jc,.is-master .jm{touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
-.jc{position:absolute;padding:3px 6px;z-index:1}
-.jc .l1,.jm .l1{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11.5px;font-weight:600;color:var(--ink2);display:flex;gap:4px;align-items:center}
+.is-master .jc,.is-master .jm,.is-master .jt{touch-action:pan-x pan-y;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;cursor:grab}
+.jc .l1,.jm .l1{font-family:"Spline Sans Mono",ui-monospace,monospace;font-size:11.5px;font-weight:600;color:var(--ink2);display:flex;gap:4px;align-items:center;white-space:nowrap;overflow:hidden}
 .jc .nm,.jm .nm{font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .jc .ds,.jm .ds{color:var(--ink2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stl{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:5px;
   background:var(--surface2);color:var(--ink2);margin-top:2px}
 .stl.done{background:var(--okBg);color:var(--ok)} .stl.cancelled{background:var(--overBg);color:var(--over)}
-.jc.short .ds,.jc.short .stl,.jc.short .te{display:none}
-.jc.tiny{display:flex;gap:6px;align-items:center;white-space:nowrap;padding-top:1px;padding-bottom:1px}
+/* timed cards on the grid: height is the job's length, tinted with the person's colour. What shows depends on the room (set by cardFit()):
+   tiny = one line (time, name) / short = time, name / mid = + suburb and services on one line / full = suburb and services on lines of their own.
+   nw = a narrow lane (week view): start time and first word of the name / xn = very narrow: smaller text. */
+.jc{position:absolute;padding:2px 5px;z-index:1;line-height:1.2;background:var(--surface);background:color-mix(in srgb,var(--sc) 13%,var(--surface))}
+.jc .ds,.jc .stl{display:none}
+.jc.mid .ds,.jc.full .ds{display:block}
+.jc.full .ds .sep{display:none}
+.jc.full .ds .sb,.jc.full .ds .sv{display:block;overflow:hidden;text-overflow:ellipsis}
+.jc.tiny{display:flex;gap:5px;align-items:center;white-space:nowrap;padding-top:0;padding-bottom:0;line-height:1.1}
 .jc.tiny .l1{flex:0 0 auto}
+.jc.tiny .nm{min-width:0}
+.jc.nw{padding:1px 3px 1px 4px}
+.jc.xn{padding:1px 0 1px 2px;border-left-width:3px}
+.jc.xn .l1{font-family:inherit;font-size:10px;letter-spacing:-.03em;text-overflow:clip}
+.jc.xn .nm{font-size:10px;letter-spacing:-.03em;text-overflow:clip}      /* "Gayl" says more than "G..." */
+.jc.xn.tiny .nm{display:none}
+/* the stretch handle on the bottom edge (master only): drag it to make the job longer or shorter */
+.rz{position:absolute;left:0;right:0;bottom:0;height:7px;cursor:ns-resize;z-index:2}
+.rz:after{content:"";position:absolute;left:50%;bottom:2px;width:20px;margin-left:-10px;height:3px;border-radius:2px;background:var(--ink2);opacity:0;transition:opacity .15s}
+@media(hover:hover){.jc:hover .rz:after{opacity:.6}}
+@media(pointer:coarse){.rz{height:min(14px,40%)}.rz:after{opacity:.3;bottom:1px;width:16px;margin-left:-8px;height:2px}}
+.jc.resizing{z-index:5;box-shadow:0 0 0 2px var(--deep),0 6px 18px rgba(0,0,0,.25)}
+.jc.resizing .rz:after{opacity:.8}
+body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:none;user-select:none}
+.rzlab{position:absolute;z-index:6;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
 .jc.st-done,.jm.st-done,.tcard.st-done{opacity:.6;filter:grayscale(.7)}
 .jc.st-cancelled,.jm.st-cancelled,.tcard.st-cancelled{opacity:.55;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.05) 6px 12px)}
 .jc.st-cancelled .nm,.jm.st-cancelled .nm{text-decoration:line-through}
@@ -149,26 +184,51 @@ a{color:var(--deep)}
 .n{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ink3)}
 .traynote{font-size:12.5px;color:var(--ink3);margin:2px 0}
 .tag{font-size:11px;color:var(--soon);font-weight:600}
+/* the Unassigned list as one sideways-scrolling row (the week view always, the day view on a phone or iPad) */
+.tray.row{flex:none;width:auto;flex-direction:row;align-items:center;gap:6px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:5px 8px;-webkit-overflow-scrolling:touch}
+.tray.row .trayhead{flex:0 0 auto;gap:6px;align-items:center}
+.tray.row h2{font-size:13.5px}
+.tray.row .traynote{white-space:nowrap;margin:0}
+.tray.row .jt{flex:0 0 auto;max-width:220px}
 @media(max-width:900px){
-  .dayline{flex-direction:column}
-  .tray{order:-1;flex:none;width:100%;max-height:34vh}
-  .gridwrap{height:calc(100vh - 240px);height:calc(100dvh - 240px);width:100%}
+  .dayline{flex-direction:column;align-items:stretch}
+  .gridwrap{flex:none;width:100%}
+  .tray{order:-1;flex:none;width:100%;flex-direction:row;align-items:center;gap:6px;max-height:none;overflow-x:auto;overflow-y:hidden;padding:5px 8px}
+  .tray .trayhead{flex:0 0 auto;gap:6px;align-items:center}
+  .tray h2{font-size:13.5px}
+  .tray h3{display:none}
+  .tray .traynote{white-space:nowrap;margin:0}
+  .tray .jm{flex:0 0 auto;max-width:210px;min-height:0;padding:2px 8px;display:flex;gap:6px;align-items:center;white-space:nowrap}
+  .tray .jm .ds,.tray .jm .stl,.tray .jm .tag{display:none}
 }
 
-/* week view */
-.wgrid{display:grid;grid-template-columns:112px repeat(var(--n),minmax(132px,1fr));min-width:calc(112px + var(--n) * 132px)}
-.wgrid .wh{position:sticky;top:0;z-index:6;background:var(--surface);border-bottom:1px solid var(--line2);padding:8px 6px;text-align:left;font-weight:700;
-  display:flex;flex-direction:column;align-items:flex-start;min-height:52px;border-left:1px solid var(--line)}
-.wgrid .wh.corner{left:0;z-index:8;border-left:none}
-.wgrid .wh.today{background:var(--okBg);color:var(--ok)}
-.wgrid .wh small{font-weight:500;color:var(--ink3);font-size:12px}
-.wgrid .wh.today small{color:var(--ok)}
-.wgrid .wh[data-act]{cursor:pointer}
-.wr{position:sticky;left:0;z-index:4;background:var(--surface);border-top:1px solid var(--line);border-right:1px solid var(--line);padding:8px 8px;font-weight:700;display:flex;gap:7px;align-items:flex-start;min-width:0}
-.wr span.nm{overflow:hidden;text-overflow:ellipsis}
-.wcell{border-top:1px solid var(--line);border-left:1px solid var(--line);padding:5px;min-height:76px;display:flex;flex-direction:column;gap:5px;cursor:cell}
-.wcell.today{background:rgba(39,107,89,.05)}
-.wcell .jm{cursor:pointer}
+/* week view: a time grid, one column per day, split into one lane per person when everyone is shown */
+.wkline{flex-direction:column;align-items:stretch;gap:8px}
+.wkline .gridwrap{flex:none;width:100%}
+.grid.wk{min-width:0}      /* the week fits the width of the screen: no sideways scrolling */
+.wk .wrow{display:grid;grid-template-columns:var(--gut) repeat(var(--n),minmax(0,1fr))}
+.wdh{border-left:1px solid var(--line);padding:3px 5px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;min-width:0;cursor:pointer;line-height:1.25;min-height:36px;color:inherit}
+.wdh:hover{background:var(--surface2)}
+.wdh b{font-size:13.5px;white-space:nowrap}
+.wdh .tot{margin:0;font-size:11.5px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.wdh.today{background:var(--okBg);color:var(--ok)}
+.wdh.today .tot{color:var(--ok)}
+.wdh .ptot{display:none}      /* a phone only, see the max-width:719px block */
+.wln .gut{background:var(--soonBg);color:var(--soon);font-size:10.5px;line-height:1.1;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
+.wdl{display:flex;border-left:1px solid var(--line);min-width:0}
+.wlh{--sc:#7E8D88;flex:1 1 0;min-width:0;border-top:3px solid var(--sc);background:var(--soonBg);padding:2px;display:flex;flex-direction:column;gap:2px;
+  min-height:24px;max-height:66px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.wlh>*{flex-shrink:0}
+.wlh+.wlh{border-left:1px dotted var(--line2)}
+.wlh .lt{font-size:10.5px;font-weight:700;color:var(--ink2);white-space:nowrap;overflow:hidden;line-height:14px}
+.wlh .jt{font-size:11px;line-height:17px;padding:0 3px 0 3px;border-left-width:3px}
+@media(max-width:719px){.wlh .jt{font-size:10px;padding:0 1px 0 2px;text-overflow:clip;letter-spacing:-.03em}}
+.wlh.dropover{outline-color:var(--soon)}
+.wlh{cursor:cell}
+.wday{display:flex;border-left:1px solid var(--line);min-width:0}
+.wday.today{background:rgba(39,107,89,.05)}
+.wday .col{flex:1 1 0;min-width:0;border-left:none}
+.wday .col+.col{border-left:1px dotted var(--line2)}
 
 /* tech list */
 .wrap{max-width:720px;margin:0 auto;padding:0 14px 40px}
@@ -269,6 +329,7 @@ textarea.sdesc{min-height:64px}
   background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;font-size:14.5px;box-shadow:0 6px 24px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .2s}
 #toast.show{opacity:1} #toast.bad{background:var(--over);color:var(--deepInk)}
 #toast.act{pointer-events:auto}
+body.isdrag #toast,body.isresize #toast{pointer-events:none;opacity:.35}      /* so a card can be dropped on the spot under it */
 #toast .toastbtn{margin-left:10px;min-height:44px;padding:0 10px;font-weight:700;text-decoration:underline;color:inherit}
 
 /* segmented buttons (Quick add "Who", and the phone day view "Both | Mitch | ...") and rows of chips */
@@ -278,8 +339,13 @@ textarea.sdesc{min-height:64px}
 .segb:first-child{border-left:none}
 .segb[aria-pressed="true"]{background:var(--deep);color:var(--deepInk)}
 .segb .n{color:inherit;opacity:.85}
-.pfilter{padding:0 14px 10px}
-@media(min-width:720px){.pfilter{display:none}}
+/* who to show (Both | Mitch | ...): in the toolbar, for the week view, and for the day view on a phone */
+.tb .pfilter{flex:1 1 220px;min-width:0;max-width:440px}
+/* toolbar date: on a computer a label and a date box side by side; on a phone (master) one button with the date box laid invisibly over it */
+.dpick{display:contents}
+.dshort{display:none}
+.tbx{display:contents}
+.tbbot{display:none}
 .chiprow{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:1px 16px 3px;margin:0 -16px}
 .chiprow::-webkit-scrollbar{display:none}
 .chiprow>*{flex:0 0 auto}
@@ -290,9 +356,11 @@ textarea.sdesc{min-height:64px}
   background:var(--deep);color:var(--deepInk);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.34),0 1px 3px rgba(0,0,0,.3)}
 .fab .ic{width:28px;height:28px;stroke-width:2.6}
 .fab:active{transform:scale(.95)}
-body.isdrag .fab{pointer-events:none;opacity:.3}      /* so a card can be dropped on the spot under it */
+body.isdrag .fab,body.isresize .fab{pointer-events:none;opacity:.3}      /* so a card can be dropped on the spot under it */
 body.is-master main{padding-bottom:92px}
+@media(min-width:720px){body.is-master main{padding-bottom:0}}      /* the grid is fitted to the screen, so nothing is below it to scroll to */
 body.is-master #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
+body.is-master #toast.act{bottom:auto;top:calc(4px + env(safe-area-inset-top));padding-top:4px;padding-bottom:4px}      /* the Undo toast sits over the title bar, never over the grid: the next job to move is often right where it would be */
 html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      /* with the keyboard up, a toast at the bottom would be hidden behind it */
 
 /* Quick add panel */
@@ -339,9 +407,39 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
   .tb .tbtn.pri{order:5}
   .tb .chk{order:6}
   .tb .live{order:7}
-  .tray{padding:8px 10px;gap:5px;max-height:26vh}
+  .tray{padding:4px 8px;gap:5px}
   .tray .traynote{display:none}
-  .tray h3{margin-top:2px}
+  .gridwrap{--gut:36px}
+  .ch{padding:5px 6px;font-size:13px;gap:5px}
+  .tot{font-size:11.5px}
+  /* master on a phone: the toolbar in two rows so the whole day fits under it.
+     [< Today >] [Day Week] / [date button] [Both | Mitch | ...]. New job and Show cancelled sit under the grid (.tbbot). */
+  .is-master .top{padding-top:calc(2px + env(safe-area-inset-top));padding-bottom:2px}
+  .is-master .top h1{font-size:17px}
+  .is-master .tb{padding:4px 8px 6px;gap:6px}
+  .is-master .tb>.grp[aria-label="View"]{margin-left:auto}
+  .is-master .tb .dpick{order:3;display:block;position:relative;flex:1 1 auto;min-width:0;height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--surface)}
+  .is-master .tb.hasf .dpick{flex:0 1 auto;max-width:48%}
+  .is-master .tb .dpick .dlabel{display:block;font-size:17px;line-height:42px;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .is-master .tb .dlong{display:none}
+  .is-master .tb .dshort{display:inline}
+  .is-master .tb .dpick .tbdate{position:absolute;left:0;top:0;width:100%;height:100%;min-height:0;opacity:0;padding:0;border:none}
+  .is-master .tb .pfilter{order:4;flex:1 1 0;max-width:none}
+  .is-master .tb .pfilter .segb{padding:0 4px;gap:4px;font-size:14.5px}
+  .is-master .tb .pfilter .segb .n{display:none}
+  .is-master .tb .pfilter .dot{width:9px;height:9px}
+  .is-master .tb .tbx{display:none}
+  .is-master .tbbot{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;padding:4px 8px 8px}
+  .is-master .dayline{padding:0 8px 6px;gap:6px}
+  .wlh .lt{display:none}      /* a person's lane on a phone is too narrow for a name: the colour says who */
+  .wdh{padding:2px 3px;min-height:32px}
+  .wdh b{font-size:12.5px}
+  .wdh .tot{font-size:10.5px}
+  .wdh.hasp>.tot{display:none}
+  .wdh .ptot{display:flex;flex-direction:column;max-width:100%}
+  .wdh .pl{display:flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--ink2);white-space:nowrap;line-height:1.25}
+  .wdh .pl .dot{width:7px;height:7px}
+  .wdh.today .pl{color:var(--ok)}
 }
 </style>
 </head>
@@ -366,9 +464,10 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
    ===================================================================== */
 
 /* ---------- settings ---------- */
-const PXMIN=1.25;            // pixels per minute on the day grid
+const WORK_START=7*60, WORK_END=17*60;   // the day and week grids always show 7am to 5pm, and grow (to the hour) to take in any job outside that
+const PPM_FLOOR=0.6, PPM_MAX=3;          // pixels per minute: fitted to the screen (fitPpm), but never under 0.6 so a 30 min job can still be tapped
 const SNAP=15;               // minutes
-const DAY_START=6*60, DAY_END=18*60;
+const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 const JOB_COLS="*, client:clients("+CLIENT_COLS+")";
@@ -422,13 +521,19 @@ function minToHM(m){return pad(Math.floor(m/60))+":"+pad(m%60);}
 function fmtMin(m){const h=Math.floor(m/60)%24,mi=m%60;return (h%12===0?12:h%12)+":"+pad(mi)+(h>=12?"pm":"am");}
 function hourLabel(m){const h=Math.floor(m/60)%24;return (h%12===0?12:h%12)+(h>=12?"pm":"am");}
 function fmtDur(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"");}
+function hm(m){const h=Math.floor(m/60)%24;return (h%12===0?12:h%12)+":"+pad(m%60);}      // 8:00, 1:30 (the grid's hour labels say am or pm)
+function rangeTxt(s,dur){return hm(s)+"-"+hm(s+dur);}                                     // 8:00-9:00
+function hmc(m){return m%60?hm(m):String(Math.floor(m/60)%24%12||12);}                       // 8, 9:15 (the tightest week lanes on a phone)
+// the time line on a grid card: the range, or just the start when the card is narrow
+function cardTime(fit,s,dur){return /\bxn\b/.test(fit)?hmc(s):/\bnw\b/.test(fit)?hm(s):rangeTxt(s,dur);}
+function firstWord(s){return trim(s).split(/\s+/)[0]||"";}
 function fmtStamp(iso){const d=new Date(iso);if(isNaN(d))return "";return d.getDate()+" "+MON[d.getMonth()]+", "+fmtMin(d.getHours()*60+d.getMinutes());}
 
 /* ---------- state ---------- */
 const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster:false,staff:[],staffById:{},types:[],typesByName:{},
   view:"day",date:todayYmd(),showCancelled:false,jobs:[],byId:{},loaded:false,loadErr:"",range:null,
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
-  scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:DAY_START,ge:DAY_END},starting:false,
+  scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
   uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both"};
 let SH=null;     // the open job sheet, or null
 
@@ -692,7 +797,7 @@ function stashDraft(uid){
   }catch(e){return false;}
 }
 function readDraft(){try{const d=JSON.parse(localStorage.getItem(DRAFT_KEY)||"null");return d&&typeof d==="object"?d:null;}catch(e){return null;}}
-function hideDraftBar(){const el=byId("dr");if(el)el.innerHTML="";}
+function hideDraftBar(){const el=byId("dr");if(el&&el.innerHTML){el.innerHTML="";renderBody();}}      // the grid is fitted to the room under the banner, so fit it again
 function clearDraft(){try{localStorage.removeItem(DRAFT_KEY);}catch(e){}hideDraftBar();}
 function clearDraftForJob(jobId){const d=readDraft();if(d&&jobId&&d.jobId===jobId&&d.uid===S.userId)clearDraft();}
 function offerDraft(){
@@ -703,6 +808,7 @@ function offerDraft(){
   const who=trim(d.form.name);
   el.innerHTML='<div class="banner warn">You were logged out while editing '+(who?esc(who)+"'s job":"a job")+'. What you typed is kept. '+
     '<button class="linkbtn" data-act="draftrestore">Restore</button><button class="linkbtn" data-act="draftdiscard">Discard</button></div>';
+  renderBody();      // the banner takes room the grid was fitted to: fit it again
 }
 // a draft saved before jobs could have several services holds one "service" and one "price"
 function draftServices(F){
@@ -828,10 +934,12 @@ function subscribe(){
   }catch(e){S.live="";updateLive();}
 }
 function updateLive(){
-  const l=byId("live");if(!l)return;
+  // the Live tag (master) is in the top bar
   const on=S.live==="SUBSCRIBED";
-  l.className="live"+(on?" on":"");l.textContent=on?"Live":"Not live";
-  l.title=on?"Changes from other people show up by themselves.":"Changes show up when you come back to this page.";
+  $$all(".live").forEach(function(l){
+    l.className="live"+(on?" on":"");l.textContent=on?"Live":"Not live";
+    l.title=on?"Changes from other people show up by themselves.":"Changes show up when you come back to this page.";
+  });
 }
 function startPoll(){
   clearInterval(S.pollT);
@@ -842,13 +950,28 @@ function startPoll(){
    CALENDAR SHELL, TOOLBAR, BODY
    ===================================================================== */
 function renderShell(){
-  setApp('<header class="top"><h1>Job Calendar</h1><span class="who">'+esc(S.me.name)+'</span>'+
+  setApp('<header class="top"><h1>Job Calendar</h1>'+(S.isMaster?'<span class="live"></span>':"")+'<span class="who">'+esc(S.me.name)+'</span>'+
     '<button class="out" data-act="signout">Log out</button></header>'+
     '<main><div id="tb"></div><div id="dr"></div><div id="cb"></div></main>'+
     (S.isMaster?'<button type="button" class="fab" data-act="qadd" aria-label="Quick add a job">'+IC.plus+'</button>':""),"cal");
   renderToolbar();renderBody();
 }
 function weekLabel(){const ws=weekStart(S.date),we=addDays(ws,5),y1=parseYmd(ws).getFullYear(),y2=parseYmd(we).getFullYear();return dayShort(ws)+(y1!==y2?" "+y1:"")+" to "+dayShort(we)+" "+y2;}
+// the phone toolbar's shorter version: "5 to 10 Oct", or "29 Sep to 4 Oct"
+function weekLabelShort(){
+  const a=parseYmd(weekStart(S.date)),b=parseYmd(addDays(weekStart(S.date),5));
+  return a.getMonth()===b.getMonth()?a.getDate()+" to "+b.getDate()+" "+MON[b.getMonth()]:a.getDate()+" "+MON[a.getMonth()]+" to "+b.getDate()+" "+MON[b.getMonth()];
+}
+// both versions of the date go in; CSS shows the long one on a computer and the short one on a phone
+function dlabelHtml(wk){
+  const yr=String(parseYmd(addDays(weekStart(S.date),5)).getFullYear());
+  return '<span class="dlong" title="'+esc(wk?weekLabel():"")+'">'+esc(wk?weekLabelShort()+" "+yr:niceDate(S.date))+'</span><span class="dshort">'+esc(wk?weekLabelShort():dayShort(S.date))+'</span>';
+}
+// New job and Show cancelled. In the toolbar on a computer; on a phone (master) they move under the grid so the grid gets the height.
+function extrasHtml(){
+  return '<button class="tbtn pri" data-act="newjob">'+IC.plus+' New job</button>'+
+    '<label class="chk"><input type="checkbox" data-canc'+(S.showCancelled?" checked":"")+'> Show cancelled</label>';
+}
 // Is someone typing in the toolbar date box? Chrome moves focus between the day, month and year parts of the box, and for a moment
 // document.activeElement reads as <body> in the middle of that (seen on a plain page), so "has focus" is tracked from focusin/focusout.
 function dateBoxBusy(){
@@ -861,56 +984,121 @@ function renderToolbar(){
   // Don't rebuild the toolbar under the date box while someone is typing in it, or the box is destroyed and the next digit goes nowhere.
   // Changing the view or tapping a button takes focus off the box first, so those still get the full rebuild.
   if(dateBoxBusy()){
-    const lbl=tb.querySelector(".dlabel");if(lbl)lbl.textContent=wk?weekLabel():niceDate(S.date);
+    const lbl=tb.querySelector(".dlabel");if(lbl)lbl.innerHTML=dlabelHtml(wk);
     updateLive();return;
   }
   let h='<div class="tb"><div class="grp">'+
     '<button class="tbtn" data-act="prev" aria-label="Previous '+(wk?"week":"day")+'">'+IC.l+'</button>'+
     '<button class="tbtn" data-act="today">Today</button>'+
     '<button class="tbtn" data-act="next" aria-label="Next '+(wk?"week":"day")+'">'+IC.r+'</button></div>'+
-    '<div class="dlabel">'+esc(wk?weekLabel():niceDate(S.date))+'</div>'+
-    '<input class="tbdate" id="tb-date" type="date" value="'+esc(S.date)+'" aria-label="Pick a date">';
+    '<div class="dpick"><div class="dlabel">'+dlabelHtml(wk)+'</div>'+
+    '<input class="tbdate" id="tb-date" type="date" value="'+esc(S.date)+'" aria-label="Pick a date"></div>';
   if(S.isMaster){
     h+='<div class="grp" role="group" aria-label="View">'+
       '<button class="tbtn" data-act="viewday" aria-pressed="'+(!wk)+'">Day</button>'+
       '<button class="tbtn" data-act="viewweek" aria-pressed="'+wk+'">Week</button></div>'+
-      '<button class="tbtn pri" data-act="newjob">'+IC.plus+' New job</button>'+
-      '<label class="chk"><input type="checkbox" id="tb-canc"'+(S.showCancelled?" checked":"")+'> Show cancelled</label>'+
-      '<span class="live" id="live"></span>';
+      '<div class="pfilter" id="tbf" hidden></div>'+
+      '<div class="tbx">'+extrasHtml()+'</div>';
   }
   tb.innerHTML=h+'</div>';
+  renderFilter();
   updateLive();
 }
-function renderBody(){
-  if(S.dragging||S.pressing){S.dirtyRender=true;return;}     // a finger or mouse is down on a card: don't swap it out from under them
-  S.dirtyRender=false;
-  const cb=byId("cb");if(!cb||S.screen!=="cal")return;
-  const old=byId("gw");const sl=old?old.scrollLeft:0,stp=old?old.scrollTop:0;
-  const ot=$(".tray"),tst=ot?ot.scrollTop:0;
-  const key=S.date+"|"+S.view,sameDay=S.lastRenderKey===key;    // the tray only keeps its place on the same day and view
-  S.lastRenderKey=key;
+// The "who to show" buttons in the toolbar. Drawn again with every body render (the counts change), and first, because the grid is
+// fitted to the space left under the toolbar.
+function renderFilter(){
+  const el=byId("tbf");if(!el)return;
+  const act=activeStaff(),bar=el.parentNode;
+  if(!filterOn(act)){el.innerHTML="";el.hidden=true;if(bar)bar.classList.remove("hasf");return;}
+  const r=currentRange(),all=visibleJobs().filter(function(j){return j.job_date>=r.from&&j.job_date<=r.to;});
+  const ae=document.activeElement,had=(ae&&el.contains(ae))?ae.getAttribute("data-who"):null;
+  el.innerHTML=phoneFilterHtml(act,all,phoneSolo(act));
+  el.hidden=false;if(bar)bar.classList.add("hasf");
+  if(had){const b=el.querySelector('[data-who="'+had+'"]');if(b){try{b.focus({preventScroll:true});}catch(e){}}}
+}
+function bodyHtml(){
   let h="";
   if(S.loadErr)h+='<div class="banner bad">'+esc(S.loadErr)+' <button class="linkbtn" data-act="retry">Try again</button></div>';
   if(!S.loaded){if(!S.loadErr)h+='<div class="boot"><div><span class="spin"></span></div><div>Loading jobs...</div></div>';}
   else if(!S.isMaster)h+=techHtml();
   else if(S.view==="week")h+=weekHtml();
   else h+=dayHtml();
-  cb.innerHTML=h;
-  const gw=byId("gw");
+  if(S.isMaster)h+='<div class="tb tbbot">'+extrasHtml()+'</div>';      // only shows on a phone (CSS)
+  return h;
+}
+function renderBody(){
+  if(S.dragging||S.pressing){S.dirtyRender=true;return;}     // a finger or mouse is down on a card: don't swap it out from under them
+  S.dirtyRender=false;
+  const cb=byId("cb");if(!cb||S.screen!=="cal")return;
+  renderFilter();      // first: it sits in the toolbar above the grid, so it changes the room the grid has
+  const old=byId("gw");const sl=old?old.scrollLeft:0,stp=old?old.scrollTop:0;
+  const ot=$(".tray"),tst=ot?ot.scrollTop:0,tsl=ot?ot.scrollLeft:0;
+  const key=S.date+"|"+S.view,sameDay=S.lastRenderKey===key;    // the tray only keeps its place on the same day and view
+  S.lastRenderKey=key;
+  S.winKey=window.innerWidth+"x"+window.innerHeight;
+  cb.innerHTML=bodyHtml();
+  let gw=byId("gw");
   if(gw){
+    // Fit the grid to the screen: measure the room under the toolbar and the grid's own header, then draw again at that scale if it changed.
+    const want=fitPpm(gw);
+    if(Math.abs(want-S.ppm)>0.002){S.ppm=want;cb.innerHTML=bodyHtml();gw=byId("gw");}
+    sizeGrid(gw);
     if(S.scrollToWork&&S.loaded){S.scrollToWork=false;gw.scrollTop=workScroll();gw.scrollLeft=0;}
     else{gw.scrollLeft=sl;gw.scrollTop=stp;}
   }
   const tr=$(".tray");
-  if(tr&&sameDay&&tst)tr.scrollTop=tst;
+  if(tr&&sameDay){if(tst)tr.scrollTop=tst;if(tsl)tr.scrollLeft=tsl;}
+  updateLive();
 }
+/* ---------- fitting the grid to the screen ----------
+   Pixels per minute = the height left on the screen under the top bar, toolbar, Unassigned row and the grid's own header (names, No time yet),
+   divided by the hours shown (7am to 5pm unless a job is outside that). Never under PPM_FLOOR: below that the grid scrolls inside its frame
+   (the names stay put) instead of squashing the cards. Worked out again on every render, and on a resize or turning the phone. */
+// The + button (master) floats 16px in from the bottom right and is 60px across. From 720px up the page does not scroll, so a grid that runs
+// under it could never be uncovered: end that grid above it. (On a phone the page scrolls on past the grid, see body.is-master main, and the
+// grid needs every pixel it can get, so it stays as it is.)
+const FAB_ROOM=80;
+function gapUnderGrid(gw){
+  if(isNarrow())return 6;      // the .dayline padding under the grid
+  if(S.isMaster&&gw&&gw.getBoundingClientRect().right>(document.documentElement.clientWidth||window.innerWidth)-76)return FAB_ROOM;
+  return 14;
+}
+function fitPpm(gw){
+  const head=gw.querySelector(".gtop"),hh=head?head.offsetHeight:0;
+  const top=gw.getBoundingClientRect().top+(window.pageYOffset||0);
+  const bar=Math.max(0,gw.offsetHeight-gw.clientHeight-2);      // a sideways scroll bar (lots of people on a small screen)
+  const span=Math.max(60,S.grid.ge-S.grid.gs);
+  const room=window.innerHeight-top-hh-bar-2-gapUnderGrid(gw);
+  return Math.max(PPM_FLOOR,Math.min(PPM_MAX,Math.floor(room/span*1000)/1000));
+}
+function sizeGrid(gw){
+  const top=gw.getBoundingClientRect().top+(window.pageYOffset||0);
+  const room=Math.max(180,Math.floor(window.innerHeight-top-gapUnderGrid(gw)));      // 180: a phone on its side still gets a usable frame
+  gw.style.height="";
+  // it fits: the frame is just as tall as the grid. The floor was hit: the frame fills the screen and the grid scrolls inside it.
+  if(gw.offsetHeight>room+1)gw.style.height=room+"px";
+  S.gridScrolls=!!gw.style.height;      // tick() only scrolls the grid up and down when there is something to scroll
+  // the Unassigned list beside the day grid (computer) is no taller than the grid
+  const tr=$(".dayline>.tray");
+  if(tr){let side=false;try{side=!window.matchMedia("(max-width:900px)").matches&&!tr.classList.contains("row");}catch(e){}tr.style.maxHeight=side?Math.max(240,gw.offsetHeight)+"px":"";}
+}
+// Only used when the floor was hit and the grid scrolls: start it near the work (now, or the first job), not at the top.
 function workScroll(){
-  if(S.view!=="day")return 0;
-  let t=7*60;
-  const jobs=visibleJobs().filter(function(j){return j.job_date===S.date&&tmToMin(j.start_time)!=null;});
-  if(S.date===todayYmd()){const n=new Date();t=n.getHours()*60+n.getMinutes()-60;}
-  else if(jobs.length){t=Math.min.apply(null,jobs.map(function(j){return tmToMin(j.start_time);}))-30;}
-  return Math.max(0,(t-S.grid.gs)*PXMIN);
+  const g=S.grid;let t=WORK_START;
+  if(S.view==="day"){
+    const jobs=visibleJobs().filter(function(j){return j.job_date===S.date&&tmToMin(j.start_time)!=null;});
+    if(S.date===todayYmd()){const n=new Date();t=n.getHours()*60+n.getMinutes()-60;}
+    else if(jobs.length){t=Math.min.apply(null,jobs.map(function(j){return tmToMin(j.start_time);}))-30;}
+  }else{
+    const ws=weekStart(S.date),td=todayYmd();
+    if(td>=ws&&td<=addDays(ws,6)){const n=new Date();t=n.getHours()*60+n.getMinutes()-60;}
+  }
+  return Math.max(0,(t-g.gs)*g.ppm);
+}
+function onWinResize(){
+  if(S.screen!=="cal"||!S.isMaster)return;
+  if(S.winKey===window.innerWidth+"x"+window.innerHeight)return;
+  renderBody();
 }
 
 /* ---------- cards ---------- */
@@ -918,10 +1106,9 @@ function stLabel(st){return st==="done"?"Done":st==="cancelled"?"Cancelled":"Boo
 function cardHtml(j,cls,style){
   const s=tmToMin(j.start_time),done=j.status==="done";
   const sub=[suburbOf(j),svcLabel(j,30)].filter(Boolean).join(" · ");
-  const subFull=[suburbOf(j),svcNames(j).join(" + ")].filter(Boolean).join(" · ");
   const time=s==null?"No time":fmtMin(s);
   const range=s==null?"":" to "+fmtMin(s+j.duration_min);
-  const tip=cName(j)+(s==null?"":", "+fmtMin(s)+range)+(subFull?", "+subFull:"")+", "+stLabel(j.status);
+  const tip=jobTip(j);
   return '<div class="'+cls+' st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+(style||"")+'">'+
     '<div class="l1"><span class="tm">'+esc(time)+'</span><span class="te">'+esc(range)+'</span>'+(done?IC.tick:"")+'</div>'+
     '<div class="nm">'+esc(cName(j))+'</div>'+
@@ -931,6 +1118,92 @@ function cardHtml(j,cls,style){
 function miniHtml(j,tag,extra){
   const tagHtml=tag?'<div class="tag">'+esc(tag)+'</div>':"";
   return cardHtml(j,"jm"+(extra?" "+extra:""),"").replace('<span class="stl',function(){return tagHtml+'<span class="stl';});
+}
+// what a screen reader says and a mouse hover shows for a job: the lot
+function jobTip(j){
+  const s=tmToMin(j.start_time),subFull=[suburbOf(j),svcNames(j).join(" + ")].filter(Boolean).join(" · ");
+  return cName(j)+(s==null?", no start time":", "+fmtMin(s)+" to "+fmtMin(s+j.duration_min))+(subFull?", "+subFull:"")+", "+stLabel(j.status);
+}
+// What a timed card has room for (see the .jc CSS), from its height and width in px. Week lanes on a phone are very narrow.
+function cardFit(h,w){
+  let c=h<30?"tiny":h<46?"short":h<64?"mid":"full";
+  if(w<70)c=(h<30?"tiny":"short")+" nw";      // narrow: start time and the first word of the name, the rest is on the job sheet
+  if(w<44)c+=" xn";
+  return c;
+}
+// A job on the time grid: "8:00-9:00", client, then suburb and services if there is room. Master gets the stretch handle on the bottom edge.
+function gridCardHtml(j,s,dur,fit,style){
+  const nw=/\bnw\b/.test(fit),done=j.status==="done",tip=jobTip(j);
+  const sb=suburbOf(j),sv=svcLabel(j,34);
+  return '<div class="jc '+fit+' st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+style+'">'+
+    '<div class="l1"><span class="tm">'+esc(cardTime(fit,s,dur))+'</span>'+(done?IC.tick:"")+'</div>'+
+    '<div class="nm">'+esc(nw?firstWord(cName(j)):cName(j))+'</div>'+
+    ((sb||sv)&&!nw?'<div class="ds">'+(sb?'<span class="sb">'+esc(sb)+'</span>':"")+(sb&&sv?'<span class="sep"> · </span>':"")+(sv?'<span class="sv">'+esc(sv)+'</span>':"")+'</div>':"")+
+    (S.isMaster?'<div class="rz" aria-hidden="true"></div>':"")+'</div>';
+}
+// a job as a small chip (no start time yet, and the week's Unassigned row). pre = a grey bit in front (the day and time), label = instead of the client name.
+function chipHtml(j,pre,label){
+  const tip=jobTip(j);
+  return '<div class="jt st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
+    (pre?'<span class="ct">'+esc(pre)+'</span>':"")+esc(label||cName(j))+'</div>';
+}
+
+/* ---------- day totals: "5 jobs · 7 h" (timed and no-time jobs, cancelled ones left out) ---------- */
+function dayTot(list){
+  let n=0,min=0;
+  list.forEach(function(j){if(j.status==="cancelled")return;n++;min+=Math.max(0,+j.duration_min||0);});
+  return {n:n,min:min};
+}
+function hrsTxt(min){return String(Math.round(min/15)/4);}      // 7, 7.5, 7.25
+// short: 0 = "5 jobs · 7 h", 1 (or true) = "5 · 7h", 2 = "5·7h" (a day column of the week on a phone)
+function totTxt(t,short){
+  if(!t.n)return "";
+  if(short===2)return t.n+"·"+hrsTxt(t.min)+"h";
+  return short?t.n+" · "+hrsTxt(t.min)+"h":t.n+(t.n===1?" job":" jobs")+" · "+hrsTxt(t.min)+" h";
+}
+function totHtml(list,short,who){
+  const t=dayTot(list);if(!t.n)return "";
+  return '<span class="tot" title="'+esc((who?who+": ":"")+totTxt(t,false))+'">'+esc(totTxt(t,short))+'</span>';
+}
+
+/* ---------- the time grid (day and week views share it) ---------- */
+function isTimed(j){return tmToMin(j.start_time)!=null;}
+// The hours shown: 7am to 5pm, stretched (to the hour) to take in any job that starts earlier or runs later.
+function gridSpan(list){
+  let gs=WORK_START,ge=WORK_END;
+  list.forEach(function(j){
+    const s=tmToMin(j.start_time);if(s==null)return;
+    gs=Math.min(gs,Math.floor(s/60)*60);ge=Math.max(ge,Math.ceil((s+Math.max(+j.duration_min||0,SNAP))/60)*60);
+  });
+  return {gs:Math.max(0,gs),ge:Math.min(ge,24*60)};
+}
+// About how wide the grid's columns are in total (px), worked out from the window so the HTML can be built in one go.
+function gridWidth(){
+  const w=document.documentElement.clientWidth||window.innerWidth||1000,narrow=isNarrow();
+  const side=(S.view!=="week"&&w>900)?242:0;      // the Unassigned list beside the day grid on a computer
+  return Math.max(120,w-(narrow?16:28)-2-(narrow?36:46)-side);
+}
+function gutHtml(g,hpx){
+  let labels="";
+  for(let m=g.gs;m<g.ge;m+=60)labels+='<div class="hl" style="top:'+((m-g.gs)*g.ppm)+'px">'+esc(hourLabel(m))+'</div>';
+  return '<div class="gut" style="height:'+hpx+'px">'+labels+'</div>';
+}
+function nowLineHtml(d,g){
+  if(d!==todayYmd())return "";
+  const n=new Date(),m=n.getHours()*60+n.getMinutes();
+  return (m>=g.gs&&m<g.ge)?'<div class="now" style="top:'+((m-g.gs)*g.ppm)+'px"></div>':"";
+}
+// one person's timed jobs for one day, at their start time and as tall as they are long. Jobs that overlap sit side by side.
+function laneCardsHtml(list,g,laneW){
+  const items=list.filter(isTimed).map(function(j){
+    const s=tmToMin(j.start_time),d=Math.max(+j.duration_min||0,1);
+    return {j:j,s:s,d:d,e:s+Math.max(d,SNAP)};
+  });
+  lanes(items);
+  return items.map(function(it){
+    const top=(it.s-g.gs)*g.ppm,h=Math.max(it.d*g.ppm-2,16),w=100/it.lanes,gap=laneW/it.lanes<44?1:3;      // the tightest lanes keep every pixel
+    return gridCardHtml(it.j,it.s,it.d,cardFit(h,laneW/it.lanes-gap),"top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - "+gap+"px)");
+  }).join("");
 }
 
 /* ---------- day view ---------- */
@@ -947,21 +1220,23 @@ function lanes(list){
   if(cluster.length)close();
   return list;
 }
-// On a phone (master, day view, two or more people) one person can be shown full width. Returns that person's id, or "" for everyone.
+// The "who to show" buttons (Both | Mitch | ...): the week view always, the day view on a phone. Two or more people only.
+function filterOn(act){return !!S.isMaster&&act.length>=2&&(S.view==="week"||isNarrow());}
+// The one person picked with those buttons, or "" for everyone.
 function phoneSolo(act){
-  if(!S.isMaster||S.view!=="day"||!isNarrow()||act.length<2)return "";
+  if(!filterOn(act))return "";
   return act.some(function(c){return c.id===S.phoneWho;})?S.phoneWho:"";
 }
 function phoneFilterHtml(act,all,solo){
-  if(!S.isMaster||S.view!=="day"||!isNarrow()||act.length<2)return "";
-  let h='<div class="pfilter"><div class="seg" role="group" aria-label="Who to show">'+
+  if(!filterOn(act))return "";
+  let h='<div class="seg" role="group" aria-label="Who to show">'+
     '<button type="button" class="segb" data-act="pwho" data-who="both" aria-pressed="'+(!solo)+'">'+(act.length>2?"All":"Both")+'</button>';
   act.forEach(function(c){
     const n=all.filter(function(j){return j.staff_id===c.id;}).length;
     h+='<button type="button" class="segb" data-act="pwho" data-who="'+esc(c.id)+'" aria-pressed="'+(solo===c.id)+'" aria-label="'+esc(c.name+(n?", "+n+(n===1?" job":" jobs"):""))+'">'+
       '<span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span>'+(n?'<span class="n">'+n+'</span>':"")+'</button>';
   });
-  return h+'</div></div>';
+  return h+'</div>';
 }
 function dayHtml(){
   const all=visibleJobs().filter(function(j){return j.job_date===S.date;});
@@ -969,40 +1244,28 @@ function dayHtml(){
   const solo=phoneSolo(act),cols=solo?act.filter(function(c){return c.id===solo;}):act;
   const onGrid=all.filter(function(j){return j.staff_id&&ids[j.staff_id]&&(!solo||j.staff_id===solo);});
   const tray=all.filter(function(j){return !(j.staff_id&&ids[j.staff_id]);});      // the tray is only ever unassigned jobs, even when one person is picked
-  let gs=DAY_START,ge=DAY_END;
-  onGrid.forEach(function(j){const s=tmToMin(j.start_time);if(s==null)return;gs=Math.min(gs,Math.floor(s/60)*60);ge=Math.max(ge,Math.ceil((s+j.duration_min)/60)*60);});
-  ge=Math.min(ge,24*60);
-  S.grid={gs:gs,ge:ge};
-  const hpx=(ge-gs)*PXMIN,hr=60*PXMIN;
-  let labels="";for(let m=gs;m<ge;m+=60)labels+='<div class="hl" style="top:'+((m-gs)*PXMIN)+'px">'+esc(hourLabel(m))+'</div>';
-  const isToday=S.date===todayYmd(),nowM=new Date().getHours()*60+new Date().getMinutes();
-  const nowLine=(isToday&&nowM>=gs&&nowM<ge)?'<div class="now" style="top:'+((nowM-gs)*PXMIN)+'px"></div>':"";
-  const ntCount=onGrid.filter(function(j){return tmToMin(j.start_time)==null;}).length;
+  const g=gridSpan(onGrid);g.ppm=S.ppm;S.grid=g;
+  const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm;
+  const colW=Math.max(isNarrow()?136:150,gridWidth()/Math.max(1,cols.length)),short=colW<200;
+  const ntCount=onGrid.filter(function(j){return !isTimed(j);}).length;
   let head='<div class="gut">Staff</div>',body="";
   let nt='<div class="gut" title="Jobs with a person but no start time. Drag one onto a time to set it.">No time yet'+(ntCount?'<span class="ntn">'+ntCount+'</span>':"")+'</div>';
   cols.forEach(function(c){
-    head+='<div class="ch"><span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span></div>';
     const mine=onGrid.filter(function(j){return j.staff_id===c.id;});
-    const noTime=mine.filter(function(j){return tmToMin(j.start_time)==null;}).sort(byTime);
-    nt+='<div class="ntc" data-drop="notime" data-staff="'+esc(c.id)+'">'+
-      (noTime.length?noTime.map(function(j){return miniHtml(j,"","nt");}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'">+ Add</button>')+'</div>';
-    const items=mine.filter(function(j){return tmToMin(j.start_time)!=null;}).map(function(j){const s=tmToMin(j.start_time);return {j:j,s:s,e:s+Math.max(j.duration_min,SNAP)};});
-    lanes(items);
-    let cards="";
-    items.forEach(function(it){
-      const top=(it.s-gs)*PXMIN,h=Math.max((it.e-it.s)*PXMIN-2,22),w=100/it.lanes;
-      cards+=cardHtml(it.j,"jc"+(h<46?" short":"")+(h<30?" tiny":""),"top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - 3px)");
-    });
-    body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLine+cards+'</div>';
+    head+='<div class="ch"><span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span>'+totHtml(mine,short,c.name)+'</div>';
+    const noTime=mine.filter(function(j){return !isTimed(j);}).sort(byTime);
+    nt+='<div class="ntc" data-drop="notime" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">'+
+      (noTime.length?noTime.map(function(j){return chipHtml(j,"","");}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">+ Add</button>')+'</div>';
+    body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW)+'</div>';
   });
-  return phoneFilterHtml(act,all,solo)+'<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+cols.length+'">'+
+  return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+cols.length+'">'+
     '<div class="gtop"><div class="grow">'+head+'</div><div class="grow ntrow">'+nt+'</div></div>'+
-    '<div class="grow gb"><div class="gut" style="height:'+hpx+'px">'+labels+'</div>'+body+'</div></div></div>'+
+    '<div class="grow gb">'+gutHtml(g,hpx)+body+'</div></div></div>'+
     trayHtml(tray)+'</div>';
 }
 function trayHtml(list){
-  const timed=list.filter(function(j){return tmToMin(j.start_time)!=null;}).sort(byTime);
-  const untimed=list.filter(function(j){return tmToMin(j.start_time)==null;}).sort(byTime);
+  const timed=list.filter(isTimed).sort(byTime);
+  const untimed=list.filter(function(j){return !isTimed(j);}).sort(byTime);
   function tagFor(j){const s=j.staff_id&&S.staffById[j.staff_id];return s?"Was "+s.name+" (not active)":"";}
   let h='<aside class="tray" data-drop="tray" aria-label="Unassigned jobs"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
   if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
@@ -1011,32 +1274,60 @@ function trayHtml(list){
   return h+'</aside>';
 }
 
-/* ---------- week view ---------- */
-function weekHtml(){
-  const ws=weekStart(S.date),jobs=visibleJobs(),cols=activeStaff(),ids={};cols.forEach(function(c){ids[c.id]=true;});
-  const days=[];for(let i=0;i<6;i++)days.push(addDays(ws,i));
+/* ---------- week view: a time grid, Mon to Sat (Sunday too if it has jobs or is the day picked), one lane per person ---------- */
+function weekDays(){
+  const ws=weekStart(S.date),days=[];
+  for(let i=0;i<6;i++)days.push(addDays(ws,i));
   const sun=addDays(ws,6);
-  if(S.date===sun||jobs.some(function(j){return j.job_date===sun;}))days.push(sun);
-  const today=todayYmd();
-  const rows=cols.map(function(c){return {id:c.id,name:c.name,colour:safeColour(c.colour)};}).concat([{id:"",name:"Unassigned",colour:UNAS}]);
-  let h='<div class="dayline" style="display:block"><div class="gridwrap" id="gw"><div class="wgrid" style="--n:'+days.length+'">';
-  h+='<div class="wh corner">Staff</div>';
+  if(S.date===sun||visibleJobs().some(function(j){return j.job_date===sun;}))days.push(sun);
+  return days;
+}
+function weekHtml(){
+  const days=weekDays(),inWk={};days.forEach(function(d){inWk[d]=true;});
+  const jobs=visibleJobs().filter(function(j){return inWk[j.job_date];});
+  const act=activeStaff(),ids={};act.forEach(function(c){ids[c.id]=true;});
+  const solo=phoneSolo(act),people=solo?act.filter(function(c){return c.id===solo;}):act;
+  const onGrid=jobs.filter(function(j){return j.staff_id&&ids[j.staff_id]&&(!solo||j.staff_id===solo);});
+  const tray=jobs.filter(function(j){return !(j.staff_id&&ids[j.staff_id]);});
+  const g=gridSpan(onGrid);g.ppm=S.ppm;S.grid=g;
+  const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm,today=todayYmd();
+  const dayW=gridWidth()/days.length,laneW=dayW/Math.max(1,people.length),many=people.length>1;
+  let head='<div class="gut"></div>',strip='<div class="gut" title="Jobs with a person but no start time. Drag one onto a time to set it.">No time</div>',body="";
   days.forEach(function(d){
-    const dd=parseYmd(d);
-    h+='<button class="wh'+(d===today?" today":"")+'" data-act="godate" data-date="'+esc(d)+'" aria-label="Open '+esc(niceDate(d))+'">'+DOW[dd.getDay()]+'<small>'+dd.getDate()+" "+MON[dd.getMonth()]+'</small></button>';
-  });
-  rows.forEach(function(r){
-    h+='<div class="wr"><span class="dot" style="background:'+r.colour+'"></span><span class="nm">'+esc(r.name)+'</span></div>';
-    days.forEach(function(d){
-      const list=jobs.filter(function(j){
-        if(j.job_date!==d)return false;
-        return r.id?j.staff_id===r.id:!(j.staff_id&&ids[j.staff_id]);
-      }).sort(byTime);
-      h+='<div class="wcell'+(d===today?" today":"")+'" data-drop="wcell" data-staff="'+esc(r.id)+'" data-date="'+esc(d)+'">'+
-        list.map(function(j){const s=!r.id&&j.staff_id&&S.staffById[j.staff_id];return miniHtml(j,s?"Was "+s.name+" (not active)":"");}).join("")+'</div>';
+    const dd=parseYmd(d),mine=onGrid.filter(function(j){return j.job_date===d;});
+    // on a phone with everyone shown the lanes are too narrow for figures, so the header says it per person (a dot in their colour, then "5·7h"); CSS swaps it for the day's total
+    let pt="";
+    if(many)people.forEach(function(c){
+      const t=dayTot(mine.filter(function(j){return j.staff_id===c.id;}));
+      if(t.n)pt+='<span class="pl" title="'+esc(c.name+": "+totTxt(t,false))+'"><span class="dot" style="background:'+safeColour(c.colour)+'"></span>'+esc(totTxt(t,2))+'</span>';
     });
+    head+='<button type="button" class="wdh'+(d===today?" today":"")+(pt?" hasp":"")+'" data-act="godate" data-date="'+esc(d)+'" aria-label="Open '+esc(niceDate(d))+'">'+
+      '<b>'+DOW[dd.getDay()]+" "+dd.getDate()+'</b>'+totHtml(mine,dayW<80?2:dayW<150?1:0,"")+(pt?'<span class="ptot">'+pt+'</span>':"")+'</button>';
+    strip+='<div class="wdl">';body+='<div class="wday'+(d===today?" today":"")+'">';
+    people.forEach(function(c){
+      const lane=mine.filter(function(j){return j.staff_id===c.id;}),col=safeColour(c.colour);
+      const t=dayTot(lane);
+      strip+='<div class="wlh" data-drop="notime" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="--sc:'+col+'" title="'+esc(c.name+(t.n?": "+totTxt(t,false):""))+'">'+
+        (many?'<div class="lt">'+esc(firstWord(c.name)+(t.n?" "+totTxt(t,true):""))+'</div>':"")+
+        lane.filter(function(j){return !isTimed(j);}).sort(byTime).map(function(j){return chipHtml(j,"",laneW<90?firstWord(cName(j)):"");}).join("")+'</div>';
+      body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(d,g)+laneCardsHtml(lane,g,laneW)+'</div>';
+    });
+    strip+='</div>';body+='</div>';
   });
-  return h+'</div></div></div>';
+  return '<div class="dayline wkline">'+weekTrayHtml(tray)+'<div class="gridwrap" id="gw"><div class="grid wk" style="--n:'+days.length+'">'+
+    '<div class="gtop"><div class="wrow">'+head+'</div><div class="wrow wln">'+strip+'</div></div>'+
+    '<div class="wrow gb">'+gutHtml(g,hpx)+body+'</div></div></div></div>';
+}
+// the week's unassigned jobs as one row of chips ("Tue 9:00 Smith"), in day and time order. Drag one onto the grid to give it a person.
+function weekTrayHtml(list){
+  const sorted=list.slice().sort(function(a,b){return a.job_date<b.job_date?-1:a.job_date>b.job_date?1:byTime(a,b);});
+  let h='<aside class="tray row" data-drop="tray" aria-label="Unassigned jobs this week"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
+  if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
+  h+=sorted.map(function(j){
+    const s=tmToMin(j.start_time),dd=parseYmd(j.job_date),was=j.staff_id&&S.staffById[j.staff_id];
+    return chipHtml(j,DOW[dd.getDay()]+(s==null?"":" "+hm(s)),cName(j)+(was?" (was "+was.name+")":""));
+  }).join("");
+  return h+'</aside>';
 }
 
 /* ---------- tech view ---------- */
@@ -1082,7 +1373,8 @@ function setPhoneWho(v){v=v||"both";if(S.phoneWho===v)return;S.phoneWho=v;savePr
 /* =====================================================================
    DRAG AND DROP (Pointer Events: mouse, pen and touch)
    ===================================================================== */
-const DR={on:false,started:false,id:null,pid:null,sx:0,sy:0,lx:0,ly:0,offX:0,offY:0,w:0,h:0,card:null,ghost:null,mark:null,over:null,raf:0,zoneT:0,pageT:0,trayT:0,touch:false,armT:0};
+const DR={on:false,started:false,id:null,pid:null,sx:0,sy:0,lx:0,ly:0,offX:0,offY:0,w:0,h:0,card:null,ghost:null,mark:null,over:null,raf:0,zoneT:0,pageT:0,trayT:0,touch:false,armT:0,
+  mode:"move",rzS:0,rzOrig:0,rzOff:0,rzDur:0,rzMoved:false,lab:null};      // mode "resize": the job's bottom edge is being stretched (see startResize)
 const HOLD_MS=350;     // a finger has to rest on a card this long before it picks the job up; a quick swipe scrolls instead
 
 function onDown(e){
@@ -1099,7 +1391,8 @@ function onDown(e){
   const card=t.closest("[data-job]");if(!card)return;
   const job=S.byId[card.getAttribute("data-job")];if(!job)return;
   const r=card.getBoundingClientRect();
-  DR.on=true;DR.started=false;DR.id=job.id;DR.pid=e.pointerId;
+  const rz=!!t.closest(".rz")&&tmToMin(job.start_time)!=null;      // the stretch handle on a timed card's bottom edge
+  DR.on=true;DR.started=false;DR.id=job.id;DR.pid=e.pointerId;DR.mode=rz?"resize":"move";
   S.pressing=true;       // from now until release, a refetch must not rebuild the cards
   DR.sx=DR.lx=e.clientX;DR.sy=DR.ly=e.clientY;
   DR.offX=e.clientX-r.left;DR.offY=e.clientY-r.top;DR.w=r.width;DR.h=r.height;DR.card=card;
@@ -1111,7 +1404,59 @@ function onDown(e){
   // also listen on the card itself, in case it is ever detached and the release never reaches window
   card.addEventListener("pointerup",onUp);
   card.addEventListener("pointercancel",onCancel);
+  if(rz){
+    // Stretching: mouse and pen start straight away, a finger presses and holds the handle first (a quick swipe there still scrolls).
+    const g=S.grid,col=card.parentNode,cr=col.getBoundingClientRect(),s0=tmToMin(job.start_time),d0=Math.max(+job.duration_min||0,1);
+    DR.rzS=s0;DR.rzOrig=d0;DR.rzDur=d0;
+    DR.rzOff=(s0+d0)-(g.gs+(e.clientY-cr.top)/g.ppm);      // minutes from the finger to the job's end, so the end doesn't jump to the finger
+    if(DR.touch)DR.armT=setTimeout(armResize,HOLD_MS);
+    else startResize();
+    if(e.cancelable&&!DR.touch)e.preventDefault();      // no text selection while dragging the edge with a mouse
+    return;
+  }
   if(DR.touch)DR.armT=setTimeout(armDrag,HOLD_MS);   // touch: press and hold to pick up. Mouse and pen: move 8px.
+}
+function armResize(){
+  DR.armT=0;
+  if(!DR.on||DR.started||DR.mode!=="resize"||!DR.card||!DR.card.isConnected)return;
+  startResize();
+  try{if(navigator.vibrate)navigator.vibrate(12);}catch(err){}
+}
+/* ----- stretching a job (master): the bottom edge follows the finger or mouse, snapped to 15 min, and the new end time shows as it goes.
+   Let go and the new length is saved the same way as a move (shows straight away, put back if the save fails, Undo in the toast). ----- */
+function startResize(){
+  DR.started=true;S.dragging=true;S.noClickUntil=Date.now()+900;DR.zoneT=0;DR.pageT=0;DR.trayT=0;
+  DR.card.classList.add("resizing");document.body.classList.add("isresize");
+  const lab=document.createElement("div");lab.className="rzlab";lab.style.position="fixed";lab.style.zIndex="300";lab.setAttribute("aria-hidden","true");
+  document.body.appendChild(lab);DR.lab=lab;
+  updateResize();
+  DR.raf=requestAnimationFrame(tick);
+}
+// the length the job would have if let go now
+function rzDur(){
+  const g=S.grid,col=DR.card&&DR.card.parentNode;
+  if(!col||!col.getBoundingClientRect)return DR.rzOrig;
+  if(Math.abs(DR.ly-DR.sy)<4&&!DR.rzMoved)return DR.rzOrig;      // not really moved: keep the length it had (it may not be on a 15 min step)
+  DR.rzMoved=true;
+  const r=col.getBoundingClientRect(),end=g.gs+(DR.ly-r.top)/g.ppm+DR.rzOff;
+  const maxEnd=Math.min(24*60,Math.max(g.ge,WORK_END+120));
+  let d=Math.round((end-DR.rzS)/SNAP)*SNAP;
+  return Math.max(MIN_DUR,Math.min(d,maxEnd-DR.rzS));
+}
+function updateResize(){
+  if(!DR.card||!DR.lab)return;
+  const g=S.grid,d=rzDur();DR.rzDur=d;
+  const h=Math.max(d*g.ppm-2,16);
+  DR.card.style.height=h+"px";
+  DR.card.classList.remove("tiny","short","mid","full");
+  cardFit(h,DR.card.offsetWidth).split(" ").forEach(function(c){if(c&&c!=="nw"&&c!=="xn")DR.card.classList.add(c);});
+  const tm=DR.card.querySelector(".tm");if(tm)tm.textContent=cardTime(DR.card.className,DR.rzS,d);
+  DR.lab.textContent=fmtMin(DR.rzS)+" to "+fmtMin(DR.rzS+d)+" ("+fmtDur(d)+")";
+  const r=DR.card.getBoundingClientRect(),lw=DR.lab.offsetWidth,lh=DR.lab.offsetHeight;
+  let top=r.bottom+4;if(top+lh>window.innerHeight-4)top=r.top-lh-4;
+  // a finger is on the bottom edge, so a label under the card would be under the fingertip: put it just above the finger (or above a short card)
+  if(DR.touch)top=Math.max(r.top-lh-8,DR.ly-lh-30);
+  DR.lab.style.left=Math.max(4,Math.min(r.left,window.innerWidth-lw-4))+"px";DR.lab.style.top=Math.max(4,top)+"px";
 }
 function armDrag(){
   DR.armT=0;
@@ -1125,10 +1470,10 @@ function onMove(e){
   if(!DR.started){
     if(Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)<8)return;     // small move threshold so a tap still opens the job
     if(DR.touch){endDrag();return;}                              // finger moved before the hold finished: that is a scroll, leave it to the browser
-    startDrag();
+    if(DR.mode==="resize")startResize();else startDrag();
   }
   DR.lx=e.clientX;DR.ly=e.clientY;
-  updateDrag();
+  if(DR.mode==="resize")updateResize();else updateDrag();
   if(e.cancelable)e.preventDefault();
 }
 function startDrag(){
@@ -1146,15 +1491,15 @@ function dropTarget(x,y,ghostTop){
   const z=el&&el.closest?el.closest("[data-drop]"):null;
   if(!z)return null;
   const kind=z.getAttribute("data-drop");
+  const date=z.getAttribute("data-date")||S.date;      // week view: each column is a day
   if(kind==="col"){
     const r=z.getBoundingClientRect(),g=S.grid;
-    let min=g.gs+Math.round(((ghostTop-r.top)/PXMIN)/SNAP)*SNAP;
+    let min=g.gs+Math.round(((ghostTop-r.top)/g.ppm)/SNAP)*SNAP;
     min=Math.max(g.gs,Math.min(min,g.ge-SNAP));
-    return {kind:kind,el:z,staff:z.getAttribute("data-staff"),min:min};
+    return {kind:kind,el:z,staff:z.getAttribute("data-staff"),date:date,min:min};
   }
-  if(kind==="notime")return {kind:kind,el:z,staff:z.getAttribute("data-staff")};
+  if(kind==="notime")return {kind:kind,el:z,staff:z.getAttribute("data-staff"),date:date};
   if(kind==="tray")return {kind:kind,el:z};
-  if(kind==="wcell")return {kind:kind,el:z,staff:z.getAttribute("data-staff")||"",date:z.getAttribute("data-date")};
   return null;
 }
 function clearMark(){
@@ -1166,9 +1511,9 @@ function markTarget(t){
   if(t.kind==="col"){
     if(DR.over){DR.over.classList.remove("dropover");DR.over=null;}
     if(!DR.mark){DR.mark=document.createElement("div");DR.mark.className="dropmark";}
-    const j=S.byId[DR.id],h=Math.max(((j&&j.duration_min)||60)*PXMIN,20);
-    DR.mark.style.top=((t.min-S.grid.gs)*PXMIN)+"px";DR.mark.style.height=h+"px";
-    DR.mark.textContent=fmtMin(t.min);
+    const j=S.byId[DR.id],g=S.grid,h=Math.min(Math.max(((j&&j.duration_min)||60)*g.ppm,16),(g.ge-t.min)*g.ppm);      // never taller than the column is under it
+    DR.mark.style.top=((t.min-g.gs)*g.ppm)+"px";DR.mark.style.height=h+"px";
+    DR.mark.textContent=S.view==="week"?hm(t.min):fmtMin(t.min);
     if(DR.mark.parentNode!==t.el)t.el.appendChild(DR.mark);
   }else{
     if(DR.mark&&DR.mark.parentNode)DR.mark.parentNode.removeChild(DR.mark);
@@ -1186,14 +1531,19 @@ function tick(){
   let moved=false;
   const gw=byId("gw");
   if(gw){
-    const r=gw.getBoundingClientRect(),topEl=$(".gtop"),hh=topEl?topEl.offsetHeight:($(".wh")?$(".wh").offsetHeight:0),E=52;
+    const r=gw.getBoundingClientRect(),topEl=$(".gtop"),hh=topEl?topEl.offsetHeight:0,E=52;
     if(DR.lx>=r.left-30&&DR.lx<=r.right+30&&DR.ly>=r.top-30&&DR.ly<=r.bottom+30){
       let dy=0,dx=0;
       // The sticky header (names, and the No time yet strip) is not an edge: a card held over it, or just picked up from it, must not scroll the grid. Only the band just under it scrolls up.
-      if(DR.ly>=r.top+hh&&DR.ly<r.top+hh+E)dy=-Math.min(18,Math.max(4,(r.top+hh+E-DR.ly)/3));
-      else if(DR.ly>=r.top+hh&&DR.ly>r.bottom-E)dy=Math.min(18,Math.max(4,(DR.ly-(r.bottom-E))/3));
-      if(DR.lx<r.left+60+E)dx=-Math.min(18,Math.max(4,(r.left+60+E-DR.lx)/3));
-      else if(DR.lx>r.right-E)dx=Math.min(18,Math.max(4,(DR.lx-(r.right-E))/3));
+      // And only when the grid is taller than its frame (S.gridScrolls): a fitted grid has nothing to scroll, and a finger parked near the bottom must not walk the grid away from under it.
+      if(S.gridScrolls){
+        if(DR.ly>=r.top+hh&&DR.ly<r.top+hh+E)dy=-Math.min(18,Math.max(4,(r.top+hh+E-DR.ly)/3));
+        else if(DR.ly>=r.top+hh&&DR.ly>r.bottom-E)dy=Math.min(18,Math.max(4,(DR.ly-(r.bottom-E))/3));
+      }
+      if(DR.mode!=="resize"){      // stretching only goes up and down
+        if(DR.lx<r.left+60+E)dx=-Math.min(18,Math.max(4,(r.left+60+E-DR.lx)/3));
+        else if(DR.lx>r.right-E)dx=Math.min(18,Math.max(4,(DR.lx-(r.right-E))/3));
+      }
       // only scroll once the pointer has been parked in an edge zone for a moment, so picking a card up near an edge doesn't shove the grid
       if(dy||dx){if(!DR.zoneT)DR.zoneT=Date.now();}else DR.zoneT=0;
       if((dy||dx)&&Date.now()-DR.zoneT>300){
@@ -1203,7 +1553,7 @@ function tick(){
     }else DR.zoneT=0;
   }
   // the Unassigned tray scrolls on its own too, so a card can be dragged down to the bottom of a long list
-  const tr=$(".tray");
+  const tr=DR.mode==="resize"?null:$(".tray");
   if(tr&&tr.scrollHeight>tr.clientHeight+2){
     const r=tr.getBoundingClientRect(),E=44;
     let dy=0;
@@ -1217,12 +1567,17 @@ function tick(){
     }else DR.trayT=0;
   }
   const sy=window.pageYOffset;
-  if(DR.ly<48||DR.ly>window.innerHeight-48){
+  // The page only scrolls under a held card when that shows more of the grid: the grid is fitted to the screen, so a finger parked on
+  // the 4pm row at the bottom of a phone must not slide the page (and the drop) along.
+  const gr=gw?gw.getBoundingClientRect():null;
+  const pgUp=DR.ly<48&&window.pageYOffset>0&&(!gr||gr.top<0||DR.ly<gr.top);
+  const pgDown=DR.ly>window.innerHeight-48&&(!gr||gr.bottom>window.innerHeight+1);
+  if(pgUp||pgDown){
     if(!DR.pageT)DR.pageT=Date.now();
-    if(Date.now()-DR.pageT>300){if(DR.ly<48)window.scrollBy(0,-12);else window.scrollBy(0,12);}
+    if(Date.now()-DR.pageT>300){if(pgUp)window.scrollBy(0,-12);else window.scrollBy(0,12);}
   }else DR.pageT=0;
   if(window.pageYOffset!==sy)moved=true;
-  if(moved)updateDrag();
+  if(moved){if(DR.mode==="resize")updateResize();else updateDrag();}
   DR.raf=requestAnimationFrame(tick);
 }
 function endDrag(){
@@ -1235,9 +1590,10 @@ function endDrag(){
   cancelAnimationFrame(DR.raf);
   clearMark();DR.mark=null;
   if(DR.ghost&&DR.ghost.parentNode)DR.ghost.parentNode.removeChild(DR.ghost);
-  if(DR.card)DR.card.classList.remove("dragging");
-  document.body.classList.remove("isdrag");
-  DR.ghost=null;DR.card=null;DR.on=false;DR.started=false;DR.touch=false;
+  if(DR.card)DR.card.classList.remove("dragging","resizing");
+  if(DR.lab&&DR.lab.parentNode)DR.lab.parentNode.removeChild(DR.lab);
+  document.body.classList.remove("isdrag","isresize");
+  DR.ghost=null;DR.card=null;DR.lab=null;DR.on=false;DR.started=false;DR.touch=false;DR.mode="move";DR.rzMoved=false;
   S.dragging=false;S.pressing=false;
   if(S.dirtyRender){
     // After a real drag the drop redraws the cards anyway. After a plain tap, a redraw right here would swap the card out before
@@ -1249,6 +1605,17 @@ function endDrag(){
 function onUp(e){
   if(!DR.on||e.pointerId!==DR.pid)return;
   const started=DR.started,id=DR.id;
+  if(DR.mode==="resize"){
+    // a tap on the handle never opens the job; a stretch saves the new length (if it changed)
+    let d=DR.rzOrig;const orig=DR.rzOrig;
+    if(started){DR.lx=e.clientX;DR.ly=e.clientY;d=rzDur();}
+    endDrag();
+    S.noClickUntil=Date.now()+500;
+    const j=S.byId[id];
+    if(started&&j&&d!==orig&&tmToMin(j.start_time)!=null)moveJob(j,{duration_min:d});
+    else if(started)renderBody();      // nothing changed: put the card back the way it was drawn
+    return;
+  }
   // let go within about 10px of where it started: nothing was moved, so don't treat it as a drop
   const moved=Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)>=10;
   const t=(started&&moved)?dropTarget(e.clientX,e.clientY,e.clientY-DR.offY):null;
@@ -1257,17 +1624,17 @@ function onUp(e){
 }
 function onCancel(e){
   if(!DR.on||e.pointerId!==DR.pid)return;
-  const started=DR.started;
+  const started=DR.started,rz=DR.mode==="resize";
   endDrag();
   if(started)S.noClickUntil=Date.now()+500;
+  if(rz){S.noClickUntil=Date.now()+500;if(started)renderBody();}      // a stretch that was cut off: the card goes back to its saved length
 }
 function applyDrop(id,t){
   const j=S.byId[id];if(!j)return;
   const p={};
-  if(t.kind==="col"){p.staff_id=t.staff;p.job_date=S.date;p.start_time=minToTm(t.min);}
-  else if(t.kind==="notime"){p.staff_id=t.staff;p.job_date=S.date;p.start_time=null;}
+  if(t.kind==="col"){p.staff_id=t.staff;p.job_date=t.date||S.date;p.start_time=minToTm(t.min);}
+  else if(t.kind==="notime"){p.staff_id=t.staff;p.job_date=t.date||S.date;p.start_time=null;}
   else if(t.kind==="tray"){p.staff_id=null;}
-  else if(t.kind==="wcell"){p.staff_id=t.staff||null;p.job_date=t.date;}
   Object.keys(p).forEach(function(k){if(p[k]===j[k]||(p[k]==null&&j[k]==null))delete p[k];});
   if(!Object.keys(p).length)return;
   moveJob(j,p);
@@ -1276,7 +1643,9 @@ function sameField(k,a,b){
   if(k==="start_time")return tmToMin(a)===tmToMin(b);
   return a===b||(a==null&&b==null);
 }
-function moveLabel(patch){
+function isLenOnly(patch){const k=Object.keys(patch);return k.length===1&&k[0]==="duration_min";}
+function moveLabel(patch,j){
+  if(isLenOnly(patch)){const s=j&&tmToMin(j.start_time);return "Now "+fmtDur(patch.duration_min)+(s!=null?", "+fmtMin(s)+" to "+fmtMin(s+patch.duration_min):"");}
   const parts=[];
   if("start_time" in patch)parts.push(patch.start_time==null?"no start time":fmtMin(tmToMin(patch.start_time)));
   if("job_date" in patch)parts.push(dayShort(patch.job_date));
@@ -1298,13 +1667,13 @@ async function moveJob(j,patch,isUndo){
   }catch(e){
     const cur=S.byId[id];if(cur)Object.assign(cur,old);
     renderBody();
-    toast("Couldn't move that job. "+friendly(e),true);
+    toast((isLenOnly(patch)?"Couldn't change how long that job is. ":"Couldn't move that job. ")+friendly(e),true);
   }finally{
     S.pending--;scheduleRefetch(300);
   }
   if(!done)return;
   if(isUndo){toast("Put back.");return;}
-  toastUndo(moveLabel(patch),function(){
+  toastUndo(moveLabel(patch,S.byId[id]||j),function(){
     // only put it back if nobody has changed it since the move
     const cur=S.byId[id];
     if(!cur||!Object.keys(patch).every(function(k){return sameField(k,cur[k],patch[k]);})){toast("Can't undo that one, the job has changed since.",true);return;}
@@ -2811,7 +3180,7 @@ function handleAct(k,el){
   else if(k==="viewday")setView("day");
   else if(k==="viewweek")setView("week");
   else if(k==="newjob")openNew({});
-  else if(k==="qadd"){if(Date.now()<S.noClickUntil)return;openQuick(el.hasAttribute("data-staff")?{staff:el.getAttribute("data-staff"),date:S.date}:{});}      // not the click that ends a drag onto an empty strip
+  else if(k==="qadd"){if(Date.now()<S.noClickUntil)return;openQuick(el.hasAttribute("data-staff")?{staff:el.getAttribute("data-staff"),date:el.getAttribute("data-date")||S.date}:{});}      // not the click that ends a drag onto an empty strip
   else if(k==="pwho")setPhoneWho(el.getAttribute("data-who"));
   else if(k==="godate"){S.view="day";savePrefs();gotoDate(el.getAttribute("data-date"));}
   else if(k==="retry"){S.loadErr="";fetchJobs(false);}
@@ -2834,18 +3203,21 @@ function onClick(e){
   const act=t.closest("[data-act]");
   if(act){handleAct(act.getAttribute("data-act"),act);return;}
   if(t.closest("a"))return;
+  if(t.closest(".rz"))return;      // the stretch handle never opens the job
   const card=t.closest("[data-job]");
   if(card){if(Date.now()<S.noClickUntil)return;openJob(card.getAttribute("data-job"));return;}
   if(S.isMaster&&S.screen==="cal"&&Date.now()>=S.noClickUntil){
+    // an empty spot on the grid (day or week): a new job for that person, day and time
     const col=t.closest(".col");
     if(col){
       const r=col.getBoundingClientRect(),g=S.grid;
-      const min=Math.max(g.gs,Math.min(g.gs+Math.floor((e.clientY-r.top)/PXMIN/SNAP)*SNAP,g.ge-SNAP));
-      openNew({staff:col.getAttribute("data-staff"),date:S.date,time:minToHM(min)});
+      const min=Math.max(g.gs,Math.min(g.gs+Math.floor((e.clientY-r.top)/g.ppm/SNAP)*SNAP,g.ge-SNAP));
+      openNew({staff:col.getAttribute("data-staff"),date:col.getAttribute("data-date")||S.date,time:minToHM(min)});
       return;
     }
-    const wc=t.closest(".wcell");
-    if(wc){openNew({staff:wc.getAttribute("data-staff")||"",date:wc.getAttribute("data-date"),time:""});return;}
+    // the empty part of a week lane's No time strip: Quick add for that person and day
+    const nt=t.closest(".wlh");
+    if(nt){openQuick({staff:nt.getAttribute("data-staff")||"",date:nt.getAttribute("data-date")||S.date});return;}
   }
 }
 function onInput(e){
@@ -2875,7 +3247,12 @@ function onChange(e){
     if(S.tbDateFocus){S.tbDateV=v;S.tbDateT=setTimeout(flushDate,500);}
     else gotoDate(v);
   }
-  else if(id==="tb-canc"){S.showCancelled=!!e.target.checked;savePrefs();renderBody();}
+  else if(e.target&&e.target.hasAttribute&&e.target.hasAttribute("data-canc")){
+    // there are two of these boxes (toolbar on a computer, under the grid on a phone): keep both the same
+    S.showCancelled=!!e.target.checked;savePrefs();
+    $$all("[data-canc]").forEach(function(b){b.checked=S.showCancelled;});
+    renderBody();
+  }
 }
 // apply a date that is waiting out the typing delay straight away (Enter, or leaving the box)
 function flushDate(){
@@ -2930,6 +3307,11 @@ function wireGlobal(){
     const mq=window.matchMedia(NARROW),redraw=function(){if(S.screen==="cal")renderBody();};
     if(mq.addEventListener)mq.addEventListener("change",redraw);else if(mq.addListener)mq.addListener(redraw);
   }catch(e){}
+  // the grid is fitted to the window: fit it again when the window changes size or the phone is turned (once things settle)
+  let rzT=0;
+  const refit=function(){clearTimeout(rzT);rzT=setTimeout(onWinResize,120);};
+  window.addEventListener("resize",refit);
+  window.addEventListener("orientationchange",refit);
   window.addEventListener("beforeunload",function(e){if(S.uploads>0||(SH&&isDirty())){e.preventDefault();e.returnValue="";}});
 }
 
