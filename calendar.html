@@ -175,6 +175,24 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .ghost{box-shadow:0 10px 28px rgba(0,0,0,.35)!important;opacity:.92}
 .jm{padding:6px 8px;position:relative}
 
+/* drive time between two jobs (the script's DRIVE TIMES block): a chip over the grid that never takes a tap or a drag, and a line between the technician's cards */
+.drv{position:absolute;z-index:2;pointer-events:none;display:flex;height:14px;padding:0 2px}
+.drv.gap{justify-content:center}
+.drv.edge{justify-content:flex-end}
+.drv .dc{display:inline-flex;align-items:center;gap:3px;max-width:100%;height:14px;padding:0 5px;border-radius:7px;border:1px solid var(--line2);background:var(--surface2);color:var(--ink2);
+  font-size:10px;font-weight:700;line-height:12px;white-space:nowrap;overflow:hidden;box-shadow:0 1px 2px rgba(20,32,30,.14)}
+.drv .dc .ic{width:11px;height:11px;stroke-width:2.4}
+.drv.warn .dc{background:var(--overBg);border-color:var(--over);color:var(--over)}
+.drv.bar{height:3px;padding:0;background:var(--over);border-radius:2px}
+.tdrv{display:flex;align-items:center;justify-content:center;gap:6px;margin:-5px 0 8px;font-size:13.5px;font-weight:600;color:var(--ink2);text-align:center}
+.tdrv.warn{color:var(--over)}
+/* Google credit for the drive times (and under the address suggestions). On a computer the master's grid is fitted to the screen with 14px spare under it: the credit sits in that, out of the layout. */
+.dcred,.acpow{font:400 12px/14px Roboto,Arial,sans-serif;color:var(--ink2)}
+.dcred{padding:4px 10px 0;pointer-events:none}
+.wrap .dcred{padding:2px 0 0}
+@media(min-width:720px){body.is-master .dcred{position:fixed;left:0;bottom:0;z-index:2;padding:0 14px}}
+.acpow{position:sticky;bottom:0;padding:6px 12px;border-top:1px solid var(--line);background:var(--surface2);border-radius:0 0 10px 10px}      /* stays in view at the foot of the list when the list scrolls */
+
 /* tray */
 .tray{flex:0 0 230px;border:1px dashed var(--line2);border-radius:12px;padding:10px;background:var(--surface2);display:flex;flex-direction:column;gap:6px;max-height:calc(100vh - 190px);overflow:auto}
 .tray>*{flex-shrink:0}      /* without this the cards squash to fit instead of the tray scrolling (10 jobs in an iPad-portrait tray were 24px tall) */
@@ -449,7 +467,7 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
 <div id="sheet"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script src="lpc-config.js"></script>
+<script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
 <!-- Pinned on purpose (2.117.2, the build the old @2 tag gave on 5 Oct 2026). To upgrade: change the version, re-hash with
      curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, week view, new/edit job, log out. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
@@ -477,7 +495,10 @@ const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","S
 // These two service types are the ones that get the Termite inspection button. Everything else gets the Service record button.
 const INSPECTION_TYPES=["Termite Inspection","Pre-Purchase Inspection"];
 const SVC_SHOW=8;           // services shown before "More services"
-const PHOTON_URL="https://photon.komoot.io/api/",PHOTON_LAT=-28.65,PHOTON_LON=153.56;     // address lookup, biased to the Northern Rivers
+const G_AUTO="https://places.googleapis.com/v1/places:autocomplete",G_PLACE="https://places.googleapis.com/v1/places/";      // address lookup (Google Places, the key is in lpc-config.js)
+const G_LAT=-28.65,G_LNG=153.56,G_RADIUS=50000;      // biased to the Northern Rivers (50 km is as wide as Google allows)
+const ADDR_MIN=4,ADDR_WAIT=250;                      // characters before a lookup, and ms of quiet after typing
+const ADDR_SAVE_WAIT=2000;                           // ms a save (or More details) waits for a just-tapped address's details, then goes ahead with the address as typed
 const QUICK_KEY="lpc_quick_prefs_v1";   // Quick add remembers who the last job was for
 const QUICK_SVC=6;                      // service chips Quick add shows before "More"
 const QUICK_DUR=60;                     // minutes, same default as the full job sheet
@@ -503,7 +524,8 @@ const IC={
   msg:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 3.7 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>',
   mail:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
   pin:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
-  cam:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>'
+  cam:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  car:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11l1.6-4.2A2 2 0 0 1 8.5 5.5h7a2 2 0 0 1 1.9 1.3L19 11"/><rect x="3" y="11" width="18" height="6" rx="2"/><circle cx="7.5" cy="17" r="1.6"/><circle cx="16.5" cy="17" r="1.6"/></svg>'
 };
 
 /* ---------- dates and times (local parts only, never toISOString for a date) ---------- */
@@ -534,7 +556,7 @@ const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster
   view:"day",date:todayYmd(),showCancelled:false,jobs:[],byId:{},loaded:false,loadErr:"",range:null,
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
   scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
-  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both"};
+  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false};
 let SH=null;     // the open job sheet, or null
 
 function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||"{}")||{};if(p.view==="week"||p.view==="day")S.view=p.view;S.showCancelled=!!p.showCancelled;if(typeof p.phoneWho==="string"&&p.phoneWho)S.phoneWho=p.phoneWho;}catch(e){}}
@@ -791,7 +813,7 @@ function stashDraft(uid){
   if(!SH||!uid||!isDirty())return false;
   try{
     localStorage.setItem(DRAFT_KEY,JSON.stringify({uid:uid,jobId:SH.jobId||null,isNew:!!SH.isNew,init:SH.init,
-      clientId:SH.clientId||null,client:SH.client||null,form:readForm(),addrTouched:!!SH.addrTouched,
+      clientId:SH.clientId||null,client:SH.client||null,form:readForm(),addrTouched:!!SH.addrTouched,addrPick:SH.addrPick||null,
       baseUpdatedAt:(SH.job&&SH.job.updated_at)||null,at:Date.now()}));
     return true;
   }catch(e){return false;}
@@ -826,6 +848,7 @@ function fillSheet(F,o){
   if(S.isMaster){SH.clientId=o.clientId||null;SH.client=o.client?Object.assign({},o.client):null;}
   SH.svc=draftServices(F);renderSvcList();renderSvcDetails();
   if(o.addrTouched)SH.addrTouched=true;
+  if(o.addrPick&&typeof o.addrPick==="object")SH.addrPick=o.addrPick;      // what Google gave for the picked address: its street, suburb ... and place id (only used if the address in the box is still that one)
   if(SH.clientId&&SH.client&&(!o.job||SH.clientId!==o.job.client_id))loadSites(SH,SH.clientId);      // an open job already fetched its own client's sites
   updateClientHint();updateLinks();renderRecs();
 }
@@ -850,7 +873,7 @@ async function restoreDraft(){
   if(job)openSheet(job,null);
   else openSheet(null,{staff:F.staff||"",date:validYmd(F.date)?F.date:S.date,time:F.time||""});
   if(!SH)return;
-  fillSheet(F,{clientId:d.clientId,client:d.client,addrTouched:d.addrTouched,job:job});
+  fillSheet(F,{clientId:d.clientId,client:d.client,addrTouched:d.addrTouched,addrPick:d.addrPick,job:job});
   const changed=!!(job&&d.baseUpdatedAt&&job.updated_at&&job.updated_at!==d.baseUpdatedAt);
   showMsg(changed?"You got logged out. Here's what you'd typed. This job was changed since, so check it before you tap Save."
     :"You got logged out. Here's what you'd typed. Check it and tap Save.","warn");
@@ -891,6 +914,8 @@ function stopApp(){
   clearTimeout(S.refetchT);clearInterval(S.pollT);S.pollT=null;clearTimeout(S.tbDateT);S.tbDateT=0;S.tbDateV="";S.tbDateFocus=false;S.lastRenderKey="";
   if(S.channel){try{S.sb.removeChannel(S.channel);}catch(e){}S.channel=null;}
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
+  D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
+  driveWipe();      // the saved drive times have client addresses in them: they don't stay on the device after a log out (this runs for a log out, a login that ran out, and a different person logging in)
   document.body.classList.remove("is-master");
 }
 
@@ -1049,6 +1074,7 @@ function renderBody(){
   const tr=$(".tray");
   if(tr&&sameDay){if(tst)tr.scrollTop=tst;if(tsl)tr.scrollLeft=tsl;}
   updateLive();
+  driveSoon();      // last: the drive-time labels go on top of what has just been drawn, on the next frame (not in this one)
 }
 /* ---------- fitting the grid to the screen ----------
    Pixels per minute = the height left on the screen under the top bar, toolbar, Unassigned row and the grid's own header (names, No time yet),
@@ -1332,7 +1358,7 @@ function weekTrayHtml(list){
 
 /* ---------- tech view ---------- */
 function techHtml(){
-  const mine=visibleJobs().filter(function(j){return j.job_date===S.date&&j.staff_id===S.me.id;}).sort(byTime);
+  const mine=visibleJobs().filter(function(j){return j.job_date===S.date&&j.staff_id===S.me.id;}).sort(function(a,b){return byTime(a,b)||driveOrder(a,b);});
   let h='<div class="wrap">';
   if(!mine.length)h+='<div class="empty"><h3>Nothing booked</h3><p>No jobs for '+esc(niceDate(S.date))+'.</p></div>';
   mine.forEach(function(j){h+=techCard(j);});
@@ -1353,6 +1379,351 @@ function techCard(j){
   if(num.length>=3)h+='<a class="btn" href="tel:'+esc(num)+'">'+IC.phone+' Ring</a><a class="btn" href="sms:'+esc(num)+'">'+IC.msg+' Text</a>';
   if(addr)h+='<a class="btn" target="_blank" rel="noopener" href="https://maps.apple.com/?q='+esc(encodeURIComponent(addr))+'">'+IC.pin+' Maps</a>';
   return h+'</div></div>';
+}
+
+/* =====================================================================
+   DRIVE TIMES BETWEEN JOBS
+   For each person's day: their timed jobs that are not cancelled, in start order. For each pair in a row where both jobs have an address, how long
+   the drive from the first to the second takes. The answers come from the Google Routes API (computeRoutes, on the same browser key as the address
+   lookup), asked with the two ADDRESS TEXTS as they are saved on the jobs. Why it is built this way:
+   - Google's terms only let us keep what its APIs give back for 30 days at most. So the page stores no map position anywhere (the database gets none),
+     and every drive time is kept here and in localStorage with the time it was saved, then dropped after 30 days and asked for again.
+   - The free public demo server of the Open Source Routing Machine project, which this used to ask, is not for business use, so it is not used at all any more.
+   It is used gently: ONE request at a time, each at least DRIVE_GAP_MS after the one before, only for pairs that are on the screen, and every pair
+   once (a pair that is saved is not asked again until it is 30 days old). Three failures in a row (no signal, an error on Google's side) stop it for
+   two minutes. Google saying over quota (429) stops it for ten minutes. Google saying no (403: the Routes API isn't switched on for the key yet, or
+   the key isn't allowed on this page) stops it for the rest of the session, quietly: one line in the browser's console, nothing on the screen.
+   Where it shows: day and week grids, a small chip in the gap between the two cards (or, with no gap to sit in, on the first line of the
+   second card, to the right of its time), or, when there is no room for a chip, a red bar on the card's top edge for a short gap and
+   otherwise just the second card's tooltip; the technician's list, a line between the two cards.
+   It goes red when the gap between the jobs is shorter than the drive. A job with no address, or a pair Google has no answer for, shows nothing at all:
+   no guessing and no error messages. Three kinds of answer are treated as "no answer" and kept that way for a day (so they are not asked again on every
+   page load): no route, an address Google can't find (400 or 404), and a route over 250 km or 4 hours (a street of that name in the wrong town or state;
+   an address with no state or postcode also has ", NSW" added to what is sent, to stop most of those). An answer under 100 m means the two addresses are one
+   place written two ways: nothing is drawn for it. The saved answers are wiped from the device on a log out (their keys are client addresses), and anything
+   past its time is removed from localStorage when the page loads, not just from memory. "Google Maps" is credited in words under the drive times (driveCredit).
+   The labels are put in AFTER the page has been drawn: renderBody only asks for them (driveSoon) and they are worked out on the next animation
+   frame, all the reading first (card widths) and then all the writing (one fragment per column), so a redraw never pays for them. They are left
+   alone while a card is being pressed or dragged. When an answer comes back only the pair(s) it belongs to get a label, nothing else is
+   rebuilt. The calls to Google run on their own timer in the background.
+   ===================================================================== */
+const ROUTES_URL="https://routes.googleapis.com/directions/v2:computeRoutes";
+const DRIVE_KEY="lpc_drive_v2",DRIVE_OLD_KEY="lpc_drive_v1";      // v1 held answers keyed by map positions and kept for 60 days: it is deleted the first time this runs
+const DRIVE_CAP=500,DRIVE_KEEP_MS=30*24*3600*1000,DRIVE_GAP_MS=300;      // most answers kept, how long (Google's 30 days), and the least time between two requests
+const DRIVE_NOANS_MS=24*3600*1000;      // a "Google has no answer for this pair" note is kept a day, then the pair is asked again
+const DRIVE_SAME_M=100;      // an answer under 100 m means the two addresses are one place written two ways: no label, and no more asking
+const DRIVE_MAX_M=250000,DRIVE_MAX_S=4*3600;      // an answer over 250 km or 4 hours is not believed (a street of that name in another state): it is kept as "no answer"
+const D={mem:null,q:[],active:0,busy:{},want:{},fail:{},bad:0,pause:0,stop:false,warned:false,saveT:0,wakeT:0,rafT:0,fbT:0,next:0,pumpT:0,dirty:false,gen:0};      // gen: counts log-outs, so a request that was out at the time can't save its answer for the next person
+// the address text a job's drive is worked out from: what is saved on the job, trimmed. Blank = no drive time to or from that job.
+function driveAddr(j){return j?trim(j.address):"";}
+// A pair's key: the two addresses tidied up (case, spaces, commas) and in order. A newline can't be in a tidied address, so two addresses can never run together into another pair's key.
+function driveKey(a,b){return normAddr(a)+"\n"+normAddr(b);}
+function driveNum(x){return typeof x==="number"&&isFinite(x);}
+function driveFresh(t,now,keep){return t<=now+3600000&&now-t<keep;}      // saved less than `keep` ago (and not in the future: a clock that was wrong)
+// A saved entry is {s: seconds, m: metres, t: when it was saved}. s and m of -1 (a "no answer" note) means Google had no usable answer for the pair.
+function driveAlive(x,now){return driveFresh(x.t,now,x.s<0?DRIVE_NOANS_MS:DRIVE_KEEP_MS);}
+// Does this entry give a label? Not for "no answer", and not for two addresses that turn out to be one place (Google puts both at one point and says about 0 m).
+function driveShows(x){return x.s>=0&&x.m>=DRIVE_SAME_M;}
+function driveLoad(){
+  if(D.mem)return;
+  D.mem=new Map();
+  try{localStorage.removeItem(DRIVE_OLD_KEY);}catch(e){}
+  let total=0,bad=false;
+  try{
+    const o=JSON.parse(localStorage.getItem(DRIVE_KEY)||"{}")||{},now=Date.now();
+    Object.keys(o).forEach(function(k){
+      total++;
+      const v=o[k];
+      if(Array.isArray(v)&&driveNum(v[0])&&driveNum(v[1])&&driveNum(v[2])&&((v[0]>=0&&v[1]>=0)||(v[0]===-1&&v[1]===-1))){
+        const x={s:v[0],m:v[1],t:v[2]};
+        if(driveAlive(x,now))D.mem.set(k,x);
+      }
+    });
+  }catch(e){bad=true;}
+  driveTrim();
+  if(bad||D.mem.size!==total)driveSave();      // something was dropped (too old, junk, over the cap): it goes from the device too, not only from memory
+}
+function driveTrim(){
+  const now=Date.now();
+  D.mem.forEach(function(x,kk){if(!driveAlive(x,now))D.mem.delete(kk);});      // time is up: it is asked for again the next time it is on the screen
+  while(D.mem.size>DRIVE_CAP){      // over the cap: the oldest answer goes
+    let oldK=null,oldT=Infinity;
+    D.mem.forEach(function(x,kk){if(x.t<oldT){oldT=x.t;oldK=kk;}});
+    if(oldK==null)break;D.mem.delete(oldK);
+  }
+}
+// a saved answer (or "no answer" note), or null if there is none or it is out of date (an old one is dropped on the spot, and from the device a moment later)
+function driveGet(k){
+  const x=D.mem.get(k);
+  if(!x)return null;
+  if(!driveAlive(x,Date.now())){D.mem.delete(k);driveSaveSoon();return null;}
+  return x;
+}
+// the only writer of lpc_drive_v2
+function driveSave(){
+  clearTimeout(D.saveT);D.saveT=0;
+  if(!D.mem)return;
+  try{const o={};D.mem.forEach(function(x,kk){o[kk]=[x.s,x.m,x.t];});localStorage.setItem(DRIVE_KEY,JSON.stringify(o));}catch(e){}
+}
+function driveSaveSoon(){clearTimeout(D.saveT);D.saveT=setTimeout(driveSave,800);}
+function driveStore(k,v){
+  if(!D.mem)return;      // logged out while the request was out: the answer is thrown away, not saved
+  D.mem.set(k,v);driveTrim();driveSaveSoon();
+}
+function driveNoAnswer(k){driveStore(k,{s:-1,m:-1,t:Date.now()});}
+// Logged out (or the login ran out, or someone else logged in): the saved drive times go from this device. Their keys are client addresses.
+function driveWipe(){
+  clearTimeout(D.saveT);D.saveT=0;D.gen++;D.mem=null;D.fail={};
+  try{localStorage.removeItem(DRIVE_KEY);localStorage.removeItem(DRIVE_OLD_KEY);}catch(e){}
+}
+// Start time, then length, then id: one fixed order for jobs that start together, used by the grid pairs and by the technician's list.
+function driveOrder(a,b){
+  const x=tmToMin(a.start_time),y=tmToMin(b.start_time);
+  return ((x||0)-(y||0))||(Math.max(+a.duration_min||0,0)-Math.max(+b.duration_min||0,0))||(a.id<b.id?-1:a.id>b.id?1:0);
+}
+// The pairs for what is on the screen, read from the cards that were drawn (so it is always exactly what is showing, whoever is picked):
+// [{col, a, b, aa, bb, key, gap}] where a and b are {j (job), el (card), s (start min), d (length min)}, aa and bb are their address texts, and gap is the minutes between a's end and b's start.
+function drivePairs(){
+  const cb=byId("cb"),out=[];
+  if(!cb||S.screen!=="cal"||!S.loaded)return out;
+  const groups=[];
+  if(S.isMaster){
+    cb.querySelectorAll(".col").forEach(function(col){groups.push({col:col,els:Array.prototype.slice.call(col.querySelectorAll(".jc[data-job]"))});});
+  }else{
+    groups.push({col:null,els:Array.prototype.slice.call(cb.querySelectorAll(".tcard"))});
+  }
+  groups.forEach(function(g){
+    const items=[];
+    g.els.forEach(function(el){
+      const idEl=g.col?el:el.querySelector("[data-job]"),id=idEl?idEl.getAttribute("data-job"):null,j=id?S.byId[id]:null;
+      if(j&&j.status!=="cancelled"&&isTimed(j))items.push({j:j,el:el,s:tmToMin(j.start_time),d:Math.max(+j.duration_min||0,0)});
+    });
+    // The grid is put in start order here. The technician's list is already in the order it is drawn (techHtml breaks a tie the same way), and the
+    // line goes above the second card in the page, so it keeps that order: two jobs with one start time can never get the line above the wrong card.
+    if(g.col)items.sort(function(x,y){return driveOrder(x.j,y.j);});
+    for(let i=1;i<items.length;i++){
+      const a=items[i-1],b=items[i],aa=driveAddr(a.j),bb=driveAddr(b.j);
+      if(!aa||!bb)continue;      // either job has no address: nothing is shown, nothing is guessed
+      if(normAddr(aa)===normAddr(bb))continue;      // the same address (two jobs at one place): no drive, nothing to show or ask for
+      out.push({col:g.col,a:a,b:b,aa:aa,bb:bb,key:driveKey(aa,bb),gap:b.s-(a.s+a.d)});
+    }
+  });
+  return out;
+}
+// Asks for the labels to be drawn, once, after the page has been drawn (renderBody calls this and does none of the work). They go in on the next
+// animation frame, which is before the browser paints, so they never blink off and on. A hidden tab doesn't run frames, so a timer backs it up.
+function driveSoon(){
+  if(D.rafT||D.fbT)return;
+  const run=function(){
+    if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
+    clearTimeout(D.fbT);D.fbT=0;
+    try{driveRefresh();}catch(e){}
+  };
+  if("requestAnimationFrame" in window){try{D.rafT=requestAnimationFrame(run);}catch(e){D.rafT=0;}}
+  D.fbT=setTimeout(run,250);
+}
+// Draws what is known, and asks for what isn't. Safe to run as often as you like: it clears its own labels first.
+// Two steps, so the page is laid out once and not once per label: all the reading first (every card's width), then all the writing.
+function driveRefresh(){
+  const cb=byId("cb");if(!cb)return;
+  if(S.dragging||S.pressing){D.dirty=true;return;}      // a card is being pressed or dragged: leave the page alone, the release picks this up
+  D.dirty=false;
+  driveLoad();
+  const pairs=drivePairs(),now=Date.now(),todo=[];
+  D.q=[];D.want={};
+  // 1. reading (and working out what to ask Google for)
+  pairs.forEach(function(p){
+    const hit=driveGet(p.key);
+    if(hit){      // known: drawn if it gives a label; a "no answer" note, or two addresses that are one place, draws nothing and is not asked again
+      if(driveShows(hit)){const geo=p.col?driveGeom(p):null;todo.push({p:p,hit:hit,geo:geo,m:driveMeasure(p,geo)});}
+      return;
+    }
+    const first=!D.want[p.key];D.want[p.key]=1;      // each pair once, however many times it is on the screen
+    if(first&&!D.busy[p.key]&&!(D.fail[p.key]>now))D.q.push({k:p.key,a:p.aa,b:p.bb});
+  });
+  // 2. writing
+  cb.querySelectorAll(".drv,.tdrv").forEach(function(n){if(n.parentNode)n.parentNode.removeChild(n);});
+  driveWrite(todo);
+  drivePump();
+}
+// One answer has just come in: label the pair(s) it belongs to and touch nothing else.
+function drivePatch(key){
+  if(S.dragging||S.pressing){D.dirty=true;return;}
+  const cb=byId("cb"),hit=D.mem&&driveGet(key);
+  if(!cb||!hit||!driveShows(hit))return;
+  const todo=[],ids={};
+  drivePairs().forEach(function(p){
+    if(p.key!==key)return;
+    const geo=p.col?driveGeom(p):null;
+    todo.push({p:p,hit:hit,geo:geo,m:driveMeasure(p,geo)});ids[p.b.j.id]=1;
+  });
+  if(!todo.length)return;
+  cb.querySelectorAll(".drv,.tdrv").forEach(function(n){if(ids[n.getAttribute("data-b")]&&n.parentNode)n.parentNode.removeChild(n);});
+  driveWrite(todo);
+}
+// The timer-driven queue: ONE request at a time, each starting at least DRIVE_GAP_MS after the one before it started. A finished request, a new
+// queue (driveRefresh) or the wake-up after a pause sets it going, and it keeps itself going: it does not wait for the page to be redrawn.
+function drivePump(){
+  if(D.stop||D.active||D.pumpT||!D.q.length)return;
+  if(!gKey()){D.q=[];return;}      // no key in lpc-config.js: nothing to ask with (the answers already saved still show)
+  const now=Date.now();
+  if(now<D.pause)return;      // paused (failures in a row, or over quota): the wake-up timer starts it again
+  if(now<D.next){D.pumpT=setTimeout(function(){D.pumpT=0;drivePump();},D.next-now);return;}
+  const it=D.q.shift();
+  D.busy[it.k]=1;D.active++;D.next=now+DRIVE_GAP_MS;
+  driveFetch(it);
+}
+// stop asking for ms; a timer wakes the queue up again afterwards
+function drivePauseFor(ms){
+  D.pause=Math.max(D.pause,Date.now()+ms);
+  clearTimeout(D.wakeT);D.wakeT=setTimeout(function(){D.wakeT=0;driveSoon();drivePump();},Math.max(0,D.pause-Date.now())+1000);
+}
+// Google said no (403 or 401: the Routes API is switched off for the key, or the key isn't allowed on this page): no more asking until the page is loaded again.
+// One line in the console, nothing on the screen.
+function driveStopForGood(status,st,msg){
+  D.stop=true;D.q=[];
+  console.warn("Drive times are off until the page is reloaded: Google's Routes API said no ("+status+(st?" "+st:"")+"). Is the Routes API switched on for the key in lpc-config.js, and is this page's address allowed on it?"+(msg?" "+String(msg).slice(0,160):""));
+}
+// Google's length of time comes as text: "1926s", or with a fraction, "1926.4s". NaN for anything else.
+function driveSecs(d){const m=/^(\d+(?:\.\d+)?)s$/.exec(String(d==null?"":d).trim());return m?+m[1]:NaN;}
+// The text sent to Google for an address. One with no state and no postcode on the end (a site saved as just "10 Gloria st") gets ", NSW" added, so Google
+// doesn't pick that street over the border. Only what is sent changes: the pair's key stays the address as it is saved.
+function driveText(a){
+  const t=trim(a);
+  if(/\b(?:nsw|qld|vic|tas|act|new south wales|queensland|victoria|tasmania|australian capital territory|south australia|western australia|northern territory)\b/i.test(t)||/\b(?:SA|WA|NT)\b/.test(t)||/\b\d{4}\s*$/.test(t))return t;
+  return t+", NSW";
+}
+async function driveFetch(it){
+  let outage=false,got=false;const gen=D.gen;
+  const ctl=("AbortController" in window)?new AbortController():null,to=setTimeout(function(){if(ctl){try{ctl.abort();}catch(e){}}},8000);
+  try{
+    const r=await fetch(ROUTES_URL,{method:"POST",signal:ctl?ctl.signal:undefined,
+      headers:{"Content-Type":"application/json","X-Goog-Api-Key":gKey(),"X-Goog-FieldMask":"routes.duration,routes.distanceMeters"},
+      body:JSON.stringify({origin:{address:driveText(it.a)},destination:{address:driveText(it.b)},travelMode:"DRIVE",routingPreference:"TRAFFIC_UNAWARE",regionCode:"au",units:"METRIC"})});
+    let j=null;try{j=await r.json();}catch(e){}
+    if(gen!==D.gen)return;      // logged out while this was out: whatever came back is dropped
+    const er=j&&j.error,st=String(er&&er.status||""),msg=String(er&&er.message||"");
+    if(r.ok&&j){
+      const rt=Array.isArray(j.routes)?j.routes[0]:null,secs=rt?driveSecs(rt.duration):NaN;
+      const mt=rt?(rt.distanceMeters==null?0:Number(rt.distanceMeters)):NaN;      // Google leaves distanceMeters out when it is 0
+      if(isFinite(secs)&&isFinite(mt)&&mt>=0&&secs<=DRIVE_MAX_S&&mt<=DRIVE_MAX_M){driveStore(it.k,{s:secs,m:mt,t:Date.now()});D.bad=0;got=true;}
+      else driveNoAnswer(it.k);      // no route between these two addresses, or one too long to be believed (the wrong town): kept as "no answer" for a day, so it isn't asked again on every page load
+    }
+    else if(r.status===403||r.status===401||/PERMISSION_DENIED|UNAUTHENTICATED/.test(st)||/api key/i.test(msg))driveStopForGood(r.status,st,msg);
+    else if(r.status===429||/RESOURCE_EXHAUSTED/.test(st))drivePauseFor(10*60000);      // over quota: nothing for ten minutes
+    else if(r.status>=500||!j){outage=true;D.fail[it.k]=Date.now()+5*60000;}
+    else{      // Google refused this one pair (an address it can't find, say): not an outage. A 400 or 404 is kept as "no answer" for a day; anything else is left alone for half an hour
+      if(r.status===400||r.status===404)driveNoAnswer(it.k);else D.fail[it.k]=Date.now()+30*60000;
+      if(!D.warned){D.warned=true;console.warn("Drive times: Google couldn't work out one drive ("+r.status+(st?" "+st:"")+")."+(msg?" "+msg.slice(0,160):""));}
+    }
+  }catch(e){outage=true;D.fail[it.k]=Date.now()+5*60000;}
+  finally{
+    clearTimeout(to);
+    // three failures in a row (no signal, or Google erroring): stop asking for two minutes
+    if(outage&&++D.bad>=3)drivePauseFor(120000);
+    D.active--;delete D.busy[it.k];
+    if(got){try{drivePatch(it.k);}catch(e){}}
+    drivePump();
+  }
+}
+/* ----- the words ----- */
+function driveKm(m){const k=m/1000;return (k>=100?Math.round(k):Math.round(k*10)/10)+" km";}
+function driveShort(mins){return mins<60?mins+"m":Math.floor(mins/60)+"h"+(mins%60?pad(mins%60):"");}
+function driveInfo(p,hit){
+  const mins=Math.max(1,Math.round(hit.s/60));
+  return {mins:mins,km:driveKm(hit.m),gap:p.gap,warn:p.gap<mins};      // red when there is less time than the drive
+}
+function driveGapTxt(gap){return gap<0?"jobs overlap":gap===0?"no gap":"only "+fmtDur(gap)+" gap";}
+// "Drive ~18 min (14 km)", and when the gap is short ", only 10 min gap"
+function driveLine(i){return "Drive ~"+fmtDur(i.mins)+" ("+i.km+")"+(i.warn?", "+driveGapTxt(i.gap):"");}
+function driveTip(i){
+  const g=driveGapTxt(i.gap);
+  return "Drive ~"+fmtDur(i.mins)+" ("+i.km+") from the last job"+(i.warn?". "+g.charAt(0).toUpperCase()+g.slice(1)+".":"");
+}
+// the longest wording that fits in a chip w px wide (about 5.6px a letter at the chip's size, plus the car and the padding).
+// A red chip keeps its gap wording down to a narrow phone card ("~32m, 30m gap"); only when even that won't fit does it fall back to the drive time alone.
+function driveChipText(i,w){
+  const m=fmtDur(i.mins),sh=driveShort(i.mins);
+  let c;
+  if(i.warn){
+    const g0=driveGapTxt(i.gap),g1=i.gap>0?"only "+driveShort(i.gap)+" gap":i.gap===0?"no gap":"overlap",g2=i.gap>0?driveShort(i.gap)+" gap":g1;
+    c=["Drive ~"+m+", "+g0,"~"+m+", "+g0,"~"+m+", "+g1,"~"+sh+", "+g1,"~"+sh+", "+g2,"~"+m,sh];
+  }else c=["Drive ~"+m+" ("+i.km+")","~"+m,sh];
+  c.sort(function(a,b){return b.length-a.length;});      // longest first, whatever the numbers turn out to be
+  for(let k=0;k<c.length;k++)if(28+5.6*c[k].length<=w-4)return c[k];
+  return null;
+}
+// Where a pair's label goes on the grid, from the numbers alone (nothing is read from the page). The first card is drawn at least 16px tall
+// (see laneCardsHtml), so its bottom is worked out from that, not from its end time. free = the blank space between the two cards.
+function driveGeom(p){
+  const g=S.grid,ppm=g.ppm,H=14;
+  const aBot=(p.a.s-g.gs)*ppm+Math.max(Math.max(p.a.d,1)*ppm-2,16),topB=(p.b.s-g.gs)*ppm,free=topB-aBot;
+  return {H:H,aBot:aBot,topB:topB,free:free,inGap:free>=H+4};
+}
+// The only reads from the page: the second card's width, and (when the chip has to go on the card itself) how much of its first line the time and tick use.
+function driveMeasure(p,geo){
+  const m={w:0,used:0};
+  if(!p.col)return m;
+  const b=p.b.el;m.w=b.offsetWidth;
+  if(!geo.inGap){
+    const l1=b.querySelector(".l1");
+    if(l1)Array.prototype.forEach.call(l1.children,function(c){m.used+=c.offsetWidth+4;});
+  }
+  return m;
+}
+// A pair's label as a node (or null for none). Writes the card's tooltip, reads nothing from the page.
+function driveNode(p,hit,geo,m){
+  const info=driveInfo(p,hit),b=p.b.el,id=p.b.j.id;
+  if(!p.col){      // the technician's list: a line between the two cards
+    const d=document.createElement("div");d.className="tdrv"+(info.warn?" warn":"");d.setAttribute("data-b",id);
+    d.innerHTML=IC.car+'<span>'+esc(driveLine(info))+'</span>';
+    return d;
+  }
+  // the grid: the tooltip always says it, and a chip goes between the cards if there is a gap, else on the second card's first line, if there is room
+  const tip=jobTip(p.b.j)+". "+driveTip(info);
+  b.setAttribute("title",tip);b.setAttribute("aria-label",tip);
+  let txt,cls,top;
+  if(geo.inGap){
+    txt=driveChipText(info,m.w);cls="gap";top=geo.aBot+(geo.free-geo.H)/2;
+  }else{
+    // No gap to sit in. The chip goes inside the second card, on its first line and to the right of its time (never over the first card's
+    // bottom line). A one-line (tiny) card has its name there, and a card too narrow for time + chip has no room: those get the red bar or the tooltip.
+    txt=b.classList.contains("tiny")?null:driveChipText(info,m.w-14-m.used);
+    cls="edge";top=geo.topB+(/\b(?:nw|xn)\b/.test(b.className)?2:3);
+  }
+  const d=document.createElement("div");d.setAttribute("data-b",id);
+  d.style.left=b.style.left;d.style.width=b.style.width;
+  if(txt==null){
+    if(!info.warn)return null;      // no room and no warning: the tooltip is enough
+    d.className="drv warn bar";d.style.top=(geo.topB-1)+"px";      // no room for words, but a short gap still shows: a red mark on the top edge of the card
+    return d;
+  }
+  d.className="drv "+(info.warn?"warn ":"")+cls;d.style.top=top+"px";
+  d.innerHTML='<span class="dc">'+IC.car+esc(txt)+'</span>';
+  return d;
+}
+// Puts the labels in: one fragment per column for the grid (so one append each), a line before the card for the list.
+function driveWrite(todo){
+  const frags=new Map();
+  todo.forEach(function(t){
+    const node=driveNode(t.p,t.hit,t.geo,t.m);if(!node)return;
+    if(t.p.col){
+      let f=frags.get(t.p.col);
+      if(!f){f=document.createDocumentFragment();frags.set(t.p.col,f);}
+      f.appendChild(node);
+    }else if(t.p.b.el.parentNode)t.p.b.el.parentNode.insertBefore(node,t.p.b.el);
+  });
+  frags.forEach(function(f,col){col.appendChild(f);});
+  driveCredit(todo.length>0);
+}
+// Google wants its name shown with what it gives back when there is no Google map. "Google Maps" in words, once on the page (the grid and the technician's list), only while a drive time is showing.
+function driveCredit(on){
+  const cb=byId("cb");if(!cb)return;
+  const old=cb.querySelector(".dcred");
+  if(!on){if(old&&old.parentNode)old.parentNode.removeChild(old);return;}
+  if(old)return;
+  const d=document.createElement("div");d.className="dcred";d.textContent="Drive times: Google Maps";
+  (S.isMaster?cb:(cb.querySelector(".wrap")||cb)).appendChild(d);
 }
 
 /* =====================================================================
@@ -1595,6 +1966,7 @@ function endDrag(){
   document.body.classList.remove("isdrag","isresize");
   DR.ghost=null;DR.card=null;DR.lab=null;DR.on=false;DR.started=false;DR.touch=false;DR.mode="move";DR.rzMoved=false;
   S.dragging=false;S.pressing=false;
+  if(D.dirty)driveSoon();      // a drive-time answer (or a redraw of the labels) came in while the card was held: put it in now
   if(S.dirtyRender){
     // After a real drag the drop redraws the cards anyway. After a plain tap, a redraw right here would swap the card out before
     // the browser sends mouseup and click, and the tap would be lost, so wait one tick.
@@ -1715,7 +2087,7 @@ function openSheet(job,defaults){
     svc:svc,svcMemo:{},svcMore:false,
     legacyPrice:(job&&job.price!=null&&!svc.length)?job.price:null,      // an old job with a price but no service: the only service ticked takes it (kept until the job saves)
     legacyHeld:"",      // the service that currently holds that price
-    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null};
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null};
   byId("sheet").innerHTML=sheetHtml();
   document.documentElement.classList.add("sheet-open");
   SH.prevFocus=document.activeElement;
@@ -2149,6 +2521,14 @@ function splitAddr(line){
   return {street:a,suburb:"",state:"",postcode:""};
 }
 function siteSlug(a){return String(a).toLowerCase().replace(/[^a-z0-9]/g,"").slice(0,24)||"site";}
+// No map position (lat/lng) is stored on a job or a site any more: Google's terms only let us keep what its APIs give back for 30 days, so the page
+// stores none of it (the lat/lng columns from 05_locations.sql are simply left alone). The one thing kept from Google is a site's place_id, which its terms
+// allow to be stored indefinitely. If the database doesn't have that column yet, say nothing: the insert is repeated without it and it is left alone for the session.
+function missingPlaceId(e){
+  if(!e)return false;
+  const m=String(e.message||"")+" "+String(e.details||"")+" "+String(e.hint||"");
+  return (e.code==="PGRST204"||e.code==="42703"||/could not find the .*column|column .*does not exist/i.test(m))&&/\bplace_id\b/.test(m);
+}
 async function fetchSites(clientId,client){
   let rows=null;
   try{
@@ -2219,7 +2599,7 @@ function renderSites(){
 }
 function pickSite(i){
   const s=SH.sites[i];if(!s)return;
-  setVal("f-addr",siteLine(s));SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;
+  setVal("f-addr",siteLine(s));SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;
   hideAddrList();updateLinks();renderSites();
 }
 // A real site has a street number in it (12 Smith St, 3/45 Smith St, Lot 4 Smith Rd). A suburb on its own ("Bangalow", "Byron Bay NSW 2481") isn't one.
@@ -2233,25 +2613,38 @@ async function saveNewSite(sh,clientId,addr){
   if(!clientId||!line||isPlaceholderAddr(line))return;
   const pick=sh.addrPick&&normAddr(sh.addrPick.line)===normAddr(line)?sh.addrPick:null;
   const parts=pick||splitAddr(line);
-  if(!pick&&!hasStreetNumber(parts.street))return;       // just a suburb (the contact-box fallback): the job keeps it, but it isn't a place to go back to
+  if(!hasStreetNumber(parts.street))return;       // just a suburb (the contact-box fallback) or just a road (a lookup pick with no house number): the job keeps it, but it isn't a place to go back to
   let sites=sh.sites;
   if(sh.sitesFor!==clientId||!sh.sitesOk){
     const r=await fetchSites(clientId,sh.client);
     if(!r.ok)throw new Error("couldn't read this client's sites");
     sites=r.list;
   }
-  const keys={};keys[normAddr(line)]=1;keys[normAddr(parts.street)]=1;
+  const fullKey=normAddr(line),streetKey=normAddr(parts.street),subKey=normAddr(parts.suburb);
   const savedRows=function(list){return list.filter(function(x){return x.id;});};       // saved rows only: their contact address showing in the chips doesn't count as saved
-  const isThere=function(rows){return rows.some(function(x){return keys[normAddr(x.address)]||keys[normAddr(siteLine(x))];});};
+  // A site is "already there" when the whole address matches, or the street matches and the suburb doesn't say otherwise (either one blank, or the same).
+  // The street alone is not enough: "5 Main St, Bangalow" and "5 Main St, Lennox Head" are two places.
+  const sameSite=function(x){
+    const xl=normAddr(siteLine(x)),xa=normAddr(x.address);
+    if(xl===fullKey||xa===fullKey)return true;
+    if(xa!==streetKey&&xl!==streetKey)return false;
+    const xs=normAddr(x.suburb);
+    return !xs||!subKey||xs===subKey;
+  };
+  const findThere=function(rows){return rows.filter(sameSite)[0]||null;};
+  // Google's place id for the lookup pick (a typed address has none). Place ids may be kept; map positions may not, so none are stored.
+  const placeId=(pick&&pick.placeId&&!S.noPlaceId)?pick.placeId:null;
   let real=savedRows(sites);
-  if(isThere(real))return;
+  if(findThere(real))return;
   const base=clientId+"::"+siteSlug(parts.street),taken={};
   real.forEach(function(x){taken[x.id]=1;});
   let id=base,n=1;
   for(let attempt=0;attempt<8;attempt++){
     while(taken[id]){n++;id=base+"-"+n;}
     const row={id:id,client_id:clientId,address:parts.street,suburb:nn(parts.suburb),state:nn(parts.state),postcode:nn(parts.postcode),source:"calendar"};
-    const ins=await S.sb.from("client_properties").insert(row);
+    if(placeId)row.place_id=placeId;
+    let ins=await S.sb.from("client_properties").insert(row);
+    if(ins.error&&row.place_id&&missingPlaceId(ins.error)){S.noPlaceId=true;delete row.place_id;ins=await S.sb.from("client_properties").insert(row);}      // the place_id column isn't there yet: save the site without it
     if(!ins.error){
       sh.sites=real.concat([{id:id,address:row.address,suburb:trim(row.suburb),state:trim(row.state),postcode:trim(row.postcode),source:"calendar"}]);
       sh.sitesFor=clientId;sh.sitesOk=true;
@@ -2267,21 +2660,22 @@ async function saveNewSite(sh,clientId,addr){
     sh.sites=fresh.list;sh.sitesFor=clientId;sh.sitesOk=true;
     real=savedRows(fresh.list);
     if(SH===sh)renderSites();
-    if(isThere(real))return;
+    if(findThere(real))return;
     real.forEach(function(x){taken[x.id]=1;});
   }
   throw new Error("no free id for the new site");
 }
 
-/* ----- job address lookup (Photon) -----
-   Photon is a public address search built for searching as you type. Nothing goes out until 350ms after typing stops (and 4+ letters),
-   a newer search cancels an older one, answers are remembered for the session, and a late answer never touches the box: results only
-   go into the pick-list, and the box only changes when someone taps one.
-   Photon rarely has house numbers in regional NSW, and a number in the search tends to push the street out of the 8 answers, so the
-   search is for the street part and the number that was typed goes back in front of the street name when one is picked.
-   Photon matches by word prefix, so "Rd" finds nothing where "Road" would: the usual street-type shorthand is spelled out before searching.
-   A shop or car park that Photon found by its NAME is left out (it is not an address on the street that was typed), so every line in the
-   list is a street, or a real address on the street that was typed. */
+/* ----- job address lookup (Google Places) -----
+   Nothing goes out until 250ms after typing stops (and 4+ characters), a newer search cancels an older one, answers are remembered for the
+   session, and a late answer never touches the box: results only go into the pick-list, and the box only changes when someone taps one.
+   Google gives house numbers (including rural ones), so the list shows what Google says, minus ", Australia".
+   One session token goes with every lookup of one address and with the one "details" call that ends it (that is how Google bills it),
+   then the next address gets a new token. Tapping a suggestion asks Google for the details (street, suburb, state and postcode, and the place id).
+   The place's map position is NOT asked for: Google's terms only let us keep it for 30 days, and nothing here needs it (drive times work from the
+   address text, see DRIVE TIMES). If the details call fails, the suggestion's own text goes in and the job is saved with that.
+   No key, or Google saying no (403, or over its quota): say so once in the hint and stop asking. Typing the address in always works. */
+const ADDR_DOWN="Address lookup unavailable, type it in.";
 function addrHint(t){const h=byId("f-addr-hint");if(h)h.textContent=t||"";}
 // Hiding the list also cancels a lookup that is waiting or on its way, so every caller gets that.
 function hideAddrList(){
@@ -2289,146 +2683,160 @@ function hideAddrList(){
   addrHint("");
   if(SH){clearTimeout(SH.acT);if(SH.acAbort){try{SH.acAbort.abort();}catch(e){}SH.acAbort=null;}SH.acSeq++;SH.acResults=[];}
 }
+function gKey(){const c=window.LPC_SUPABASE||{};return trim(c.googleKey);}
+function gBlocked(){return !gKey()||Date.now()<S.gBlockUntil;}
+// A failed Google answer: 403 (key not allowed here, API off) stops lookups for the rest of the session, 429 / over quota for a minute.
+async function gFail(r){
+  let st="";
+  try{const j=await r.json();st=String(j&&j.error&&j.error.status||"");}catch(e){}
+  if(r.status===403||r.status===401||/PERMISSION_DENIED|REQUEST_DENIED|UNAUTHENTICATED/i.test(st))S.gBlockUntil=Infinity;
+  else if(r.status===429||/RESOURCE_EXHAUSTED|OVER_QUERY_LIMIT/i.test(st))S.gBlockUntil=Date.now()+60000;
+}
 function onAddrInput(){
-  SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;
+  SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;
   // Quick add has no street, suburb ... boxes to see or fix for a NEW client. They only ever hold the lookup pick for this address, so they go as soon as the text is changed
   // (otherwise a cleared or corrected address comes back from them on save).
   if(SH.quick&&!SH.clientId)["f-street","f-suburb","f-state","f-postcode"].forEach(function(id){setVal(id,"");});
   hideAddrList();       // whatever was showing belongs to the old text
   renderSites();
   const q=trim(val("f-addr"));
-  if(q.length<4)return;
+  if(q.length<ADDR_MIN)return;
   const sh=SH;
-  sh.acT=setTimeout(function(){if(SH===sh)addrLookup(q);},350);
+  sh.acT=setTimeout(function(){if(SH===sh)addrLookup(q);},ADDR_WAIT);
 }
 // Enter: search now instead of waiting
 function findAddr(){
   if(!SH)return;
   const q=trim(val("f-addr"));
   clearTimeout(SH.acT);
-  if(q.length<4){addrHint("Type a bit more of the address.");return;}
+  if(q.length<ADDR_MIN){addrHint("Type a bit more of the address.");return;}
   addrLookup(q);
-}
-const NUMTOK="\\d+[a-z]?",NUMSEQ=NUMTOK+"(?:\\s*[/&-]\\s*"+NUMTOK+")*";
-const LEAD_RE=new RegExp("^\\s*((?:(?:unit|u|apt|apartment|flat|shop|suite|ste|lot|level|lvl|villa)\\.?\\s*)?"+NUMSEQ+"(?:\\s*,?\\s+"+NUMSEQ+")?)(?=\\s|,|$)","i");
-// "5/296 Tyagarah Rd" -> {num:"5/296", rest:"Tyagarah Rd"}. Handles 111, 3a, 5/296, 283-285, 3 & 3a, Lot 4, Unit 11 70.
-function splitTyped(q){
-  const t=String(q==null?"":q).replace(/\s+/g," ").trim(),m=LEAD_RE.exec(t);
-  if(!m)return {num:"",rest:t};
-  let num=m[1].replace(/,/g," ").replace(/\s*&\s*/g," & ").replace(/\s*([\/-])\s*/g,"$1").replace(/\s+/g," ").trim();
-  num=num.charAt(0).toUpperCase()+num.slice(1);
-  return {num:num,rest:t.slice(m[0].length).replace(/^[\s,]+/,"")};
-}
-function hasToken(text,tok){
-  const e=String(tok).replace(/[.*+?^${}()|[\]\\\/]/g,"\\$&");
-  return new RegExp("(^|[^0-9a-z])"+e+"($|[^0-9a-z])","i").test(String(text));
-}
-// "5/296" -> "296", "Unit 11 70" -> "70", "Lot 4" -> "4". A range ("283-285") or "3 & 3a" stays whole. This is the part that is the house number on the street.
-function typedHouseNum(num){
-  const seqs=String(num==null?"":num).match(new RegExp(NUMSEQ,"gi"))||[];
-  const last=seqs.length?seqs[seqs.length-1]:"";
-  const i=last.lastIndexOf("/");
-  return i>=0?last.slice(i+1):last;
-}
-const STREET_TYPES={rd:"Road",cct:"Circuit",ct:"Court",ln:"Lane",pde:"Parade",hwy:"Highway",tce:"Terrace",cres:"Crescent",pl:"Place",dr:"Drive",ave:"Avenue",cl:"Close",st:"Street"};
-// "Tyagarah Rd" -> "Tyagarah Road". Whole words only, any case. The first word is left alone: "St Helena Rd" starts with a saint, not a street.
-function expandStreetTypes(text){
-  return String(text==null?"":text).replace(/(^|[\s,])([a-z]+)\.?(?=$|[\s,])/gi,function(m,pre,w){
-    const e=pre?STREET_TYPES[w.toLowerCase()]:null;
-    return e?pre+e:m;
-  });
 }
 function stateAbbr(st){
   const t=trim(st);if(!t)return "";
   if(STATE_ABBR[t])return STATE_ABBR[t];
   return /^(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)$/i.test(t)?t.toUpperCase():t;
 }
-// Only Australian answers that are addresses: streets, and things with a house number or a name on a street. Parks, suburbs and bus stops are left out.
-function usableFeature(f){
-  const p=(f&&f.properties)||{};
-  if(p.countrycode!=="AU")return false;
-  if(p.type==="street")return !!trim(p.name);
-  if(p.type!=="house")return false;
-  if(trim(p.housenumber))return !!(trim(p.street)||trim(p.name));
-  if(/^(public_transport|highway|railway|aeroway|waterway|natural)$/.test(String(p.osm_key||"")))return false;
-  return !!(trim(p.street)||trim(p.name));
-}
-// A street always stays. Anything else (a shop, a fuel station, a car park) only stays when it is on the street that was typed: its street has a word that
-// starts with the first word typed. One that Photon found by its name ("Pat" finding the Patagonia shop on Jonson Street) is left out.
-function onTypedStreet(f,typedStreet){
-  const p=(f&&f.properties)||{};
-  if(p.type==="street")return true;
-  const first=(String(typedStreet==null?"":typedStreet).toLowerCase().match(/[a-z0-9]+/)||[""])[0];
-  if(!first)return true;
-  return (String(p.street==null?"":p.street).toLowerCase().match(/[a-z0-9]+/g)||[]).some(function(w){return w.indexOf(first)===0;});
-}
-// "<number> <street or name>, <suburb> <STATE> <postcode>". The result's own house number wins; with none, the number that was typed goes in front of the street.
-function photonParts(f,typedNum){
-  const p=(f&&f.properties)||{},hn=trim(p.housenumber),nameT=trim(p.name),streetT=trim(p.street);
-  const streetName=p.type==="street"?nameT:(streetT||nameT);
-  let n="";
-  // typed "5/296" and the result says 296: keep the 5/. Only the house number part is compared (296), never the unit (5).
-  if(hn)n=(typedNum&&typedNum!==hn&&hasToken(typedHouseNum(typedNum),hn))?typedNum:hn;
-  else if(typedNum&&(p.type==="street"||streetT))n=typedNum;
-  const street=(n?n+" ":"")+streetName;
-  let suburb=trim(p.city)||trim(p.town)||trim(p.village)||trim(p.locality)||trim(p.district);
-  if(suburb&&suburb.toLowerCase()===streetName.toLowerCase())suburb="";
-  const state=stateAbbr(p.state),pc=trim(p.postcode);
-  return {street:street,suburb:suburb,state:state,postcode:pc,line:composeAddr(street,suburb,state,pc)};
+// one suggestion from Google -> {id, line}, or null if it has no place or no text
+function gPred(s){
+  const p=s&&s.placePrediction;if(!p)return null;
+  const id=trim(p.placeId)||trim(String(p.place||"").replace(/^places\//,""));
+  const t=trim(p.text&&p.text.text);
+  if(!id||!t)return null;
+  return {id:id,line:trim(t.replace(/,\s*Australia$/i,""))};
 }
 async function addrLookup(q){
   const sh=SH;if(!sh)return;
-  const parts=splitTyped(q),sendQ=expandStreetTypes(parts.num?parts.rest:q);       // "Rd" -> "Road": Photon matches whole-word prefixes
-  if(sendQ.length<3){addrHint("Type a bit more of the street.");return;}       // "111 Pa": wait for more of the street
-  const key=sendQ.toLowerCase();
+  const key=normAddr(q);
+  if(key.length<ADDR_MIN){addrHint("Type a bit more of the address.");return;}
   if(sh.acAbort){try{sh.acAbort.abort();}catch(e){}sh.acAbort=null;}
   const seq=++sh.acSeq;
   const hit=S.addrCache.get(key);
-  if(hit){showAddrList(hit,q);return;}
+  if(hit){showAddrList(hit);return;}
+  if(gBlocked()){addrHint(ADDR_DOWN);return;}       // no key, or Google has said no: don't ask again
   const ctl=("AbortController" in window)?new AbortController():null;sh.acAbort=ctl;
+  if(!sh.gTok)sh.gTok=uuid();
   addrHint("Looking...");
   try{
-    const url=PHOTON_URL+"?q="+encodeURIComponent(sendQ)+"&limit=8&lang=en&lat="+PHOTON_LAT+"&lon="+PHOTON_LON;
-    const r=await fetch(url,ctl?{signal:ctl.signal}:{});
-    if(!r.ok)throw plainErr("Address lookup answered with an error.");
+    const r=await fetch(G_AUTO,{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":gKey()},signal:ctl?ctl.signal:undefined,
+      body:JSON.stringify({input:q,sessionToken:sh.gTok,includedRegionCodes:["au"],includedPrimaryTypes:["street_address","premise","subpremise","route"],
+        locationBias:{circle:{center:{latitude:G_LAT,longitude:G_LNG},radius:G_RADIUS}}})});
+    if(!r.ok){await gFail(r);throw plainErr("Address lookup answered with an error.");}
     const data=await r.json();
-    if(!data||!Array.isArray(data.features))throw plainErr("Address lookup answered with something odd.");
-    const feats=data.features.filter(function(f){return f&&f.properties&&f.properties.countrycode==="AU";});
-    S.addrCache.set(key,feats);
+    if(!data||typeof data!=="object")throw plainErr("Address lookup answered with something odd.");
+    const seen={},preds=[];
+    (data.suggestions||[]).forEach(function(s){const p=gPred(s);if(!p)return;const k=p.line.toLowerCase();if(seen[k])return;seen[k]=1;preds.push(p);});
+    S.addrCache.set(key,preds);
     if(S.addrCache.size>80)S.addrCache.delete(S.addrCache.keys().next().value);
     if(SH!==sh||seq!==sh.acSeq)return;       // the sheet changed, or newer typing / a pick / a blur has cancelled this
     if(trim(val("f-addr"))!==q)return;       // the text has moved on since this was asked
-    showAddrList(feats,q);
+    showAddrList(preds);
   }catch(e){
     if(SH!==sh||seq!==sh.acSeq)return;
     if(e&&e.name==="AbortError")return;
-    addrHint("Address lookup unavailable, type it in.");
+    addrHint(ADDR_DOWN);
   }
 }
-function showAddrList(feats,q){
+function showAddrList(preds){
   const l=byId("f-addr-list");if(!l||!SH)return;
-  const sp=splitTyped(q),num=sp.num,typedStreet=expandStreetTypes(sp.num?sp.rest:q),seen={},out=[];
-  feats.forEach(function(f){
-    if(!usableFeature(f)||!onTypedStreet(f,typedStreet))return;
-    const pp=photonParts(f,num);
-    if(!pp.street)return;
-    const k=pp.line.toLowerCase();if(seen[k])return;seen[k]=1;out.push(pp);
-  });
-  SH.acResults=out.slice(0,8);
+  SH.acResults=preds.slice(0,8);
   if(!SH.acResults.length){l.hidden=true;l.innerHTML="";addrHint("No match found. Type it in.");return;}
   addrHint("");
-  l.innerHTML=SH.acResults.map(function(p,i){return '<button type="button" class="acitem" role="option" data-sh="pickaddr" data-i="'+i+'">'+esc(p.line)+'</button>';}).join("");
+  l.innerHTML=SH.acResults.map(function(p,i){return '<button type="button" class="acitem" role="option" data-sh="pickaddr" data-i="'+i+'">'+esc(p.line)+'</button>';}).join("")+
+    '<div class="acpow" role="presentation">Address suggestions: Google Maps</div>';      // Google's name with its suggestions (no Google map here)
   l.hidden=false;
 }
+// What Google's place details say, as {street, suburb, state, postcode, line, placeId}.
+// Street is "<number> <road>" with the unit in front ("5/296 Tyagarah Rd") when there is one. Google sometimes knows only the road for
+// a numbered rural address (it answers with the road, no number): then the number that was in the suggestion is kept, and placeId is
+// left empty, because the place Google has is the road, not the house. Only the place id is kept from Google's answer (its terms allow
+// place ids to be stored for good); the map position is not even asked for (see the lookup notes above).
+function placeParts(d,pred){
+  if(!d||!Array.isArray(d.addressComponents))return null;
+  const comps=d.addressComponents;
+  const get=function(types,short){
+    for(let k=0;k<types.length;k++){
+      const c=comps.filter(function(x){return x&&Array.isArray(x.types)&&x.types.indexOf(types[k])>=0;})[0];
+      if(c){const v=trim(short?(c.shortText||c.longText):(c.longText||c.shortText));if(v)return v;}
+    }
+    return "";
+  };
+  const num=get(["street_number"]),sub=get(["subpremise"]),route=get(["route"],true);
+  const seg=trim(String(pred.line).split(",")[0]);
+  let street;
+  if(num&&route)street=(sub?sub+"/":"")+num+" "+route;
+  else if(/\d/.test(seg))street=seg;
+  else street=route||seg;
+  const suburb=get(["locality","sublocality_level_1","sublocality","postal_town"]);
+  const state=stateAbbr(get(["administrative_area_level_1"],true)),pc=get(["postal_code"]);
+  return {street:street,suburb:suburb,state:state,postcode:pc,line:composeAddr(street,suburb,state,pc),placeId:(num||sub)?pred.id:null};
+}
+// Tapping a suggestion: its text goes in the box straight away, then Google's details replace it (if the box still shows that text) with the proper
+// street / suburb / state / postcode, and the place id is kept for a new client site. sh.addrPending is that call; a save waits for it (so the client's
+// street, suburb ... boxes and the new site get the proper details, not just the suggestion's text).
 function pickAddr(i){
-  const p=SH.acResults[i];if(!p)return;
-  setVal("f-addr",p.line);SH.addrTouched=true;SH.addrAuto="";
+  const sh=SH,p=sh&&sh.acResults[i];if(!p)return;
+  const seq=++sh.pickSeq;
+  setVal("f-addr",p.line);sh.addrTouched=true;sh.addrAuto="";sh.addrPick=null;
+  hideAddrList();updateLinks();renderSites();
+  const shown=trim(val("f-addr"));
+  const done=function(){if(sh.addrPending===pr)sh.addrPending=null;};
+  const pr=pickDetails(sh,p,seq,shown).then(done,done);
+  sh.addrPending=pr;
+}
+// Waits for the details of an address that was only just tapped, but never longer than ms. true = they landed. false = gave up: the pick is cancelled
+// (pickSeq), so a late answer can't rewrite the address box after the save has gone ahead, and the job is saved with the address text as it is.
+async function waitAddrPending(sh,ms){
+  const pr=sh.addrPending;if(!pr)return true;
+  let t=0;
+  const landed=await Promise.race([pr.then(function(){return true;},function(){return true;}),new Promise(function(res){t=setTimeout(function(){res(false);},ms);})]);
+  clearTimeout(t);
+  if(!landed&&sh.addrPending===pr){sh.pickSeq++;sh.addrPending=null;}
+  return landed;
+}
+async function pickDetails(sh,p,seq,shown){
+  let got=null;
+  const tok=sh.gTok||uuid();
+  sh.gTok=null;       // this call ends the session: the next time the address box is used it gets a new token
+  if(!gBlocked()){
+    const ctl=("AbortController" in window)?new AbortController():null,to=setTimeout(function(){if(ctl){try{ctl.abort();}catch(e){}}},7000);
+    try{
+      const r=await fetch(G_PLACE+encodeURIComponent(p.id)+"?sessionToken="+encodeURIComponent(tok),
+        {headers:{"X-Goog-Api-Key":gKey(),"X-Goog-FieldMask":"addressComponents,formattedAddress"},signal:ctl?ctl.signal:undefined});
+      if(!r.ok){await gFail(r);throw plainErr("Place details answered with an error.");}
+      got=placeParts(await r.json(),p);
+    }catch(e){got=null;}
+    finally{clearTimeout(to);}
+  }
+  if(sh.pickSeq!==seq)return;       // the address was typed over, or another one was picked, while Google was answering
+  if(!got){const sp=splitAddr(p.line);got={street:sp.street,suburb:sp.suburb,state:sp.state,postcode:sp.postcode,line:p.line,placeId:null};}
+  sh.addrPick={line:got.line,street:got.street,suburb:got.suburb,state:got.state,postcode:got.postcode,placeId:got.placeId};
+  if(SH!==sh||trim(val("f-addr"))!==shown)return;      // sheet closed, or the box was changed some other way
+  setVal("f-addr",got.line);
   // the client's street, suburb ... boxes only get filled when there is a client (or a name typed for one): with no client they would block the save
   // Quick add, new client: those boxes are hidden and only ever hold the latest pick, so a second pick replaces the first (in the full sheet they are visible and stay as they are).
   const qNew=!!(SH.quick&&!SH.clientId);
-  if((SH.clientId||trim(val("f-name")))&&(qNew||(!trim(val("f-street"))&&!trim(val("f-suburb"))))){setVal("f-street",p.street);setVal("f-suburb",p.suburb);setVal("f-state",p.state);setVal("f-postcode",p.postcode);}
-  hideAddrList();
-  SH.addrPick={line:p.line,street:p.street,suburb:p.suburb,state:p.state,postcode:p.postcode};     // remembered so a save can store the suburb, state and postcode with the site
+  if((SH.clientId||trim(val("f-name")))&&(qNew||(!trim(val("f-street"))&&!trim(val("f-suburb"))))){setVal("f-street",got.street);setVal("f-suburb",got.suburb);setVal("f-state",got.state);setVal("f-postcode",got.postcode);}
   updateLinks();renderSites();
 }
 
@@ -2736,6 +3144,13 @@ async function saveSheet(extra,opts){
   if(!SH||SH.busy)return false;
   // Everything below reads and writes THIS sheet (sh), even if the screen has moved on by the time a request comes back.
   const sh=SH;
+  // An address was only just tapped and Google's details are still on their way (a fraction of a second): wait for them, so the client's street, suburb ... and the new site get them.
+  if(sh.addrPending){
+    setBusy(true);showMsg("Getting the address details...","ok");
+    await waitAddrPending(sh,ADDR_SAVE_WAIT);      // two seconds at most: after that it saves with the address as typed
+    if(SH!==sh)return false;
+    setBusy(false);
+  }
   let f=readForm();const bad=validate(f);
   if(bad){showMsg(bad,"bad");return false;}
   setBusy(true);showMsg("Saving...","ok");
@@ -2904,7 +3319,7 @@ function quickState(init,prevFocus){
   return {isNew:true,quick:true,job:null,jobId:null,client:null,clientId:null,init:init,addrTouched:false,baseline:"",busy:false,
     recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
     unlinked:null,renameTo:null,pendingN:0,svc:[],svcMemo:{},svcMore:false,legacyPrice:null,legacyHeld:"",
-    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,
     qEdit:false,qEmail:false,qSum:null,saveName:null,prevFocus:prevFocus||null};
 }
 function quickDays(){
@@ -3049,7 +3464,7 @@ function quickToggleSvc(name){
 function quickUnlink(){
   unlinkClient();SH.unlinked=null;
   ["f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr"].forEach(function(id){setVal(id,"");});
-  SH.addrTouched=false;SH.addrAuto="";SH.addrPick=null;SH.qEdit=false;SH.qEmail=false;
+  SH.addrTouched=false;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;SH.qEdit=false;SH.qEmail=false;
   hideAddrList();renderSites();
 }
 function quickChangeClient(){
@@ -3117,8 +3532,15 @@ function quickReset(old){
   if(keepName){setVal("f-name",keepName);onNameInput();}      // onNameInput brings up the new-client note and the type-ahead for it
 }
 // "More details": the full job sheet, with what has been typed so far filled in
-function quickMore(){
+async function quickMore(){
   const q=SH;if(!q||!q.quick||q.busy)return;
+  if(q.addrPending){      // an address was only just tapped: let Google's details land first (two seconds at most), so they come across too
+    setBusy(true);showMsg("Getting the address details...","ok");
+    await waitAddrPending(q,ADDR_SAVE_WAIT);
+    if(SH!==q)return;
+    setBusy(false);showMsg("");
+  }
+  if(q.busy)return;
   const F=readForm();
   if(!q.clientId&&F.name)quickClientAddr(q,F);      // a new client gets the same contact address from Save as from More details then Save, and the full sheet's boxes show it
   const keep={clientId:q.clientId,client:q.client,addrTouched:q.addrTouched,addrAuto:q.addrAuto,addrPick:q.addrPick,preferAddr:q.preferAddr,svcMemo:q.svcMemo};
@@ -3272,7 +3694,10 @@ function onKey(e){
     if(t&&t.getAttribute&&t.hasAttribute("data-job")&&t.getAttribute("role")==="button"){e.preventDefault();openJob(t.getAttribute("data-job"));}
   }
 }
-function onFocusIn(e){if(e.target&&e.target.id==="tb-date")S.tbDateFocus=true;}
+function onFocusIn(e){
+  if(e.target&&e.target.id==="tb-date")S.tbDateFocus=true;
+  if(SH&&!SH.gTok&&e.target&&e.target.id==="f-addr")SH.gTok=uuid();      // a new address-entry session for Google (a new token after a pick, or when the sheet has just opened)
+}
 function onFocusOut(e){
   if(e.target&&e.target.id==="tb-date"){S.tbDateFocus=false;flushDate();}
   if(!SH)return;
