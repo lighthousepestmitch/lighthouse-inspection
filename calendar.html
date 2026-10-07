@@ -4524,6 +4524,33 @@ function wireGlobal(){
   document.addEventListener("mousedown",function(e){if(SH&&e.target&&e.target.closest&&e.target.closest(".aclist"))e.preventDefault();});
   // Once a card has been picked up (after the press-and-hold), the page must not scroll under the finger. Before that, swipes scroll normally.
   document.addEventListener("touchmove",function(e){if(DR.on&&DR.started&&e.cancelable)e.preventDefault();},{passive:false});
+  // Swipe left / right on the calendar = next / previous day (a week in week view). A quick sideways flick only:
+  // a press-and-hold that picks a job up, an up/down scroll, or a swipe inside the booking bar, a job sheet or a
+  // sideways-scrolling row of chips is left alone.
+  const SW={on:false,x:0,y:0,t:0};
+  function swipeSpot(t){
+    if(!t||!t.closest||S.screen!=="cal")return false;
+    if(SV||(SH&&!SH.bar))return false;
+    if(t.closest(".bar,.sheet,input,textarea,select,.menu,.aclist,[data-noswipe]"))return false;
+    for(let n=t;n&&n!==document.body;n=n.parentElement){      // a row that scrolls sideways keeps its own swipe
+      if(n.scrollWidth>n.clientWidth+4){const ox=getComputedStyle(n).overflowX;if(ox==="auto"||ox==="scroll")return false;}
+    }
+    return true;
+  }
+  document.addEventListener("touchstart",function(e){
+    SW.on=e.touches.length===1&&swipeSpot(e.target);
+    if(SW.on){SW.x=e.touches[0].clientX;SW.y=e.touches[0].clientY;SW.t=Date.now();}
+  },{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(!SW.on)return;SW.on=false;
+    if(DR.started||DR.on&&DR.mode==="resize")return;       // a job was being moved or stretched
+    const c=e.changedTouches&&e.changedTouches[0];if(!c)return;
+    const dx=c.clientX-SW.x,dy=c.clientY-SW.y;
+    if(Date.now()-SW.t>700||Math.abs(dx)<70||Math.abs(dx)<2*Math.abs(dy))return;
+    S.noClickUntil=Date.now()+400;       // the lift-off must not also count as a tap on an empty slot
+    go(dx<0?1:-1);
+  },{passive:true});
+  document.addEventListener("touchcancel",function(){SW.on=false;},{passive:true});
   document.addEventListener("keydown",function(e){
     if(e.key==="Enter"&&SH&&e.target&&e.target.tagName==="INPUT"){e.preventDefault();}
     if(e.key==="Enter"&&SV&&e.target&&e.target.tagName==="INPUT"){e.preventDefault();try{e.target.blur();}catch(x){}}      // Services panel: Enter saves the box (leaving it does that)
