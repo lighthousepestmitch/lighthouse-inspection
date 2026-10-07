@@ -334,6 +334,7 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .svhead b{font-size:15px;min-width:0;word-break:break-word}
 .pf{flex:0 0 auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--soon);background:var(--soonBg);padding:2px 8px;border-radius:5px}
 textarea.sdesc{min-height:64px}
+.svadd .inp{max-width:200px}
 #sv-total:empty{display:none}
 /* a client's known job sites, tap to fill the job address */
 .sites{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 12px}
@@ -354,7 +355,7 @@ textarea.sdesc{min-height:64px}
 .phgrid img{width:100%;height:100%;object-fit:cover;display:block}
 .photostat{font-size:13.5px;color:var(--ink2);min-height:20px}
 .danger{margin-top:22px;padding-top:6px;border-top:1px solid var(--line)}
-/* client notes: a ! on a job card, a yellow strip under the sheet's title (and in Quick add), a strip on the technician's cards */
+/* client notes: a ! on a job card, a yellow strip under the sheet's title (and in the booking bar), a strip on the technician's cards */
 .cn{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;width:14px;height:14px;border-radius:50%;background:var(--noteDot);color:#3A2A00;border:1px solid var(--noteLine);font:700 10px/1 "Public Sans",sans-serif;vertical-align:middle}
 .jc.xn .cn{width:10px;height:10px;font-size:7px}
 .jc.xn .l1{gap:2px}
@@ -388,7 +389,7 @@ textarea.cnta{min-height:76px}
 body.isdrag #toast,body.isresize #toast{pointer-events:none;opacity:.35}      /* so a card can be dropped on the spot under it */
 #toast .toastbtn{margin-left:10px;min-height:44px;padding:0 10px;font-weight:700;text-decoration:underline;color:inherit}
 
-/* segmented buttons (Quick add "Who", and the phone day view "Both | Mitch | ...") and rows of chips */
+/* segmented buttons (the booking bar's "Who", and the phone day view "Both | Mitch | ...") and rows of chips */
 .seg{display:flex;border:1px solid var(--line2);border-radius:12px;overflow:hidden;background:var(--surface)}
 .segb{flex:1 1 0;min-width:0;min-height:44px;padding:0 8px;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   border-left:1px solid var(--line2);display:flex;align-items:center;justify-content:center;gap:6px}
@@ -405,7 +406,7 @@ body.isdrag #toast,body.isresize #toast{pointer-events:none;opacity:.35}      /*
 .chiprow>*{flex:0 0 auto}
 @media(hover:hover) and (pointer:fine){.chiprow{scrollbar-width:thin}.chiprow::-webkit-scrollbar{display:block;height:6px}}      /* on a computer the sideways scroll needs a visible bar */
 
-/* floating + button (master): Quick add */
+/* floating + button (master): opens the booking bar */
 .fab{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:60px;height:60px;border-radius:50%;
   background:var(--deep);color:var(--deepInk);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.34),0 1px 3px rgba(0,0,0,.3)}
 .fab .ic{width:28px;height:28px;stroke-width:2.6}
@@ -415,25 +416,75 @@ body.is-master main{padding-bottom:92px}
 @media(min-width:720px){body.is-master main{padding-bottom:0}}      /* the grid is fitted to the screen, so nothing is below it to scroll to */
 body.is-master #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
 body.is-master #toast.act{bottom:auto;top:calc(4px + env(safe-area-inset-top));padding-top:4px;padding-bottom:4px}      /* the Undo toast sits over the title bar, never over the grid: the next job to move is often right where it would be */
-html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      /* with the keyboard up, a toast at the bottom would be hidden behind it */
+html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      /* with the bar open (and the keyboard up), a toast at the bottom would be behind them */
 
-/* Quick add panel */
-.qa .panel{max-width:520px}
-.qa .shhead{align-items:center;padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:4px;gap:4px}
-.qa .shhead h2{flex:1;min-width:0}
-.qa .shhead .linkbtn{flex:0 0 auto;font-size:14px}
-.qa .shbody{padding:2px 16px 10px}
-.qa .lbl{margin:6px 0 3px;display:flex;align-items:center;gap:8px;min-height:18px}
-.qa .qname{margin-top:8px}
-.qa .lbl .qdl{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);font-size:13px}
-.qa .lbl .linkbtn{text-transform:none;letter-spacing:0;font-size:14px;margin:-13px -6px -13px 0}
-.qa .fld{margin-bottom:8px}
-.qa .aclist{max-height:230px}
-.qa .hint{margin:0 0 8px 2px}
-.qa .shfoot{gap:10px}
-.qa .shfoot .btn{min-width:0;padding:11px 8px}
-.qa .shfoot .btn.pri{flex:0 0 32%}
-.qa .shfoot .btn:not(.pri){flex:1}
+/* Booking bar (master): docked to the bottom of the screen, never covering the calendar. The grid is fitted to the room above it (barMeasure puts the
+   bar's height in --barh), and once a client and a service are picked the free spots a job fits in show green on the grid. On a computer it is
+   bottom-centre and 560px wide. The client box is outside the part that scrolls, so its list can open upwards over the calendar. */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:560px;margin:0 auto;background:var(--surface);border:1px solid var(--line2);border-bottom:none;
+  border-radius:18px 18px 0 0;box-shadow:0 -6px 26px rgba(0,0,0,.24);display:flex;flex-direction:column;
+  max-height:max(150px,calc(var(--vvh,100vh) * .45));padding-bottom:env(safe-area-inset-bottom)}      /* (never less than the top row and the buttons, 150px, so they don't hang out of the bar when the keyboard leaves little room) */
+@media(min-width:720px){.bar{max-height:min(44vh,400px)}}
+html.kb-open .bar{padding-bottom:0}      /* the phone's keyboard is up: the bar sits on it, no home-bar gap */
+/* A box in More (phone, address, email, notes) is being typed in with the keyboard up (barEditFlag): the bar takes the room above the keyboard instead of 45% of it, so the
+   box and the address suggestions can be seen. The client box (in the top row) doesn't do this: its list opens upwards over the calendar, and the bar must stay low for that. */
+html.kb-open.bar-edit .bar{max-height:max(150px,calc(var(--vvh,100vh) - 12px))}
+html.bar-edit .bar #f-addr-list{max-height:min(200px,max(90px,calc(var(--vvh,100vh) - 215px)))}
+.barhead{position:relative;flex:0 0 auto;display:flex;align-items:center;gap:2px;padding:13px 4px 0 12px}
+.barhead:before{content:"";position:absolute;top:6px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--line2)}      /* the drag-handle look */
+.bar .barhead .fld{flex:1;min-width:0;margin:0;position:static}
+.barhead .linkbtn{flex:0 0 auto;font-size:14px;min-height:44px;padding:0 8px}
+.bar .barhead .aclist{left:8px;right:8px;top:auto;bottom:100%;margin:0 0 3px;max-height:min(300px,calc(var(--vvh,100vh) * .5))}
+.barbody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:2px 12px 4px}
+.barfoot{flex:0 0 auto;padding:4px 12px 7px;border-top:1px solid var(--line)}
+.barfoot .banner{margin:0 0 5px;padding:6px 10px;font-size:13.5px}
+.bar .lbl{margin:8px 0 3px;display:flex;align-items:center;gap:8px;min-height:18px}
+.bar .lbl .qdl{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:600;color:var(--ink2);font-size:13px}
+.bar .fld{margin-bottom:8px}
+.bar .hint{margin:0 0 8px 2px}
+.bar .chip{min-height:36px}
+.bar .seg .segb{min-height:36px;padding:0 6px}
+.bar .sites{flex-wrap:nowrap;overflow-x:auto;margin:0 0 6px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.bar .sites>*{flex:0 0 auto}
+.bar #f-addr-list{position:static;margin:4px 0 0;max-height:200px}
+.bar textarea.inp{min-height:0;resize:none}
+.barwho{display:flex;align-items:center;gap:8px;margin:6px 0 2px}
+.barwho .lbl{margin:0;flex:0 0 auto}
+.barwho .seg{flex:1;min-width:0}
+.barwho .linkbtn{flex:0 0 auto;min-height:36px;padding:0 2px 0 4px;font-size:13.5px;margin-right:-4px;white-space:nowrap}
+.barmore{margin-top:6px;padding-top:2px;border-top:1px dashed var(--line2)}
+.barmore .linkbtn{margin-left:-6px}
+.bar .qsum .linkbtn{min-height:34px}
+.bar .qsum{flex-wrap:nowrap}
+.bar .qsum .qsl{flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}      /* the client summary stays on one line: the address is cut short, not wrapped */
+.bar .sitelbl{display:none}
+.bar .sites .chip{min-height:34px;padding:4px 12px;font-size:13px}
+.bar .cnstrip.inl{padding:3px 8px;margin:-2px 0 6px;font-size:13.5px;line-height:1.3}
+.bar .cnstrip.inl .cn{width:16px;height:16px;font-size:11px}
+.bar .cnstrip .cntxt{max-height:2.7em}
+.barstat{display:flex;align-items:center;gap:7px;min-height:24px;font-size:14.5px;font-weight:700;color:var(--ink2);line-height:1.25}
+.barstat .sw{flex:0 0 auto;width:14px;height:14px;border-radius:4px;border:1.5px solid var(--ok);background:rgba(39,160,100,.24);background:color-mix(in srgb,var(--ok) 26%,transparent)}
+.barstat.rdy{color:var(--ok)}
+.barstat.warn{color:var(--soon)}
+.barstat .linkbtn{min-height:30px;padding:0 4px;margin:-3px 0;color:inherit;font-size:14.5px}
+.barbtns{display:flex;gap:8px;margin-top:4px}
+.barbtns .btn{min-height:40px;min-width:0;padding:4px 10px;font-size:14.5px;flex:1 1 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;display:block;line-height:30px}
+.barbtns .btn.pri{flex:1.4 1 0}
+@media(pointer:coarse){.col,.wlh{cursor:pointer}}      /* iOS Safari only sends a tap to the page's click handler for an element that looks tappable */
+html.bar-open .col,html.bar-open .wlh,html.bar-open .tray{cursor:pointer}
+html.bar-open .fab{display:none}      /* the bar has its own X, and the + would sit on top of it */
+html.bar-open body.is-master main{padding-bottom:calc(var(--barh,0px) + 8px)}
+@media(min-width:720px){html.bar-open body.is-master main{padding-bottom:var(--barh,0px)}}      /* the grid is fitted to the screen above the bar, so nothing is below it to scroll to */
+@media(min-width:720px){html.bar-open body.is-master .dcred{bottom:var(--barh,0px)}}      /* Google's credit sits just above the bar */
+/* the free spots (green) and the time already chosen, drawn on the grid by barPaint; they never take a tap (the grid does) and go while a card is being dragged */
+.gspot{position:absolute;left:1px;right:1px;z-index:0;pointer-events:none;border-radius:6px;border:1.5px solid var(--ok);
+  background:rgba(39,160,100,.22);background:color-mix(in srgb,var(--ok) 24%,transparent)}
+.wk .gspot{left:0;right:0;border-width:1.5px;border-radius:4px}
+.bkmark{border-color:var(--soon);background:rgba(140,99,20,.16);color:var(--soon);z-index:3}
+body.isdrag .gspot,body.isresize .gspot,body.isdrag .bkmark,body.isresize .bkmark{display:none}
+.tray.barok{outline:2px solid var(--ok);outline-offset:-2px;background:rgba(39,160,100,.14);background:color-mix(in srgb,var(--ok) 14%,var(--surface2));cursor:pointer}
+.tray.barok .trayhead:after{content:"tap to book here";font-size:11.5px;font-weight:700;color:var(--ok);margin-left:6px;white-space:nowrap}
+body.isdrag .tray.barok,body.isresize .tray.barok{outline:none}
 .chip.qc{text-align:center;padding:6px 14px;white-space:nowrap}
 .qdate{flex:0 0 156px;min-height:44px;padding:6px 10px}
 .qtime{display:flex;gap:6px;align-items:center}
@@ -442,13 +493,13 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
 .qsv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .qsv .chip{border-radius:12px;padding:4px 5px;text-align:center;font-size:13.5px;line-height:1.2;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere;min-width:0}
 .qsv .chip.on:before{content:"\2713\00a0"}
-.qsum{display:flex;gap:0 8px;align-items:center;flex-wrap:wrap;margin:-2px 0 6px;padding:5px 10px 0;border:1px solid var(--ok);background:var(--okBg);border-radius:10px}
-.qsum .qsl{flex:1 1 180px;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
+.qsum{display:flex;gap:0 8px;align-items:center;flex-wrap:wrap;margin:0 0 6px;padding:2px 10px 0;border:1px solid var(--ok);background:var(--okBg);border-radius:10px}
+.qsum .qsl{flex:1 1 180px;min-width:0;font-size:14.5px;overflow-wrap:anywhere;padding:3px 0}
 .qsum .qsa{display:flex;gap:2px;margin-right:-6px}
 .qsum .linkbtn{font-size:13.5px}
-.qhint{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:-4px 0 0}
+.qhint{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 4px}
 .qhint .hint{margin:0}
-.qhint .linkbtn{flex:0 0 auto;font-size:14px;margin-right:-6px}
+.qhint .linkbtn{flex:0 0 auto;font-size:14px;margin-right:-6px;min-height:34px}
 .qsum .miss{color:var(--soon);font-weight:700}
 @media(max-width:719px){
   .grid{--cw:136px}
@@ -494,6 +545,7 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
 <noscript><p style="padding:20px">This calendar needs JavaScript turned on.</p></noscript>
 <div id="app"></div>
 <div id="sheet"></div>
+<div id="bar" class="bar" role="region" aria-label="Book a job" hidden></div>
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
@@ -513,15 +565,17 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
 /* ---------- settings ---------- */
 const WORK_START=7*60, WORK_END=17*60;   // the day and week grids always show 7am to 5pm, and grow (to the hour) to take in any job outside that
 const PPM_FLOOR=0.6, PPM_MAX=3;          // pixels per minute: fitted to the screen (fitPpm), but never under 0.6 so a 30 min job can still be tapped
+const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open: there the whole 7am to 5pm day fits above it on a computer, and a green spot is what gets tapped
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
-// clients.notes and service_types.default_minutes come from 06_lengths_notes.sql. If the database doesn't have them yet, the first answer that says so
-// switches them off for the session (S.noNotesCol, S.noLenCol), quietly: they are left out of every read and write and the page carries on without them.
+// clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
+// have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
+// read and write and the page carries on without them (no add-on column = every add-on counts as blank, so a service adds its full time).
 function clientCols(){return CLIENT_COLS+(S.noNotesCol?"":",notes");}
 function jobCols(){return "*, client:clients("+clientCols()+")";}
-function typeCols(){return "id,name,default_price,"+(S.noLenCol?"":"default_minutes,")+"xero_description,sort";}
+function typeCols(){return "id,name,default_price,"+(S.noLenCol?"":"default_minutes,")+(S.noAddonCol?"":"addon_minutes,")+"xero_description,sort";}
 const PREF_KEY="lpc_calendar_prefs_v1", EMAIL_KEY="lpc_calendar_last_email", DRAFT_KEY="lpc-cal-draft-v1";
 const DRAFT_MAX_AGE=24*60*60*1000;
 const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","South Australia":"SA","Western Australia":"WA","Tasmania":"TAS","Northern Territory":"NT","Australian Capital Territory":"ACT"};
@@ -533,8 +587,8 @@ const G_LAT=-28.65,G_LNG=153.56,G_RADIUS=50000;      // biased to the Northern R
 const ADDR_MIN=4,ADDR_WAIT=250;                      // characters before a lookup, and ms of quiet after typing
 const ADDR_SAVE_WAIT=2000;                           // ms a save (or More details) waits for a just-tapped address's details, then goes ahead with the address as typed
 const MORE_KEY="lpc_sheet_more_v1";     // the job sheet's "More" row: open or shut, remembered on this device
-const QUICK_KEY="lpc_quick_prefs_v1";   // Quick add remembers who the last job was for
-const QUICK_SVC=6;                      // service chips Quick add shows before "More"
+const QUICK_KEY="lpc_quick_prefs_v1";   // the booking bar remembers who it was last booking for
+const QUICK_SVC=6;                      // service chips the booking bar shows before "More services"
 const QUICK_DUR=60;                     // minutes, same default as the full job sheet
 const QUICK_FIRST=6*60+30, QUICK_LAST=17*60, QUICK_STEP=30;      // time chips 6:30am to 5:00pm
 const NARROW="(max-width:719px)";       // phone width: below this the day view can show one person at a time
@@ -578,7 +632,7 @@ function minToTm(m){return pad(Math.floor(m/60))+":"+pad(m%60)+":00";}
 function minToHM(m){return pad(Math.floor(m/60))+":"+pad(m%60);}
 function fmtMin(m){const h=Math.floor(m/60)%24,mi=m%60;return (h%12===0?12:h%12)+":"+pad(mi)+(h>=12?"pm":"am");}
 function hourLabel(m){const h=Math.floor(m/60)%24;return (h%12===0?12:h%12)+(h>=12?"pm":"am");}
-function fmtDur(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+r+" min":"");}
+function fmtDur(m){if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+pad(r)+" min":"");}      // 45 min, 1 hr, 1 hr 20 min, 2 hr 05 min
 function hm(m){const h=Math.floor(m/60)%24;return (h%12===0?12:h%12)+":"+pad(m%60);}      // 8:00, 1:30 (the grid's hour labels say am or pm)
 function rangeTxt(s,dur){return hm(s)+"-"+hm(s+dur);}                                     // 8:00-9:00
 function hmc(m){return m%60?hm(m):String(Math.floor(m/60)%24%12||12);}                       // 8, 9:15 (the tightest week lanes on a phone)
@@ -592,12 +646,13 @@ const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster
   view:"day",date:todayYmd(),showCancelled:false,jobs:[],byId:{},loaded:false,loadErr:"",range:null,
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
   scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
-  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,menuOpen:false};
+  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,noAddonCol:false,menuOpen:false,
+  rid:0,barH:0,barPrevView:null};      // rid: counts body redraws (the booking bar's green spots are drawn again after each). barH: room the bar takes at the foot of the screen. barPrevView: the view to go back to when the bar closes (it was switched to Week).
 let SH=null;     // the open job sheet, or null
 let SV=null;     // the open Services panel (master), or null. Never open together with SH.
 
 function loadPrefs(){try{const p=JSON.parse(localStorage.getItem(PREF_KEY)||"{}")||{};if(p.view==="week"||p.view==="day")S.view=p.view;S.showCancelled=!!p.showCancelled;if(typeof p.phoneWho==="string"&&p.phoneWho)S.phoneWho=p.phoneWho;}catch(e){}}
-function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify({view:S.view,showCancelled:S.showCancelled,phoneWho:S.phoneWho}));}catch(e){}}
+function savePrefs(){try{localStorage.setItem(PREF_KEY,JSON.stringify({view:S.barPrevView||S.view,showCancelled:S.showCancelled,phoneWho:S.phoneWho}));}catch(e){}}      // (the Week the booking bar switches to is not remembered)
 
 function isNarrow(){try{return !!(window.matchMedia&&window.matchMedia(NARROW).matches);}catch(e){return false;}}
 
@@ -634,16 +689,17 @@ function missingCol(e,col){
   const m=String(e.message||"")+" "+String(e.details||"")+" "+String(e.hint||"");
   return (e.code==="PGRST204"||e.code==="42703"||/could not find the .*column|column .*does not exist/i.test(m))&&new RegExp("\\b"+col+"\\b").test(m);
 }
-// Looks at a failed answer: if it says clients.notes or service_types.default_minutes isn't there, remember that and return true (ask again without it).
+// Looks at a failed answer: if it says clients.notes, service_types.default_minutes or service_types.addon_minutes isn't there, remember that and return true (ask again without it).
 function noteMissing(e){
   if(!S.noNotesCol&&missingCol(e,"notes")){S.noNotesCol=true;return true;}
   if(!S.noLenCol&&missingCol(e,"default_minutes")){S.noLenCol=true;return true;}
+  if(!S.noAddonCol&&missingCol(e,"addon_minutes")){S.noAddonCol=true;return true;}
   return false;
 }
 // run() builds and sends a request (it is called again if the first answer said one of those columns is missing, so it must read the S.no... flags each time)
 async function colRetry(run){
   let r=await run();
-  for(let i=0;i<2&&r&&r.error&&noteMissing(r.error);i++)r=await run();
+  for(let i=0;i<3&&r&&r.error&&noteMissing(r.error);i++)r=await run();
   return r;
 }
 function netErr(e){return (navigator.onLine===false)||(e&&(e.name==="AuthRetryableFetchError"||e.status===0))||/failed to fetch|networkerror|load failed|network request failed/i.test(String(e&&e.message||""));}
@@ -895,13 +951,14 @@ function draftServices(F){
   return st?[{type:st,description:typeDesc(st),price:priceStr(F.price)}]:[];
 }
 // Puts a form (as readForm gives it) into the job sheet that has just been opened. The baseline stays as the fresh snapshot taken in
-// openSheet, so the sheet counts as changed and still asks before it closes. Used by Restore (after a logout) and by Quick add's "More details".
+// openSheet, so the sheet counts as changed and still asks before it closes. Used by Restore (after a logout) and by the booking bar's "More details".
 function fillSheet(F,o){
   const vals={"f-name":F.name,"f-phone":F.phone,"f-email":F.email,"f-street":F.street,"f-suburb":F.suburb,"f-state":F.state,"f-postcode":F.postcode,
     "f-addr":F.address,"f-notes":F.notes};
   if(F.cnotes!=null){vals["f-cnotes"]=F.cnotes;SH.cnTouched=true;}      // a typed (or kept) client note; without one the box just mirrors the client's saved notes
-  if(S.isMaster){vals["f-date"]=F.date;vals["f-time"]=F.time;vals["f-dur"]=F.dur;vals["f-staff"]=F.staff;}
+  if(S.isMaster){vals["f-date"]=F.date;vals["f-time"]=F.time;vals["f-staff"]=F.staff;}
   Object.keys(vals).forEach(function(id){if(byId(id))setVal(id,vals[id]);});
+  if(S.isMaster&&F.dur>0)setDur(F.dur);      // (the How long list is in 15 minute steps: a length like 80 min is added to it)
   if(S.isMaster){SH.clientId=o.clientId||null;SH.client=o.client?Object.assign({},o.client):null;}
   SH.svc=draftServices(F);renderSvcList();renderSvcDetails();
   if(o.addrTouched)SH.addrTouched=true;
@@ -1066,7 +1123,7 @@ function renderShell(){
   S.menuOpen=false;
   setApp('<header class="top"><h1>Job Calendar</h1><span class="who">'+esc(S.me.name)+'</span>'+menuHtml()+'</header>'+
     '<main><div id="tb"></div><div id="dr"></div><div id="cb"></div></main>'+
-    (S.isMaster?'<button type="button" class="fab" data-act="qadd" aria-label="Quick add a job">'+IC.plus+'</button>':""),"cal");
+    (S.isMaster?'<button type="button" class="fab" data-act="qadd" aria-label="Book a job">'+IC.plus+'</button>':""),"cal");
   renderToolbar();renderBody();
 }
 function weekLabel(){const ws=weekStart(S.date),we=addDays(ws,5),y1=parseYmd(ws).getFullYear(),y2=parseYmd(we).getFullYear();return dayShort(ws)+(y1!==y2?" "+y1:"")+" to "+dayShort(we)+" "+y2;}
@@ -1155,6 +1212,7 @@ function renderBody(){
   const tr=$(".tray");
   if(tr&&sameDay){if(tst)tr.scrollTop=tst;if(tsl)tr.scrollLeft=tsl;}
   updateLive();
+  S.rid++;barRefresh();      // the booking bar's green spots go on the grid that has just been drawn (and its status line is brought up to date)
   driveSoon();      // last: the drive-time labels go on top of what has just been drawn, on the next frame (not in this one)
 }
 /* ---------- fitting the grid to the screen ----------
@@ -1165,9 +1223,11 @@ function renderBody(){
 // under it could never be uncovered: end that grid above it. (On a phone the page scrolls on past the grid, see body.is-master main, and the
 // grid needs every pixel it can get, so it stays as it is.)
 const FAB_ROOM=80;
+// The height the calendar has to fit in: the window, less the booking bar docked at the foot of it (when it is open).
+function viewH(){return window.innerHeight-(S.barH||0);}
 function gapUnderGrid(gw){
   if(isNarrow())return 6;      // the .dayline padding under the grid
-  if(S.isMaster&&gw&&gw.getBoundingClientRect().right>(document.documentElement.clientWidth||window.innerWidth)-76)return FAB_ROOM;
+  if(!S.barH&&S.isMaster&&gw&&gw.getBoundingClientRect().right>(document.documentElement.clientWidth||window.innerWidth)-76)return FAB_ROOM;      // (the + is hidden while the bar is open)
   return 14;
 }
 function fitPpm(gw){
@@ -1175,12 +1235,12 @@ function fitPpm(gw){
   const top=gw.getBoundingClientRect().top+(window.pageYOffset||0);
   const bar=Math.max(0,gw.offsetHeight-gw.clientHeight-2);      // a sideways scroll bar (lots of people on a small screen)
   const span=Math.max(60,S.grid.ge-S.grid.gs);
-  const room=window.innerHeight-top-hh-bar-2-gapUnderGrid(gw);
-  return Math.max(PPM_FLOOR,Math.min(PPM_MAX,Math.floor(room/span*1000)/1000));
+  const room=viewH()-top-hh-bar-2-gapUnderGrid(gw);
+  return Math.max(S.barH?PPM_FLOOR_BAR:PPM_FLOOR,Math.min(PPM_MAX,Math.floor(room/span*1000)/1000));
 }
 function sizeGrid(gw){
   const top=gw.getBoundingClientRect().top+(window.pageYOffset||0);
-  const room=Math.max(180,Math.floor(window.innerHeight-top-gapUnderGrid(gw)));      // 180: a phone on its side still gets a usable frame
+  const room=Math.max(S.barH?120:180,Math.floor(viewH()-top-gapUnderGrid(gw)));      // 180: a phone on its side still gets a usable frame (120 with the booking bar open: the frame must not run under it)
   gw.style.height="";
   // it fits: the frame is just as tall as the grid. The floor was hit: the frame fills the screen and the grid scrolls inside it.
   if(gw.offsetHeight>room+1)gw.style.height=room+"px";
@@ -1265,7 +1325,7 @@ function dayTot(list){
   list.forEach(function(j){if(j.status==="cancelled")return;n++;min+=Math.max(0,+j.duration_min||0);});
   return {n:n,min:min};
 }
-function hrsTxt(min){return String(Math.round(min/15)/4);}      // 7, 7.5, 7.25
+function hrsTxt(min){return String(min%15===0?Math.round(min/15)/4:Math.round(min/6)/10);}      // 7, 7.5, 7.25 (a length off the quarter hours, like 1 hr 20, in tenths: 1.3)
 // short: 0 = "5 jobs · 7 h", 1 (or true) = "5 · 7h", 2 = "5·7h" (a day column of the week on a phone)
 function totTxt(t,short){
   if(!t.n)return "";
@@ -1817,6 +1877,7 @@ function driveCredit(on){
    ===================================================================== */
 function afterNav(){
   S.scrollToWork=true;
+  barFollowDay();      // (the booking bar's day follows the day on screen, until a day has been picked on the bar)
   renderToolbar();
   const r=currentRange();
   if(S.range&&r.from>=S.range.from&&r.to<=S.range.to&&S.loaded){renderBody();fetchJobs(true);}
@@ -1835,7 +1896,7 @@ const DR={on:false,started:false,id:null,pid:null,sx:0,sy:0,lx:0,ly:0,offX:0,off
 const HOLD_MS=350;     // a finger has to rest on a card this long before it picks the job up; a quick swipe scrolls instead
 
 function onDown(e){
-  if(!S.isMaster||S.screen!=="cal"||SH||SV)return;
+  if(!S.isMaster||S.screen!=="cal"||(SH&&!SH.bar)||SV)return;      // (dragging and stretching keep working with the booking bar open)
   // A press that never got its release (the card was swapped out, or the browser lost the touch) must not block dragging for good.
   // The one case we leave alone is a second finger landing during a live drag.
   if(DR.on){
@@ -1897,7 +1958,7 @@ function rzDur(){
   DR.rzMoved=true;
   const r=col.getBoundingClientRect(),end=g.gs+(DR.ly-r.top)/g.ppm+DR.rzOff;
   const maxEnd=Math.min(24*60,Math.max(g.ge,WORK_END+120));
-  let d=Math.round((end-DR.rzS)/SNAP)*SNAP;
+  const d=Math.round(end/SNAP)*SNAP-DR.rzS;      // the END snaps to 15 min (a job of 80 min starting at 9:00 is stretched to end at 10:15 or 10:30)
   return Math.max(MIN_DUR,Math.min(d,maxEnd-DR.rzS));
 }
 function updateResize(){
@@ -2028,7 +2089,7 @@ function tick(){
   // the 4pm row at the bottom of a phone must not slide the page (and the drop) along.
   const gr=gw?gw.getBoundingClientRect():null;
   const pgUp=DR.ly<48&&window.pageYOffset>0&&(!gr||gr.top<0||DR.ly<gr.top);
-  const pgDown=DR.ly>window.innerHeight-48&&(!gr||gr.bottom>window.innerHeight+1);
+  const pgDown=DR.ly>viewH()-48&&(!gr||gr.bottom>viewH()+1);
   if(pgUp||pgDown){
     if(!DR.pageT)DR.pageT=Date.now();
     if(Date.now()-DR.pageT>300){if(pgUp)window.scrollBy(0,-12);else window.scrollBy(0,12);}
@@ -2151,8 +2212,12 @@ function newDefaults(o){
   }
   return {staff:o.staff!==undefined?o.staff:(S.me?S.me.id:""),date:date,time:o.time!==undefined?o.time:"08:00"};
 }
-function openJob(id){const j=S.byId[id];if(j)openSheet(j,null);}
-function openNew(o){if(!S.isMaster)return;openSheet(null,newDefaults(o));}
+// A job card was tapped. With the booking bar open the bar closes first (and asks if it has something typed in it).
+function openJob(id){
+  const j=S.byId[id];if(!j)return;
+  if(SH&&SH.bar&&!closeSheet(false))return;
+  openSheet(j,null);
+}
 
 function openSheet(job,defaults){
   if(SH||SV)return;
@@ -2284,10 +2349,17 @@ function onSvcField(el){
   const e=SH.svc[+el.getAttribute("data-i")];if(!e)return;
   if(el.getAttribute("data-sv")==="p"){e.price=el.value;updateSvcMeta();}else e.description=el.value;
 }
+// The How long list: 15 minute steps. A saved length that is not on them (80 min, 2 hr 05) goes in at its place in the list, the way setDur adds one, not at the end.
 function durOptions(cur){
+  cur=+cur||0;
   let h="",found=false;
-  for(let m=15;m<=720;m+=15){const on=m===cur;if(on)found=true;h+='<option value="'+m+'"'+(on?" selected":"")+'>'+esc(fmtDur(m))+'</option>';}
-  if(!found&&cur>0)h+='<option value="'+cur+'" selected>'+esc(fmtDur(cur))+'</option>';
+  const opt=function(m){return '<option value="'+m+'"'+(m===cur?" selected":"")+'>'+esc(fmtDur(m))+'</option>';};
+  for(let m=15;m<=720;m+=15){
+    if(!found&&cur>0&&cur<m&&cur%15!==0){h+=opt(cur);found=true;}
+    if(m===cur)found=true;
+    h+=opt(m);
+  }
+  if(!found&&cur>0)h+=opt(cur);      // (longer than the list goes to)
   return h;
 }
 function staffOptions(cur){
@@ -2450,14 +2522,15 @@ function readForm(){
     state:trim(val("f-state")),postcode:trim(val("f-postcode")),address:trim(val("f-addr")),
     services:SH.svc.map(function(e){return {type:e.type,description:e.description,price:trim(e.price)};}),
     notes:String(val("f-notes")||"").replace(/\r\n/g,"\n"),
-    cnotes:byId("f-cnotes")?String(val("f-cnotes")||"").replace(/\r\n/g,"\n"):null      // null = no notes box on this sheet (Quick add, or the database has no clients.notes yet)
+    cnotes:byId("f-cnotes")?String(val("f-cnotes")||"").replace(/\r\n/g,"\n"):null      // null = no notes box on this sheet (the booking bar, or the database has no clients.notes yet)
   };
   if(M){f.date=val("f-date")||"";f.time=val("f-time")||"";f.dur=parseInt(val("f-dur"),10);f.staff=val("f-staff")||"";}
   else{f.date=I.date;f.time=I.time;f.dur=I.dur;f.staff=I.staff;}
   return f;
 }
 function snap(){
-  if(SH.quick){const f=readForm();return JSON.stringify([f.name,f.phone,f.email,f.street,f.suburb,f.state,f.postcode,f.address,f.services])+"|"+(SH.clientId||"");}
+  // the bar: not the day, time or who (those are set by the chips and the green spots), but the notes are
+  if(SH.quick){const f=readForm();return JSON.stringify([f.name,f.phone,f.email,f.street,f.suburb,f.state,f.postcode,f.address,f.services,f.notes,SH.cnTouched?f.cnotes:""])+"|"+(SH.clientId||"");}
   return JSON.stringify(readForm())+"|"+(SH.clientId||"");
 }
 function isDirty(){return !!SH&&snap()!==SH.baseline;}
@@ -2468,7 +2541,7 @@ function setLink(id,href){
 }
 function updateLinks(){
   if(!SH)return;
-  if(SH.quick){quickSync();return;}      // Quick add has no Ring/Text/Maps buttons or paperwork: it only needs its own chips and summary refreshed
+  if(SH.quick){quickSync();return;}      // the booking bar has no Ring/Text/Maps buttons or paperwork: it only needs its own chips and summary refreshed
   const f=readForm(),num=f.phone.replace(/[^\d+]/g,"");
   setLink("ln-ring",num.length>=3?"tel:"+num:"");
   setLink("ln-text",num.length>=3?"sms:"+num:"");
@@ -2502,27 +2575,36 @@ function updateLinks(){
 }
 function showMsg(text,kind){
   const m=byId("sh-msg");if(!m)return;
+  if(SH&&SH.bar){
+    // The booking bar: a plain note (Saving...) goes in its status line, so the bar doesn't grow for a moment. An error is a banner and stays until the next tap.
+    clearTimeout(SH.hintT);
+    if(kind!=="bad"){m.innerHTML="";if(kind==="warn"&&text)barHint(text);else{SH.hint=text||"";barRefresh();}return;}      // (a warning goes after a few seconds, Saving... stays until the save is over)
+    SH.hint="";barRefresh();
+  }
   m.innerHTML=text?'<div class="banner '+(kind||"warn")+'">'+esc(text)+'</div>':"";
   if(text&&kind==="bad"){const b=$(".shbody");if(b)b.scrollTop=0;}
 }
 function setBusy(on){
   SH.busy=!!on;
-  ["sh-save","sh-done","sh-saveadd"].forEach(function(id){const b=byId(id);if(b)b.disabled=!!on;});
+  if(SH.bar){barButtons();return;}      // the bar's buttons are also off until a client and a service are picked
+  ["sh-save","sh-done"].forEach(function(id){const b=byId(id);if(b)b.disabled=!!on;});
   $$all(".danger .btn").forEach(function(b){b.disabled=!!on;});
 }
 function $$all(s){return Array.prototype.slice.call(document.querySelectorAll(s));}
 
 /* ----- closing ----- */
-function closeSheet(force){
+// force skips the "still saving" and "unsaved changes" checks. keepView (with force, from "More details") still puts the view back that the booking bar switched to Week.
+function closeSheet(force,keepView){
   if(!SH)return true;
   // X, Escape and a tap on the backdrop all come through here. Closing in the middle of a save would leave it half done.
   if(!force&&SH.busy){showMsg("Still saving, hang on a sec.","warn");return false;}
   if(!force&&isDirty()&&!confirm("You have changes that are not saved. Close anyway?"))return false;
   clearTimeout(SH.sT);clearTimeout(SH.acT);if(SH.acAbort){try{SH.acAbort.abort();}catch(e){}}
+  if(SH.bar){barClose(!!force,!!keepView);return true;}      // the booking bar: no backdrop, nothing to un-lock
   const pf=SH.prevFocus;
   SH=null;
   byId("sheet").innerHTML="";
-  document.documentElement.classList.remove("sheet-open","qa-open");
+  document.documentElement.classList.remove("sheet-open");
   const app=byId("app");app.removeAttribute("inert");app.removeAttribute("aria-hidden");
   if(S.dirtyRender)renderBody();
   if(pf&&pf.focus&&document.contains(pf)){try{pf.focus({preventScroll:true});}catch(e){}}
@@ -2540,7 +2622,7 @@ function onNameInput(){
   if(SH.quick&&SH.busy)return;
   // Typing in the name box does NOT unlink the client. Fixing a spelling keeps their phone, email and address, and the job address.
   // Switching to someone else is done by picking from the list, or with the "Different client" button.
-  if(SH.quick&&SH.clientId&&SH.client&&trim(f.value)!==trim(SH.client.name))quickUnlink();      // Quick add has no rename: typing again means someone else
+  if(SH.quick&&SH.clientId&&SH.client&&trim(f.value)!==trim(SH.client.name))quickUnlink();      // the bar has no rename: typing again means someone else
   if(SH.renameTo!=null)SH.renameTo=trim(f.value);
   updateClientHint();
   clearTimeout(SH.sT);
@@ -2758,7 +2840,7 @@ function applySitePrefill(sh){
 }
 function renderSites(){
   const el=byId("f-addr-sites");if(!el||!SH)return;
-  if(SH.quick)quickSync();      // Quick add: the sites have just loaded (or been cleared), so its summary can stop saying it is still looking
+  if(SH.quick)quickSync();      // booking bar: the sites have just loaded (or been cleared), so its summary can stop saying it is still looking
   const list=SH.sites||[];
   if(list.length<2){el.hidden=true;el.innerHTML="";return;}
   const cur=normAddr(val("f-addr"));
@@ -2865,7 +2947,7 @@ async function gFail(r){
 }
 function onAddrInput(){
   SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;
-  // Quick add has no street, suburb ... boxes to see or fix for a NEW client. They only ever hold the lookup pick for this address, so they go as soon as the text is changed
+  // The booking bar has no street, suburb ... boxes to see or fix for a NEW client. They only ever hold the lookup pick for this address, so they go as soon as the text is changed
   // (otherwise a cleared or corrected address comes back from them on save).
   if(SH.quick&&!SH.clientId)["f-street","f-suburb","f-state","f-postcode"].forEach(function(id){setVal(id,"");});
   hideAddrList();       // whatever was showing belongs to the old text
@@ -2936,6 +3018,7 @@ function showAddrList(preds){
   l.innerHTML=SH.acResults.map(function(p,i){return '<button type="button" class="acitem" role="option" data-sh="pickaddr" data-i="'+i+'">'+esc(p.line)+'</button>';}).join("")+
     '<div class="acpow" role="presentation">Address suggestions: Google Maps</div>';      // Google's name with its suggestions (no Google map here)
   l.hidden=false;
+  if(SH.bar)barScrollTo(byId("f-addr"));      // on the bar the list is inside the part that scrolls, under the box: bring the box to the top so the list is in view
 }
 // What Google's place details say, as {street, suburb, state, postcode, line, placeId}.
 // Street is "<number> <road>" with the unit in front ("5/296 Tyagarah Rd") when there is one. Google sometimes knows only the road for
@@ -3005,7 +3088,7 @@ async function pickDetails(sh,p,seq,shown){
   if(SH!==sh||trim(val("f-addr"))!==shown)return;      // sheet closed, or the box was changed some other way
   setVal("f-addr",got.line);
   // the client's street, suburb ... boxes only get filled when there is a client (or a name typed for one): with no client they would block the save
-  // Quick add, new client: those boxes are hidden and only ever hold the latest pick, so a second pick replaces the first (in the full sheet they are visible and stay as they are).
+  // Booking bar, new client: those boxes are hidden and only ever hold the latest pick, so a second pick replaces the first (in the full sheet they are visible and stay as they are).
   const qNew=!!(SH.quick&&!SH.clientId);
   if((SH.clientId||trim(val("f-name")))&&(qNew||(!trim(val("f-street"))&&!trim(val("f-suburb"))))){setVal("f-street",got.street);setVal("f-suburb",got.suburb);setVal("f-state",got.state);setVal("f-postcode",got.postcode);}
   updateLinks();renderSites();
@@ -3378,7 +3461,7 @@ async function saveSheet(extra,opts){
     }
     lostContact=!clientId&&hasContact(f);
     // 2. the job
-    // (Quick add: a job address that was cleared on purpose stays blank. Its hidden client boxes must not put it back.)
+    // (Booking bar: a job address that was cleared on purpose stays blank. Its hidden client boxes must not put it back.)
     if(!f.address&&!(sh.quick&&sh.addrTouched)){const a=composeAddr(f.street,f.suburb,f.state,f.postcode);if(a){f.address=a;if(SH===sh)setVal("f-addr",a);}}
     const patch=buildJobPatch(sh,f,clientId,extra);
     let row=null;
@@ -3476,29 +3559,119 @@ async function deleteJob(){
 
 /* =====================================================================
    JOB LENGTH FROM THE SERVICES, AND THE SERVICES PANEL
-   Each service type can have a usual length (service_types.default_minutes, 15 to 720) and a usual price. Ticking services sets the job's length to the
-   usual lengths added up (only services that have one), to the nearest 15 min, never under 15. If none of the ticked services has a usual length, the
-   length is left as it is. It only does that while the length has not been set by hand on this job (SH.durHand); a job that is already saved counts as
-   set by hand, so ticking more services on it never changes its length by itself: the hint under "How long" offers the usual time instead ("Use it").
+   Each service type can have a usual length (service_types.default_minutes, 15 to 720), an add-on time (service_types.addon_minutes, 0 to 720: the minutes it
+   adds when it is done on the same visit as another service, blank = its full usual time) and a usual price. Ticking services sets the job's length by
+   the rule in lenRule below (only services that have a usual length count), to the nearest 5 min, 15 to 720. If none of the ticked services has a usual
+   length, the length is left as it is. It only does that while the length has not been set by hand on this job (SH.durHand); a job that is already saved
+   counts as set by hand, so ticking more services on it never changes its length by itself: the hint under "How long" offers the usual time instead ("Use it").
    ===================================================================== */
-function usualLen(svc){
-  let sum=0,any=false;
-  (svc||[]).forEach(function(e){
-    const t=S.typesByName[e.type],m=t&&t.default_minutes;
-    if(typeof m==="number"&&isFinite(m)&&m>0){sum+=m;any=true;}
+/*LEN-BEGIN  pure functions (no page state): the self-test below, and a test page, can run them on their own */
+// items = [{m: usual minutes (or none), a: minutes it adds when with another job (or null = its full time)}], one per ticked service.
+// Each ticked service is tried as the "main" job (its full time) with every OTHER ticked service adding its add-on time (its full time if blank).
+// The shortest of those totals is the job's length: nearest 5 min, 15 to 720. A service with no usual length adds nothing. null = none has one.
+function lenRule(items){
+  const L=[];
+  (items||[]).forEach(function(e){
+    const m=e&&e.m;if(!(typeof m==="number"&&isFinite(m)&&m>0))return;
+    const a=e.a;L.push({m:m,a:(typeof a==="number"&&isFinite(a)&&a>=0)?a:m});
   });
-  return any?Math.max(MIN_DUR,Math.min(720,Math.round(sum/15)*15)):null;
+  if(!L.length)return null;
+  let best=Infinity;
+  L.forEach(function(main,i){let t=main.m;L.forEach(function(o,k){if(k!==i)t+=o.a;});if(t<best)best=t;});
+  return Math.max(MIN_DUR,Math.min(720,Math.round(best/5)*5));
 }
-// called after the ticked services change (the full sheet and Quick add)
+// a job length in words for the booking bar: "45 min", "1 hr", "1 hr 20", "2 hr 05"
+function fmtLen(m){m=Math.round(m);if(m<60)return m+" min";const h=Math.floor(m/60),r=m%60;return h+" hr"+(r?" "+pad(r):"");}
+// The free gaps in a lane where a job of len minutes fits. busy = [[start,end],...] (minutes, any order, may overlap), the day runs ws to we.
+// Each answer is {from,to}: from = the earliest start on the step (15 min) grid, to = the end of the free gap (a job can start anywhere from..to-len).
+function fitGaps(busy,len,ws,we,step){
+  const iv=(busy||[]).filter(function(b){return b[1]>b[0];}).sort(function(a,b){return a[0]-b[0]||a[1]-b[1];});
+  const out=[];let cur=ws;
+  const emit=function(a,b){const f=Math.ceil(a/step)*step;if(f+len<=b)out.push({from:f,to:b});};
+  for(let i=0;i<iv.length;i++){
+    const x=iv[i];
+    if(x[1]<=cur)continue;
+    if(x[0]>cur)emit(cur,Math.min(x[0],we));
+    cur=Math.max(cur,x[1]);
+    if(cur>=we)break;
+  }
+  if(cur<we)emit(cur,we);
+  return out;
+}
+// A tap at raw minute (the time under the finger, not snapped) inside one of those gaps: the start it books, on the step grid, clamped so the job
+// still fits in the gap. null = the tap is not in a green block.
+function pickStart(gaps,raw,len,step){
+  for(let i=0;i<gaps.length;i++){
+    const g=gaps[i];
+    if(raw>=g.from&&raw<g.to){
+      const hi=Math.floor((g.to-len)/step)*step;
+      return Math.max(g.from,Math.min(Math.floor(raw/step)*step,hi));
+    }
+  }
+  return null;
+}
+// Returns a list of what is wrong (empty = all good). Mitch's live values: General Pest 60 (add-on blank), Termite Inspection 60 (adds 45), Rodent 45 (adds 20).
+function lenSelfTest(){
+  const GP={m:60,a:null},TI={m:60,a:45},RO={m:45,a:20},NO={m:null,a:30},bad=[];
+  const eq=function(what,got,want){if(JSON.stringify(got)!==JSON.stringify(want))bad.push(what+": got "+JSON.stringify(got)+", wanted "+JSON.stringify(want));};
+  eq("GP alone",lenRule([GP]),60);eq("TI alone",lenRule([TI]),60);eq("Rodent alone",lenRule([RO]),45);
+  eq("GP + TI",lenRule([GP,TI]),105);eq("GP + Rodent",lenRule([GP,RO]),80);eq("TI + Rodent",lenRule([TI,RO]),80);eq("GP + TI + Rodent",lenRule([GP,TI,RO]),125);
+  eq("order does not matter",lenRule([RO,TI,GP]),125);
+  eq("nothing ticked",lenRule([]),null);eq("no usual length at all",lenRule([NO]),null);eq("a service with no length adds nothing",lenRule([GP,NO]),60);
+  eq("nearest 5 (62)",lenRule([{m:62,a:null}]),60);eq("nearest 5 (63)",lenRule([{m:63,a:null}]),65);eq("not under 15",lenRule([{m:5,a:null}]),15);eq("not over 720",lenRule([{m:700,a:null},{m:700,a:null}]),720);
+  eq("add-on 0 adds nothing",lenRule([GP,{m:30,a:0}]),60);
+  eq("label 80",fmtLen(80),"1 hr 20");eq("label 125",fmtLen(125),"2 hr 05");eq("label 105",fmtLen(105),"1 hr 45");eq("label 60",fmtLen(60),"1 hr");eq("label 45",fmtLen(45),"45 min");
+  // gaps: a lane with jobs 8:00-9:10, 10:00-11:00 (and one inside it), 15:30-16:30, day 7:00-17:00
+  const busy=[[600,660],[480,550],[630,650],[930,990]];
+  eq("gaps for 60",fitGaps(busy,60,420,1020,15),[{from:420,to:480},{from:660,to:930}]);
+  eq("gaps for 80",fitGaps(busy,80,420,1020,15),[{from:660,to:930}]);
+  eq("gaps for 30",fitGaps(busy,30,420,1020,15).map(function(g){return g.from+"-"+g.to;}),["420-480","555-600","660-930","990-1020"]);
+  eq("empty day",fitGaps([],125,420,1020,15),[{from:420,to:1020}]);
+  eq("full day",fitGaps([[420,1020]],15,420,1020,15),[]);
+  eq("job runs past 5pm",fitGaps([[960,1100]],60,420,1020,15),[{from:420,to:960}]);
+  eq("job starts before 7am",fitGaps([[360,480]],60,420,1020,15),[{from:480,to:1020}]);
+  eq("a gap that starts between steps starts on the next one",fitGaps([[480,550]],60,420,1020,15),[{from:420,to:480},{from:555,to:1020}]);
+  eq("exact fit",fitGaps([[420,480],[540,1020]],60,420,1020,15),[{from:480,to:540}]);
+  eq("one minute short",fitGaps([[420,480],[539,1020]],60,420,1020,15),[]);
+  // taps
+  const g=[{from:555,to:640},{from:700,to:1020}];
+  eq("tap in first block",pickStart(g,560,60,15),555);
+  eq("tap near the end of a block is pulled back so it fits",pickStart(g,635,60,15),570);
+  eq("tap snaps down to 15",pickStart(g,730,60,15),720);
+  eq("tap outside",pickStart(g,650,60,15),null);
+  eq("tap on the block's end edge",pickStart(g,640,60,15),null);
+  eq("tap right at the start",pickStart(g,555,60,15),555);
+  return bad;
+}
+/*LEN-END*/
+// the usual length for the ticked services (see lenRule), or null if none of them has one. No add-on column in the database: every add-on counts as blank.
+function usualLen(svc){
+  return lenRule((svc||[]).map(function(e){
+    const t=S.typesByName[e.type];
+    return {m:t?t.default_minutes:null,a:(t&&!S.noAddonCol)?t.addon_minutes:null};
+  }));
+}
+// puts a length in the How long box. The full sheet's box is a list in 15 minute steps: a length that is not on it (80 min) is added to it.
+function setDur(v){
+  const e=byId("f-dur");if(!e)return;
+  v=String(v);
+  if(e.tagName==="SELECT"&&v!==""&&!Array.prototype.some.call(e.options,function(o){return o.value===v;})){
+    const o=document.createElement("option");o.value=v;o.textContent=fmtDur(+v);
+    let ref=null;Array.prototype.forEach.call(e.options,function(x){if(!ref&&+x.value>+v)ref=x;});
+    e.insertBefore(o,ref);
+  }
+  e.value=v;
+}
+// called after the ticked services change (the full sheet and the booking bar)
 function autoLen(){
   if(!SH||!S.isMaster)return;
   const u=usualLen(SH.svc);
   if(!SH.durHand){
     if(u!=null){
       if(!SH.durAuto)SH.durBase=val("f-dur");      // the length from before the first automatic set
-      setVal("f-dur",String(u));SH.durAuto=true;
+      setDur(u);SH.durAuto=true;
     }else if(SH.durAuto&&SH.durBase!=null){      // the service that set the length is unticked and nothing else gives one: back to what it was
-      setVal("f-dur",SH.durBase);SH.durAuto=false;SH.durBase=null;
+      setDur(SH.durBase);SH.durAuto=false;SH.durBase=null;
     }
   }
   updateLenHint();
@@ -3515,22 +3688,29 @@ function updateLenHint(){
 }
 
 function svcPanelHtml(){
+  const addon=!S.noLenCol&&!S.noAddonCol;
   let h='<div class="sheet" id="svp-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="svp-title">'+
     '<div class="shhead"><div class="shttl"><h2 id="svp-title">Services</h2><div class="sb">The usual length and price for each service. Leave a box blank for none.</div></div>'+
     '<button type="button" class="x" data-svp="close" aria-label="Close">'+IC.x+'</button></div>'+
-    '<div class="shbody">'+(S.noLenCol?'<div class="hint">Usual lengths need the 06 database update. Prices still work.</div>':'');
+    '<div class="shbody">'+(S.noLenCol?'<div class="hint">Usual lengths need the 06 database update. Prices still work.</div>':'')+
+    (!S.noLenCol&&S.noAddonCol?'<div class="hint">The add-on time needs the 07 database update. Until then every service adds its full time.</div>':'')+
+    (addon?'<div class="hint">Add-on time: how long a service adds when it is done on the same visit as another one. Blank = it adds its full time.</div>':'');
   S.types.forEach(function(t,i){
     h+='<div class="svcard"><div class="svhead"><b>'+esc(t.name)+'</b></div><div class="'+(S.noLenCol?"":"g2")+'">'+
       (S.noLenCol?"":'<div class="fld"><label class="fl" for="svp-m-'+i+'">Usual length (minutes)</label>'+
-        '<input class="inp" id="svp-m-'+i+'" data-svp-f="m" data-i="'+i+'" type="number" min="15" max="720" step="15" inputmode="numeric" placeholder="none" value="'+esc(t.default_minutes==null?"":t.default_minutes)+'"></div>')+
+        '<input class="inp" id="svp-m-'+i+'" data-svp-f="m" data-i="'+i+'" type="number" min="15" max="720" step="5" inputmode="numeric" placeholder="none" value="'+esc(t.default_minutes==null?"":t.default_minutes)+'"></div>')+
       '<div class="fld"><label class="fl" for="svp-p-'+i+'">Usual price (ex GST)</label>'+
-        '<input class="inp" id="svp-p-'+i+'" data-svp-f="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" placeholder="none" value="'+esc(t.default_price==null?"":t.default_price)+'"></div></div></div>';
+        '<input class="inp" id="svp-p-'+i+'" data-svp-f="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" placeholder="none" value="'+esc(t.default_price==null?"":t.default_price)+'"></div></div>'+
+      (addon?'<div class="fld svadd"><label class="fl" for="svp-a-'+i+'">Adds when with another job (min)</label>'+
+        '<input class="inp" id="svp-a-'+i+'" data-svp-f="a" data-i="'+i+'" type="number" min="0" max="720" step="5" inputmode="numeric" placeholder="full time" value="'+esc(t.addon_minutes==null?"":t.addon_minutes)+'"></div>':"")+
+      '</div>';
   });
   if(!S.types.length)h+='<p class="hint">No services in the database yet.</p>';
   return h+'</div><div class="shfoot"><button type="button" class="btn pri" data-svp="close">Done</button></div></div></div>';
 }
 function openSvcPanel(){
-  if(!S.isMaster||SH||SV||S.screen!=="cal")return;
+  if(!S.isMaster||SV||S.screen!=="cal")return;
+  if(SH&&(!SH.bar||!closeSheet(false)))return;      // the booking bar closes first (and asks if it has something typed in it)
   SV={prevFocus:byId("menu-btn"),back:false};
   byId("sheet").innerHTML=svcPanelHtml();
   document.documentElement.classList.add("sheet-open");
@@ -3555,19 +3735,21 @@ function svcPanelClick(t){
   if(t.id==="svp-back"&&SV&&SV.back)closeSvcPanel();
 }
 // A box was changed: check it, save it straight away (the toast says so), and put the old value back if the save fails. Blank = no usual value (null).
+// The usual length and the add-on time are in steps of 5 minutes (15 to 720, and 0 to 720).
 async function svcPanelChange(el){
   if(!SV||!el||!el.getAttribute)return;
   const f=el.getAttribute("data-svp-f");if(!f)return;
   const t=S.types[+el.getAttribute("data-i")];if(!t)return;
-  const col=f==="m"?"default_minutes":"default_price",old=t[col]==null?null:t[col],raw=trim(el.value);
+  const col=f==="m"?"default_minutes":f==="a"?"addon_minutes":"default_price",old=t[col]==null?null:t[col],raw=trim(el.value);
+  const lo=f==="a"?0:15,msg=f==="a"?"The add-on time has to be between 0 and 720 minutes.":"The usual length has to be between 15 and 720 minutes.";
   let v=null,err="";
   if(raw!==""){
-    if(f==="m"){const n=Number(raw);if(!isFinite(n)||n<15||n>720)err="The usual length has to be between 15 and 720 minutes.";else v=Math.round(n/15)*15;}      // steps of 15
+    if(f==="m"||f==="a"){const n=Number(raw);if(!isFinite(n)||n<lo||n>720)err=msg;else v=Math.round(n/5)*5;}
     else{const n=parsePrice(raw);if(isNaN(n))err="The price needs to be a number, like 250 or 250.50.";else v=n;}
   }
   const show=function(x){el.value=x==null?"":String(x);};
   // the browser couldn't read what was typed as a number (el.value is "" then): that is a mistake, not a deliberate blank, so the old value goes back
-  if(f==="m"&&el.validity&&el.validity.badInput)err="The usual length has to be between 15 and 720 minutes.";
+  if((f==="m"||f==="a")&&el.validity&&el.validity.badInput)err=msg;
   if(err){show(old);toast(err,true);return;}
   show(v);
   if(v===old)return;
@@ -3580,8 +3762,9 @@ async function svcPanelChange(el){
     t[col]=v;      // S.types and S.typesByName hold the same objects
     toast("Saved");
   }catch(e){
-    if(col==="default_minutes"&&missingCol(e,"default_minutes")){      // the database has no usual lengths yet: drop them for the session, quietly
-      S.noLenCol=true;
+    const noLen=col==="default_minutes"&&missingCol(e,"default_minutes"),noAdd=col==="addon_minutes"&&missingCol(e,"addon_minutes");
+    if(noLen||noAdd){      // the database has no usual lengths (or add-on times) yet: drop them for the session, quietly
+      if(noLen)S.noLenCol=true;else S.noAddonCol=true;
       if(SV){const b=$(".shbody"),st=b?b.scrollTop:0;byId("sheet").innerHTML=svcPanelHtml();const b2=$(".shbody");if(b2)b2.scrollTop=st;}
       return;
     }
@@ -3590,11 +3773,19 @@ async function svcPanelChange(el){
 }
 
 /* =====================================================================
-   QUICK ADD (master only)
-   A small panel for booking a job while on the phone to a customer: who, day, client, services and a time (or "Any time").
-   It is the same job sheet underneath: the same SH, the same field ids (f-name, f-phone, f-addr ...) and the same save path, so the
-   client type-ahead, address lookup, job sites and saving all behave as they do in the full sheet. The fields that have no box here
-   (street, suburb, state, postcode, time, how long, who) are hidden inputs that the chips and the client pick fill in.
+   BOOKING BAR (master only). The + button opens it; it replaces the old Quick add panel, which covered the calendar.
+   A slim panel docked to the bottom of the screen for booking a job while on the phone to a customer: pick the client, tick the services, then tap a
+   green spot on the calendar above it. The calendar stays live and visible: the grid is fitted to the room above the bar (barMeasure), and the
+   bar keeps itself above the phone's keyboard (barPlace, from window.visualViewport).
+   It is the same job sheet underneath: the same SH, the same field ids (f-name, f-phone, f-addr ...) and the same save path, so the client type-ahead,
+   address lookup, job sites and saving all behave as they do in the full sheet. SH.bar marks it (SH.quick too: the Quick add rules still apply to it).
+   The fields that have no box on the front of the bar (time, how long, who, street, suburb ...) are hidden inputs that the chips, the green spots and the
+   client pick fill in. Tapping the calendar while the bar is open:
+   - a green spot (a gap in that person's day where a job this long fits, 7am to 5pm, today or later): books the job there, at the tapped time snapped to
+     15 min and pulled back if need be so it still fits, for that person and day. The Unassigned list is green too: a tap there books it for nobody, no time.
+   - anywhere else, with a client and service picked: a short hint (Doesn't fit there). Before that: the slot is remembered (a Book button appears
+     once a client and a service are picked, and the green spots show as well).
+   Opened by tapping an empty slot (bar closed): the same, with that day, time and person already set.
    ===================================================================== */
 function quickWhoLoad(){try{const p=JSON.parse(localStorage.getItem(QUICK_KEY)||"{}")||{};return typeof p.who==="string"?p.who:null;}catch(e){return null;}}
 function quickWhoSave(v){try{localStorage.setItem(QUICK_KEY,JSON.stringify({who:v}));}catch(e){}}
@@ -3611,11 +3802,15 @@ function quickInit(o){
   return {name:"",phone:"",email:"",street:"",suburb:"",state:"",postcode:"",address:"",notes:"",date:o.date,time:o.time||"",dur:QUICK_DUR,staff:o.staff||""};
 }
 function quickState(init,prevFocus){
-  return {isNew:true,quick:true,job:null,jobId:null,client:null,clientId:null,init:init,addrTouched:false,baseline:"",busy:false,
+  return {isNew:true,quick:true,bar:true,job:null,jobId:null,client:null,clientId:null,init:init,addrTouched:false,baseline:"",busy:false,
     recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
     unlinked:null,renameTo:null,pendingN:0,svc:[],svcMemo:{},svcMore:false,legacyPrice:null,legacyHeld:"",durHand:false,durAuto:false,durBase:null,svcTouched:false,
-    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,
-    qEdit:false,qEmail:false,qSum:null,saveName:null,prevFocus:prevFocus||null};
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,cnTouched:false,
+    qEdit:false,qSum:null,saveName:null,prevFocus:prevFocus||null,
+    bmore:false,      // the More panel on the bar is open
+    dayHand:false,    // the day was picked by hand (or came from a tap on the grid): until then it follows the day being looked at
+    dayAuto:"",       // the day that was open in Day view when the bar switched a computer to Week: it stays the bar's day while that same week is showing (see barDayDefault)
+    hint:"",hintT:0,statSig:"",whoKeep:null,booked:false};      // hint: a short note in the status line; whoKeep: who was picked before a green spot set it for that spot's person; booked: a job has just been booked
 }
 function quickDays(){
   const t=todayYmd(),out=[];
@@ -3623,69 +3818,77 @@ function quickDays(){
   return out;
 }
 function quickTimes(){const out=[];for(let m=QUICK_FIRST;m<=QUICK_LAST;m+=QUICK_STEP)out.push({v:minToHM(m),l:fmtMin(m)});return out;}
+// "Tue 6" (and the month when it isn't this one)
+function dayLbl(s){const d=parseYmd(s),t=new Date();return DOW[d.getDay()]+" "+d.getDate()+(d.getMonth()!==t.getMonth()||d.getFullYear()!==t.getFullYear()?" "+MON[d.getMonth()]:"");}
 function quickHtml(){
   const I=SH.init;
-  let h='<div class="sheet qa" id="sh-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="sh-title">'+
-    '<div class="shhead"><h2 id="sh-title">Quick add</h2>'+
-    '<button type="button" class="linkbtn" data-sh="qmore">More details</button>'+
-    '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
-    '<div class="shbody"><div id="sh-msg" role="alert"></div>';
-  // who
-  h+='<div class="lbl">Who</div><div class="seg" id="q-who" role="group" aria-label="Who">';
-  activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
-  h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>';
-  // day
-  h+='<div class="lbl">Day<span class="qdl" id="q-daylbl"></span></div><div class="chiprow" id="q-days" role="group" aria-label="Day">';
-  quickDays().forEach(function(d){h+='<button type="button" class="chip qc" data-sh="qday" data-v="'+esc(d.v)+'" aria-pressed="false">'+esc(d.l)+'</button>';});
-  h+='<input class="inp qdate" id="f-date" type="date" aria-label="Pick another day" value="'+esc(I.date)+'"></div>';
-  // client
-  h+='<div class="fld qname"><label class="vh" for="f-name">Client name, phone or street</label>'+
-    '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Name, phone or street">'+
+  // the top row (client box, More, X) is outside the part that scrolls, so the client list can open upwards over the calendar
+  let h='<div class="barhead">'+
+    '<div class="fld qname"><label class="vh" for="f-name">Client name, phone or street</label>'+
+    '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Client: name, phone or street">'+
     '<div class="aclist" id="f-name-list" role="listbox" hidden></div></div>'+
+    '<button type="button" class="linkbtn" id="q-moretog" data-sh="qmoretog" aria-expanded="false" aria-controls="q-more">More</button>'+
+    '<button type="button" class="x" data-sh="close" aria-label="Close the booking bar">'+IC.x+'</button></div>'+
+    '<div class="barbody" id="q-body"><div id="q-inner">'+
     '<div id="q-sum" role="status"></div>'+
     '<div class="sites" id="f-addr-sites" hidden></div>'+
+    '<div class="qsv" id="q-svc" role="group" aria-label="Services"></div>'+
+    '<div class="barwho"><span class="lbl" id="q-wholbl">Who</span><div class="seg" id="q-who" role="group" aria-labelledby="q-wholbl">';
+  activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
+  h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
+    '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
+  // More: the contact boxes for a new client (or for Edit), job notes, the client's note, the day, the time, and the full job sheet
+  h+='<div class="barmore" id="q-more" hidden>'+
     '<div id="q-new" hidden>'+
       '<div class="fld"><label class="vh" for="f-phone">Phone</label><input class="inp" id="f-phone" type="tel" autocomplete="off" inputmode="tel" placeholder="Phone (optional, but handy)"></div>'+
       '<div class="fld"><label class="vh" for="f-addr">Address</label>'+
         '<input class="inp" id="f-addr" type="text" autocomplete="off" placeholder="Address (optional)">'+
         '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
       '<div class="hint" id="f-addr-hint" role="status"></div>'+
-      '<div class="fld" id="q-em" hidden><label class="vh" for="f-email">Email</label>'+
+      '<div class="fld"><label class="vh" for="f-email">Email</label>'+
         '<input class="inp" id="f-email" type="email" autocomplete="off" inputmode="email" autocapitalize="none" placeholder="Email (optional)"></div>'+
-    '</div>';
-  // services
-  h+='<div class="lbl">Services<span class="qdl" id="q-svctot"></span><button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More</button></div>'+
-    '<div class="qsv" id="q-svc" role="group" aria-label="Services"></div>';
-  // time
-  h+='<div class="lbl">Time</div><div class="qtime"><button type="button" class="chip qc" data-sh="qtime" data-v="" aria-pressed="true">Any time</button>'+
+    '</div>'+
+    '<div class="fld"><label class="fl" for="f-notes">Job notes</label><textarea class="inp" id="f-notes" rows="2" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>'+
+    (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
+      '<textarea class="inp" id="f-cnotes" rows="2" placeholder="Dog, gate code, key, parking..."></textarea></div>')+
+    '<div class="lbl">Day<span class="qdl" id="q-daylbl"></span></div><div class="chiprow" id="q-days" role="group" aria-label="Day">';
+  quickDays().forEach(function(d){h+='<button type="button" class="chip qc" data-sh="qday" data-v="'+esc(d.v)+'" aria-pressed="false">'+esc(d.l)+'</button>';});
+  h+='<input class="inp qdate" id="f-date" type="date" aria-label="Pick another day" value="'+esc(I.date)+'"></div>'+
+    '<div class="lbl">Time</div><div class="qtime"><button type="button" class="chip qc" data-sh="qtime" data-v="" aria-pressed="true">Any time</button>'+
     '<div class="chiprow" id="q-times" role="group" aria-label="Start time">';
   quickTimes().forEach(function(t){h+='<button type="button" class="chip qc" data-sh="qtime" data-v="'+esc(t.v)+'" aria-pressed="false">'+esc(t.l)+'</button>';});
-  h+='</div></div>';
+  h+='</div></div><button type="button" class="linkbtn" data-sh="qmore">More details (the full job sheet)</button></div>';
   // the fields this panel has no box for
   h+='<input type="hidden" id="f-staff" value="'+esc(I.staff)+'"><input type="hidden" id="f-time" value="'+esc(I.time)+'"><input type="hidden" id="f-dur" value="'+esc(I.dur)+'">'+
     '<input type="hidden" id="f-street"><input type="hidden" id="f-suburb"><input type="hidden" id="f-state"><input type="hidden" id="f-postcode">';
-  return h+'</div><div class="shfoot"><button type="button" class="btn pri" id="sh-save" data-sh="qsave">Save</button>'+
-    '<button type="button" class="btn" id="sh-saveadd" data-sh="qsaveadd">Save + add another</button></div></div></div>';
+  return h+'</div></div><div class="barfoot"><div id="sh-msg" role="alert"></div><div class="barstat" id="q-stat" role="status"></div>'+
+    '<div class="barbtns"><button type="button" class="btn pri" id="q-book" data-sh="qbook" hidden></button>'+
+    '<button type="button" class="btn" id="sh-save" data-sh="qnotime">Save, no time</button></div></div>';
 }
+// o = {staff, date, time, exact}. exact = the day came from a tap on a column of the grid, so a day that has gone is kept (it is not moved to today).
 function openQuick(o){
-  if(!S.isMaster||SH||SV||S.screen!=="cal")return;
+  if(!S.isMaster||SV||S.screen!=="cal")return;
   o=o||{};
+  if(SH){if(SH.bar)barPreset(o);return;}      // already open: just set who, the day and the time. (A full job sheet is open: leave it alone.)
   const staff=o.staff!==undefined?o.staff:quickWhoDefault();
   // a day that was asked for (the "+ Add" under a name) follows the same rule as the + button: today or later, never a day that has gone
-  const today=todayYmd(),date=validYmd(o.date)?(o.date<today?today:o.date):quickDayDefault();
-  // an Undo toast left over from a drag would be moved to the top of this panel, over "More details", and a tap there would undo the move. It goes.
-  const tt=byId("toast");if(tt&&tt.classList.contains("act")){clearTimeout(toastT);tt.className="";tt.textContent="";}
+  const today=todayYmd();
+  let date=validYmd(o.date)?o.date:quickDayDefault();
+  if(!o.exact&&date<today)date=today;
   SH=quickState(quickInit({date:date,time:o.time||"",staff:staff||""}),document.activeElement);
-  byId("sheet").innerHTML=quickHtml();
-  document.documentElement.classList.add("sheet-open","qa-open");
-  const app=byId("app");app.setAttribute("inert","");app.setAttribute("aria-hidden","true");
-  const pn=$(".panel");if(pn){pn.setAttribute("tabindex","-1");try{pn.focus({preventScroll:true});}catch(e){}}
+  SH.dayHand=validYmd(o.date);
+  const bar=byId("bar");bar.innerHTML=quickHtml();bar.hidden=false;
+  document.documentElement.classList.add("qa-open","bar-open");
   quickRenderSvc();
   SH.baseline=snap();
-  // a phone is left alone (the keyboard would hide Who and Day); on a computer the client box is ready to type in
-  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus();}}catch(e){}
+  barPlace();barMeasure();barWatch(true);
+  // on a computer the week is the view to book from; a phone keeps what it was showing. It goes back when the bar closes (unless the view was changed by hand meanwhile).
+  if(!isNarrow()&&S.view!=="week"){S.barPrevView=S.view;S.view="week";if(!SH.dayHand)SH.dayAuto=val("f-date");afterNav();}      // (the day that was on screen stays the bar's day while that week is showing. It is not a day picked by hand: go to another week and the bar's day goes with it.)
+  else renderBody();
+  // a phone is left alone (the keyboard would hide the calendar); on a computer the client box is ready to type in
+  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus({preventScroll:true});}}catch(e){}
 }
-// Service chips: the first QUICK_SVC service types (by their sort order), then the rest behind "More". A ticked one always stays showing.
+// Service chips: the first QUICK_SVC service types (by their sort order), then the rest behind "More services". A ticked one always stays showing.
 function quickRenderSvc(){
   const el=byId("q-svc");if(!el||!SH)return;
   const names=svcAllNames(),on={};SH.svc.forEach(function(e){on[e.type]=1;});
@@ -3696,18 +3899,22 @@ function quickRenderSvc(){
   });
   el.innerHTML=h;
   const mb=byId("q-svcmore");
-  if(mb){mb.hidden=names.length<=QUICK_SVC;mb.textContent=SH.svcMore?"Fewer":"More";mb.setAttribute("aria-expanded",SH.svcMore?"true":"false");}
+  if(mb){mb.hidden=names.length<=QUICK_SVC;mb.textContent=SH.svcMore?"Fewer services":"More services";mb.setAttribute("aria-expanded",SH.svcMore?"true":"false");}
   quickSync();
 }
 function setPressed(b,on){b.setAttribute("aria-pressed",on?"true":"false");b.classList.toggle("on",!!on);}
-// Brings everything on the panel into line with what is in the boxes and in SH: which chips are pressed, the client summary, which boxes show.
-// Runs on every keystroke, so it only touches text, attributes and a summary that changed.
+// Brings everything on the bar into line with what is in the boxes and in SH: which chips are pressed, the client summary, which boxes show, the status line
+// and the green spots. Runs on every keystroke, so it only touches text, attributes and a summary that changed.
 function quickSync(){
   if(!SH||!SH.quick)return;
   const nm=trim(val("f-name")),has=!!SH.clientId,isNewC=!has&&!!nm;
   const nb=byId("q-new");if(nb)nb.hidden=!(isNewC||(has&&SH.qEdit));
-  const showEm=SH.qEmail||SH.qEdit||!!trim(val("f-email")),em=byId("q-em");
-  if(em)em.hidden=!showEm;
+  // the client note box shows the client's saved notes until it is typed in (what it holds is saved to the client with the job)
+  const cta=byId("f-cnotes");
+  if(cta&&has&&SH.client&&!SH.cnTouched){const n=SH.client.notes||"";if(cta.value!==n&&document.activeElement!==cta)cta.value=n;}
+  const mp=byId("q-more"),mt=byId("q-moretog");
+  if(mp)mp.hidden=!SH.bmore;
+  if(mt){mt.textContent=SH.bmore?"Less":"More";mt.setAttribute("aria-expanded",SH.bmore?"true":"false");}
   const sum=byId("q-sum");
   if(sum){
     let h="";
@@ -3721,7 +3928,7 @@ function quickSync(){
       if(SH.client&&trim(SH.client.notes)&&!S.noNotesCol)h+='<div class="cnstrip inl" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(trim(SH.client.notes))+'</span></div>';
     }else if(isNewC){
       h='<div class="qhint"><span class="hint new">New client. Added to your list when you save.</span>'+
-        (showEm?"":'<button type="button" class="linkbtn" data-sh="qemail">+ email</button>')+'</div>';
+        '<button type="button" class="linkbtn" data-sh="qopenmore">+ phone, address</button></div>';
     }
     if(SH.qSum!==h){
       const ae=document.activeElement,k=(ae&&sum.contains(ae))?ae.getAttribute("data-sh"):null;
@@ -3730,27 +3937,25 @@ function quickSync(){
     }
   }
   const who=val("f-staff")||"",d=val("f-date")||"",tm=val("f-time")||"";
-  $$all('#sheet [data-sh="qwho"]').forEach(function(b){const v=b.getAttribute("data-v");setPressed(b,(v==="later"?"":v)===who);});
-  $$all('#sheet [data-sh="qday"]').forEach(function(b){setPressed(b,b.getAttribute("data-v")===d);});
-  $$all('#sheet [data-sh="qtime"]').forEach(function(b){setPressed(b,b.getAttribute("data-v")===tm);});
+  $$all('#bar [data-sh="qwho"]').forEach(function(b){const v=b.getAttribute("data-v");setPressed(b,(v==="later"?"":v)===who);});
+  $$all('#bar [data-sh="qday"]').forEach(function(b){setPressed(b,b.getAttribute("data-v")===d);});
+  $$all('#bar [data-sh="qtime"]').forEach(function(b){setPressed(b,b.getAttribute("data-v")===tm);});
   const on={};SH.svc.forEach(function(e){on[e.type]=1;});
-  $$all('#sheet [data-sh="qsvc"]').forEach(function(b){setPressed(b,!!on[b.getAttribute("data-v")]);});
+  $$all('#bar [data-sh="qsvc"]').forEach(function(b){setPressed(b,!!on[b.getAttribute("data-v")]);});
   const dl=byId("q-daylbl");if(dl)dl.textContent=validYmd(d)?niceDate(d):"Pick a day";
-  const tot=byId("q-svctot");
-  if(tot){
-    const sv=canonServices(SH.svc),sm=sumPrice(sv),blank=sv.some(function(e){return e.price==null||isNaN(e.price);});
-    const parts=[];
-    if(sm!=null)parts.push("$"+sm.toFixed(2)+(blank?" so far":" ex GST"));
-    if(SH.svc.length){const d=parseInt(val("f-dur"),10);if(d>0)parts.push(fmtDur(d));}      // Quick add has no length box: say what length will be booked
-    tot.textContent=parts.join(" · ");
-  }
+  barRefresh();
+  barRefitSoon();      // (the bar's height may have changed: if so the grid is fitted to the room above it again)
 }
-// a banner (an error, or the "Booked: ..." note) goes as soon as the person taps or types something else; never while a save is running
-function quickClearMsg(){if(!SH||!SH.quick||SH.busy)return;const m=byId("sh-msg");if(m&&m.firstChild)m.innerHTML="";}
+// a banner (an error, or the "Booked" note) goes as soon as the person taps or types something else; never while a save is running
+function quickClearMsg(){
+  if(!SH||!SH.quick||SH.busy)return;
+  const m=byId("sh-msg");if(m&&m.firstChild)m.innerHTML="";
+  if(SH.booked){SH.booked=false;barRefresh();}
+}
 function quickSet(k,a){
   const v=a.getAttribute("data-v");
-  if(k==="qwho")setVal("f-staff",v==="later"?"":v);
-  else if(k==="qday")setVal("f-date",v);
+  if(k==="qwho"){setVal("f-staff",v==="later"?"":v);quickWhoSave(v==="later"?"later":v);}
+  else if(k==="qday"){setVal("f-date",v);SH.dayHand=true;}
   else if(k==="qtime")setVal("f-time",v);
   quickSync();
 }
@@ -3762,11 +3967,11 @@ function quickToggleSvc(name){
   autoLen();
   quickSync();
 }
-// "Change client", or typing in the name box after picking one: back to a blank client. (The full sheet has Rename here; Quick add doesn't.)
+// "Change client", or typing in the name box after picking one: back to a blank client. (The full sheet has Rename here; the bar doesn't.)
 function quickUnlink(){
   unlinkClient();SH.unlinked=null;
   ["f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr"].forEach(function(id){setVal(id,"");});
-  SH.addrTouched=false;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;SH.qEdit=false;SH.qEmail=false;
+  SH.addrTouched=false;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;SH.qEdit=false;
   hideAddrList();renderSites();
 }
 function quickChangeClient(){
@@ -3782,8 +3987,8 @@ function quickClientAddr(sh,f){
   if(!hasStreetNumber(p.street))return;
   f.street=p.street;f.suburb=p.suburb;f.state=p.state;f.postcode=p.postcode;
 }
-// "Use that client" (the name matched one already on file): the boxes were filled for a NEW client, and Quick add shows no address boxes to check,
-// so nothing from them may be written over the existing client's record on the next save. Their address goes back to what is on file. Phone and email
+// "Use that client" (the name matched one already on file): the boxes were filled for a NEW client, and the bar shows no address boxes to check unless Edit is
+// open, so nothing from them may be written over the existing client's record on the next save. Their address goes back to what is on file. Phone and email
 // do too when the record has one (the summary shows what is kept, and Edit changes it); a typed one only stays where the record has nothing.
 function quickTakeClient(c){
   ["street","suburb","state","postcode"].forEach(function(k){setVal("f-"+k,c[k]);});
@@ -3798,43 +4003,43 @@ function quickNameBack(sh){
   const m=byId("sh-msg"),t=m?trim(m.textContent):"";
   showMsg((t?t+" ":"")+"The name you typed was put back to this booking's. Tap Save to try again.","bad");
 }
-async function quickSave(another){
+async function quickSave(){
   const sh=SH;if(!sh||!sh.quick||sh.busy)return false;
   const f=readForm();
   if(!sh.clientId&&!f.name){showMsg("Type the client's name.","bad");const n=byId("f-name");if(n){try{n.focus();}catch(e){}}return false;}
   if(!sh.svc.length){showMsg("Tap at least one service.","bad");return false;}
   sh.saveName=f.name;      // the name this booking is for: a different one in the box when the save is done was typed for the next caller
-  // On a phone the keyboard only comes up for a focus() made while the tap is still being handled, so the client box is focused now,
-  // not after the save: the keyboard is then already up for the next job.
-  if(another){const n=byId("f-name");if(n){try{n.focus({preventScroll:true});}catch(e){}}}
-  return saveSheet(null,{quick:true,another:!!another});
+  return saveSheet(null,{quick:true});
 }
-// after a good save (called from saveSheet)
+// after a good save (called from saveSheet): a toast, a clean bar for the next booking (who is kept), and a Done link to close it
 function quickDone(sh,opts,siteFailed,siteNote){
-  const j=sh.job||{},nm=trim((sh.client&&sh.client.name)||val("f-name"));
-  const msg="Booked: "+nm+" "+dayShort(j.job_date);
-  quickWhoSave(j.staff_id||"later");
-  if(opts.another){quickReset(sh);showMsg(msg+".","ok");}
-  else closeSheet(true);
+  const j=sh.job||{},nm=trim((sh.client&&sh.client.name)||val("f-name")),s=tmToMin(j.start_time);
+  const msg="Booked: "+nm+", "+dayLbl(j.job_date)+(s!=null?" "+fmtMin(s):"");
+  quickReset(sh);
+  SH.booked=true;barRefresh();      // the status line says so, with a Done link, until the next tap or key
   toast(msg+(siteFailed?". "+siteNote:""),siteFailed);
 }
-// "Save + add another": a clean panel with the same Who and Day. The boxes are cleared in place (not rebuilt), so the client box keeps its focus and the keyboard stays up.
+// A clean bar: the same Who (what was picked before a green spot set it for that spot's person). The boxes are cleared in place (not rebuilt), so the
+// client box keeps its focus and the keyboard stays up if it was.
 function quickReset(old){
-  clearTimeout(old.sT);clearTimeout(old.acT);if(old.acAbort){try{old.acAbort.abort();}catch(e){}}
-  // Save + add another puts the cursor in the name box before the save, so a name may have been typed for the next caller while it was running. That one stays.
+  clearTimeout(old.sT);clearTimeout(old.acT);clearTimeout(old.hintT);if(old.acAbort){try{old.acAbort.abort();}catch(e){}}
+  // a name may have been typed for the next caller while the save was running. That one stays.
   const typed=val("f-name"),keepName=(old.saveName!=null&&trim(typed)!==old.saveName)?typed:"";
-  SH=quickState(quickInit({date:val("f-date")||todayYmd(),time:"",staff:val("f-staff")||""}),old.prevFocus);
-  ["f-name","f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr","f-time"].forEach(function(id){setVal(id,"");});
-  setVal("f-dur",String(SH.init.dur));      // the last booking's automatic length must not carry over to the next one
+  const who=old.whoKeep!=null?old.whoKeep:(val("f-staff")||"");
+  const day=barDayDefault(old);      // the same rule as the first booking: the day on screen (or today), unless a day is picked by hand
+  SH=quickState(quickInit({date:day,time:"",staff:who}),old.prevFocus);
+  SH.bmore=old.bmore;SH.dayAuto=old.dayAuto;
+  ["f-name","f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr","f-time","f-notes","f-cnotes"].forEach(function(id){setVal(id,"");});
+  setVal("f-staff",who);setVal("f-date",SH.init.date);setVal("f-dur",String(SH.init.dur));      // the last booking's automatic length must not carry over to the next one
   hideNameList();hideAddrList();renderSites();
-  quickRenderSvc();
+  quickRenderSvc();      // (this also clears the status line and takes the green spots off)
   const tr=byId("q-times");if(tr)tr.scrollLeft=0;
-  const b=$(".shbody");if(b)b.scrollTop=0;
+  const b=byId("q-body");if(b)b.scrollTop=0;
   SH.baseline=snap();
-  const n=byId("f-name");if(n){try{n.focus({preventScroll:true});}catch(e){}}
+  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus({preventScroll:true});}}catch(e){}
   if(keepName){setVal("f-name",keepName);onNameInput();}      // onNameInput brings up the new-client note and the type-ahead for it
 }
-// "More details": the full job sheet, with what has been typed so far filled in
+// "More details" (in More): the full job sheet, with what has been typed so far filled in
 async function quickMore(){
   const q=SH;if(!q||!q.quick||q.busy)return;
   if(q.addrPending){      // an address was only just tapped: let Google's details land first (two seconds at most), so they come across too
@@ -3847,11 +4052,265 @@ async function quickMore(){
   const F=readForm();
   if(!q.clientId&&F.name)quickClientAddr(q,F);      // a new client gets the same contact address from Save as from More details then Save, and the full sheet's boxes show it
   const keep={clientId:q.clientId,client:q.client,addrTouched:q.addrTouched,addrAuto:q.addrAuto,addrPick:q.addrPick,preferAddr:q.preferAddr,svcMemo:q.svcMemo};
-  closeSheet(true);
+  closeSheet(true,true);      // (the view the bar switched to Week goes back: the full sheet is not part of that)
   openSheet(null,{staff:F.staff,date:validYmd(F.date)?F.date:S.date,time:F.time});
   if(!SH)return;
   fillSheet(F,{clientId:keep.clientId,client:keep.client,addrTouched:keep.addrTouched,job:null});
   SH.addrAuto=keep.addrAuto;SH.addrPick=keep.addrPick;SH.preferAddr=keep.preferAddr;SH.svcMemo=keep.svcMemo;
+}
+
+/* ----- the status line, the Book button and the green spots ----- */
+// a client (or a name typed for a new one) and at least one service are picked
+function barReady(){return !!SH&&!!SH.bar&&(!!SH.clientId||!!trim(val("f-name")))&&SH.svc.length>0;}
+function barLen(){const d=parseInt(val("f-dur"),10);return d>0?d:QUICK_DUR;}
+// the time already chosen (a tap on an empty slot opened the bar, or a time chip): {staff, date, min}, or null
+function barSlot(){
+  const tm=val("f-time"),d=val("f-date");
+  if(!tm||!validYmd(d)||tmToMin(tm)==null)return null;
+  return {staff:val("f-staff")||"",date:d,min:tmToMin(tm)};
+}
+function slotTxt(sl){const st=sl.staff&&S.staffById[sl.staff];return dayLbl(sl.date)+" "+fmtMin(sl.min)+(st?", "+st.name:"");}
+function barButtons(){
+  if(!SH||!SH.bar)return;
+  const dis=!!SH.busy||!barReady();
+  ["sh-save","q-book"].forEach(function(id){const b=byId(id);if(b)b.disabled=dis;});
+}
+function barRefresh(){
+  if(!SH||!SH.bar)return;
+  const rdy=barReady(),L=barLen(),sl=barSlot(),n=barPaint();
+  let txt,cls="",html=null;
+  if(SH.hint){txt=SH.hint;cls="warn";}
+  else if(SH.booked&&!rdy){txt="Booked. Book another, or Done";cls="rdy";html='<span>Booked. Book another, or</span> <button type="button" class="linkbtn" data-sh="close">Done</button>';}
+  else if(!rdy)txt=(sl?slotTxt(sl)+" · ":"")+"Pick a client and a service";
+  else if(!S.loaded)txt=fmtLen(L);
+  else{
+    const sv=canonServices(SH.svc),sm=sumPrice(sv),pr=(sm!=null&&!sv.some(function(e){return e.price==null||isNaN(e.price);}))?" · $"+(Math.round(sm)===sm?sm:sm.toFixed(2)):"";      // the price when every ticked service has one
+    if(n>0){txt=fmtLen(L)+pr+" · tap a green spot";cls="rdy";}
+    else txt=fmtLen(L)+pr+" · no gap that long on these days";
+  }
+  const st=byId("q-stat"),sig=cls+"|"+txt;
+  if(st&&SH.statSig!==sig){SH.statSig=sig;st.className="barstat"+(cls?" "+cls:"");st.innerHTML=html||((cls==="rdy"?'<span class="sw" aria-hidden="true"></span>':"")+"<span>"+esc(txt)+"</span>");}
+  const bk=byId("q-book");
+  if(bk){bk.hidden=!sl;if(sl){const t="Book "+slotTxt(sl);if(bk.textContent!==t)bk.textContent=t;}}
+  // Save with no time says the day and the person it books for (they are in More and the Who row, which can be scrolled out of sight). With a time chosen, the Book button beside it says it.
+  const ns=byId("sh-save");
+  if(ns){const t=barNoTimeTxt(sl);if(ns.textContent!==t)ns.textContent=t;}
+  barButtons();
+}
+// the label on the Save with no time button: "Save Wed 7, Mitch, no time" (Unassigned when nobody is picked)
+function barNoTimeTxt(sl){
+  if(sl)return "Save, no time";
+  const d=val("f-date"),st=S.staffById[val("f-staff")||""];
+  return "Save "+(validYmd(d)?dayLbl(d)+", ":"")+(st?st.name:"Unassigned")+", no time";
+}
+// a short note in the status line for a few seconds
+function barHint(text){
+  if(!SH||!SH.bar)return;
+  clearTimeout(SH.hintT);SH.hint=text;barRefresh();
+  const sh=SH;sh.hintT=setTimeout(function(){sh.hint="";if(SH===sh)barRefresh();},3400);
+}
+// every non-cancelled timed job, as busy minutes per person and day: {"staffId|2026-10-07": [[start,end],...]}
+function busyMap(){
+  const m={};
+  S.jobs.forEach(function(j){
+    if(j.status==="cancelled"||!j.staff_id)return;
+    const s=tmToMin(j.start_time);if(s==null)return;
+    const k=j.staff_id+"|"+j.job_date;(m[k]||(m[k]=[])).push([s,s+Math.max(+j.duration_min||0,1)]);
+  });
+  return m;
+}
+// The earliest a job can start on a day: 7am, or for today the time now rounded up to the next 15 minutes. A time that has gone is never green, and a tap can't book it.
+function barStart(date){
+  if(date!==todayYmd())return WORK_START;
+  const n=new Date();
+  return Math.max(WORK_START,Math.ceil((n.getHours()*60+n.getMinutes())/SNAP)*SNAP);
+}
+const BP={rid:-1,key:"",n:0};      // what the last barPaint drew (so it isn't drawn again for nothing), and how many green blocks that was
+// Draws the green spots (one translucent block per free gap, per person's column, on the day and week grids), the marker for a time already chosen, and
+// greens the Unassigned list. The green spots come from the jobs already loaded. Every redraw of the page body (renderBody) wipes them, so that calls this
+// again (S.rid counts the redraws). Returns the number of green blocks.
+function barPaint(){
+  const cb=byId("cb");if(!cb)return 0;
+  const on=!!SH&&!!SH.bar&&S.isMaster&&S.screen==="cal"&&S.loaded;
+  const rdy=on&&barReady(),L=barLen(),sl=on?barSlot():null;
+  const key=(rdy?"r"+L:"n")+"|"+(sl?sl.staff+"@"+sl.date+"@"+sl.min:"")+"|"+(on?1:0)+"|"+barStart(todayYmd());      // (today's green starts at the time now, so it is drawn again once that moves on)
+  if(BP.rid===S.rid&&BP.key===key)return BP.n;
+  BP.rid=S.rid;BP.key=key;BP.n=0;
+  cb.querySelectorAll(".gspot,.bkmark").forEach(function(n){if(n.parentNode)n.parentNode.removeChild(n);});
+  const tr=cb.querySelector(".tray");if(tr)tr.classList.remove("barok");
+  if(!on)return 0;
+  const g=S.grid,today=todayYmd(),cols=$$all("#cb .col");
+  let n=0;
+  if(rdy){
+    const busy=busyMap();
+    cols.forEach(function(col){
+      const d=col.getAttribute("data-date"),sid=col.getAttribute("data-staff");
+      if(!d||d<today)return;      // a day that has gone gets no green
+      const f=document.createDocumentFragment();
+      fitGaps(busy[sid+"|"+d]||[],L,barStart(d),WORK_END,SNAP).forEach(function(gp){
+        const el=document.createElement("div");el.className="gspot";el.setAttribute("aria-hidden","true");
+        el.style.top=((gp.from-g.gs)*g.ppm)+"px";el.style.height=((gp.to-gp.from)*g.ppm)+"px";
+        f.appendChild(el);n++;
+      });
+      col.appendChild(f);
+    });
+    if(tr&&barTrayDate())tr.classList.add("barok");      // (not on a day or a week that has gone: a tap there only says so)
+  }
+  if(sl){
+    cols.forEach(function(col){
+      if(col.getAttribute("data-date")!==sl.date||(col.getAttribute("data-staff")||"")!==sl.staff)return;
+      const el=document.createElement("div");el.className="dropmark bkmark";el.setAttribute("aria-hidden","true");
+      el.style.top=((sl.min-g.gs)*g.ppm)+"px";el.style.height=Math.min(Math.max(L*g.ppm,16),Math.max(16,(g.ge-sl.min)*g.ppm))+"px";
+      el.textContent=S.view==="week"?hm(sl.min):fmtMin(sl.min);
+      col.appendChild(el);
+    });
+  }
+  BP.n=n;return n;
+}
+/* ----- placing the job ----- */
+// Books the job: who (a person, or "" = nobody), the day, and min (minutes, or null = no start time). The same save as every other quick save.
+async function barBook(staff,date,min){
+  const sh=SH;if(!sh||!sh.bar||sh.busy||!barReady())return;
+  const was={staff:val("f-staff")||"",date:val("f-date"),time:val("f-time")};
+  sh.whoKeep=was.staff;      // Who stays as it was picked after this: a green spot in someone else's column doesn't change it
+  setVal("f-staff",staff||"");setVal("f-date",date);setVal("f-time",min==null?"":minToHM(min));
+  quickSync();
+  let ok=false;
+  try{ok=await quickSave();}catch(e){console.warn("The booking didn't save.",e);}
+  // It didn't go through (no signal ...): Who, the day and the time go back to what they were before the tap, so that tapping Save (or Save with no time) next
+  // doesn't book for the spot's person and day, which is out of sight on a phone.
+  if(!ok&&SH===sh){setVal("f-staff",was.staff);setVal("f-date",was.date);setVal("f-time",was.time);sh.whoKeep=null;quickSync();}
+}
+// A tap on a person's column (day or week) while the bar is open. raw = the minute under the finger (not snapped).
+function barGridTap(staff,date,raw){
+  const sh=SH;if(!sh||!sh.bar||sh.busy)return;
+  const g=S.grid;
+  if(!barReady()){      // nothing to book yet: remember this slot. Once a client and a service are picked it shows as a Book button, and the green spots show too.
+    const min=Math.max(g.gs,Math.min(Math.floor(raw/SNAP)*SNAP,g.ge-SNAP));
+    barPreset({staff:staff,date:date,time:minToHM(min),exact:true});
+    return;
+  }
+  const L=barLen(),start=date<todayYmd()?null:pickStart(fitGaps(busyMap()[staff+"|"+date]||[],L,barStart(date),WORK_END,SNAP),raw,L,SNAP);
+  if(start==null){barHint("Doesn't fit there. Tap a green spot, or drag it later.");return;}
+  barBook(staff,date,start);
+}
+// the day a tap on the Unassigned list books for: the day on screen (day view), or the bar's day if it is in this week and hasn't gone (week view)
+function barTrayDate(){
+  const today=todayYmd();
+  if(S.view!=="week")return S.date>=today?S.date:null;
+  const days=weekDays().filter(function(d){return d>=today;}),cur=val("f-date");
+  return days.indexOf(cur)>=0?cur:(days[0]||null);
+}
+function barTrayTap(){
+  const sh=SH;if(!sh||!sh.bar||sh.busy||!barReady())return;
+  const d=barTrayDate();
+  if(!d){barHint("That day has gone. Pick a day that hasn't.");return;}
+  barBook("",d,null);
+}
+// Who, day and time set from a tap on the grid or a "+ Add" (and the bar already open). Past days are kept when o.exact (a tap on a column).
+function barPreset(o){
+  if(!SH||!SH.bar)return;
+  SH.booked=false;
+  if(o.staff!==undefined)setVal("f-staff",o.staff||"");
+  if(validYmd(o.date)){setVal("f-date",(!o.exact&&o.date<todayYmd())?todayYmd():o.date);SH.dayHand=true;}
+  if(o.time!==undefined)setVal("f-time",o.time||"");
+  quickSync();
+}
+// while the bar is open and the day on screen changes, the bar's day follows it (until a day has been picked by hand)
+function barFollowDay(){if(!SH||!SH.bar||SH.dayHand)return;setVal("f-date",barDayDefault(SH));quickSync();}
+// The day the bar books on when no day has been picked by hand: today or the day on screen (quickDayDefault). The one exception is the day that was open in Day view
+// when a computer was switched to Week for the bar: that day stays while its week is the one showing, and goes the moment another week is.
+function barDayDefault(sh){
+  if(sh&&sh.dayAuto){
+    if(S.view==="week"&&weekStart(S.date)===weekStart(sh.dayAuto)&&sh.dayAuto>=todayYmd())return sh.dayAuto;
+    sh.dayAuto="";
+  }
+  return quickDayDefault();
+}
+
+/* ----- the bar's place on the screen ----- */
+// Scrolls the bar's body so el is at the top of it
+function barScrollTo(el){
+  const body=byId("q-body");if(!body||!el)return;
+  body.scrollTop=Math.max(0,el.getBoundingClientRect().top-body.getBoundingClientRect().top+body.scrollTop-4);
+}
+// Is a box in the part of the bar that scrolls (More: phone, address, email, notes ...) the one being typed in? Then html.bar-edit is on, and with the keyboard up the CSS gives the
+// bar the room above it. A box that has just been tapped is scrolled into the room it now has.
+function barEditFlag(){
+  const ae=document.activeElement,on=!!(SH&&SH.bar&&ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)&&ae.closest&&ae.closest("#q-body")),de=document.documentElement,was=de.classList.contains("bar-edit");
+  de.classList.toggle("bar-edit",on);
+  if(on&&!was){
+    setTimeout(function(){
+      if(!SH||!SH.bar||document.activeElement!==ae)return;
+      const body=byId("q-body");if(!body)return;
+      const b=body.getBoundingClientRect(),r=ae.getBoundingClientRect();
+      if(r.top<b.top||r.bottom>b.bottom)barScrollTo(ae.closest(".fld")||ae);
+    },80);
+  }
+}
+// Keeps the bar just above the phone's keyboard (the keyboard shrinks the visual viewport, not the page), and gives it a maximum height of 45% of what is
+// visible (--vvh).
+function barPlace(){
+  const b=byId("bar");if(!b||!SH||!SH.bar)return;
+  const vv=window.visualViewport;let bottom=0,vh=window.innerHeight;
+  if(vv&&vv.scale<1.05){vh=vv.height;bottom=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));}
+  b.style.bottom=bottom+"px";b.style.setProperty("--vvh",Math.round(vh)+"px");
+  document.documentElement.classList.toggle("kb-open",bottom>80);
+}
+// How much of the bottom of the screen the bar takes: its content height, up to its maximum (45% of the screen on a phone), and NOT shrunk by the keyboard
+// (so the calendar doesn't jump about while someone types). The grid is fitted to the rest (viewH).
+function barMeasure(){
+  const b=byId("bar");let h=0;
+  if(b&&SH&&SH.bar){
+    const head=$(".barhead",b),inner=byId("q-inner"),foot=$(".barfoot",b);
+    const nat=(head?head.offsetHeight:0)+(inner?inner.offsetHeight:0)+4+(foot?foot.offsetHeight:0)+(parseFloat(getComputedStyle(b).paddingBottom)||0)+1;
+    const cap=isNarrow()?Math.max(150,Math.floor(window.innerHeight*.45)):Math.min(Math.floor(window.innerHeight*.44),400);      // the same numbers as .bar's max-height in the CSS (the keyboard's smaller --vvh doesn't count: the calendar mustn't jump about while someone types)
+    h=Math.min(nat,cap);
+  }
+  S.barH=h;document.documentElement.style.setProperty("--barh",h+"px");
+  return h;
+}
+let barRO=null,barVv=false,barRefitT=0;
+function barRefit(){
+  barRefitT=0;
+  if(!SH||!SH.bar)return;
+  const old=S.barH;barMeasure();
+  if(Math.abs(S.barH-old)>2)renderBody();      // the room above the bar changed: fit the grid again
+}
+function barRefitSoon(){clearTimeout(barRefitT);barRefitT=setTimeout(barRefit,90);}
+function barWatch(on){
+  const vv=window.visualViewport;
+  if(on){
+    if(vv&&!barVv){vv.addEventListener("resize",barPlace);vv.addEventListener("scroll",barPlace);barVv=true;}
+    if(window.ResizeObserver&&!barRO){
+      try{
+        barRO=new ResizeObserver(barRefitSoon);
+        const b=byId("bar");["q-inner"].forEach(function(id){const e=byId(id);if(e)barRO.observe(e);});
+        if(b){const h=$(".barhead",b),f=$(".barfoot",b);if(h)barRO.observe(h);if(f)barRO.observe(f);}
+      }catch(e){barRO=null;}
+    }
+    window.addEventListener("resize",barRefitSoon);window.addEventListener("resize",barPlace);
+  }else{
+    if(vv&&barVv){vv.removeEventListener("resize",barPlace);vv.removeEventListener("scroll",barPlace);barVv=false;}
+    if(barRO){try{barRO.disconnect();}catch(e){}barRO=null;}
+    clearTimeout(barRefitT);barRefitT=0;
+    window.removeEventListener("resize",barRefitSoon);window.removeEventListener("resize",barPlace);
+  }
+}
+// The bar is going: tidy up and give the calendar its room back. A view that was switched to Week for the bar goes back, except on a logout (force without
+// restore), where the screen is being torn down and nothing is redrawn or fetched. "More details" is a force that does restore.
+function barClose(force,restore){
+  clearTimeout(SH.hintT);
+  const pf=SH.prevFocus;
+  SH=null;
+  barWatch(false);
+  const b=byId("bar");if(b){b.innerHTML="";b.hidden=true;b.style.bottom="";b.style.removeProperty("--vvh");}
+  const de=document.documentElement;de.classList.remove("qa-open","bar-open","kb-open","bar-edit");
+  S.barH=0;de.style.setProperty("--barh","0px");
+  let nav=false;
+  if(S.barPrevView){const v=S.barPrevView;S.barPrevView=null;if((!force||restore)&&S.view!==v){S.view=v;nav=true;}}
+  if(nav)afterNav();else renderBody();
+  if(pf&&pf.focus&&document.contains(pf)){try{pf.focus({preventScroll:true});}catch(e){}}
 }
 
 /* =====================================================================
@@ -3859,7 +4318,7 @@ async function quickMore(){
    ===================================================================== */
 function handleSheetAction(a,e){
   const k=a.getAttribute("data-sh");
-  if(SH&&SH.quick&&k!=="qsave"&&k!=="qsaveadd")quickClearMsg();
+  if(SH&&SH.quick&&k!=="qbook"&&k!=="qnotime")quickClearMsg();
   if(k==="close"){closeSheet(false);}
   else if(k==="save"){doSave();}
   else if(k==="done"||k==="undone"||k==="cancel"||k==="reopen"){setStatus(k);}
@@ -3880,15 +4339,19 @@ function handleSheetAction(a,e){
   else if(k==="retryphotos"){retryPhotos();}
   else if(k==="more"){toggleMore();}
   else if(k==="cnedit"||k==="cnadd"){openCNotes();}
-  else if(k==="uselen"){setVal("f-dur",String(usualLen(SH.svc)));updateLenHint();updateLinks();}
+  else if(k==="uselen"){setDur(usualLen(SH.svc));updateLenHint();updateLinks();}
   else if(k==="qwho"||k==="qday"||k==="qtime"){quickSet(k,a);}
   else if(k==="qsvc"){quickToggleSvc(a.getAttribute("data-v"));}
   else if(k==="qsvcmore"){SH.svcMore=!SH.svcMore;quickRenderSvc();}
-  else if(k==="qemail"){SH.qEmail=true;quickSync();const e2=byId("f-email");if(e2){try{e2.focus();}catch(x){}}}
-  else if(k==="qedit"){SH.qEdit=!SH.qEdit;quickSync();}
+  else if(k==="qmoretog"){
+    SH.bmore=!SH.bmore;quickSync();
+    if(SH.bmore){const body=byId("q-body"),mp=byId("q-more");if(body&&mp)body.scrollTop=Math.max(0,mp.getBoundingClientRect().top-body.getBoundingClientRect().top+body.scrollTop-4);}      // bring what opened to the top of the bar
+  }
+  else if(k==="qopenmore"){SH.bmore=true;quickSync();const p=byId("f-phone");if(p){try{p.focus();}catch(x){}}}
+  else if(k==="qedit"){SH.qEdit=!SH.qEdit;if(SH.qEdit)SH.bmore=true;quickSync();}
   else if(k==="qchange"){quickChangeClient();}
-  else if(k==="qsave"){quickSave(false);}
-  else if(k==="qsaveadd"){quickSave(true);}
+  else if(k==="qbook"){SH.whoKeep=null;quickSave();}
+  else if(k==="qnotime"){SH.whoKeep=null;setVal("f-time","");quickSync();quickSave();}
   else if(k==="qmore"){quickMore();}
 }
 function handleAct(k,el){
@@ -3909,11 +4372,11 @@ function handleAct(k,el){
   else if(k==="prev")go(-1);
   else if(k==="next")go(1);
   else if(k==="today"){S.date=todayYmd();afterNav();}
-  else if(k==="viewday")setView("day");
-  else if(k==="viewweek")setView("week");
-  else if(k==="qadd"){if(Date.now()<S.noClickUntil)return;openQuick(el.hasAttribute("data-staff")?{staff:el.getAttribute("data-staff"),date:el.getAttribute("data-date")||S.date}:{});}      // not the click that ends a drag onto an empty strip
+  else if(k==="viewday"){S.barPrevView=null;setView("day");}      // (a view picked by hand stays when the booking bar closes)
+  else if(k==="viewweek"){S.barPrevView=null;setView("week");}
+  else if(k==="qadd"){if(Date.now()<S.noClickUntil)return;openQuick(el.hasAttribute("data-staff")?{staff:el.getAttribute("data-staff"),date:el.getAttribute("data-date")||S.date,time:""}:{});}      // not the click that ends a drag onto an empty strip
   else if(k==="pwho")setPhoneWho(el.getAttribute("data-who"));
-  else if(k==="godate"){S.view="day";savePrefs();gotoDate(el.getAttribute("data-date"));}
+  else if(k==="godate"){S.barPrevView=null;S.view="day";savePrefs();gotoDate(el.getAttribute("data-date"));}
   else if(k==="retry"){S.loadErr="";fetchJobs(false);}
 }
 function onClick(e){
@@ -3922,7 +4385,7 @@ function onClick(e){
   if(SV){svcPanelClick(t);return;}
   const sh=t.closest("[data-sh]");
   if(sh&&SH){e.preventDefault();handleSheetAction(sh,e);return;}
-  if(SH){
+  if(SH&&!SH.bar){
     if(t.id==="sh-back"&&SH.back){closeSheet(false);}
     // Service record and Termite inspection open in this same tab. (Maps opens in its own tab, so the sheet and the day are never lost to it.)
     const lk=t.closest("#ln-rec,#ln-insp");
@@ -3938,24 +4401,44 @@ function onClick(e){
   if(t.closest("a"))return;
   if(t.closest(".rz"))return;      // the stretch handle never opens the job
   const card=t.closest("[data-job]");
-  if(card){if(Date.now()<S.noClickUntil)return;openJob(card.getAttribute("data-job"));return;}
+  if(card){
+    if(Date.now()<S.noClickUntil)return;
+    // Booking bar open: a short job is drawn taller than it is (16px at least), and that extra covers the start of the green spot under it. Below the job's real end it is free
+    // time, so that tap goes to the grid (it books there, or says it doesn't fit) instead of closing the bar to open the job.
+    const bc=(SH&&SH.bar&&S.isMaster&&S.screen==="cal")?card.closest(".col"):null;
+    if(bc){
+      const r=bc.getBoundingClientRect(),g=S.grid,raw=g.gs+(e.clientY-r.top)/g.ppm,j=S.byId[card.getAttribute("data-job")],s=j?tmToMin(j.start_time):null;
+      if(s!=null&&raw>=s+Math.max(+j.duration_min||0,1)){barGridTap(bc.getAttribute("data-staff"),bc.getAttribute("data-date")||S.date,raw);return;}
+    }
+    openJob(card.getAttribute("data-job"));return;
+  }
   if(S.isMaster&&S.screen==="cal"&&Date.now()>=S.noClickUntil){
-    // an empty spot on the grid (day or week): a new job for that person, day and time
+    // an empty spot on the grid (day or week). Bar open: a green spot books the job there, any other spot says so (see barGridTap). Bar closed: the bar
+    // opens with that person, day and time already set.
     const col=t.closest(".col");
     if(col){
-      const r=col.getBoundingClientRect(),g=S.grid;
+      const r=col.getBoundingClientRect(),g=S.grid,staff=col.getAttribute("data-staff"),date=col.getAttribute("data-date")||S.date;
+      if(SH&&SH.bar){barGridTap(staff,date,g.gs+(e.clientY-r.top)/g.ppm);return;}
       const min=Math.max(g.gs,Math.min(g.gs+Math.floor((e.clientY-r.top)/g.ppm/SNAP)*SNAP,g.ge-SNAP));
-      openNew({staff:col.getAttribute("data-staff"),date:col.getAttribute("data-date")||S.date,time:minToHM(min)});
+      openQuick({staff:staff,date:date,time:minToHM(min),exact:true});
       return;
     }
-    // the empty part of a week lane's No time strip: Quick add for that person and day
+    // the empty part of a week lane's No time strip: the bar for that person and day (no time)
     const nt=t.closest(".wlh");
-    if(nt){openQuick({staff:nt.getAttribute("data-staff")||"",date:nt.getAttribute("data-date")||S.date});return;}
+    if(nt){
+      const staff=nt.getAttribute("data-staff")||"",date=nt.getAttribute("data-date")||S.date,had=!!(SH&&SH.bar);
+      openQuick({staff:staff,date:date,time:""});
+      if(had&&SH&&SH.bar&&barReady()){const st=S.staffById[staff];barHint((st?st.name+", ":"")+dayLbl(val("f-date"))+" set. Tap Save.");}
+      return;
+    }
+    // the Unassigned list, while it is green: book it for nobody (no time)
+    if(SH&&SH.bar&&t.closest(".tray")&&barReady()){barTrayTap();return;}
   }
 }
+function inBar(el){return !!(el&&el.closest&&el.closest("#bar"));}
 function onInput(e){
   const id=e.target&&e.target.id;
-  if(SH){
+  if(SH&&(!SH.bar||inBar(e.target))){
     if(SH.quick)quickClearMsg();
     if(e.target.getAttribute&&e.target.getAttribute("data-sv")){onSvcField(e.target);return;}      // a service's price or invoice wording
     if(id==="f-name")onNameInput();
@@ -3968,8 +4451,9 @@ function onInput(e){
 function onChange(e){
   const id=e.target&&e.target.id;
   if(SV){svcPanelChange(e.target);return;}
-  if(SH){
+  if(SH&&(!SH.bar||inBar(e.target))){      // (with the bar open, the calendar's own date box still works)
     if(SH.quick)quickClearMsg();
+    if(SH.bar&&id==="f-date")SH.dayHand=true;
     if(e.target.getAttribute&&e.target.getAttribute("data-svc")!=null){onSvcTick(e.target);}
     else if(id==="ph-cam"||id==="ph-lib"){const files=e.target.files;addPhotos(files).catch(function(){}).then(function(){try{e.target.value="";}catch(x){}});}
     else if(id==="f-dur"&&S.isMaster&&!SH.quick){SH.durHand=true;SH.durAuto=false;updateLenHint();updateLinks();}      // a length picked by hand: the services' usual times no longer change it
@@ -3991,19 +4475,20 @@ function flushDate(){
 }
 function onKey(e){
   if(SV){if(e.key==="Escape"){closeSvcPanel(false);}return;}
-  if(S.menuOpen&&!SH){
+  const modal=!!SH&&!SH.bar;      // a full job sheet (the booking bar is not modal: the calendar behind it still works)
+  if(S.menuOpen&&!modal){
     if(e.key==="Escape"){e.preventDefault();closeMenu(true);return;}
     if(e.key==="ArrowDown"||e.key==="ArrowUp"){menuKey(e);return;}
     if(e.key==="Tab"){closeMenu();}
   }
-  if(e.key==="Enter"&&!SH&&e.target&&e.target.id==="tb-date"){flushDate();return;}
+  if(e.key==="Enter"&&!modal&&e.target&&e.target.id==="tb-date"){flushDate();return;}
   if(e.key==="Enter"&&SH&&e.target&&e.target.id==="f-addr"){findAddr();return;}
   if(e.key==="Escape"&&SH){
     const l1=byId("f-name-list"),l2=byId("f-addr-list");
     if((l1&&!l1.hidden)||(l2&&!l2.hidden)){hideNameList();hideAddrList();return;}
     closeSheet(false);return;
   }
-  if((e.key==="Enter"||e.key===" ")&&!SH){
+  if((e.key==="Enter"||e.key===" ")&&!modal){
     const t=e.target;
     if(t&&t.getAttribute&&t.hasAttribute("data-job")&&t.getAttribute("role")==="button"){e.preventDefault();openJob(t.getAttribute("data-job"));}
   }
@@ -4011,9 +4496,11 @@ function onKey(e){
 function onFocusIn(e){
   if(e.target&&e.target.id==="tb-date")S.tbDateFocus=true;
   if(SH&&!SH.gTok&&e.target&&e.target.id==="f-addr")SH.gTok=uuid();      // a new address-entry session for Google (a new token after a pick, or when the sheet has just opened)
+  if(SH&&SH.bar)barEditFlag();
 }
 function onFocusOut(e){
   if(e.target&&e.target.id==="tb-date"){S.tbDateFocus=false;flushDate();}
+  if(SH&&SH.bar)setTimeout(barEditFlag,0);      // (once focus has landed on the next box, or on nothing)
   if(!SH)return;
   const id=e.target&&e.target.id;
   // only hide if focus really has left the box (a quick blur and refocus must not cancel a search that was just started)
@@ -4030,7 +4517,7 @@ function wireGlobal(){
   document.addEventListener("focusout",onFocusOut);
   document.addEventListener("pointerdown",function(e){
     if(SV){SV.back=!!(e.target&&e.target.id==="svp-back");return;}
-    if(SH){SH.back=!!(e.target&&e.target.id==="sh-back");return;}
+    if(SH&&!SH.bar){SH.back=!!(e.target&&e.target.id==="sh-back");return;}
     onDown(e);
   });
   // keep focus in the text box when tapping a suggestion, so the list is still there for the click
@@ -4085,6 +4572,8 @@ function boot(){
   S.sb.auth.onAuthStateChange(function(ev,session){setTimeout(function(){onSession(session);},0);});
   checkSession();
 }
+window.lpcSelfTest=lenSelfTest;      // in the browser console: lpcSelfTest() lists anything wrong with the job length rule (nothing = all good)
+try{const bad=lenSelfTest();if(bad.length)console.warn("Job length self-test failed:\n"+bad.join("\n"));}catch(e){console.warn("Job length self-test could not run.",e);}
 boot();
 })();
 </script>
