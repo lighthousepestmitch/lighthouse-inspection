@@ -335,7 +335,7 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .pf{flex:0 0 auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--soon);background:var(--soonBg);padding:2px 8px;border-radius:5px}
 textarea.sdesc{min-height:64px}
 .svadd .inp{max-width:200px}
-#sv-total:empty{display:none}
+#sv-total:empty,#sv-pnote:empty{display:none}
 /* a client's known job sites, tap to fill the job address */
 .sites{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 12px}
 .sitelbl{font-size:12.5px;color:var(--ink3);font-weight:600;margin-right:2px}
@@ -575,7 +575,14 @@ const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // read and write and the page carries on without them (no add-on column = every add-on counts as blank, so a service adds its full time).
 function clientCols(){return CLIENT_COLS+(S.noNotesCol?"":",notes");}
 function jobCols(){return "*, client:clients("+clientCols()+")";}
-function typeCols(){return "id,name,default_price,"+(S.noLenCol?"":"default_minutes,")+(S.noAddonCol?"":"addon_minutes,")+"xero_description,sort";}
+// PRICES live in their own master-only tables (08_hide_prices.sql): job_prices (a job's total and a price per service) and service_prices (a service's usual price).
+// A worker (role "tech") has no right to read them, so this page never asks for them when a worker is logged in, and the old places (jobs.price, a "price" inside
+// jobs.services, service_types.default_price) are dead: triggers keep them empty, this page never reads them for display and never writes them.
+// If the two tables aren't in the database yet (the 08 update hasn't been run) the first answer that says so switches prices off for the session (S.noPriceTbl),
+// quietly: prices show blank, are not saved, and one note says why. It never falls back to the old columns.
+// So run 08 (and check its prices_left_on_jobs is 0) BEFORE this page goes live: without it, a service tick or reword rewrites jobs.services without the old "price"
+// keys, the old prices stay on the jobs table and still reach a technician's phone (jobCols is "*"), and 08's move later copies those lines with no price.
+function typeCols(){return "id,name,"+(S.noLenCol?"":"default_minutes,")+(S.noAddonCol?"":"addon_minutes,")+"xero_description,sort";}
 const PREF_KEY="lpc_calendar_prefs_v1", EMAIL_KEY="lpc_calendar_last_email", DRAFT_KEY="lpc-cal-draft-v1";
 const DRAFT_MAX_AGE=24*60*60*1000;
 const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","South Australia":"SA","Western Australia":"WA","Tasmania":"TAS","Northern Territory":"NT","Australian Capital Territory":"ACT"};
@@ -647,6 +654,8 @@ const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
   scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
   uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,noAddonCol:false,menuOpen:false,
+  noPriceTbl:false,priceNoted:false,priceFailNoted:false,usualFail:false,priceChan:null,      // prices (master only): the 08 tables are missing / that was said once / a price load failed and was said / usual prices didn't load / the realtime channel for the two price tables
+
   rid:0,barH:0,barPrevView:null};      // rid: counts body redraws (the booking bar's green spots are drawn again after each). barH: room the bar takes at the foot of the screen. barPrevView: the view to go back to when the bar closes (it was switched to Week).
 let SH=null;     // the open job sheet, or null
 let SV=null;     // the open Services panel (master), or null. Never open together with SH.
@@ -702,6 +711,18 @@ async function colRetry(run){
   for(let i=0;i<3&&r&&r.error&&noteMissing(r.error);i++)r=await run();
   return r;
 }
+// Is this a "that table isn't in the database" answer? (PGRST205 from the API, 42P01 from Postgres.) tbl = which table, so a different missing one doesn't count.
+function missingTable(e,tbl){
+  if(!e)return false;
+  const m=String(e.message||"")+" "+String(e.details||"")+" "+String(e.hint||"");
+  return (e.code==="PGRST205"||e.code==="42P01"||/could not find the table|relation .* does not exist/i.test(m))&&(!tbl||new RegExp("\\b"+tbl+"\\b").test(m));
+}
+// The 08 tables aren't there: prices are off for the session. Said once, in a toast, and in the places prices would have been (the job sheet and the Services list).
+function noPriceTables(){
+  S.noPriceTbl=true;
+  if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
+  if(!S.priceNoted){S.priceNoted=true;toast("Prices need the 08 database update.");}
+}
 function netErr(e){return (navigator.onLine===false)||(e&&(e.name==="AuthRetryableFetchError"||e.status===0))||/failed to fetch|networkerror|load failed|network request failed/i.test(String(e&&e.message||""));}
 
 /* ---------- staff, service types, small lookups ---------- */
@@ -742,35 +763,73 @@ function uuid(){
 }
 
 /* ---------- services on a job ----------
-   A job can have several services. In the form each one is {type, description, price}, with the price kept as the text in the box.
-   Saved: jobs.services = [{type, description, price}] in tick order, jobs.service_type = the names joined with " + " (for showing),
-   jobs.price = the entered prices added up (null if none entered). */
+   A job can have several services. In the form each one is {type, description, price}, with the price kept as the text in the box. The price is the master's:
+   for a worker (role "tech") it is always "" and there is no price box (see the PRICES notes at typeCols).
+   Saved, in two places:
+   - the jobs table: jobs.services = [{type, description}] in tick order (no price in it), jobs.service_type = the names joined with " + " (for showing).
+     jobs.price is never written (a trigger keeps it empty).
+   - master only, the job_prices table (the XERO note at savePrices): price = the entered prices added up (null if none entered), lines = [{type, price}] in the same order.
+   In memory, a job the master loaded carries them as j._price, j._lines and j._pOk (false = the price load failed, so this job's prices must not be written over).
+   A usual price is t._usual on a service type (from service_prices). None of these are ever in a patch sent to the jobs or service_types table. */
 function priceStr(p){return p==null||p===""?"":String(p);}
 function typeDesc(name){const t=S.typesByName[name];return t&&t.xero_description?String(t.xero_description):"";}
-// What the form starts with for a job: its saved services, or, for an older job that only has service_type, that one service.
+// What the form starts with for a job: its saved services, or, for an older job that only has service_type, that one service. Prices come from j._lines (master only).
 function loadServices(j){
   if(!j)return [];
+  const M=S.isMaster,lines=(M&&Array.isArray(j._lines))?j._lines.slice():[];
+  // a service's price line: matched by service name, each line used once (the same service can be on a job twice)
+  const lineFor=function(type){
+    for(let i=0;i<lines.length;i++){if(lines[i]&&lines[i].type===type){const l=lines[i];lines[i]=null;return l;}}
+    return null;
+  };
   if(Array.isArray(j.services)&&j.services.length){
     const out=j.services.filter(function(e){return e&&trim(e.type);}).map(function(e){
       // only a service with no wording saved at all gets the default Xero wording; wording that was cleared on purpose (saved as "") stays blank
-      return {type:trim(e.type),description:e.description===undefined?typeDesc(trim(e.type)):String(e.description||""),price:priceStr(e.price)};
+      const l=lineFor(trim(e.type));
+      return {type:trim(e.type),description:e.description===undefined?typeDesc(trim(e.type)):String(e.description||""),price:M?priceStr(l&&l.price):""};
     });
-    // one service with no price of its own, but the job has one: that is the service's price (don't show it blank and risk wiping it on save)
-    if(out.length===1&&out[0].price===""&&j.price!=null)out[0].price=priceStr(j.price);
+    // one service with no price of its own, but the job has a total: that is the service's price (don't show it blank and risk wiping it on save).
+    // Only for an old-style total, where no service has a price of its own. Once any service does, the per-service prices are the truth: a service with none stays blank
+    // (a technician who unticked a service leaves that service's price in the total, and it is not this one's).
+    if(M&&out.length===1&&out[0].price===""&&j._price!=null&&!(Array.isArray(j._lines)?j._lines:[]).some(function(l){return l&&l.price!=null&&l.price!=="";}))out[0].price=priceStr(j._price);
     return out;
   }
   const st=trim(j.service_type);
-  return st?[{type:st,description:typeDesc(st),price:priceStr(j.price)}]:[];
+  return st?[{type:st,description:typeDesc(st),price:M?priceStr(j._price):""}]:[];
 }
-// the form's services as they get saved (price as a number or null, blank wording as "" so it stays blank when the job is opened again)
+// the form's services as they get saved on the jobs table (blank wording as "" so it stays blank when the job is opened again). No price: that goes to job_prices.
 function canonServices(list){
-  return (list||[]).map(function(e){return {type:trim(e.type),description:trim(e.description),price:parsePrice(e.price)};});
+  return (list||[]).map(function(e){return {type:trim(e.type),description:trim(e.description)};});
+}
+// the form's prices as they get saved to job_prices.lines: a number or null for each service, in the same order
+function canonLines(list){
+  return (list||[]).map(function(e){const p=parsePrice(e.price);return {type:trim(e.type),price:(p==null||isNaN(p))?null:p};});
 }
 function sumPrice(list){
   let any=false,t=0;
   list.forEach(function(e){if(e.price!=null&&!isNaN(e.price)){any=true;t+=e.price;}});
   return any?Math.round(t*100)/100:null;
 }
+// {price: total or null, lines: [{type, price}]} for a form's services: what job_prices holds for them
+function pricesOf(list){const lines=canonLines(list);return {price:sumPrice(lines),lines:lines};}
+function pricesEmpty(p){return p.price==null&&p.lines.every(function(l){return l.price==null;});}
+// the row job_prices really holds for a job (j._price, j._lines), in the same shape as pricesOf()
+function storedPrices(job){
+  const lines=(job&&Array.isArray(job._lines)?job._lines:[]).filter(function(l){return l&&typeof l==="object";}).map(function(l){
+    const p=(l.price==null||l.price==="")?null:Number(l.price);
+    return {type:trim(l.type),price:(p==null||isNaN(p))?null:p};
+  });
+  const t=(job&&job._price!=null&&job._price!=="")?Number(job._price):null;
+  return {price:(t==null||isNaN(t))?null:t,lines:lines};
+}
+// What a job's prices were when it was loaded (master): p = as the form showed them, s = what the table really holds for it (it can be out of step with the services, after a
+// technician changed them), ok = they loaded (false: don't write over them)
+function priceSnap(job){
+  return {p:pricesOf(loadServices(job)),s:storedPrices(job),ok:!job||job._pOk!==false};
+}
+// the prices a job just saved (or loaded) carries in memory
+function setJobPrices(job,price,lines,ok){if(job){job._price=price;job._lines=lines;job._pOk=ok!==false;}}
+function carryPrices(from,to){if(from&&to&&from!==to)setJobPrices(to,from._price==null?null:from._price,from._lines||[],from._pOk!==false);}
 function svcNames(j){
   if(Array.isArray(j.services)&&j.services.length){
     const a=j.services.map(function(e){return trim(e&&e.type);}).filter(Boolean);
@@ -946,9 +1005,9 @@ function offerDraft(){
 }
 // a draft saved before jobs could have several services holds one "service" and one "price"
 function draftServices(F){
-  if(Array.isArray(F.services))return F.services.filter(function(e){return e&&trim(e.type);}).map(function(e){return {type:trim(e.type),description:String(e.description==null?"":e.description),price:priceStr(e.price)};});
+  if(Array.isArray(F.services))return F.services.filter(function(e){return e&&trim(e.type);}).map(function(e){return {type:trim(e.type),description:String(e.description==null?"":e.description),price:S.isMaster?priceStr(e.price):""};});
   const st=trim(F.service);
-  return st?[{type:st,description:typeDesc(st),price:priceStr(F.price)}]:[];
+  return st?[{type:st,description:typeDesc(st),price:S.isMaster?priceStr(F.price):""}]:[];
 }
 // Puts a form (as readForm gives it) into the job sheet that has just been opened. The baseline stays as the fresh snapshot taken in
 // openSheet, so the sheet counts as changed and still asks before it closes. Used by Restore (after a logout) and by the booking bar's "More details".
@@ -979,6 +1038,7 @@ async function restoreDraft(){
         const r=await colRetry(function(){return S.sb.from("jobs").select(jobCols()).eq("id",d.jobId).maybeSingle();});
         if(r.error)throw r.error;
         job=r.data||null;
+        if(job&&S.isMaster)await attachPrices([job]);      // its prices too (master)
       }catch(e){toast("Couldn't get that job back. "+friendly(e),true);return;}
       if(!job){toast("That job isn't there any more, so what you typed can't go back on it. Tap Discard to clear it.",true);return;}
     }
@@ -998,6 +1058,7 @@ async function restoreDraft(){
 async function startApp(){
   if(S.starting)return;
   S.starting=true;
+  S.isMaster=false;      // (until this login's own staff row says so)
   renderBoot("Loading your calendar...");
   try{
     const me=await S.sb.from("staff").select("id,name,role,colour,active").eq("id",S.userId).maybeSingle();
@@ -1011,6 +1072,7 @@ async function startApp(){
     if(res[0].error)throw res[0].error;if(res[1].error)throw res[1].error;
     S.staff=sortStaff(res[0].data||[]);S.staffById={};S.staff.forEach(function(s){S.staffById[s.id]=s;});
     S.types=res[1].data||[];S.typesByName={};S.types.forEach(function(t){S.typesByName[t.name]=t;});
+    await loadUsualPrices();      // master only (it does nothing for a worker): each service's usual price, from service_prices
     document.body.classList.toggle("is-master",S.isMaster);
     if(!S.isMaster)S.view="day";
     S.date=todayYmd();S.loaded=false;S.loadErr="";S.jobs=[];S.byId={};S.range=null;S.scrollToWork=true;S.lastRenderKey="";
@@ -1026,8 +1088,11 @@ async function startApp(){
   }
 }
 function stopApp(){
+  S.fetchSeq++;S.isMaster=false;      // a fetch still on its way for the last login is dropped when it comes back, before it asks for prices under whoever logs in next
   clearTimeout(S.refetchT);clearInterval(S.pollT);S.pollT=null;clearTimeout(S.tbDateT);S.tbDateT=0;S.tbDateV="";S.tbDateFocus=false;S.lastRenderKey="";
   if(S.channel){try{S.sb.removeChannel(S.channel);}catch(e){}S.channel=null;}
+  if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
+  S.noPriceTbl=false;S.priceNoted=false;S.priceFailNoted=false;S.usualFail=false;      // the next person to log in finds out for themselves
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
   D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
   driveWipe();      // the saved drive times have client addresses in them: they don't stay on the device after a log out (this runs for a log out, a login that ran out, and a different person logging in)
@@ -1056,7 +1121,10 @@ async function fetchJobs(silent){
     });
     if(seq!==S.fetchSeq)return;
     if(r.error)throw r.error;
-    setJobs(r.data||[]);S.range=range;S.loaded=true;S.loadErr="";
+    const rows=r.data||[];
+    // Master only: the prices of these jobs (and, on a refresh, the usual prices) come from their own tables and are merged into the jobs in memory. A worker never asks.
+    if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null]);if(seq!==S.fetchSeq)return;}
+    setJobs(rows);S.range=range;S.loaded=true;S.loadErr="";
     renderBody();
   }catch(e){
     if(seq!==S.fetchSeq)return;
@@ -1064,6 +1132,47 @@ async function fetchJobs(silent){
     if(!S.loaded&&!S.jobs.length)S.loaded=false;
     renderBody();
   }
+}
+/* ----- prices (master only; a worker never calls any of this) ----- */
+// Fills j._price, j._lines and j._pOk on each job in rows from job_prices: ONE query for the jobs in view (in chunks of 100 ids). A job with no row has no price entered.
+// If the table is missing prices are switched off (noPriceTables). If the answer fails for another reason the jobs are marked j._pOk=false: they show blank prices, and
+// savePrices won't write over what it couldn't read.
+async function attachPrices(rows){
+  rows.forEach(function(j){setJobPrices(j,null,[],true);});
+  if(!S.isMaster||S.noPriceTbl||!rows.length)return;
+  const byJob={},ids=rows.map(function(j){byJob[j.id]=j;return j.id;});
+  try{
+    for(let i=0;i<ids.length;i+=100){
+      const r=await S.sb.from("job_prices").select("job_id,price,lines").in("job_id",ids.slice(i,i+100));
+      if(r.error){
+        if(missingTable(r.error,"job_prices")){noPriceTables();return;}
+        throw r.error;
+      }
+      (r.data||[]).forEach(function(x){
+        const j=byJob[x.job_id];
+        if(j)setJobPrices(j,x.price==null?null:Number(x.price),Array.isArray(x.lines)?x.lines.filter(function(l){return l&&typeof l==="object";}):[],true);
+      });
+    }
+    S.priceFailNoted=false;
+  }catch(e){
+    rows.forEach(function(j){j._pOk=false;});
+    console.warn("Prices didn't load.",e);
+    if(!S.priceFailNoted){S.priceFailNoted=true;toast("The prices didn't load, so they show blank for now. "+friendly(e),true);}
+  }
+}
+// Each service's usual price from service_prices, put on the service types in memory as t._usual (a number, or null for none).
+async function loadUsualPrices(){
+  if(!S.isMaster||S.noPriceTbl)return;
+  try{
+    const r=await S.sb.from("service_prices").select("service_type_id,default_price");
+    if(r.error){
+      if(missingTable(r.error,"service_prices")){noPriceTables();return;}
+      throw r.error;
+    }
+    const m={};(r.data||[]).forEach(function(x){m[x.service_type_id]=x.default_price==null?null:Number(x.default_price);});
+    S.types.forEach(function(t){t._usual=Object.prototype.hasOwnProperty.call(m,t.id)?m[t.id]:null;});
+    S.usualFail=false;
+  }catch(e){S.usualFail=true;console.warn("The usual prices didn't load.",e);}
 }
 function scheduleRefetch(delay){clearTimeout(S.refetchT);S.refetchT=setTimeout(function(){fetchJobs(true);},delay==null?400:delay);}
 function subscribe(){
@@ -1074,6 +1183,25 @@ function subscribe(){
       .on("postgres_changes",{event:"*",schema:"public",table:"job_photos"},function(){if(SH&&SH.jobId)loadPhotos();})
       .subscribe(function(status){S.live=status;updateLive();});
   }catch(e){S.live="";updateLive();}
+  subscribePrices();
+}
+// Master only: a price changed on another device shows without waiting for the next refresh. A channel of its own, so that if the database doesn't send changes for
+// these tables (or they aren't there yet) the calendar's own live updates are not affected: a channel that can't subscribe at all (the tables aren't sent) is dropped,
+// quietly. A slow join or a dropped connection is left alone, like the jobs channel: supabase-js tries it again by itself.
+function subscribePrices(){
+  if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
+  if(!S.isMaster||S.noPriceTbl)return;
+  try{
+    const ch=S.sb.channel("lpc-prices")
+      .on("postgres_changes",{event:"*",schema:"public",table:"job_prices"},function(){scheduleRefetch();})
+      .on("postgres_changes",{event:"*",schema:"public",table:"service_prices"},function(){scheduleRefetch();})
+      .subscribe(function(status,err){
+        if(status==="CHANNEL_ERROR"&&/unable to subscribe|mismatch between server and client|does not exist|not found|publication/i.test(String((err&&err.message)||err||""))){
+          if(S.priceChan===ch){try{S.sb.removeChannel(ch);}catch(e){}S.priceChan=null;}
+        }
+      });
+    S.priceChan=ch;
+  }catch(e){S.priceChan=null;}
 }
 function updateLive(){
   // the Live tag (master) is in the top bar
@@ -2239,7 +2367,7 @@ function openSheet(job,defaults){
     more:moreLoad(),moreForce:!!(job&&job.status==="cancelled"),      // the More row: open or shut as last left on this device; a cancelled job opens it (Reopen is in there)
     cnOpen:false,cnTouched:false,      // the client notes box: showing, and typed in on this sheet (until then it just mirrors the client's saved notes)
     durHand:!!job,durAuto:false,durBase:null,svcTouched:false,      // job length: set by hand (a saved job's length counts as set by hand), set from the services, services ticked on this sheet
-    legacyPrice:(job&&job.price!=null&&!svc.length)?job.price:null,      // an old job with a price but no service: the only service ticked takes it (kept until the job saves)
+    legacyPrice:(S.isMaster&&job&&job._price!=null&&!svc.length)?job._price:null,      // an old job with a price but no service: the only service ticked takes it (kept until the prices save)
     legacyHeld:"",      // the service that currently holds that price
     sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null};
   byId("sheet").innerHTML=sheetHtml();
@@ -2290,41 +2418,54 @@ function renderSvcList(){
 }
 function renderSvcDetails(){
   const el=byId("sv-det");if(!el||!SH)return;
+  const M=S.isMaster,lock=pricesLocked();
+  // Master: a price box and a "price to fill" tag on each ticked service, then the invoice wording. A worker gets the wording only: no price box, no tag, no total.
   el.innerHTML=SH.svc.map(function(e,i){
-    return '<div class="svcard"><div class="svhead"><b>'+esc(e.type)+'</b><span class="pf" id="sv-pf-'+i+'">price to fill</span></div>'+
-      '<div class="fld"><label class="fl" for="sv-p-'+i+'">Price (ex GST)</label>'+
-      '<input class="inp" id="sv-p-'+i+'" data-sv="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(e.price)+'" placeholder="Leave blank if not sure"></div>'+
+    return '<div class="svcard"><div class="svhead"><b>'+esc(e.type)+'</b>'+(M?'<span class="pf" id="sv-pf-'+i+'">price to fill</span>':'')+'</div>'+
+      (M?'<div class="fld"><label class="fl" for="sv-p-'+i+'">Price (ex GST)</label>'+
+      '<input class="inp" id="sv-p-'+i+'" data-sv="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(e.price)+'" placeholder="Leave blank if not sure"'+(lock?" disabled":"")+'></div>':"")+
       '<div class="fld"><label class="fl" for="sv-d-'+i+'">What goes on the invoice</label>'+
       '<textarea class="inp sdesc" id="sv-d-'+i+'" data-sv="d" data-i="'+i+'" autocapitalize="sentences">'+esc(e.description)+'</textarea></div></div>';
   }).join("");
   updateSvcMeta();
 }
-// the "price to fill" tags and the total line; touches only text, so it is safe to run on every keystroke in a price box
+// Master only: prices can't be typed in (so not saved) while the 08 tables are missing, or when this job's prices didn't load.
+function pricesLocked(){return !!S.isMaster&&(S.noPriceTbl||!!(SH&&SH.job&&SH.job._pOk===false));}
+// the "price to fill" tags, the total line and the note about prices that can't be saved (master); touches only text, so it is safe to run on every keystroke in a price box
 function updateSvcMeta(){
   if(!SH)return;
+  if(!S.isMaster){updateMoreRow();return;}      // a worker has no prices: nothing to count or show
+  const off=S.noPriceTbl,lock=pricesLocked();      // lock: no price can be typed in (the 08 tables are missing, or this job's prices didn't load), so nothing is "to fill" either
   let blank=0,sum=0,any=false;
   SH.svc.forEach(function(e,i){
     const isBlank=trim(e.price)==="";
     if(isBlank)blank++;
     else{const n=parsePrice(e.price);if(n!=null&&!isNaN(n)){any=true;sum+=n;}}
-    const pf=byId("sv-pf-"+i);if(pf)pf.hidden=!isBlank;
+    const pf=byId("sv-pf-"+i);if(pf)pf.hidden=lock||!isBlank;
   });
   updateMoreRow();
+  const note=byId("sv-pnote");
+  if(note){
+    note.className="hint new";
+    note.textContent=off?"Prices need the 08 database update, so they can't be saved yet."
+      :(SH.job&&SH.job._pOk===false?"This job's prices didn't load, so they show blank and can't be saved. Close the job and open it again.":"");
+  }
   const t=byId("sv-total");if(!t)return;
+  if(lock){t.className="hint";t.textContent="";return;}
   const parts=[];
   if(any)parts.push("Total (ex GST): $"+(Math.round(sum*100)/100).toFixed(2));
   if(blank)parts.push("Price to fill"+(blank>1?" on "+blank+" services":""));
   t.className="hint"+(blank?" new":"");
   t.textContent=parts.join(" · ");
 }
-// a service was ticked: it gets its default price (only if one is set) and its invoice wording. Unticking keeps what was typed, in case it was a slip.
+// a service was ticked: it gets its usual price (master only, and only if one is set) and its invoice wording. Unticking keeps what was typed, in case it was a slip.
 function newSvcEntry(name){
   const m=SH.svcMemo[name];
   let e;
   if(m)e={type:name,description:m.description,price:m.price};
   else{
     const t=S.typesByName[name];
-    e={type:name,description:typeDesc(name),price:t&&t.default_price!=null?String(t.default_price):""};
+    e={type:name,description:typeDesc(name),price:(S.isMaster&&!pricesLocked()&&t&&t._usual!=null)?String(t._usual):""};      // (the usual price is the master's, from service_prices; none while the price boxes are locked, as it could never be saved)
   }
   // an old job with a price but no service: the only service ticked takes that price. It stays on offer until the job saves, so a wrong tick that gets undone doesn't lose it.
   if(!SH.svc.length&&SH.legacyPrice!=null&&!SH.legacyHeld&&(!m||trim(m.price)==="")){e.price=String(SH.legacyPrice);SH.legacyHeld=name;}
@@ -2347,7 +2488,7 @@ function onSvcTick(cb){
 }
 function onSvcField(el){
   const e=SH.svc[+el.getAttribute("data-i")];if(!e)return;
-  if(el.getAttribute("data-sv")==="p"){e.price=el.value;updateSvcMeta();}else e.description=el.value;
+  if(el.getAttribute("data-sv")==="p"){if(S.isMaster){e.price=el.value;updateSvcMeta();}}else e.description=el.value;
 }
 // The How long list: 15 minute steps. A saved length that is not on them (80 min, 2 hr 05) goes in at its place in the list, the way setDur adds one, not at the end.
 function durOptions(cur){
@@ -2428,12 +2569,13 @@ function sheetHtml(){
   // paperwork
   h+='<div class="lbl">Paperwork</div><div class="btns"><a class="btn" id="ln-rec" hidden>Service record</a><a class="btn" id="ln-insp" hidden>Termite inspection</a></div>'+
     '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
-  // More: prices and invoice wording, the job total, the client's email, state and postcode, photos, cancel and delete. Shut until opened (remembered on this device).
-  // It opens by itself if something in there needs a look (a bad price or email, photos that haven't uploaded, a cancelled job). A price still to fill shows as a badge on the row.
+  // More: prices and invoice wording (a worker gets the wording only, never a price), the job total, the client's email, state and postcode, photos, cancel and delete. Shut until opened (remembered on this device).
+  // It opens by itself if something in there needs a look (a bad price or email, photos that haven't uploaded, a cancelled job). For the master a price still to fill shows as a badge on the row.
   h+='<button type="button" class="morerow" id="sh-morebtn" data-sh="more" aria-expanded="false" aria-controls="sh-more">'+
-    '<span class="mrt">More</span><span class="mrs" id="sh-moresum"></span><span class="pf" id="sh-morepf" hidden>price to fill</span>'+IC.chev+'</button>'+
+    '<span class="mrt">More</span><span class="mrs" id="sh-moresum"></span>'+(M?'<span class="pf" id="sh-morepf" hidden>price to fill</span>':"")+IC.chev+'</button>'+
     '<div class="morepanel" id="sh-more" hidden>'+
-    '<div class="lbl">Prices and invoice wording</div><div id="sv-det"></div><div class="hint" id="sv-total" role="status"></div>'+
+    (M?'<div class="lbl">Prices and invoice wording</div><div id="sv-det"></div><div class="hint" id="sv-pnote" role="status"></div><div class="hint" id="sv-total" role="status"></div>'
+      :'<div class="lbl">Invoice wording</div><div id="sv-det"></div>')+
     '<div class="lbl">More client details</div>'+
     cf("f-email","Email",'type="email" autocomplete="off" inputmode="email" autocapitalize="none"',I.email)+
     '<div class="g2">'+cf("f-state","State",'type="text" autocomplete="off" autocapitalize="characters"',I.state)+cf("f-postcode","Postcode",'type="text" autocomplete="off" inputmode="numeric"',I.postcode)+'</div>'+
@@ -2464,16 +2606,16 @@ function sheetHtml(){
 function moreLoad(){try{return localStorage.getItem(MORE_KEY)==="1";}catch(e){return false;}}
 function moreSave(v){try{localStorage.setItem(MORE_KEY,v?"1":"0");}catch(e){}}
 function moreOpen(){return !!SH&&!SH.quick&&(SH.more||SH.moreForce);}
-// the row's open/shut state, the "price to fill" badge, and a short list of what is inside
+// the row's open/shut state, the "price to fill" badge (master only), and a short list of what is inside
 function updateMoreRow(){
   if(!SH||SH.quick)return;
   const b=byId("sh-morebtn"),p=byId("sh-more");if(!b||!p)return;
   const open=moreOpen();
   b.setAttribute("aria-expanded",open?"true":"false");b.classList.toggle("open",open);p.hidden=!open;
-  const blank=SH.svc.filter(function(e){return trim(e.price)==="";}).length;
+  const blank=(S.isMaster&&!pricesLocked())?SH.svc.filter(function(e){return trim(e.price)==="";}).length:0;
   const pf=byId("sh-morepf");if(pf){pf.hidden=!blank;pf.textContent=blank>1?blank+" prices to fill":"price to fill";}
   const sm=byId("sh-moresum"),n=SH.photos.length;
-  if(sm)sm.textContent="Prices and wording, "+(n?n+(n===1?" photo":" photos"):"photos")+", more details"+(S.isMaster&&!SH.isNew?", cancel":"");
+  if(sm)sm.textContent=(S.isMaster?"Prices and wording, ":"Invoice wording, ")+(n?n+(n===1?" photo":" photos"):"photos")+", more details"+(S.isMaster&&!SH.isNew?", cancel":"");
 }
 function toggleMore(){
   if(!SH||SH.quick)return;
@@ -3321,7 +3463,7 @@ function validate(f){
   if(!SH.clientId&&!f.name&&hasContact(f))
     return S.isMaster?"Type the client's name so the phone, email and address have somewhere to save, or clear those boxes."
       :"This job has no client, so phone, email and address can't be saved. Clear those boxes, or ask Mitch to add the client.";
-  for(let i=0;i<f.services.length;i++){
+  for(let i=0;S.isMaster&&i<f.services.length;i++){      // (prices are the master's: a worker's sheet has none)
     if(isNaN(parsePrice(f.services[i].price)))return flagMore("The price for "+f.services[i].type+" needs to be a number, like 250 or 250.50.");
   }
   if(f.email&&!looksEmail(f.email))return flagMore("That email address doesn't look right.");
@@ -3338,12 +3480,12 @@ function buildJobPatch(sh,f,clientId,extra){
     if(isNew||f.dur!==j.duration_min)p.duration_min=f.dur;
     if(isNew||(clientId||null)!==(j.client_id||null))p.client_id=clientId||null;
   }
-  // services, service_type and price are written together, and only when the services (or a price or wording) changed
+  // services and service_type are written together, and only when the services or a wording changed. No price goes to the jobs table, ever (it is saved to
+  // job_prices by savePrices, master only), so changing only a price sends nothing here.
   const svcNew=canonServices(f.services);
   if(isNew||JSON.stringify(svcNew)!==JSON.stringify(canonServices(loadServices(j)))){
     p.services=svcNew;
     p.service_type=svcNew.length?svcNew.map(function(e){return e.type;}).join(" + "):null;
-    p.price=sumPrice(svcNew);
   }
   // never null out an address nobody touched (a client change blanks the street boxes, but that isn't the person clearing the job address)
   const addr=nn(f.address);if(isNew||(addr!==nn(j.address)&&(addr!==null||sh.addrTouched)))p.address=addr;
@@ -3417,7 +3559,7 @@ async function saveSheet(extra,opts){
   if(bad){showMsg(bad,"bad");return false;}
   setBusy(true);showMsg("Saving...","ok");
   S.pending++;
-  let okSave=false,lostContact=false,siteFailed=false;
+  let okSave=false,lostContact=false,siteFailed=false,priceMissed=false;
   try{
     // 1. the client
     let clientId=sh.clientId,rename=false;
@@ -3464,6 +3606,7 @@ async function saveSheet(extra,opts){
     // (Booking bar: a job address that was cleared on purpose stays blank. Its hidden client boxes must not put it back.)
     if(!f.address&&!(sh.quick&&sh.addrTouched)){const a=composeAddr(f.street,f.suburb,f.state,f.postcode);if(a){f.address=a;if(SH===sh)setVal("f-addr",a);}}
     const patch=buildJobPatch(sh,f,clientId,extra);
+    const pOld=S.isMaster?priceSnap(sh.job):null;      // the prices as they were loaded (master), taken before the job is written
     let row=null;
     if(sh.isNew){
       patch.status=patch.status||"booked";
@@ -3477,9 +3620,21 @@ async function saveSheet(extra,opts){
       if(!r.data||!r.data.length)throw plainErr("That job didn't save. It may have been deleted or moved to someone else.");
       row=r.data[0];
     }
-    if(row){sh.job=row;if(row.client)sh.client=Object.assign({},row.client);}
+    if(row){
+      if(S.isMaster){if(sh.job)carryPrices(sh.job,row);else setJobPrices(row,null,[],true);}      // the row that comes back has no prices in it: it keeps the ones the old copy had (savePrices brings them up to date next)
+      sh.job=row;if(row.client)sh.client=Object.assign({},row.client);
+    }
     else if(sh.job&&sh.client){sh.job.client=Object.assign({},sh.job.client||{},sh.client);}
+    // Master only: the job is saved, now its prices (job_prices). If that fails the job stays saved, the calendar shows it, and the sheet stays open and says so.
+    let priceErr=null;
+    if(S.isMaster&&sh.job){try{await savePrices(sh,f,pOld);}catch(e){priceErr=e;}}
     if(sh.job)upsertLocal(sh.job);       // the calendar shows what was written, whether or not this sheet is still open
+    if(priceErr){
+      // The booking bar: the job IS booked, so a price that didn't save is a warning, not a failed save. (A failed save would put Who, the day and the time back, and the next
+      // Save would then move the booked job.) The bar only sends usual prices, so nothing typed is lost.
+      if(!opts.quick){if(SH===sh)refreshSheetHead();throw priceErr;}
+      priceMissed=true;console.warn("The job is booked, but its price didn't save.",priceErr);
+    }
     if(SH===sh)sh.baseline=snap();
     if(sh.svc.length){sh.legacyPrice=null;sh.legacyHeld="";}      // the old price now lives on a saved service
     okSave=true;
@@ -3495,9 +3650,9 @@ async function saveSheet(extra,opts){
   }
   if(!okSave)return false;
   clearDraftForJob(sh.jobId);
-  const siteNote="The address couldn't be added to their list of sites.";
-  if(SH!==sh){toast("Saved"+(siteFailed?". "+siteNote:""),siteFailed);return true;}       // the sheet was closed while this was saving (logged out, for one); the write itself went through
-  if(opts.quick){quickDone(sh,opts,siteFailed,siteNote);return true;}
+  const siteNote="The address couldn't be added to their list of sites.",priceNote="The price didn't save. Open the job to add it.";
+  if(SH!==sh){toast("Saved"+(priceMissed?". "+priceNote:"")+(siteFailed?". "+siteNote:""),siteFailed||priceMissed);return true;}       // the sheet was closed while this was saving (logged out, for one); the write itself went through
+  if(opts.quick){quickDone(sh,opts,siteFailed,siteNote,priceMissed,priceNote);return true;}
   const warn=lostContact?" The phone, email and address weren't saved, because this job has no client.":"",kind=lostContact?"warn":"ok";
   if(opts.fresh){
     // First save of a new job: reopen it as a saved job so photos, paperwork and the done button appear.
@@ -3518,6 +3673,33 @@ async function saveSheet(extra,opts){
     toast(msg,lostContact||siteFailed);
   }
   return true;
+}
+/* XERO (not built yet): a future "make a Xero draft invoice" reads job_prices, never the jobs table: price = the job's total ex GST (null = nothing entered; a price is
+   never made up), lines = [{type, price}], one per service in the order of jobs.services; the wording for each invoice line is jobs.services[].description. jobs.price
+   and any "price" inside jobs.services are dead (the 08 triggers keep them empty). Only the master can read job_prices, so a draft has to be made from the master's login.
+   savePrices (master only): writes the job's prices to job_prices after the job itself saved. old is priceSnap() from before the job was written. It writes only when
+   a price (or the list of services the prices sit on) changed, or when the stored row doesn't match the services on screen (a technician can change the services without
+   touching job_prices): a save that changes nothing sends nothing. A job with no price left on its form has its row deleted, not kept with nulls, but only when the form
+   showed a price to clear: a stored price the form couldn't show (an old job with a price and no service) is never deleted just because the job was saved.
+   Never writes to the jobs table. A worker never gets here. */
+async function savePrices(sh,f,old){
+  if(!S.isMaster||S.noPriceTbl)return;
+  const job=sh.job;if(!job||!job.id)return;
+  const lines=canonLines(f.services),np={price:sumPrice(lines),lines:lines},empty=pricesEmpty(np),npJ=JSON.stringify(np);
+  // nothing entered: there is something to clear only if the form showed a price. Something entered: no write if it is what the form showed and what is stored.
+  if(empty?pricesEmpty(old.p):(npJ===JSON.stringify(old.p)&&npJ===JSON.stringify(old.s)))return;
+  if(!old.ok)throw plainErr("The job saved, but its prices didn't load earlier, so they can't be saved over now. Close the job, open it again and re-enter the prices.");
+  let r;
+  try{
+    r=empty?await S.sb.from("job_prices").delete().eq("job_id",job.id).select("job_id")
+           :await S.sb.from("job_prices").upsert({job_id:job.id,price:np.price,lines:np.lines},{onConflict:"job_id"}).select("job_id");
+  }catch(e){r={error:e};}
+  if(r.error){
+    if(missingTable(r.error,"job_prices")){noPriceTables();return;}      // (the 08 update isn't in: the job is saved, the prices can't be)
+    throw plainErr("The job saved, but its prices didn't. "+friendly(r.error)+" Tap Save to try again.");
+  }
+  if(!empty&&(!r.data||!r.data.length))throw plainErr("The job saved, but its prices didn't. Tap Save to try again.");
+  setJobPrices(job,empty?null:np.price,empty?[]:np.lines,true);
 }
 function refreshSheetHead(){
   const t=byId("sh-title"),s=byId("sh-sub");
@@ -3560,7 +3742,7 @@ async function deleteJob(){
 /* =====================================================================
    JOB LENGTH FROM THE SERVICES, AND THE SERVICES PANEL
    Each service type can have a usual length (service_types.default_minutes, 15 to 720), an add-on time (service_types.addon_minutes, 0 to 720: the minutes it
-   adds when it is done on the same visit as another service, blank = its full usual time) and a usual price. Ticking services sets the job's length by
+   adds when it is done on the same visit as another service, blank = its full usual time) and a usual price (a row of service_prices, master only: t._usual). Ticking services sets the job's length by
    the rule in lenRule below (only services that have a usual length count), to the nearest 5 min, 15 to 720. If none of the ticked services has a usual
    length, the length is left as it is. It only does that while the length has not been set by hand on this job (SH.durHand); a job that is already saved
    counts as set by hand, so ticking more services on it never changes its length by itself: the hint under "How long" offers the usual time instead ("Use it").
@@ -3692,7 +3874,8 @@ function svcPanelHtml(){
   let h='<div class="sheet" id="svp-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="svp-title">'+
     '<div class="shhead"><div class="shttl"><h2 id="svp-title">Services</h2><div class="sb">The usual length and price for each service. Leave a box blank for none.</div></div>'+
     '<button type="button" class="x" data-svp="close" aria-label="Close">'+IC.x+'</button></div>'+
-    '<div class="shbody">'+(S.noLenCol?'<div class="hint">Usual lengths need the 06 database update. Prices still work.</div>':'')+
+    '<div class="shbody">'+(S.noLenCol?'<div class="hint">Usual lengths need the 06 database update.'+(S.noPriceTbl?'':' Prices still work.')+'</div>':'')+
+    (S.noPriceTbl?'<div class="hint">Usual prices need the 08 database update.</div>':(S.usualFail?'<div class="hint">The usual prices didn\'t load, so they can\'t be changed now. Close this and open the calendar again.</div>':''))+
     (!S.noLenCol&&S.noAddonCol?'<div class="hint">The add-on time needs the 07 database update. Until then every service adds its full time.</div>':'')+
     (addon?'<div class="hint">Add-on time: how long a service adds when it is done on the same visit as another one. Blank = it adds its full time.</div>':'');
   S.types.forEach(function(t,i){
@@ -3700,7 +3883,7 @@ function svcPanelHtml(){
       (S.noLenCol?"":'<div class="fld"><label class="fl" for="svp-m-'+i+'">Usual length (minutes)</label>'+
         '<input class="inp" id="svp-m-'+i+'" data-svp-f="m" data-i="'+i+'" type="number" min="15" max="720" step="5" inputmode="numeric" placeholder="none" value="'+esc(t.default_minutes==null?"":t.default_minutes)+'"></div>')+
       '<div class="fld"><label class="fl" for="svp-p-'+i+'">Usual price (ex GST)</label>'+
-        '<input class="inp" id="svp-p-'+i+'" data-svp-f="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" placeholder="none" value="'+esc(t.default_price==null?"":t.default_price)+'"></div></div>'+
+        '<input class="inp" id="svp-p-'+i+'" data-svp-f="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" placeholder="none" value="'+esc(t._usual==null?"":t._usual)+'"'+(S.noPriceTbl||S.usualFail?" disabled":"")+'></div></div>'+
       (addon?'<div class="fld svadd"><label class="fl" for="svp-a-'+i+'">Adds when with another job (min)</label>'+
         '<input class="inp" id="svp-a-'+i+'" data-svp-f="a" data-i="'+i+'" type="number" min="0" max="720" step="5" inputmode="numeric" placeholder="full time" value="'+esc(t.addon_minutes==null?"":t.addon_minutes)+'"></div>':"")+
       '</div>';
@@ -3740,7 +3923,8 @@ async function svcPanelChange(el){
   if(!SV||!el||!el.getAttribute)return;
   const f=el.getAttribute("data-svp-f");if(!f)return;
   const t=S.types[+el.getAttribute("data-i")];if(!t)return;
-  const col=f==="m"?"default_minutes":f==="a"?"addon_minutes":"default_price",old=t[col]==null?null:t[col],raw=trim(el.value);
+  // m and a are columns of service_types; the usual price (p) is not: it is a row of service_prices (t._usual in memory)
+  const col=f==="m"?"default_minutes":f==="a"?"addon_minutes":null,old=f==="p"?(t._usual==null?null:t._usual):(t[col]==null?null:t[col]),raw=trim(el.value);
   const lo=f==="a"?0:15,msg=f==="a"?"The add-on time has to be between 0 and 720 minutes.":"The usual length has to be between 15 and 720 minutes.";
   let v=null,err="";
   if(raw!==""){
@@ -3753,15 +3937,30 @@ async function svcPanelChange(el){
   if(err){show(old);toast(err,true);return;}
   show(v);
   if(v===old)return;
+  if(f==="p"&&(S.noPriceTbl||S.usualFail)){show(old);return;}      // (the box is switched off then)
   el.disabled=true;
-  const patch={};patch[col]=v;
   try{
-    const r=await S.sb.from("service_types").update(patch).eq("id",t.id).select("id");
-    if(r.error)throw r.error;
-    if(!r.data||!r.data.length)throw plainErr("That didn't save. You may not be allowed to change services.");
-    t[col]=v;      // S.types and S.typesByName hold the same objects
+    let r;
+    if(f==="p"){      // blank = no usual price: the row goes, so nothing is ever kept as a made-up zero
+      r=v==null?await S.sb.from("service_prices").delete().eq("service_type_id",t.id).select("service_type_id")
+               :await S.sb.from("service_prices").upsert({service_type_id:t.id,default_price:v},{onConflict:"service_type_id"}).select("service_type_id");
+      if(r.error)throw r.error;
+      if(v!=null&&(!r.data||!r.data.length))throw plainErr("That didn't save. You may not be allowed to change services.");
+      t._usual=v;      // S.types and S.typesByName hold the same objects
+    }else{
+      const patch={};patch[col]=v;
+      r=await S.sb.from("service_types").update(patch).eq("id",t.id).select("id");
+      if(r.error)throw r.error;
+      if(!r.data||!r.data.length)throw plainErr("That didn't save. You may not be allowed to change services.");
+      t[col]=v;      // S.types and S.typesByName hold the same objects
+    }
     toast("Saved");
   }catch(e){
+    if(f==="p"&&missingTable(e,"service_prices")){      // the 08 update isn't in: prices go off for the session, quietly, and the panel is drawn again with the box switched off
+      noPriceTables();show(old);
+      if(SV){const b=$(".shbody"),st=b?b.scrollTop:0;byId("sheet").innerHTML=svcPanelHtml();const b2=$(".shbody");if(b2)b2.scrollTop=st;}
+      return;
+    }
     const noLen=col==="default_minutes"&&missingCol(e,"default_minutes"),noAdd=col==="addon_minutes"&&missingCol(e,"addon_minutes");
     if(noLen||noAdd){      // the database has no usual lengths (or add-on times) yet: drop them for the session, quietly
       if(noLen)S.noLenCol=true;else S.noAddonCol=true;
@@ -4012,12 +4211,12 @@ async function quickSave(){
   return saveSheet(null,{quick:true});
 }
 // after a good save (called from saveSheet): a toast, a clean bar for the next booking (who is kept), and a Done link to close it
-function quickDone(sh,opts,siteFailed,siteNote){
+function quickDone(sh,opts,siteFailed,siteNote,priceMissed,priceNote){
   const j=sh.job||{},nm=trim((sh.client&&sh.client.name)||val("f-name")),s=tmToMin(j.start_time);
   const msg="Booked: "+nm+", "+dayLbl(j.job_date)+(s!=null?" "+fmtMin(s):"");
   quickReset(sh);
   SH.booked=true;barRefresh();      // the status line says so, with a Done link, until the next tap or key
-  toast(msg+(siteFailed?". "+siteNote:""),siteFailed);
+  toast(msg+(priceMissed?". "+priceNote:"")+(siteFailed?". "+siteNote:""),siteFailed||!!priceMissed);
 }
 // A clean bar: the same Who (what was picked before a green spot set it for that spot's person). The boxes are cleared in place (not rebuilt), so the
 // client box keeps its focus and the keyboard stays up if it was.
@@ -4084,7 +4283,7 @@ function barRefresh(){
   else if(!rdy)txt=(sl?slotTxt(sl)+" · ":"")+"Pick a client and a service";
   else if(!S.loaded)txt=fmtLen(L);
   else{
-    const sv=canonServices(SH.svc),sm=sumPrice(sv),pr=(sm!=null&&!sv.some(function(e){return e.price==null||isNaN(e.price);}))?" · $"+(Math.round(sm)===sm?sm:sm.toFixed(2)):"";      // the price when every ticked service has one
+    const sv=canonLines(SH.svc),sm=sumPrice(sv),pr=(sm!=null&&!sv.some(function(e){return e.price==null||isNaN(e.price);}))?" · $"+(Math.round(sm)===sm?sm:sm.toFixed(2)):"";      // the price when every ticked service has one
     if(n>0){txt=fmtLen(L)+pr+" · tap a green spot";cls="rdy";}
     else txt=fmtLen(L)+pr+" · no gap that long on these days";
   }
@@ -4178,8 +4377,9 @@ async function barBook(staff,date,min){
   let ok=false;
   try{ok=await quickSave();}catch(e){console.warn("The booking didn't save.",e);}
   // It didn't go through (no signal ...): Who, the day and the time go back to what they were before the tap, so that tapping Save (or Save with no time) next
-  // doesn't book for the spot's person and day, which is out of sight on a phone.
-  if(!ok&&SH===sh){setVal("f-staff",was.staff);setVal("f-date",was.date);setVal("f-time",was.time);sh.whoKeep=null;quickSync();}
+  // doesn't book for the spot's person and day, which is out of sight on a phone. Not when the job did get booked (sh.isNew is false once the insert is in): then these
+  // ARE the job's person, day and time, and putting the old ones back would make the next Save move it.
+  if(!ok&&SH===sh&&sh.isNew){setVal("f-staff",was.staff);setVal("f-date",was.date);setVal("f-time",was.time);sh.whoKeep=null;quickSync();}
 }
 // A tap on a person's column (day or week) while the bar is open. raw = the minute under the finger (not snapped).
 function barGridTap(staff,date,raw){
@@ -4524,12 +4724,15 @@ function wireGlobal(){
   document.addEventListener("mousedown",function(e){if(SH&&e.target&&e.target.closest&&e.target.closest(".aclist"))e.preventDefault();});
   // Once a card has been picked up (after the press-and-hold), the page must not scroll under the finger. Before that, swipes scroll normally.
   document.addEventListener("touchmove",function(e){if(DR.on&&DR.started&&e.cancelable)e.preventDefault();},{passive:false});
-  // Swipe left / right on the calendar = next / previous day (a week in week view). A quick sideways flick only:
-  // a press-and-hold that picks a job up, an up/down scroll, or a swipe inside the booking bar, a job sheet or a
-  // sideways-scrolling row of chips is left alone.
-  const SW={on:false,x:0,y:0,t:0};
+  // Swipe left / right on the calendar = next / previous day (a week in week view). The calendar follows the thumb:
+  // let go past a quarter of the screen (or flick) and the next day slides in, otherwise it springs back.
+  // Once the finger is clearly going sideways the page stops scrolling up and down, so it can't jitter.
+  // Left alone: a press-and-hold that picks a job up, an up/down scroll, and swipes inside the booking bar,
+  // a job sheet or a sideways-scrolling row of chips.
+  const SW={on:false,lock:"",x:0,y:0,t:0,dx:0,busy:false};
+  const reduceMotion=function(){try{return window.matchMedia("(prefers-reduced-motion: reduce)").matches;}catch(e){return false;}};
   function swipeSpot(t){
-    if(!t||!t.closest||S.screen!=="cal")return false;
+    if(!t||!t.closest||S.screen!=="cal"||SW.busy)return false;
     if(SV||(SH&&!SH.bar))return false;
     if(t.closest(".bar,.sheet,input,textarea,select,.menu,.aclist,[data-noswipe]"))return false;
     for(let n=t;n&&n!==document.body;n=n.parentElement){      // a row that scrolls sideways keeps its own swipe
@@ -4537,20 +4740,53 @@ function wireGlobal(){
     }
     return true;
   }
+  function swipeEl(){return byId("cb");}
+  function swipeSet(x,ms){
+    const el=swipeEl();if(!el)return;
+    const w=Math.max(1,el.clientWidth);
+    el.style.transition=ms?("transform "+ms+"ms ease-out, opacity "+ms+"ms ease-out"):"none";
+    el.style.transform=x?("translateX("+Math.round(x)+"px)"):"";
+    el.style.opacity=x?String(1-Math.min(Math.abs(x)/w,1)*0.35):"";
+  }
+  function swipeBack(){swipeSet(0,180);}
   document.addEventListener("touchstart",function(e){
-    SW.on=e.touches.length===1&&swipeSpot(e.target);
+    SW.on=e.touches.length===1&&swipeSpot(e.target);SW.lock="";SW.dx=0;
     if(SW.on){SW.x=e.touches[0].clientX;SW.y=e.touches[0].clientY;SW.t=Date.now();}
   },{passive:true});
-  document.addEventListener("touchend",function(e){
+  document.addEventListener("touchmove",function(e){
+    if(!SW.on)return;
+    if(DR.started||e.touches.length!==1){if(SW.lock==="h")swipeBack();SW.on=false;return;}      // a job got picked up, or a second finger
+    const tch=e.touches[0],dx=tch.clientX-SW.x,dy=tch.clientY-SW.y;
+    if(!SW.lock){
+      if(Math.abs(dx)<10&&Math.abs(dy)<10)return;
+      SW.lock=Math.abs(dx)>Math.abs(dy)*1.2?"h":"v";
+      if(SW.lock==="v"){SW.on=false;return;}      // up/down: let the page scroll as normal
+      if(DR.on&&!DR.started)endDrag();      // sideways before the hold time: this is a swipe, not a pick-up
+    }
+    if(e.cancelable)e.preventDefault();
+    SW.dx=dx;
+    if(!reduceMotion())swipeSet(dx*0.9,0);
+  },{passive:false});
+  document.addEventListener("touchend",function(){
     if(!SW.on)return;SW.on=false;
-    if(DR.started||DR.on&&DR.mode==="resize")return;       // a job was being moved or stretched
-    const c=e.changedTouches&&e.changedTouches[0];if(!c)return;
-    const dx=c.clientX-SW.x,dy=c.clientY-SW.y;
-    if(Date.now()-SW.t>700||Math.abs(dx)<70||Math.abs(dx)<2*Math.abs(dy))return;
+    if(SW.lock!=="h"){return;}
+    const el=swipeEl(),w=el?el.clientWidth:window.innerWidth,dx=SW.dx,dt=Math.max(1,Date.now()-SW.t);
+    const go1=Math.abs(dx)>w*0.25||(Math.abs(dx)>40&&Math.abs(dx)/dt>0.5);      // far enough, or a quick flick
     S.noClickUntil=Date.now()+400;       // the lift-off must not also count as a tap on an empty slot
-    go(dx<0?1:-1);
+    if(!go1){swipeBack();return;}
+    const dir=dx<0?1:-1;
+    if(reduceMotion()||!el){swipeSet(0,0);go(dir);return;}
+    SW.busy=true;
+    swipeSet(-dir*w,160);                                    // slide the old day out
+    setTimeout(function(){
+      go(dir);                                               // draw the new day
+      swipeSet(dir*w*0.35,0);                                // start it just off to the side
+      void (swipeEl()&&swipeEl().offsetWidth);               // (make the browser take that start position)
+      requestAnimationFrame(function(){swipeSet(0,200);});    // and slide it in
+      setTimeout(function(){const e2=swipeEl();if(e2){e2.style.transition="";e2.style.transform="";e2.style.opacity="";}SW.busy=false;},260);
+    },160);
   },{passive:true});
-  document.addEventListener("touchcancel",function(){SW.on=false;},{passive:true});
+  document.addEventListener("touchcancel",function(){if(SW.on&&SW.lock==="h")swipeBack();SW.on=false;},{passive:true});
   document.addEventListener("keydown",function(e){
     if(e.key==="Enter"&&SH&&e.target&&e.target.tagName==="INPUT"){e.preventDefault();}
     if(e.key==="Enter"&&SV&&e.target&&e.target.tagName==="INPUT"){e.preventDefault();try{e.target.blur();}catch(x){}}      // Services panel: Enter saves the box (leaving it does that)
