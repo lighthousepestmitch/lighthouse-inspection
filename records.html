@@ -202,7 +202,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-08r2";   // same cache-buster as jobbook.html
+const BUILD="2026-10-09r1";   // same cache-buster as jobbook.html
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -865,7 +865,7 @@ async function save(){
   if(F.errors.length){ render(); const e=$("#errs"); if(e) e.scrollIntoView({block:"start"}); toast("Missing: "+F.errors.length+" thing"+(F.errors.length>1?"s":"")+". See the top of the form.",true); return; }
   const op=S.chem.operator, techs=(op.techs||[]).filter(t=>F.appliedBy.indexOf(t.name)>=0);
   const finish=F.finishTouched&&F.finish?F.finish:(F.id&&F.finish?F.finish:nowHM());
-  const rec={id:F.id||uid(),propId:F.propId,client:F.client,address:F.address,date:F.date,start:F.start,finish:finish,
+  const rec={id:F.id||uid(),propId:F.propId,jobId:F.jobId||null,client:F.client,address:F.address,date:F.date,start:F.start,finish:finish,
     services:F.services.map(x=>({s:x.s,d:x.d})),
     products:F.products.map(p=>({id:p.id,name:p.name,active:p.active,apvma:p.apvma,type:p.type,amount:p.amount,unit:p.unit,mix:p.mix})),
     areas:F.areas.slice(),equipment:F.equipment.slice(),
@@ -1130,12 +1130,25 @@ function loadForEdit(r){
   S.prefs=STORE.read(); P();
   try{ S.records=(await dbAll())||[]; }
   catch(e){ S.records=[]; toast("Couldn't open the saved records on this device ("+(e&&e.message?e.message:"storage error")+"). New records may not save.",true); }
-  resetForm(); render();
+  resetForm(); const fromCal=fromJob(); render(); if(fromCal) fetchWx();
   custStart();
   if(pendingCount()) backfill().then(()=>renderBanner());
   window.addEventListener("online",()=>{ if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
 })();
 function resetForm_pre(){}
+/* Opened from a job on the Job Calendar (records.html?job=..&client=..&addr=..&service=..): the client, the address and
+   the job's services are filled in, so the worker (who can't search the customer list) goes straight to the treatment.
+   The "customer" is keyed by the address, so "Same as last time" works on a repeat visit to the same place. */
+function fromJob(){
+  let q; try{ q=new URLSearchParams(location.search); }catch(e){ return false; }
+  const job=(q.get("job")||"").trim(); if(!job) return false;
+  const client=(q.get("client")||"").trim(), addr=(q.get("addr")||"").trim(), svc=(q.get("service")||"").trim();
+  if(!client&&!addr) return false;
+  F.jobId=job; F.propId="addr:"+(addr||client).toLowerCase().replace(/\s+/g," ");
+  F.client=client||"(no name on the job)"; F.address=addr; F.date=TODAY; F.start=nowHM();
+  svc.split("+").map(x=>alias(x.trim())).filter(Boolean).forEach(n=>{ if(offered(n)) svcOn(n); });
+  return true;
+}
 })();
 </script>
 </body>

@@ -501,7 +501,8 @@ html.bar-edit .bar #f-name-list{max-height:min(200px,max(90px,calc(var(--vvh,100
 .barwho .linkbtn{flex:0 0 auto;min-height:36px;padding:0 2px 0 4px;font-size:13.5px;margin-right:-4px;white-space:nowrap}
 .barmore{margin-top:6px;padding-top:2px;border-top:1px dashed var(--line2)}
 .barmore .linkbtn{margin-left:-6px}
-.qnew{margin:4px 0 6px}      /* a new client's phone, address (Google lookup) and email, straight under the name */
+.qnew{margin:4px 0 6px}
+.svro{margin:2px 0 0;padding-left:20px;font-size:17px;font-weight:600;line-height:1.5}      /* a worker's read-only list of the services on the job */      /* a new client's phone, address (Google lookup) and email, straight under the name */
 .bar .qsum .linkbtn{min-height:34px}
 .bar .qsum{flex-wrap:nowrap}
 .bar .qsum .qsl{flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}      /* the client summary stays on one line: the address is cut short, not wrapped */
@@ -2557,6 +2558,11 @@ function svcAllNames(){
 // focus and doesn't jump. Ticked services are always in it, even past the first few.
 function renderSvcList(){
   const el=byId("sv-list");if(!el||!SH)return;
+  if(!S.isMaster){
+    el.innerHTML=SH.svc.length?'<ul class="svro">'+SH.svc.map(function(e){return '<li role="listitem">'+esc(e.type)+'</li>';}).join("")+'</ul>'
+      :'<div class="ro">No services on this job yet. Ask Mitch.</div>';
+    return;
+  }
   const names=svcAllNames(),ticked={};SH.svc.forEach(function(e){ticked[e.type]=1;});
   let h='<div class="svlist">';
   names.forEach(function(n,i){
@@ -2680,6 +2686,8 @@ function sheetHtml(){
     '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
     '<div class="hint" id="f-addr-hint" role="status"></div>'+
     '<div class="sites" id="f-addr-sites" hidden></div>';
+  // a worker sees the services Mitch ticked straight under the address, as a plain list (no ticking: Mitch decides the job)
+  if(!M)h+='<div class="fld"><div class="fl" id="sv-lbl">The job</div><div id="sv-list" role="list" aria-labelledby="sv-lbl"></div></div>';
   // 2. the client: name, phone, email (Ring, Text, Email and Maps are under them). The client's own street, suburb, state and postcode are in the More row.
   h+='<div class="lbl">Client</div>';
   if(M){
@@ -2704,7 +2712,7 @@ function sheetHtml(){
   }
   // 3. the job
   h+='<div class="lbl">Job</div>'+
-    '<div class="fld"><div class="fl" id="sv-lbl">Services</div><div id="sv-list" role="group" aria-labelledby="sv-lbl"></div></div>';
+    (M?'<div class="fld"><div class="fl" id="sv-lbl">Services</div><div id="sv-list" role="group" aria-labelledby="sv-lbl"></div></div>':'');
   if(M){
     h+='<div class="g2"><div class="fld"><label class="fl" for="f-date">Date</label><input class="inp" id="f-date" type="date" value="'+esc(I.date)+'"></div>'+
       '<div class="fld"><label class="fl" for="f-time">Start time</label><input class="inp" id="f-time" type="time" step="900" value="'+esc(I.time)+'"></div></div>'+
@@ -2733,7 +2741,7 @@ function sheetHtml(){
     '<span class="mrt">More</span><span class="mrs" id="sh-moresum"></span>'+(M?'<span class="pf" id="sh-morepf" hidden>price to fill</span>':"")+IC.chev+'</button>'+
     '<div class="morepanel" id="sh-more" hidden>'+
     (M?'<div class="lbl">Prices and invoice wording</div><div id="sv-det"></div><div class="hint" id="sv-pnote" role="status"></div><div class="hint" id="sv-total" role="status"></div>'
-      :'<div class="lbl">Invoice wording</div><div id="sv-det"></div>')+
+      :'<div id="sv-det" hidden></div>')+
     '<div class="lbl">More client details <span class="fl2">(the client\'s own address, for their record)</span></div>'+
     '<div class="g2">'+cf("f-street","Street",'type="text" autocomplete="off"',I.street)+cf("f-suburb","Suburb",'type="text" autocomplete="off"',I.suburb)+'</div>'+
     '<div class="g2">'+cf("f-state","State",'type="text" autocomplete="off" autocapitalize="characters"',I.state)+cf("f-postcode","Postcode",'type="text" autocomplete="off" inputmode="numeric"',I.postcode)+'</div>'+
