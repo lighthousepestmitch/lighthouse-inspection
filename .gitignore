@@ -1,0 +1,14 @@
+# Job Book customer data. Local to this Mac only. It lives in the Supabase table
+# jobbook_files (behind the master login), uploaded with "Upload from this Mac" on
+# http://127.0.0.1:8942/jobbook.html. The repo is public, so none of this may be committed.
+# (Files already tracked need: git rm --cached --ignore-unmatch <file>. Copies already in older
+# commits stay downloadable from the public repo's history until it is purged or the repo goes
+# private. tools/refresh_jobbook.py says so every run.)
+jobbook-data/clients_*.json
+jobbook-data/properties_*.json
+jobbook-data/jobs_*.json
+jobbook-data/due_*.json
+jobbook-data/replies_*.json
+jobbook-data/review_asks.json
+# a client name + property id: the refresh reads it from here, the website must not serve it
+tools/confirmed_intervals.json

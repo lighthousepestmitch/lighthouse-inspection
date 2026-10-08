@@ -184,6 +184,8 @@ a.btn{text-decoration:none}
   font-weight:600;font-size:16px!important;padding:3px 0;display:block}
 .copylink:hover{color:var(--accent)}
 .hint{font-size:11.5px;color:var(--ink3);margin:-4px 0 10px 2px}
+.authcard .hint{margin:4px 0 0}
+.hint a{color:var(--deep);font-weight:600}
 .bignum{font-family:"Spline Sans Mono",monospace;font-size:21px;font-weight:600;color:var(--ink);
   letter-spacing:.01em;padding:10px 0 4px;-webkit-user-select:text;user-select:text;word-break:break-all}
 .copyval{flex:1;min-width:0;font-family:"Spline Sans Mono",monospace;font-size:13px;
@@ -212,9 +214,24 @@ a.btn{text-decoration:none}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 .boot{display:grid;place-items:center;min-height:70vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+
+/* login / status screens (same look as the Job Calendar's) */
+.authwrap{min-height:70vh;display:grid;place-items:center;padding:24px 0}
+.authcard{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;box-shadow:var(--raise)}
+.authcard h1{font-size:24px;margin-bottom:4px}
+.authcard h2{font-size:20px;margin-bottom:4px}
+.authcard p{color:var(--ink2);margin:6px 0 12px}
+.authcard .btns{margin:14px 0 4px}
+.fl{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin:0 0 4px}
+.authcard .inp{min-height:48px;font-size:16px;margin-bottom:10px}
+.btn:disabled{opacity:.4;cursor:default}
+nav.bottom[hidden]{display:none}          /* the tab bar only shows once you're in */
+body.locked .stats{display:none}          /* no empty counters on the login screen */
+.upbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0}
+.upbox .st{font-size:13px;color:var(--ink2);margin-top:8px;white-space:pre-wrap;word-break:break-word}
 </style>
 </head>
-<body>
+<body class="locked">
 
 <header>
   <div class="wrap">
@@ -222,9 +239,9 @@ a.btn{text-decoration:none}
       <h1>Job Book</h1><span class="sub">Lighthouse Pest</span>
     </div>
     <div class="stats">
-      <button class="stat hot" data-go="due" data-band="fresh"><b id="s-fresh">—</b><span>Ring today</span></button>
-      <button class="stat" data-go="due" data-band="over"><b id="s-over">—</b><span>Well overdue</span></button>
-      <button class="stat" data-go="todo"><b id="s-todo">—</b><span>Needs an interval</span></button>
+      <button class="stat hot" data-go="due" data-band="fresh"><b id="s-fresh">-</b><span>Ring today</span></button>
+      <button class="stat" data-go="due" data-band="over"><b id="s-over">-</b><span>Well overdue</span></button>
+      <button class="stat" data-go="todo"><b id="s-todo">-</b><span>Needs an interval</span></button>
     </div>
   </div>
 </header>
@@ -241,10 +258,14 @@ a.btn{text-decoration:none}
 </nav>
 <div id="sheet"></div>
 
+<script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
+<!-- Pinned on purpose (2.117.2, same build and hash as calendar.html). To upgrade: change the version, re-hash with
+     curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, Due list, Upload from this Mac, log out. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04f";
+const BUILD="2026-10-08a";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -254,8 +275,8 @@ const TODAY=iso(new Date());
 const parse=s=>{const [y,m,d]=String(s).split("-").map(Number); return new Date(y,m-1,d);};
 const days=(a,b)=>Math.round((parse(b)-parse(a))/DAY);
 const AU=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const nice=s=>{if(!s)return "—";const d=parse(s);return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear();};
-const when=t=>{if(!t)return "—";const d=new Date(t);
+const nice=s=>{if(!s)return "-";const d=parse(s);return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear();};
+const when=t=>{if(!t)return "-";const d=new Date(t);
   return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear()+", "+
     String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
 const SVG={phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
@@ -303,9 +324,9 @@ const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
   ov:{},bookings:{},gone:{},asked:{},rq:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
 
 /* ---------- storage ----------
-   Client list and job history are static files served with the page - they only change
-   when Claude refreshes them. Anything Mitch changes (intervals, dates, contact log,
-   bookings) lives in this device's own storage. */
+   Client list and job history come from the database (behind the login) and only change
+   when Claude refreshes them and Mitch uploads. Anything Mitch changes (intervals, dates,
+   contact log, bookings) lives in this device's own storage. */
 const STORE={
   key:"lpc_jobbook_v1",
   read(){ try{ return JSON.parse(localStorage.getItem(this.key)||"{}")||{}; }catch(e){ return {}; } },
@@ -313,22 +334,230 @@ const STORE={
             catch(e){ return false; } }
 };
 const DATA="jobbook-data/";
-async function loadAll(){
+
+/* ---------- login and where the data lives ----------
+   Settings, sync date, chemicals and services are public static files (no customer data in them).
+   The customer data (clients, properties, jobs, due list, replies, review asks) is NOT served with
+   the page any more. It sits in the Supabase table jobbook_files, one row per old data file, and
+   only the master login (Mitch) can read or write it. The login is the same one the Job Calendar
+   uses (same lpc-config.js, same browser session). */
+const CFG=window.LPC_SUPABASE||{};
+const EMAIL_KEY="lpc_jobbook_last_email", CAL_EMAIL_KEY="lpc_calendar_last_email";
+const PRIVATE_BASES=["clients","properties","jobs","due","replies"];       // file families that hold customer data
+const PRIVATE_RE=/^(clients|properties|jobs|due|replies)_(\d+)$/;
+const ASKS_NAME="review_asks";
+const MANIFEST_NAME="jobbook_manifest";       // written last by every upload: the list of rows that belong together
+const isLocal=location.hostname==="127.0.0.1"||location.hostname==="localhost";   // the Mac, running the page from the repo folder
+let SB=null;
+const A={uid:null,email:"",screen:"boot",starting:false,gen:0,lastUpload:""};
+
+const trim=s=>String(s==null?"":s).trim();
+const looksEmail=s=>/^[^\s@?&#,;]+@[^\s@?&#,;]+\.[^\s@?&#,;]+$/.test(trim(s));
+const netErr=e=>(typeof navigator!=="undefined"&&navigator.onLine===false)||(e&&(e.name==="AuthRetryableFetchError"||e.status===0))
+  ||/failed to fetch|networkerror|load failed|network request failed/i.test(String(e&&e.message||""));
+const authErr=e=>!!e&&(e.status===401||e.code==="PGRST301"||/\bjwt\b|not authenticated|invalid.*token|refresh token/i.test(String(e.message||"")));
+const missingTable=e=>!!e&&(e.code==="PGRST205"||e.code==="42P01"||/could not find the table|relation .* does not exist/i.test(String(e.message||"")));
+function friendly(e){
+  const msg=trim(e&&(e.message||e.error_description||e.msg)||(typeof e==="string"?e:""));
+  const code=e&&e.code, status=e&&e.status;
+  if(netErr(e)) return "Can't reach the server. Check your signal and try again.";
+  if(authErr(e)) return "You've been logged out. Log in again.";
+  if(code==="42501"||/row-level security|permission denied/i.test(msg)) return "You're not allowed to do that.";
+  if(status===429||/rate limit|too many/i.test(msg)) return "Too many tries. Wait a few minutes and try again.";
+  return "Something went wrong"+(msg?" ("+msg+")":"")+".";
+}
+
+/* the screens that are not the Job Book itself */
+function setScreen(name,node){
+  A.screen=name; $("#nav").hidden=true; document.body.classList.add("locked");
+  const m=$("#main"); m.innerHTML=""; m.appendChild(node);
+}
+function cardScreen(name,title,para,extra){
+  const w=el("div","authwrap"), c=el("div","authcard");
+  c.appendChild(el("h2",null,title));
+  if(para) c.appendChild(el("p",null,para));
+  (extra||[]).forEach(n=>n&&c.appendChild(n));
+  w.appendChild(c); setScreen(name,w); return c;
+}
+const row=(...bs)=>{ const r=el("div","btns"); bs.forEach(b=>r.appendChild(b)); return r; };
+function renderBoot(msg){
+  const d=el("div","boot"); const a=el("div"); a.appendChild(el("span","spin")); d.appendChild(a);
+  d.appendChild(el("div",null,msg||"Opening your job book…")); setScreen("boot",d);
+}
+function renderProblem(title,para,canRetry){
+  const bs=[]; if(canRetry) bs.push(btn("Try again",null,"pri",()=>{ A.starting=false; startApp(); }));
+  bs.push(btn("Log out",null,"",()=>signOut()));
+  cardScreen("problem",title,para,[row(...bs)]);
+}
+function renderOffline(){
+  cardScreen("offline","No signal","Can't reach the server. Check your signal and try again.",
+    [row(btn("Try again",null,"pri",()=>checkSession()),btn("Log out",null,"",()=>signOut()))]);
+}
+function renderNotMaster(){
+  cardScreen("denied","Job Book","The Job Book is for Mitch only.",[row(btn("Log out",null,"",()=>signOut()))]);
+}
+function renderNoData(){
+  const extra=[];
+  if(isLocal) extra.push(uploadPanel());
+  extra.push(row(btn("Log out",null,"",()=>signOut())));
+  cardScreen("nodata","Job Book",
+    "Your Job Book data isn't uploaded yet. On the Mac, open the Job Book at http://127.0.0.1:8942/jobbook.html and tap Upload from this Mac.",extra);
+}
+function renderLogin(notice,kind){
+  let last=""; try{ last=localStorage.getItem(EMAIL_KEY)||localStorage.getItem(CAL_EMAIL_KEY)||""; }catch(e){}
+  const w=el("div","authwrap"), c=el("div","authcard"); w.appendChild(c);
+  c.appendChild(el("h1",null,"Job Book"));
+  c.appendChild(el("p",null,"Log in with your email and password. Your phone can remember them for you."));
+  const msg=el("div"); msg.id="lg-msg"; msg.setAttribute("role","alert"); c.appendChild(msg);
+  const f=el("form"); f.id="lg-form"; f.setAttribute("action","#"); f.setAttribute("autocomplete","on");
+  f.innerHTML='<label class="fl" for="lg-email">Your email</label>'
+    +'<input class="inp" id="lg-email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" value="'+esc(last)+'">'
+    +'<label class="fl" for="lg-pass">Password</label>'
+    +'<input class="inp" id="lg-pass" name="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">'
+    +'<div class="btns"><button class="btn pri" id="lg-go" type="submit">Log in</button></div>';
+  f.onsubmit=e=>{ e.preventDefault(); passwordLogin(); };
+  c.appendChild(f);
+  const h=el("p","hint","Forgot your password? Log in on the "); const a=el("a",null,"Job Calendar"); a.href="calendar.html";
+  h.appendChild(a); h.appendChild(document.createTextNode(" with an emailed login link, then come back here. It's the same login."));
+  c.appendChild(h);
+  setScreen("login",w);
+  if(notice) loginMsg(notice,kind);
+}
+function loginMsg(text,kind){ const m=$("#lg-msg"); if(!m) return; m.innerHTML="";
+  if(text){ const b=el("div","banner "+(kind||"warn"),text); b.style.margin="0 0 12px"; m.appendChild(b); } }
+function loginBusy(on){ const b=$("#lg-go"); if(b) b.disabled=!!on; }
+async function passwordLogin(){
+  const email=trim($("#lg-email").value).toLowerCase(), pass=$("#lg-pass").value;
+  if(!looksEmail(email)){ loginMsg("Type your email address first.","bad"); return; }
+  if(!pass){ loginMsg("Type your password.","bad"); return; }
+  try{ localStorage.setItem(EMAIL_KEY,email); }catch(e){}
+  loginBusy(true); loginMsg("Checking...","ok");
+  try{
+    const r=await SB.auth.signInWithPassword({email,password:pass});
+    if(r.error) throw r.error;
+    if(r.data&&r.data.session) onSession(r.data.session);
+  }catch(e){
+    const m=trim(e&&e.message);
+    loginMsg(/invalid login|invalid credentials|email not confirmed/i.test(m)
+      ?"That email and password don't match. Check them and try again.":friendly(e),"bad");
+    loginBusy(false);
+  }
+}
+/* nothing from the database stays in memory or on screen once the login is gone */
+function wipeData(){
+  A.gen++; A.starting=false;
+  S.ready=false; S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={}; S.asked={};
+  S.ov={}; S.bookings={}; S.gone={}; S.stack.length=0; drawSheet();
+  ["#s-fresh","#s-over","#s-todo"].forEach(id=>{ const n=$(id); if(n) n.textContent="-"; });
+}
+async function signOut(){
+  A.uid=null; A.me=null; A.email=""; wipeData();
+  let r=null;
+  try{ r=await SB.auth.signOut({scope:"local"}); }catch(e){ r={error:e}; }
+  // auth-js hands back {error} instead of throwing. If the logout call failed (no signal) the stored session is still
+  // there, so clear the stored login keys ourselves, or the next person to open this page lands in this account.
+  let partial=false;
+  if(r&&r.error){
+    partial=true;
+    try{
+      const k=(SB.auth&&SB.auth.storageKey)||"";
+      Object.keys(localStorage).forEach(key=>{ if((k&&key.indexOf(k)===0)||/^sb-.+-auth-token/.test(key)) localStorage.removeItem(key); });
+    }catch(e){}
+  }
+  renderLogin(partial?"Logged out on this device. No signal, so the login wasn't cancelled on the server. That's fine, it just runs out on its own.":"",partial?"warn":"");
+}
+function onSession(session){
+  if(!session||!session.user){
+    // INITIAL_SESSION arrives as null before getSession has answered: checkSession decides then
+    if(!A.uid) return;
+    wipeData(); A.uid=null; A.me=null; A.email="";
+    renderLogin("You've been logged out. Log in again.","warn");
+    return;
+  }
+  if(A.uid===session.user.id) return;          // same login again (token refresh, or the second event for one sign-in)
+  if(A.uid) wipeData();                          // a different person logged in on this browser
+  A.uid=session.user.id; A.email=session.user.email||"";
+  startApp();
+}
+async function startApp(){
+  if(A.starting) return;
+  A.starting=true;
+  const gen=A.gen;
+  renderBoot("Opening your job book…");
+  try{
+    const me=await SB.from("staff").select("id,name,role,colour,active").eq("id",A.uid).maybeSingle();
+    if(gen!==A.gen) return;
+    if(me.error) throw me.error;
+    if(!me.data||!me.data.active||me.data.role!=="master"){ renderNotMaster(); return; }     // master only; the database says no as well
+    A.me=me.data;
+    await loadAll(gen);
+  }catch(e){
+    if(gen!==A.gen) return;
+    if(authErr(e)){ wipeData(); A.uid=null; renderLogin(friendly(e),"warn"); return; }
+    renderProblem("Couldn't open the Job Book",friendly(e),true);
+  }finally{ if(gen===A.gen) A.starting=false; }
+}
+function checkSession(){
+  renderBoot("Opening your job book…");
+  SB.auth.getSession().then(r=>{
+    const s=r&&r.data&&r.data.session;
+    if(s) return onSession(s);
+    if(A.screen!=="boot"&&A.screen!=="offline") return;
+    if(r&&r.error&&netErr(r.error)){ renderOffline(); return; }
+    renderLogin("","warn");
+  }).catch(e=>{ if(netErr(e)) renderOffline(); else renderLogin(friendly(e),"bad"); });
+}
+function start(){
+  if(!CFG.url||!CFG.anonKey){ cardScreen("problem","Not connected yet","The Job Book is not linked to its database yet. Ask Mitch to finish the setup."); return; }
+  if(!/^https?:\/\//i.test(CFG.url)){ cardScreen("problem","Hang on","The database address in lpc-config.js doesn't look right. Ask Mitch."); return; }
+  if(!window.supabase||!window.supabase.createClient){
+    cardScreen("problem","Hang on","Couldn't load the login tools. Check you're online, then reload the page.",[row(btn("Reload",null,"pri",()=>location.reload()))]); return; }
+  try{ SB=window.supabase.createClient(CFG.url,CFG.anonKey); }
+  catch(e){ cardScreen("problem","Hang on","Couldn't start the Job Book. "+friendly(e)); return; }
+  SB.auth.onAuthStateChange((ev,session)=>{ setTimeout(()=>onSession(session),0); });
+  checkSession();
+}
+
+/* the private data: the rows of jobbook_files that the last finished upload named, used exactly as the old file
+   contents were. An upload writes its file list (jobbook_manifest) LAST, so a half-finished upload, or a stale row
+   whose delete failed, is never read as current data. No manifest row (older upload): use every row. */
+async function fetchPrivate(){
+  const r=await SB.from("jobbook_files").select("name,data");
+  if(r.error){ if(missingTable(r.error)) return {empty:true}; throw r.error; }
+  let rows=(r.data||[]).filter(x=>x&&x.name&&x.data);
+  const mf=rows.find(x=>x.name===MANIFEST_NAME);
+  if(mf&&mf.data&&Array.isArray(mf.data.names)){
+    const keep=new Set(mf.data.names);
+    rows=rows.filter(x=>keep.has(x.name));
+  }
+  return rows.length?{rows}:{empty:true};
+}
+async function loadAll(gen){
   const g=async f=>{ try{ const r=await fetch(DATA+f+".json?v="+BUILD);
       return r.ok?await r.json():null; }catch(e){ return null; } };
-  S.settings=await g("settings");
-  if(!S.settings){ boot("Couldn't load your clients",
-    "The data files didn't come down. Check you're online and pull to reload."); return; }
-  S.sync=await g("sync")||{lastSyncedDate:S.settings.seedDataEnds};
-  S.asked=((await g("review_asks"))||{}).rows||{};   // review texts already sent, pulled off his Mac
-  const m=Object.assign({clients:5,properties:3,jobs:4,due:3,replies:0},S.settings.manifest||{});
-  const want=[]; for(const k of ["clients","properties","jobs","due","replies"])
-    for(let i=0;i<m[k];i++) want.push([k,k+"_"+i]);
-  const got=await Promise.all(want.map(([,f])=>g(f)));
-  want.forEach(([k],i)=>{ const d=got[i]; if(!d)return;
+  const settings=await g("settings");
+  if(gen!==A.gen) return;
+  if(!settings){ renderProblem("Couldn't load your clients",
+    "The data files didn't come down. Check you're online and try again.",true); return; }
+  S.settings=settings;
+  const sync=await g("sync");
+  if(gen!==A.gen) return;
+  S.sync=sync||{lastSyncedDate:S.settings.seedDataEnds};
+  const got=await fetchPrivate();                       // clients, properties, jobs, due, replies, review asks
+  if(gen!==A.gen) return;
+  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null;
+  for(const r of (got.rows||[])){
+    if(r.name===ASKS_NAME){ asks=r.data; continue; }
+    const m=PRIVATE_RE.exec(r.name); if(m) fam[m[1]].push([+m[2],r.data]);
+  }
+  if(!fam.clients.length){ renderNoData(); return; }
+  for(const k in fam) fam[k].sort((a,b)=>a[0]-b[0]);       // file order, so the due list reads the same as it did from files
+  S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={};
+  S.asked=(asks&&asks.rows)||{};                           // review texts already sent, pulled off his Mac
+  for(const k of PRIVATE_BASES) for(const [,d] of fam[k]){ if(!d) continue;
     if(k==="due") S.due=S.due.concat(d.rows||[]);
     else if(k==="replies") Object.assign(S.replies,d.rows||{});
-    else Object.assign(S[k==="clients"?"clients":k==="properties"?"props":"jobs"],d.rows||{}); });
+    else Object.assign(S[k==="clients"?"clients":k==="properties"?"props":"jobs"],d.rows||{}); }
   /* Lapsed and cold clients come off the old QuickBooks list with no property, and
      everything (ring, text, contact log) hangs off a property. Give them one. */
   const has=new Set(Object.values(S.props).map(p=>p.c));
@@ -336,9 +565,8 @@ async function loadAll(){
     S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
   const mine=STORE.read();
   S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK;
-  S.ready=true; $("#nav").hidden=false; render();
+  S.ready=true; A.screen="app"; $("#nav").hidden=false; document.body.classList.remove("locked"); render();
 }
-function boot(h,p){ $("#main").innerHTML=`<div class="boot"><h2>${esc(h)}</h2><p>${esc(p)}</p></div>`; }
 
 /* every write goes through here: updates memory first so the screen is never a lie,
    then persists. A failed write shouts instead of failing silently. */
@@ -359,6 +587,142 @@ function toast(m,bad){ const t=el("div","banner "+(bad?"bad":"ok"),m);
   Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"84px",zIndex:99,
     maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
   document.body.appendChild(t); setTimeout(()=>t.remove(),4200); }
+
+/* ---------- Upload from this Mac ----------
+   Only offered when the page is open from the Mac itself (127.0.0.1 or localhost), because only
+   there can it read jobbook-data/*.json. The private files (clients, properties, jobs, due,
+   replies, review asks) go into jobbook_files, one row each. The refresh script never sends
+   anything anywhere; this is the one step that does, and only Mitch can do it. */
+const plainErr=msg=>{ const e=new Error(msg); e.plain=true; return e; };     // our own wording, shown as it is
+async function localJson(name){
+  const r=await fetch(DATA+name+".json?nc="+Date.now()+"_"+Math.random().toString(36).slice(2,8),{cache:"no-store"});
+  if(r.status===404) return null;
+  if(!r.ok) throw plainErr(name+".json on this Mac: HTTP "+r.status+". Nothing was uploaded.");
+  try{ return await r.json(); }
+  catch(e){ throw plainErr(name+".json on this Mac isn't valid JSON. Nothing was uploaded."); }
+}
+/* what would be uploaded: names from this Mac's own settings.json manifest (review_asks is optional) */
+async function localPlan(){
+  const st=await localJson("settings");
+  const man=st&&st.manifest;
+  if(!man) throw plainErr("Couldn't read jobbook-data/settings.json on this Mac. Is this page open from the Job Book folder?");
+  const names=[];
+  for(const b of PRIVATE_BASES) for(let i=0;i<(+man[b]||0);i++) names.push(b+"_"+i);
+  if(!names.some(n=>n.startsWith("clients_"))) throw plainErr("This Mac's settings.json lists no client files. Run the refresh first.");
+  const asks=await localJson(ASKS_NAME);                    // optional: only there once review asks have been imported
+  if(asks!=null){
+    if(typeof asks!=="object"||Array.isArray(asks)) throw plainErr(ASKS_NAME+".json doesn't look right. Nothing was uploaded.");
+    names.push(ASKS_NAME);
+  }
+  return {names,man};
+}
+async function readLocal(names,onProgress){
+  const files=[];
+  for(let i=0;i<names.length;i++){
+    onProgress("Reading the files on this Mac… "+(i+1)+" of "+names.length);
+    const d=await localJson(names[i]);
+    if(d==null) throw plainErr(names[i]+".json is missing on this Mac. Nothing was uploaded. Run the refresh again.");
+    if(typeof d!=="object"||Array.isArray(d)||(names[i]!==ASKS_NAME&&!("rows" in d))) throw plainErr(names[i]+".json doesn't look right. Nothing was uploaded.");
+    files.push({name:names[i],data:d});
+  }
+  const nClients=files.filter(f=>f.name.startsWith("clients_")).reduce((n,f)=>n+Object.keys(f.data.rows||{}).length,0);
+  if(!nClients) throw plainErr("The client files on this Mac are empty. Nothing was uploaded.");
+  return files;
+}
+async function uploadFiles(files,onProgress){
+  const T=SB.from.bind(SB);
+  const CAP=700000;                                   // characters per request, so no single request gets huge
+  let batch=[], size=0, done=0;
+  const flush=async()=>{
+    if(!batch.length) return;
+    const r=await T("jobbook_files").upsert(batch,{onConflict:"name"});
+    if(r.error) throw r.error;
+    done+=batch.length; batch=[]; size=0;
+    onProgress("Uploading… "+done+" of "+files.length);
+  };
+  for(const f of files){
+    const n=JSON.stringify(f.data).length;
+    if(batch.length&&size+n>CAP) await flush();
+    batch.push({name:f.name,data:f.data}); size+=n;
+  }
+  await flush();
+  /* The file list goes in last. Until it lands, the page keeps reading the previous upload's list, and once it
+     lands anything not on it (an old due_4, say) is ignored even if deleting that row fails below. */
+  const mf=await T("jobbook_files").upsert([{name:MANIFEST_NAME,data:{names:files.map(f=>f.name),at:new Date().toISOString()}}],{onConflict:"name"});
+  if(mf.error) throw mf.error;
+  /* rows for numbered files that this refresh no longer has (fewer clients_N than last time) */
+  const have=new Set(files.map(f=>f.name));
+  const ex=await T("jobbook_files").select("name");
+  if(ex.error) throw ex.error;
+  const stale=(ex.data||[]).map(r=>r.name).filter(n=>PRIVATE_RE.test(n)&&!have.has(n));
+  if(stale.length){
+    const d=await T("jobbook_files").delete().in("name",stale);
+    if(d.error) throw d.error;
+  }
+  return {uploaded:files.length,removed:stale.length,ordered:await keepsOrder(files)};
+}
+/* The table must be json, not jsonb: jsonb re-sorts object keys, which changes which property is "first" for
+   clients with more than one. Read one properties file back and compare key order, so a table that is still jsonb
+   is caught here and not by Mitch noticing the wrong address on a button. Can't tell (no read-back) = say nothing. */
+async function keepsOrder(files){
+  try{
+    const f=files.find(x=>PRIVATE_RE.test(x.name)&&/^properties_/.test(x.name)&&x.data&&x.data.rows&&Object.keys(x.data.rows).length>1);
+    if(!f) return true;
+    const r=await SB.from("jobbook_files").select("data").eq("name",f.name).maybeSingle();
+    if(r.error||!r.data||!r.data.data||!r.data.data.rows) return true;
+    const sent=Object.keys(f.data.rows), got=Object.keys(r.data.data.rows);
+    return sent.length===got.length&&sent.every((k,i)=>k===got[i]);
+  }catch(e){ return true; }
+}
+function uploadPanel(){
+  const box=el("div","upbox");
+  box.appendChild(el("div","lbl2","Upload from this Mac"));
+  box.appendChild(el("div","hint","Sends the client, job, due list, reply and review files on this Mac to the Job Book database. "
+    +"Do this after every refresh. Nothing leaves this Mac until you tap it."));
+  const st=el("div","st"); if(A.lastUpload) st.textContent=A.lastUpload;
+  const acts=el("div","btns");
+  const go=btn("Upload from this Mac",SVG.tick,"pri",async()=>{
+    const gen=A.gen; go.disabled=true; acts.querySelectorAll("button.x2").forEach(b=>b.remove());
+    const say=t=>{ if(st.isConnected) st.textContent=t; };
+    try{
+      say("Checking the files on this Mac…");
+      const plan=await localPlan();
+      if(gen!==A.gen) return;
+      const n=plan.names.length;
+      /* confirm with the file count before anything is sent */
+      const ok=await new Promise(res=>{
+        st.textContent="Upload "+n+" files to the Job Book database? This replaces what is there now.";
+        const yes=btn("Upload "+n+" files",SVG.tick,"warn x2",()=>{ yes.remove(); no.remove(); res(true); });
+        const no=btn("Cancel",null,"x2",()=>{ yes.remove(); no.remove(); res(false); });
+        acts.appendChild(yes); acts.appendChild(no);
+      });
+      if(!ok){ say("Cancelled. Nothing was uploaded."); go.disabled=false; return; }
+      const files=await readLocal(plan.names,say);
+      if(gen!==A.gen) return;
+      const res=await uploadFiles(files,say);
+      if(gen!==A.gen) return;
+      A.lastUpload="Uploaded "+res.uploaded+" files"+(res.removed?" (removed "+res.removed+" old ones)":"")+" at "
+        +String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")+".";
+      if(!res.ordered) A.lastUpload+=" WARNING: the database table is still the old jsonb type, which shuffles the order of each client's properties. "
+        +"Run 09_jobbook_files.sql again in the Supabase SQL editor, then tap Upload again.";
+      say(A.lastUpload+" Reloading…");
+      toast(res.ordered?"Uploaded "+res.uploaded+" files.":"Uploaded, but the table needs 09_jobbook_files.sql run again. See the Setup tab.",!res.ordered);
+      await loadAll(gen);
+      if(gen===A.gen) say(A.lastUpload);
+    }catch(e){
+      if(gen!==A.gen) return;
+      if(authErr(e)){ wipeData(); A.uid=null; renderLogin(friendly(e),"warn"); return; }
+      const m=missingTable(e)
+        ?"The jobbook_files table isn't in the database yet. Run 09_jobbook_files.sql in the Supabase SQL editor first, then try again."
+        :(e&&e.plain?e.message:friendly(e));
+      say("Upload stopped: "+m+(e&&e.plain?"":" It is safe to tap Upload again."));
+      go.disabled=false;
+    }
+  });
+  acts.appendChild(go);
+  box.appendChild(acts); box.appendChild(st);
+  return box;
+}
 
 /* ---------- model ---------- */
 function lines(){
@@ -652,7 +1016,7 @@ function drawSheet(){
   $("#shbody").scrollTop=0;
 }
 document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&S.stack.length) closeSheet(); });
-function kv(host,k,v){ const d=el("div","kv"); d.appendChild(el("dt",null,k)); d.appendChild(el("dd",null,v||"—")); host.appendChild(d); }
+function kv(host,k,v){ const d=el("div","kv"); d.appendChild(el("dt",null,k)); d.appendChild(el("dd",null,v||"-")); host.appendChild(d); }
 function btn(label,svgp,cls,fn,enabled){
   const b=el("button","btn"+(cls?" "+cls:""));
   b.innerHTML=(svgp?ico(svgp):"")+"<span>"+esc(label)+"</span>";
@@ -751,7 +1115,7 @@ function openUnconfirmed(){
       const c=cOf(pid), card=el("div","svc");
       const top=el("div","top"); top.appendChild(el("b",null,c.n));
       top.appendChild(el("span","pill soon",e.ch==="email"?"email":"text")); card.appendChild(top);
-      card.appendChild(el("div","mt",when(e.t)+" · to "+(e.to||"—")));
+      card.appendChild(el("div","mt",when(e.t)+" · to "+(e.to||"-")));
       card.appendChild(el("div","quote",e.msg));
       const row=el("div","btns");
       row.appendChild(btn("It went",SVG.tick,"pri",async()=>{ await setLogStatus(pid,e.id,"sent"); drawSheet(); }));
@@ -913,8 +1277,8 @@ function openProp(pid,focusSvc){
     acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(L),!!c.p));
     b.appendChild(acts2);
 
-    kv(b,"Phone",c.p||"—"); kv(b,"Email",c.e||"—");
-    kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||p.l||"—");
+    kv(b,"Phone",c.p||"-"); kv(b,"Email",c.e||"-");
+    kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||p.l||"-");
     kv(b,"On the books",{active:"Active client",lapsed:"Haven't seen in a while",
       barrier:"Barrier follow-up",cold:"Cold pre-purchase contact"}[c.g||"active"]);
     const rem=(S.ov[pid]||{}).remind;
@@ -1047,8 +1411,8 @@ function openClient(id){
   if(props.length===1) return openProp(props[0]);
   const c=S.clients[id];
   openSheet({title:c.n, sub:props.length+" properties", build:b=>{
-    kv(b,"Phone",c.p||"—"); kv(b,"Email",c.e||"—");
-    kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||"—");
+    kv(b,"Phone",c.p||"-"); kv(b,"Email",c.e||"-");
+    kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||"-");
     const acts=el("div","btns");
     const seed=props.length?myLine(props[0]):{pid:null};
     acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(seed),!!c.p&&!!props.length));
@@ -1112,7 +1476,7 @@ function renderClientList(){
     const bits=[]; if(c.ic) bits.push(c.ic+" invoice"+(c.ic===1?"":"s"));
     if(c.lt) bits.push(c.lt); if(c.ls) bits.push("last "+nice(c.ls));
     if(!c.p&&!c.e) bits.push("no phone or email on file");
-    tx.appendChild(el("div","mt",bits.join(" · ")||"—"));
+    tx.appendChild(el("div","mt",bits.join(" · ")||"-"));
     main.appendChild(tx);
     main.appendChild(el("span","pill",{active:"Active",lapsed:"Lapsed",barrier:"Barrier",cold:"Cold"}[c.g||"active"]));
     hit.appendChild(main); hit.onclick=()=>openClient(id);
@@ -1205,6 +1569,9 @@ function viewSync(m){
     setTimeout(()=>{cb.querySelector("span").textContent="Copy";},2500); };
   box.appendChild(cb); m.appendChild(box);
   m.appendChild(el("div","hint","Say that to Claude and it updates the whole thing."));
+  if(isLocal) m.appendChild(uploadPanel());       // only on the Mac, opened from the Job Book folder
+  else m.appendChild(el("div","hint","After a refresh, open the Job Book on the Mac (http://127.0.0.1:8942/jobbook.html) and tap Upload from this Mac. "
+    +"That puts the new data behind your login."));
 
   m.appendChild(el("div","lbl","Your changes on this device"));
   const mine=STORE.read();
@@ -1237,6 +1604,8 @@ function viewSync(m){
   dbtn.onclick=async()=>{
     dout.innerHTML=""; const L=[];
     L.push("build "+BUILD);
+    L.push("login: "+(A.email||"none")+(A.me?" ("+A.me.role+")":""));
+    L.push("data from: the database (jobbook_files), page opened on "+location.hostname+(isLocal?" (Upload from this Mac is on)":""));
     L.push("data: "+Object.keys(S.clients).length+" clients, "+Object.keys(S.props).length
       +" properties, "+S.due.length+" due rows, "+Object.keys(S.replies).length+" with replies");
     L.push("saving to this device: "+(STORE.write(STORE.read())?"works":"BLOCKED"));
@@ -1250,6 +1619,11 @@ function viewSync(m){
     dout.appendChild(cb2);
   };
   m.appendChild(dbtn); m.appendChild(dout);
+
+  m.appendChild(el("div","lbl","Login"));
+  m.appendChild(el("div","note","Logged in as "+(A.email||"you")+". Your client list, job history and replies sit behind this login, "
+    +"not in the website files. Logging out here also logs you out of the Job Calendar on this device, because it's the same login."));
+  const lo=el("div","btns"); lo.appendChild(btn("Log out",SVG.x,"",()=>signOut())); m.appendChild(lo);
 }
 
 /* ---------- wiring ---------- */
@@ -1262,7 +1636,7 @@ document.addEventListener("click",e=>{
   window.scrollTo(0,0); render();
 });
 window.addEventListener("error",ev=>{ try{ toast("Something glitched: "+(ev.message||"unknown"),true); }catch(_){} });
-loadAll().catch(()=>boot("Something went wrong","Reload the page and it should come good."));
+start();
 })();
 </script>
 

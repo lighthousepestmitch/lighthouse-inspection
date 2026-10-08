@@ -150,6 +150,9 @@ select.inp{appearance:none;-webkit-appearance:none}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 .boot{display:grid;place-items:center;min-height:60vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+.fl{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin:10px 0 4px}
+.custcard .inp{margin-bottom:2px}
+.custcard .btns{margin:12px 0 0}
 .wxline{font-size:15px;font-weight:600;padding:4px 0}
 
 /* read-only record view (also the print layout) */
@@ -192,10 +195,14 @@ select.inp{appearance:none;-webkit-appearance:none}
 </main>
 <div id="savebar"></div>
 
+<script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
+<!-- Pinned on purpose, same version and hash as jobbook.html and calendar.html. To upgrade: change the version, re-hash with
+     curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, find a customer, log out. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-04r3";   // same cache-buster as jobbook.html
+const BUILD="2026-10-08r2";   // same cache-buster as jobbook.html
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -261,7 +268,13 @@ function toast(m,bad){ const t=el("div","banner toast "+(bad?"bad":"ok"),m);
     maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
   document.body.appendChild(t); setTimeout(()=>t.remove(),bad?6000:3200); }
 
-/* ---------- loading the job book data ---------- */
+/* ---------- loading the data ----------
+   Chemicals, settings and the service lists are public static files (no customer data in them).
+   The customer data (clients, properties, job history) is NOT served with the page. It sits in the
+   Supabase table jobbook_files and only the master login (Mitch) can read it: same login, same
+   lpc-config.js and same stored session as the Job Book and the Job Calendar. Until it has loaded
+   the New tab shows a login card where the customer search goes. Saved records (the Records tab)
+   live on this device and do not need the login. */
 const DATA="jobbook-data/";
 async function loadAll(){
   const g=async f=>{ try{ const r=await fetch(DATA+f+".json?v="+BUILD); return r.ok?await r.json():null; }catch(e){ return null; } };
@@ -270,17 +283,161 @@ async function loadAll(){
   const sv=await g("services");
   if(!settings||!S.chem||!sv){ boot("Couldn't load the data","The data files didn't come down. Check you're online and reload."); return false; }
   S.services=sv.services||[];
-  const m=Object.assign({clients:5,properties:3,jobs:4},settings.manifest||{});
-  const want=[]; ["clients","properties","jobs"].forEach(k=>{ for(let i=0;i<m[k];i++) want.push([k,k+"_"+i]); });
-  const got=await Promise.all(want.map(w=>g(w[1])));
-  want.forEach((w,i)=>{ const d=got[i]; if(!d)return;
-    Object.assign(S[w[0]==="clients"?"clients":w[0]==="properties"?"props":"jobs"],d.rows||{}); });
-  /* clients with no property get one, same as the Job Book does */
-  const has=new Set(Object.values(S.props).map(p=>p.c));
-  for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
-    S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
-  buildIndex();
   return true;
+}
+const CFG=window.LPC_SUPABASE||{};
+const EMAIL_KEY="lpc_jobbook_last_email", CAL_EMAIL_KEY="lpc_calendar_last_email";
+const PRIVATE_RE=/^(clients|properties|jobs)_(\d+)$/;    // the only families this page needs (same names as jobbook.html)
+const MANIFEST_NAME="jobbook_manifest";                    // written last by every Job Book upload: the rows that belong together
+let SB=null;
+const C={state:"boot",msg:"",kind:"warn",uid:null,gen:0,loading:false};   // state: boot login offline denied nodata problem ready
+const trim=s=>String(s==null?"":s).trim();
+const looksEmail=s=>/^[^\s@?&#,;]+@[^\s@?&#,;]+\.[^\s@?&#,;]+$/.test(trim(s));
+const netErr=e=>(typeof navigator!=="undefined"&&navigator.onLine===false)||(e&&(e.name==="AuthRetryableFetchError"||e.status===0))
+  ||/failed to fetch|networkerror|load failed|network request failed/i.test(String(e&&e.message||""));
+const authErr=e=>!!e&&(e.status===401||e.code==="PGRST301"||/\bjwt\b|not authenticated|invalid.*token|refresh token/i.test(String(e.message||"")));
+const missingTable=e=>!!e&&(e.code==="PGRST205"||e.code==="42P01"||/could not find the table|relation .* does not exist/i.test(String(e.message||"")));
+function friendly(e){
+  const msg=trim(e&&(e.message||e.error_description||e.msg)||(typeof e==="string"?e:""));
+  const code=e&&e.code, status=e&&e.status;
+  if(netErr(e)) return "Can't reach the server. Check your signal and try again.";
+  if(authErr(e)) return "You've been logged out. Log in again.";
+  if(code==="42501"||/row-level security|permission denied/i.test(msg)) return "You're not allowed to do that.";
+  if(status===429||/rate limit|too many/i.test(msg)) return "Too many tries. Wait a few minutes and try again.";
+  return "Something went wrong"+(msg?" ("+msg+")":"")+".";
+}
+/* nothing from the database stays in memory once the login is gone */
+function custWipe(){ C.gen++; C.loading=false; S.clients={}; S.props={}; S.jobs={}; S.index=[]; }
+function custState(state,msg,kind){
+  C.state=state; C.msg=msg||""; C.kind=kind||"warn";
+  /* only the customer picker changes: never redraw a form that already has a customer (it would lose what was typed) */
+  if(F&&!F.propId&&S.tab==="new"&&!S.justSaved) render();
+}
+function custHTML(){
+  const st=C.state, note=C.msg?'<div class="banner '+C.kind+'" role="alert" style="margin:8px 0">'+esc(C.msg)+'</div>':"";
+  const out=btn=>'<div class="btns"><button type="button" class="btn" data-a="custout">Log out</button></div>';
+  if(st==="ready") return '<input class="inp search" id="q" data-f="q" placeholder="Start typing a name or street" autocomplete="off" autocapitalize="off" value="'+esc(F.q)+'">'
+    +'<div id="qres"></div>';
+  let h='<div class="card custcard">';
+  if(st==="boot") h+='<div class="wxline"><span class="spin"></span> Opening the customer list…</div>'+note;
+  else if(st==="login") h+='<b>Log in to find a customer</b><div class="hint">The customer list is behind the Job Book login (the same one as the Job Book and Job Calendar).</div>'+note
+    +'<form id="lg-form" action="#" autocomplete="on"><label class="fl" for="lg-email">Your email</label>'
+    +'<input class="inp" id="lg-email" name="email" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" value="'+esc(custLastEmail())+'">'
+    +'<label class="fl" for="lg-pass">Password</label>'
+    +'<input class="inp" id="lg-pass" name="password" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">'
+    +'<div class="btns"><button class="btn pri" id="lg-go" type="submit">Log in</button></div></form>';
+  else if(st==="offline") h+='<b>No signal</b><div class="hint">The customer list needs a connection. Saved records still open under Records.</div>'+note
+    +'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Try again</button></div>';
+  else if(st==="denied") h+='<b>Customer list</b><div class="hint">The customer list is for Mitch only.</div>'+note+out();
+  else if(st==="nodata") h+='<b>No customers yet</b><div class="hint">The Job Book data isn\'t uploaded yet. On the Mac, open http://127.0.0.1:8942/jobbook.html and tap Upload from this Mac.</div>'+note
+    +'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Check again</button><button type="button" class="btn" data-a="custout">Log out</button></div>';
+  else h+='<b>Couldn\'t open the customer list</b>'+note+'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Try again</button><button type="button" class="btn" data-a="custout">Log out</button></div>';
+  return h+'</div>';
+}
+function custLastEmail(){ try{ return localStorage.getItem(EMAIL_KEY)||localStorage.getItem(CAL_EMAIL_KEY)||""; }catch(e){ return ""; } }
+function custMsg(text,kind){ const f=$("#lg-form"); if(!f) return; let m=$("#lg-msg");
+  if(!m){ m=el("div"); m.id="lg-msg"; m.setAttribute("role","alert"); f.parentNode.insertBefore(m,f); }
+  m.innerHTML=""; if(text){ const b=el("div","banner "+(kind||"warn"),text); b.style.margin="8px 0"; m.appendChild(b); } }
+async function custPasswordLogin(){
+  const email=trim(($("#lg-email")||{}).value).toLowerCase(), pass=($("#lg-pass")||{}).value;
+  if(!looksEmail(email)){ custMsg("Type your email address first.","bad"); return; }
+  if(!pass){ custMsg("Type your password.","bad"); return; }
+  try{ localStorage.setItem(EMAIL_KEY,email); }catch(e){}
+  const go=$("#lg-go"); if(go) go.disabled=true; custMsg("Checking...","ok");
+  try{
+    const r=await SB.auth.signInWithPassword({email,password:pass});
+    if(r.error) throw r.error;
+    if(r.data&&r.data.session) custOnSession(r.data.session);
+  }catch(e){
+    const m=trim(e&&e.message);
+    custMsg(/invalid login|invalid credentials|email not confirmed/i.test(m)?"That email and password don't match. Check them and try again.":friendly(e),"bad");
+    const g2=$("#lg-go"); if(g2) g2.disabled=false;
+  }
+}
+async function custSignOut(){
+  C.uid=null; custWipe();
+  let r=null;
+  try{ r=await SB.auth.signOut({scope:"local"}); }catch(e){ r={error:e}; }
+  /* no signal: signOut hands back {error} and leaves the stored login behind, so clear the stored keys ourselves */
+  let partial=false;
+  if(r&&r.error){ partial=true;
+    try{ const k=(SB.auth&&SB.auth.storageKey)||"";
+      Object.keys(localStorage).forEach(key=>{ if((k&&key.indexOf(k)===0)||/^sb-.+-auth-token/.test(key)) localStorage.removeItem(key); });
+    }catch(e){} }
+  custState("login",partial?"Logged out on this device. No signal, so the login wasn't cancelled on the server. That's fine, it just runs out on its own.":"",partial?"warn":"ok");
+}
+function custOnSession(session){
+  if(!session||!session.user){
+    if(!C.uid) return;                          // INITIAL_SESSION arrives as null before getSession has answered
+    custWipe(); C.uid=null; custState("login","You've been logged out. Log in again.","warn"); return;
+  }
+  if(C.uid===session.user.id) return;           // same login again (token refresh, or the second event for one sign-in)
+  if(C.uid) custWipe();                         // a different person logged in on this browser
+  C.uid=session.user.id;
+  custLoad();
+}
+/* the rows this page needs: the last upload's own file list says which; no list (older upload) = every matching row */
+async function custFetch(){
+  const mf=await SB.from("jobbook_files").select("data").eq("name",MANIFEST_NAME).maybeSingle();
+  if(mf.error){ if(missingTable(mf.error)) return null; throw mf.error; }
+  const d=mf.data&&mf.data.data;
+  const names=d&&Array.isArray(d.names)?d.names.filter(n=>PRIVATE_RE.test(n)):null;
+  let q=SB.from("jobbook_files").select("name,data");
+  q=names?q.in("name",names):q.or("name.like.clients*,name.like.properties*,name.like.jobs*");
+  const r=await q;
+  if(r.error){ if(missingTable(r.error)) return null; throw r.error; }
+  return (r.data||[]).filter(x=>x&&x.name&&x.data&&PRIVATE_RE.test(x.name));
+}
+async function custLoad(){
+  if(C.loading) return;
+  C.loading=true; const gen=C.gen;
+  custState("boot");
+  try{
+    const me=await SB.from("staff").select("id,role,active").eq("id",C.uid).maybeSingle();
+    if(gen!==C.gen) return;
+    if(me.error) throw me.error;
+    if(!me.data||!me.data.active||me.data.role!=="master"){ custState("denied"); return; }     // master only; the database says no as well
+    const rows=await custFetch();
+    if(gen!==C.gen) return;
+    const fam={clients:[],properties:[],jobs:[]};
+    for(const r of (rows||[])){ const m=PRIVATE_RE.exec(r.name); if(m) fam[m[1]].push([+m[2],r.data]); }
+    if(!fam.clients.length){ custState("nodata"); return; }
+    for(const k in fam) fam[k].sort((a,b)=>a[0]-b[0]);       // file order, same as jobbook.html
+    S.clients={}; S.props={}; S.jobs={};
+    for(const [,d] of fam.clients) Object.assign(S.clients,d.rows||{});
+    for(const [,d] of fam.properties) Object.assign(S.props,d.rows||{});
+    for(const [,d] of fam.jobs) Object.assign(S.jobs,d.rows||{});
+    /* clients with no property get one, same as the Job Book does */
+    const has=new Set(Object.values(S.props).map(p=>p.c));
+    for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
+      S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
+    buildIndex();
+    custState("ready");
+  }catch(e){
+    if(gen!==C.gen) return;
+    if(authErr(e)){ custWipe(); C.uid=null; custState("login",friendly(e),"warn"); return; }
+    if(netErr(e)){ custState("offline"); return; }
+    custState("problem",friendly(e),"bad");
+  }finally{ if(gen===C.gen) C.loading=false; }
+}
+function custCheck(){
+  custState("boot");
+  SB.auth.getSession().then(r=>{
+    const s=r&&r.data&&r.data.session;
+    if(s) return custOnSession(s);
+    if(C.state!=="boot"&&C.state!=="offline") return;
+    if(r&&r.error&&netErr(r.error)){ custState("offline"); return; }
+    custState("login");
+  }).catch(e=>{ if(netErr(e)) custState("offline"); else custState("login",friendly(e),"bad"); });
+}
+function custStart(){
+  if(!CFG.url||!CFG.anonKey){ custState("problem","The Job Book isn't linked to its database yet. Ask Mitch to finish the setup.","bad"); return; }
+  if(!/^https?:\/\//i.test(CFG.url)){ custState("problem","The database address in lpc-config.js doesn't look right. Ask Mitch.","bad"); return; }
+  if(!window.supabase||!window.supabase.createClient){ custState("problem","Couldn't load the login tools. Check you're online, then reload the page.","bad"); return; }
+  try{ SB=window.supabase.createClient(CFG.url,CFG.anonKey); }
+  catch(e){ custState("problem","Couldn't start the login. "+friendly(e),"bad"); return; }
+  SB.auth.onAuthStateChange((ev,session)=>{ setTimeout(()=>custOnSession(session),0); });
+  custCheck();
 }
 function boot(h,p){ $("#main").innerHTML='<div class="boot"><h2>'+esc(h)+'</h2><p>'+esc(p)+'</p></div>'; }
 
@@ -565,8 +722,7 @@ function renderForm(){
     const mine=lastRecord(F.propId);
     if(mine&&!F.id&&!UI.sameDone) h+='<button class="btn pri same" data-a="sameas">Same as last time <span class="small" style="color:inherit;opacity:.8">('+esc(nice(mine.date))+')</span></button>';
   }else{
-    h+='<input class="inp search" id="q" data-f="q" placeholder="Start typing a name or street" autocomplete="off" autocapitalize="off" value="'+esc(F.q)+'">'
-      +'<div id="qres"></div>';
+    h+=custHTML();
   }
   if(F.propId){
     /* 2. job tiles */
@@ -868,6 +1024,8 @@ document.addEventListener("click",function(e){
   const a=t.dataset.a, d=t.dataset, svOf=s=>F.services.find(x=>x.s===s);
   if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
+  if(a==="custretry"){ if(C.uid){ C.loading=false; custLoad(); } else custCheck(); return; }
+  if(a==="custout"){ custSignOut(); return; }
   if(a==="clearcust"){ resetForm(); render(); return; }
   if(a==="svc"){ if(F.services.some(x=>x.s===d.s)) svcOff(d.s); else svcOn(d.s); render(); return; }
   if(a==="sameas"){ sameAsLast(); return; }
@@ -916,6 +1074,9 @@ document.addEventListener("click",function(e){
     dbDel(d.id).then(()=>{ S.records=S.records.filter(x=>x.id!==d.id); S.openId=null; S.justSaved=false; S.tab="records"; toast("Record deleted."); render(); })
       .catch(()=>toast("Couldn't delete the record.",true)); return; }
   if(a==="edit"){ const r=byId(d.id); if(r) loadForEdit(r); return; }
+});
+document.addEventListener("submit",function(e){
+  if(e.target&&e.target.id==="lg-form"){ e.preventDefault(); custPasswordLogin(); }
 });
 document.addEventListener("input",function(e){
   const t=e.target, f=t.dataset&&t.dataset.f; if(!f) return;
@@ -970,6 +1131,7 @@ function loadForEdit(r){
   try{ S.records=(await dbAll())||[]; }
   catch(e){ S.records=[]; toast("Couldn't open the saved records on this device ("+(e&&e.message?e.message:"storage error")+"). New records may not save.",true); }
   resetForm(); render();
+  custStart();
   if(pendingCount()) backfill().then(()=>renderBanner());
   window.addEventListener("online",()=>{ if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
 })();

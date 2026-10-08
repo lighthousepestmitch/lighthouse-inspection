@@ -2,8 +2,10 @@
 """Find the Google review asks Mitch has already texted, from Messages on this Mac,
 and write jobbook-data/review_asks.json so the Reviews tab shows them as asked.
 
-Only client id and date are written (the data folder is public on GitHub Pages).
+Only client id and date are written. The file stays on this Mac (gitignored; older copies may still sit in the public repo history);
+it reaches the Job Book through "Upload from this Mac" on http://127.0.0.1:8942/jobbook.html.
 Run it any time:  python3 ~/lighthouse-inspection/tools/import_review_asks.py
+Then open the Job Book on this Mac and tap Upload from this Mac.
 """
 import sqlite3, re, json, glob, os, datetime
 
@@ -61,6 +63,7 @@ def main():
     if unmatched:
         print(f"{len(unmatched)} numbers asked but not matched to a client:")
         for n, day in sorted(unmatched.items(), key=lambda x: x[1]): print("  ", day, n)
+    print("\nNow open http://127.0.0.1:8942/jobbook.html on this Mac and tap Upload from this Mac.")
 
 if __name__ == "__main__":
     main()

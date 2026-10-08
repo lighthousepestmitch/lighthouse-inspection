@@ -9,6 +9,16 @@ Reads the newest Xero exports out of ~/Downloads:
   Contacts.csv          phone numbers and emails  (Contacts -> Export)
 and merges them into jobbook-data/*.json, keeping everything already there.
 
+The customer files it writes (clients_N, properties_N, jobs_N, due_N, replies_N, review_asks)
+are gitignored from now on and stay on this Mac. They reach the Job Book and Service Records through
+the database, with "Upload from this Mac" on http://127.0.0.1:8942/jobbook.html (master login).
+tools/confirmed_intervals.json (a client name and property id) is kept local the same way.
+BUT the website repo is public and older copies of these files are still in its git history, so
+they are still downloadable until the history is purged or the repo goes private. finish() says so.
+settings.json, sync.json, chemicals.json, services.json and sds.json carry no customer data
+(build_service_lists.py cuts addresses, proposal numbers and regos out of services.json and refuses to
+write it if a street address is left) and are still served with the website.
+
 Everything fiddly is in here on purpose, so a fresh chat never has to work it out again:
   - pulling the property address out of Mitch's "re: 43 Childe St" line-item notes
   - telling a real address from a job description ("Supply and install Greenzone...")
@@ -24,6 +34,8 @@ REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(REPO, "jobbook-data")
 HERE_TOOLS = os.path.dirname(os.path.abspath(__file__))
 DOWN = os.path.expanduser("~/Downloads")
+# the files that hold customer data: kept out of commits from now on (see .gitignore)
+PRIVATE_FILE = re.compile(r"^(?:(?:clients|properties|jobs|due|replies)_\d+|review_asks)\.json$")
 TODAY = dt.date.today()
 
 # ---------------------------------------------------------------- services
@@ -142,6 +154,52 @@ def newest(pattern):
 def load(name):
     p = os.path.join(DATA, name + ".json")
     return json.load(open(p)) if os.path.exists(p) else None
+
+# also local only: has a client name and a property id in it, and the website would serve it from /tools/
+LOCAL_ONLY = ["tools/confirmed_intervals.json"]
+PRIVATE_GLOBS = ["jobbook-data/clients_*.json", "jobbook-data/properties_*.json", "jobbook-data/jobs_*.json",
+                 "jobbook-data/due_*.json", "jobbook-data/replies_*.json", "jobbook-data/review_asks.json",
+                 *LOCAL_ONLY]
+
+def _git(*a):
+    import subprocess
+    return subprocess.run(["git", "-C", REPO, *a], capture_output=True, text=True)
+
+def in_history():
+    """How many commits (all branches) still hold a customer file. The repo is public, so those copies are
+    downloadable from the old commits however the files are treated from now on. None = can't tell / no git."""
+    try:
+        if _git("rev-parse", "--is-inside-work-tree").stdout.strip() != "true": return None
+        commits = _git("log", "--all", "--format=%h", "--", *PRIVATE_GLOBS).stdout.split()
+    except OSError:
+        return None
+    return len(commits)
+
+def private_guard():
+    """The website repo is public. Say so if a customer file could still be committed:
+    a file git already tracks (needs git rm --cached) or one .gitignore doesn't cover."""
+    try:
+        if _git("rev-parse", "--is-inside-work-tree").stdout.strip() != "true": return []
+    except OSError:
+        return []                                   # no git on this machine, nothing to check
+    rel = [f"jobbook-data/{f}" for f in sorted(os.listdir(DATA)) if PRIVATE_FILE.match(f)]
+    rel += [p for p in LOCAL_ONLY if os.path.exists(os.path.join(REPO, p))]
+    if not rel: return []
+    tracked = set(_git("ls-files", "--", *rel).stdout.split())
+    problems = []
+    if tracked:
+        # --ignore-unmatch: plain git rm stops with "pathspec did not match" (and removes nothing) as soon as
+        # one pattern has no tracked file, e.g. when only review_asks.json is tracked
+        problems.append(f"{len(tracked)} customer files are still tracked by git, so a commit would publish any change to them. "
+                        "Not yet: the database must hold the data first, or the Job Book and Service Records (both read it now) go blank "
+                        "once the files are off the site. Order: 09_jobbook_files.sql in Supabase, Upload from this Mac, "
+                        "check both pages show clients on this Mac, then run\n"
+                        f"       git -C {REPO} rm --cached -q --ignore-unmatch -- " + " ".join(f"'{g}'" for g in PRIVATE_GLOBS)
+                        + "\n       then commit and push. The new pages and the file removal go out in that one push (reload the phone pages afterwards).")
+    loose = [r for r in rel if r not in tracked and _git("check-ignore", "-q", "--no-index", r).returncode != 0]
+    if loose:
+        problems.append(f"{len(loose)} customer files are NOT covered by .gitignore (first: {loose[0]}). Check {os.path.join(REPO, '.gitignore')}")
+    return problems
 
 def main():
     inv_csv = newest("SalesInvoices_*.csv")
@@ -334,8 +392,31 @@ def main():
     print(f"  old barriers (2yr+)     {sum(1 for d in od if age(d)>730):5}")
     print(f"  needs an interval       {sum(1 for d in due if not d.get('nd')):5}")
     print(f"\n  files written to {DATA}")
-    print("  commit, then Mitch runs:  git -C ~/lighthouse-inspection push")
+
+def finish():
+    """Last thing printed, so it is the last thing Mitch reads."""
+    print("  The customer files are gitignored, so new copies stay on this Mac. That does NOT undo what is already out there.")
+    bad = private_guard()
+    if bad:
+        print("\n  !! CUSTOMER DATA COULD GO PUBLIC. Fix this before any commit:")
+        for b in bad: print("     -", b)
+    n = in_history()
+    if n:
+        print(f"\n  !! OLD COPIES ARE STILL PUBLIC. {n} commits in the website repo (github.com/lighthousepestmitch/lighthouse-inspection) still hold")
+        print("     the client list, phone numbers, emails, addresses and reply texts. Anyone can fetch them from those old")
+        print("     commits (raw.githubusercontent.com/<commit>/jobbook-data/clients_0.json) or by cloning the repo.")
+        print("     Taking the files off the live site does not remove them from history. Pick one:")
+        print("       1. Purge them from history: git filter-repo --invert-paths with a --path-glob for each pattern in .gitignore, then a force-push (you run it).")
+        print("       2. Make the repo private (GitHub Pages on a private repo needs a paid plan).")
+        print("       3. Move the website to a fresh repo that never had the files, and retire this one.")
+    print("\n  Next step:")
+    print("  Now open http://127.0.0.1:8942/jobbook.html on this Mac and tap Upload from this Mac.")
+    print("  (Needs the local server:  python3 -m http.server 8942 --bind 127.0.0.1 --directory ~/lighthouse-inspection)")
+    print("  settings.json, sync.json and services.json carry no customer data (services.json has addresses, proposal")
+    print("  numbers and regos cut out, and the build refuses to write it if a street address is left), so they go out with a")
+    print("  normal commit and  git -C ~/lighthouse-inspection push")
 
 if __name__ == "__main__":
     main()
     import build_service_lists; build_service_lists.main()
+    finish()
