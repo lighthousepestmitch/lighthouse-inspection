@@ -20,6 +20,7 @@
   --over:#A23C29; --overBg:#F8E8E3; --soon:#8C6314; --soonBg:#F8F0DC; --ok:#276B59; --okBg:#E2EFE9;
   --focus:#0E4F54; --now:#C0392B;
   --noteBg:#FFF3C2; --noteInk:#5E4400; --noteLine:#E2C35B; --noteDot:#F2C230;
+  --prop:#C2570A; --propBg:#FBE3CC; --propInk:#6B2F00; --propOn:#FFFFFF;      /* a job that needs a barrier or baiting proposal: strong orange, not the staff colours, not the yellow of a client note */
 }
 @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
   --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
@@ -28,9 +29,11 @@
   --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
   --focus:#57B3BA; --now:#EE7B6B;
   --noteBg:#3A3115; --noteInk:#F2DC93; --noteLine:#8A7227; --noteDot:#D9AE35;
+  --prop:#F59A4B; --propBg:#43260E; --propInk:#FFD9B3; --propOn:#2B1500;
 }}
 :root[data-theme="dark"]{
   --noteBg:#3A3115; --noteInk:#F2DC93; --noteLine:#8A7227; --noteDot:#D9AE35;
+  --prop:#F59A4B; --propBg:#43260E; --propInk:#FFD9B3; --propOn:#2B1500;
   --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
   --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D; --lineq:#1C2824;
   --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B;
@@ -155,14 +158,15 @@ button.mi:hover,button.mi:focus-visible{background:var(--surface2)}
 .stl{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:1px 6px;border-radius:5px;
   background:var(--surface2);color:var(--ink2);margin-top:2px}
 .stl.done{background:var(--okBg);color:var(--ok)} .stl.cancelled{background:var(--overBg);color:var(--over)}
-/* timed cards on the grid: height is the job's length, tinted with the person's colour. What shows depends on the room (set by cardFit()):
-   tiny = one line (time, name) / short = time, name / mid = + suburb and services on one line / full = suburb and services on lines of their own.
-   nw = a narrow lane (week view): start time and first word of the name / xn = very narrow: smaller text. */
+/* timed cards on the grid: height is the job's length, tinted with the person's colour. The top line is the job's ADDRESS (the client's name if there is none).
+   What shows depends on the room (set by cardFit()):
+   tiny = one line (time, address) / short = time, address / mid = + client name and services on one line / full = client name and services on lines of their own.
+   nw = a narrow lane (week view): start time and the street / xn = very narrow: smaller text, just the street's name. */
 .jc{position:absolute;padding:2px 5px;z-index:1;line-height:1.2;background:var(--surface);background:color-mix(in srgb,var(--sc) 13%,var(--surface))}
 .jc .ds,.jc .stl{display:none}
 .jc.mid .ds,.jc.full .ds{display:block}
 .jc.full .ds .sep{display:none}
-.jc.full .ds .sb,.jc.full .ds .sv{display:block;overflow:hidden;text-overflow:ellipsis}
+.jc.full .ds .cl,.jc.full .ds .sv{display:block;overflow:hidden;text-overflow:ellipsis}
 .jc.tiny{display:flex;gap:5px;align-items:center;white-space:nowrap;padding-top:0;padding-bottom:0;line-height:1.1}
 .jc.tiny .l1{flex:0 0 auto}
 .jc.tiny .nm{min-width:0}
@@ -185,6 +189,32 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .jc.st-cancelled .nm,.jm.st-cancelled .nm{text-decoration:line-through}
 .jc.dragging,.jm.dragging{opacity:.3}
 .ghost{box-shadow:0 10px 28px rgba(0,0,0,.35)!important;opacity:.92}
+/* A job that needs a barrier and/or baiting proposal (see propMarks): a strong orange frame all round and an orange tint, whoever it is for, so it stands out in the week view.
+   The staff colour stays as the left stripe. Orange, not the yellow of a client note, not the pale green of a free spot, and a DONE job keeps its colour (the inspection being
+   done is exactly when the proposal is wanted), where a cancelled one is not lit at all. A dot per proposal where it is tight (solid = barrier, ring = baiting), the words where there is room. */
+.pdots{display:inline-flex;gap:2px;align-items:center;flex:0 0 auto;margin-right:3px;vertical-align:middle}
+.pd{display:inline-block;box-sizing:border-box;width:9px;height:9px;border-radius:50%;background:var(--prop);flex:0 0 auto}
+.pd.t{background:transparent;border:2px solid var(--prop)}
+.ptag{display:inline-block;flex:0 0 auto;padding:0 6px;border-radius:5px;background:var(--prop);color:var(--propOn);font:700 10px/16px "Public Sans",sans-serif;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;vertical-align:middle}
+.ptag.big{font-size:12px;line-height:22px;padding:0 10px;border-radius:7px}
+.jc.hp,.jm.hp,.jt.hp,.tcard.hp{box-shadow:inset 0 0 0 2px var(--prop),0 1px 3px rgba(20,32,30,.2)}
+.jc.hp{background:var(--propBg);background:color-mix(in srgb,var(--prop) 22%,var(--surface))}
+.jm.hp,.jt.hp,.tcard.hp{background:var(--propBg);background:color-mix(in srgb,var(--prop) 15%,var(--surface))}
+.jt.hp{box-shadow:inset 0 0 0 1.5px var(--prop),0 1px 2px rgba(20,32,30,.15)}
+.jc.hp.st-done,.jm.hp.st-done,.jt.hp.st-done,.tcard.hp.st-done{opacity:1;filter:none}
+/* On a timed grid card the dots show, and the words take their place on the time line when the card is wide enough for them (a container query on the card's own width:
+   pt1 = one proposal, pt2 = both). A one-line (tiny) card, a narrow lane, or a browser without container queries keeps the dots. */
+.jc{container-type:inline-size}
+.jc .ptag{display:none;margin-left:auto}
+@container (min-width:160px){.jc.pt1:not(.tiny) .ptag{display:inline-block}.jc.pt1:not(.tiny) .pdots{display:none}}
+@container (min-width:190px){.jc.pt2:not(.tiny) .ptag.sh{display:inline-block}.jc.pt2:not(.tiny) .pdots{display:none}}
+@container (min-width:235px){.jc.pt2:not(.tiny) .ptag.sh{display:none}.jc.pt2:not(.tiny) .ptag.lg{display:inline-block}}
+.jc.xn .pd{width:7px;height:7px}
+.jc.xn .pd.t{border-width:1.5px}
+.jc.xn .pdots{margin-right:0;gap:1px}
+.jm .ptagl{margin-top:2px}
+.jt .pdots{margin-right:4px}
+.tprop{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .jm{padding:6px 8px;position:relative}
 
 /* drive time between two jobs (the script's DRIVE TIMES block): a chip over the grid that never takes a tap or a drag, and a line between the technician's cards */
@@ -229,7 +259,7 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
   .tray h3{display:none}
   .tray .traynote{white-space:nowrap;margin:0}
   .tray .jm{flex:0 0 auto;max-width:210px;min-height:0;padding:2px 8px;display:flex;gap:6px;align-items:center;white-space:nowrap}
-  .tray .jm .ds,.tray .jm .stl,.tray .jm .tag{display:none}
+  .tray .jm .ds,.tray .jm .stl,.tray .jm .tag,.tray .jm .ptagl{display:none}
 }
 
 /* week view: a time grid, one column per day, split into one lane per person when everyone is shown */
@@ -285,6 +315,20 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .btn.bad{background:var(--surface);color:var(--over);border-color:var(--over)}
 .btn[disabled],.btn.off{opacity:.4;cursor:default;pointer-events:none}
 .btn.sm{min-height:44px;flex:0 0 auto;font-size:14px}
+/* the Barrier proposal / Baiting proposal buttons on the job sheet: pressed = orange, the same orange the job is lit up in */
+.btn.pbtn{border-color:var(--prop);color:var(--propInk);background:var(--surface)}
+.btn.pbtn[aria-pressed="true"]{background:var(--prop);color:var(--propOn);border-color:var(--prop)}
+.btn.pbtn[aria-pressed="true"]:before{content:"\2713\00a0"}
+.btn.pbtn[disabled]{opacity:.6;pointer-events:none}
+/* the Proposals to do list (⋯ menu) */
+.prow{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:56px;text-align:left;padding:10px 12px;margin:0 0 8px;border:1px solid var(--line2);border-radius:12px;background:var(--surface);box-shadow:inset 4px 0 0 var(--prop)}
+.prow:hover,.prow:focus-visible{background:var(--surface2)}
+.prow.cx{opacity:.6}
+.prow .pwhen{flex:0 0 78px;font-family:"Spline Sans Mono",monospace;font-size:12.5px;font-weight:600;color:var(--ink2);line-height:1.35}
+.prow .pmain{flex:1;min-width:0}
+.prow .pmain b{display:block;overflow-wrap:anywhere}
+.prow .pmain span{display:block;font-size:13.5px;color:var(--ink2)}
+.prow .ptags{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex:0 0 auto}
 
 /* login / status screens */
 .authwrap{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
@@ -347,6 +391,9 @@ textarea.sdesc{min-height:64px}
 .acitem b{display:block}
 .acitem span{display:block;font-size:12.5px;color:var(--ink2)}
 .acitem:hover,.acitem:focus-visible{background:var(--surface2)}
+.acitem.site{border-left:3px solid var(--deep)}      /* a site on file for a client: "<address> · <client name>" */
+.acitem.site .sa{display:inline;font-weight:700;font-size:inherit;color:var(--ink)}
+.acitem.site .sc{display:inline;font-size:inherit;color:var(--ink2)}
 .ro{padding:10px 12px;border:1px solid var(--line);background:var(--surface2);border-radius:10px;font-size:15px;min-height:44px}
 .recs{font-size:14px;color:var(--ink2);margin:2px 0 6px}
 .recs .y{color:var(--ok);font-weight:700}
@@ -419,17 +466,17 @@ body.is-master #toast.act{bottom:auto;top:calc(4px + env(safe-area-inset-top));p
 html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      /* with the bar open (and the keyboard up), a toast at the bottom would be behind them */
 
 /* Booking bar (master): docked to the bottom of the screen, never covering the calendar. The grid is fitted to the room above it (barMeasure puts the
-   bar's height in --barh), and once a client and a service are picked the free spots a job fits in show green on the grid. On a computer it is
-   bottom-centre and 560px wide. The client box is outside the part that scrolls, so its list can open upwards over the calendar. */
+   bar's height in --barh), and once an address or a name and a service are picked the free spots a job fits in show green on the grid. On a computer it is
+   bottom-centre and 560px wide. The job address box (the first box) is outside the part that scrolls, so its list can open upwards over the calendar. */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:560px;margin:0 auto;background:var(--surface);border:1px solid var(--line2);border-bottom:none;
   border-radius:18px 18px 0 0;box-shadow:0 -6px 26px rgba(0,0,0,.24);display:flex;flex-direction:column;
   max-height:max(150px,calc(var(--vvh,100vh) * .45));padding-bottom:env(safe-area-inset-bottom)}      /* (never less than the top row and the buttons, 150px, so they don't hang out of the bar when the keyboard leaves little room) */
 @media(min-width:720px){.bar{max-height:min(44vh,400px)}}
 html.kb-open .bar{padding-bottom:0}      /* the phone's keyboard is up: the bar sits on it, no home-bar gap */
-/* A box in More (phone, address, email, notes) is being typed in with the keyboard up (barEditFlag): the bar takes the room above the keyboard instead of 45% of it, so the
-   box and the address suggestions can be seen. The client box (in the top row) doesn't do this: its list opens upwards over the calendar, and the bar must stay low for that. */
+/* A box under the address (name, phone, email, notes) is being typed in with the keyboard up (barEditFlag): the bar takes the room above the keyboard instead of 45% of it, so the
+   box and the name suggestions can be seen. The job address box (in the top row) doesn't do this: its list opens upwards over the calendar, and the bar must stay low for that. */
 html.kb-open.bar-edit .bar{max-height:max(150px,calc(var(--vvh,100vh) - 12px))}
-html.bar-edit .bar #f-addr-list{max-height:min(200px,max(90px,calc(var(--vvh,100vh) - 215px)))}
+html.bar-edit .bar #f-name-list{max-height:min(200px,max(90px,calc(var(--vvh,100vh) - 215px)))}
 .barhead{position:relative;flex:0 0 auto;display:flex;align-items:center;gap:2px;padding:13px 4px 0 12px}
 .barhead:before{content:"";position:absolute;top:6px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:var(--line2)}      /* the drag-handle look */
 .bar .barhead .fld{flex:1;min-width:0;margin:0;position:static}
@@ -446,7 +493,7 @@ html.bar-edit .bar #f-addr-list{max-height:min(200px,max(90px,calc(var(--vvh,100
 .bar .seg .segb{min-height:36px;padding:0 6px}
 .bar .sites{flex-wrap:nowrap;overflow-x:auto;margin:0 0 6px;padding-bottom:2px;-webkit-overflow-scrolling:touch}
 .bar .sites>*{flex:0 0 auto}
-.bar #f-addr-list{position:static;margin:4px 0 0;max-height:200px}
+.bar #f-name-list{position:static;margin:4px 0 0;max-height:200px}      /* the name's list sits in the part that scrolls, under the box (the address list is in the top row and opens upwards) */
 .bar textarea.inp{min-height:0;resize:none}
 .barwho{display:flex;align-items:center;gap:8px;margin:6px 0 2px}
 .barwho .lbl{margin:0;flex:0 0 auto}
@@ -593,6 +640,8 @@ const SVC_SHOW=8;           // services shown before "More services"
 const G_AUTO="https://places.googleapis.com/v1/places:autocomplete",G_PLACE="https://places.googleapis.com/v1/places/";      // address lookup (Google Places, the key is in lpc-config.js)
 const G_LAT=-28.65,G_LNG=153.56,G_RADIUS=50000;      // biased to the Northern Rivers (50 km is as wide as Google allows)
 const ADDR_MIN=4,ADDR_WAIT=250;                      // characters before a lookup, and ms of quiet after typing
+const ADDR_SITE_MIN=3,ADDR_SITES=5;                  // characters before the client sites on file are searched, and how many of them the list shows
+const ADDR_HOLD=600;                                 // ms Google's rows wait for the client sites on file, so the list doesn't jump when the sites land above them
 const ADDR_SAVE_WAIT=2000;                           // ms a save (or More details) waits for a just-tapped address's details, then goes ahead with the address as typed
 const MORE_KEY="lpc_sheet_more_v1";     // the job sheet's "More" row: open or shut, remembered on this device
 const QUICK_KEY="lpc_quick_prefs_v1";   // the booking bar remembers who it was last booking for
@@ -655,6 +704,7 @@ const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
   scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
   uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,noAddonCol:false,menuOpen:false,
+  noPropCols:false,      // the proposal flag columns (10_proposal_flags.sql) aren't in the database: the Barrier / Baiting buttons and the Proposals to do list stay hidden
   noPriceTbl:false,priceNoted:false,priceFailNoted:false,usualFail:false,priceChan:null,      // prices (master only): the 08 tables are missing / that was said once / a price load failed and was said / usual prices didn't load / the realtime channel for the two price tables
 
   rid:0,barH:0,barPrevView:null};      // rid: counts body redraws (the booking bar's green spots are drawn again after each). barH: room the bar takes at the foot of the screen. barPrevView: the view to go back to when the bar closes (it was switched to Week).
@@ -732,16 +782,90 @@ function safeColour(c){return /^#[0-9a-fA-F]{3,8}$/.test(String(c||""))?c:UNAS;}
 function staffColour(id){const s=id&&S.staffById[id];return safeColour(s&&s.colour);}
 function activeStaff(){return S.staff.filter(function(s){return s.active;});}
 function cName(j){return (j.client&&j.client.name)?j.client.name:"No client";}
+function clientNameOf(j){return trim(j&&j.client&&j.client.name);}      // "" when the job has no client (a job can be booked with just an address)
 function composeAddr(street,suburb,state,pc){const tail=[suburb,state,pc].map(trim).filter(Boolean).join(" ");return [trim(street),tail].filter(Boolean).join(", ");}
-function suburbOf(j){
-  if(j.client&&j.client.suburb)return j.client.suburb;
-  const a=trim(j.address);if(a.indexOf(",")<0)return "";
-  const last=a.split(",").pop();
-  return trim(last.replace(/\b(NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/i,"").replace(/\b\d{4}\b/,""));
+/* ----- what a job is called on the calendar: its ADDRESS first, the client's name under it -----
+   The address is what Mitch types in first when he books, so it is the top line of every card. A job with no address shows the client's name on that line instead, and a job with
+   neither shows "No client". How much of the address fits depends on the room: street and suburb ("3 Hayter St, Suffolk Pk"), just the street, or in the tightest lanes of
+   the week view only the street's name. The full address, the client and the services are always in the card's tooltip (jobTip). */
+// A street with a number in front: "3 Hayter St", "5/296 Tyagarah Rd", "Lot 4 Smith Rd", "1/23-25 Smith St". Not a unit alone ("Unit 2"), a building's name, or a postcode with its state ("2482 NSW").
+function numberedStreet(s){
+  const t=trim(s);
+  return /^(?:(?:unit|u|lot|shop|suite)\.?\s*)?\d+[A-Za-z]?(?:\s*[\/-]\s*\d+[A-Za-z]?)*\s+[A-Za-z]/i.test(t)&&!/^\d{4}\s+(?:NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/i.test(t);
+}
+// "3 Hayter St, Byron Bay NSW 2481" -> {street:"3 Hayter St", suburb:"Byron Bay"} (the state and postcode are left off). With no comma the whole thing is the street, less a state and postcode on the end.
+// When the first bit before the comma is a unit, a shop or a building's name and the street comes next, the street is that next bit: "Unit 2, 5 Smith St, Byron Bay" -> "2/5 Smith St",
+// "Shop 3, 12 Jonson St, ..." -> "12 Jonson St", "The Northcott Society, 14 Martin St, Ballina 2478" -> "14 Martin St". (The whole address is always in the card's tooltip.)
+function addrBits(a){
+  const t=trim(a);if(!t)return {street:"",suburb:""};
+  const parts=t.split(",").map(trim).filter(Boolean);
+  let street=parts[0]||"",from=1;
+  if(parts.length>=2&&!numberedStreet(parts[0])&&numberedStreet(parts[1])){
+    const um=/^(?:unit|u|apt|apartment|flat|villa|townhouse)\.?\s*([A-Za-z]?\d+[A-Za-z]?)$/i.exec(parts[0]);
+    street=(um&&!/^\d+[A-Za-z]?\s*\//.test(parts[1]))?um[1]+"/"+parts[1]:parts[1];
+    from=2;
+  }
+  if(parts.length===1)street=trim(street.replace(/\s+(?:NSW|VIC|QLD|SA|WA|TAS|NT|ACT)(?:\s+\d{4})?\s*$/i,"").replace(/\s+\d{4}\s*$/,""))||street;
+  const tail=trim(parts.slice(from).join(" ").replace(/\b(?:NSW|VIC|QLD|SA|WA|TAS|NT|ACT)\b/gi," ").replace(/\b\d{4}\b/g," ").replace(/\s+/g," "));
+  return {street:street,suburb:tail};
+}
+const SUB_ABBR=[[/\bPark\b/i,"Pk"],[/\bHeights\b/i,"Hts"],[/\bHeads\b/i,"Hds"],[/\bBeach\b/i,"Bch"],[/\bMount\b/i,"Mt"],[/\bPoint\b/i,"Pt"],[/\bNorth\b/i,"Nth"],[/\bSouth\b/i,"Sth"],[/\bCreek\b/i,"Ck"],[/\bValley\b/i,"Vly"]];
+function abbrSuburb(sub){let t=trim(sub);SUB_ABBR.forEach(function(p){t=t.replace(p[0],p[1]);});return t;}
+// "3 Hayter St" -> "Hayter St", "5/296 Tyagarah Rd" -> "Tyagarah Rd", "Lot 4 Smith Rd" -> "Smith Rd" (a street with no number is left alone)
+function streetName(street){
+  let t=trim(street);
+  for(let i=0;i<2;i++){
+    const m=/^(?:(?:unit|u|lot|shop|suite)\.?\s*)?\d[\w\/\-]*\s+(\S.*)$/i.exec(t);
+    if(!m)break;t=trim(m[1]);
+  }
+  t=trim(t.replace(/^[\s\-\u2013\/:.,]+/,""));      // ("55178 - Northwind" -> "Northwind", not "-")
+  return t||trim(street);
+}
+// The address part of a card's top line. chars = about how many letters fit (null = all of it): street and suburb if they fit, else with the suburb shortened ("Suffolk Pk"), else just the street.
+function addrLine(j,chars){
+  const b=addrBits(j&&j.address);if(!b.street)return "";
+  if(!b.suburb)return b.street;
+  const full=b.street+", "+b.suburb;
+  if(chars==null||full.length<=chars)return full;
+  const sh=b.street+", "+abbrSuburb(b.suburb);
+  return sh.length<=chars?sh:b.street;
+}
+// The top line of a card: the address, or (no address) the client's name, or "No client".
+function mainLine(j,chars){return addrLine(j,chars)||clientNameOf(j)||"No client";}
+// The line under it: the client's name, only when the top line is the address. "" otherwise.
+function subLine(j){return (addrBits(j&&j.address).street&&clientNameOf(j))||"";}
+// The tight versions for the narrow lanes of the week view: nw = the street's name without the number ("Hayter St": a 44-70px lane has no room for a number AND a name), xn = only the
+// street name's first word ("Hayter"). Without an address it is the client's first word, as before.
+function mainTight(j,xn){
+  const st=addrBits(j&&j.address).street;
+  if(!st)return firstWord(clientNameOf(j)||"No client");
+  const nm=streetName(st);
+  return xn?(firstWord(nm)||firstWord(st)):(nm||st);
+}
+// letters that fit in a card w px wide (about 6.9px a letter in the card's bold 12.5px text)
+function fitChars(w){return Math.max(8,Math.floor((w-14)/6.9));}
+/* ----- proposal flags (10_proposal_flags.sql): a termite inspection job that needs a barrier proposal and/or a baiting proposal -----
+   jobs.proposal_barrier and jobs.proposal_baiting, ticked by Mitch or the worker on the job sheet. A job with either one on is lit up orange on every card until they are unticked.
+   If the database hasn't had the 10 update yet, the first answer that shows it switches the buttons off for the session (S.noPropCols), quietly. */
+function propOf(j){return {b:!!(j&&j.proposal_barrier),t:!!(j&&j.proposal_baiting)};}
+function propText(j,compact){const p=propOf(j);if(p.b&&p.t)return compact?"Bar + Bait":"Barrier + Baiting";return p.b?"Barrier":p.t?"Baiting":"";}
+function hasProp(j){const p=propOf(j);return !!j&&j.status!=="cancelled"&&(p.b||p.t);}      // (a cancelled job is not lit up: nothing to quote)
+function hpCls(j){return hasProp(j)?" hp":"";}
+// The marks on a card: a dot for each proposal (solid = barrier, ring = baiting), and (withWords, the timed grid cards) the words too: "Barrier", "Baiting", "Bar + Bait" or
+// "Barrier + Baiting". CSS (container queries on the card's own width, see .jc) shows the words when the card is wide enough and the dots when it is not.
+function propMarks(j,withWords){
+  if(!hasProp(j))return "";
+  const p=propOf(j);
+  let h='<span class="pdots" aria-hidden="true">'+(p.b?'<i class="pd b"></i>':"")+(p.t?'<i class="pd t"></i>':"")+'</span>';
+  if(withWords){
+    if(p.b&&p.t)h+='<span class="ptag sh" aria-hidden="true">'+esc(propText(j,true))+'</span><span class="ptag lg" aria-hidden="true">'+esc(propText(j))+'</span>';
+    else h+='<span class="ptag" aria-hidden="true">'+esc(propText(j))+'</span>';
+  }
+  return h;
 }
 function byTime(a,b){
   const x=tmToMin(a.start_time),y=tmToMin(b.start_time);
-  if(x==null&&y==null)return cName(a).localeCompare(cName(b));
+  if(x==null&&y==null)return mainLine(a).localeCompare(mainLine(b));
   if(x==null)return 1;if(y==null)return -1;return x-y;
 }
 function visibleJobs(){return S.jobs.filter(function(j){return (S.isMaster&&S.showCancelled)||j.status!=="cancelled";});}
@@ -999,8 +1123,8 @@ function offerDraft(){
   // never show one person's draft to another, and don't keep old ones around
   if(d.uid!==S.userId||!d.form||!(Date.now()-d.at<DRAFT_MAX_AGE)){clearDraft();return;}
   const el=byId("dr");if(!el)return;
-  const who=trim(d.form.name);
-  el.innerHTML='<div class="banner warn">You were logged out while editing '+(who?esc(who)+"'s job":"a job")+'. What you typed is kept. '+
+  const who=trim(d.form.name),at=trim(d.form.address);
+  el.innerHTML='<div class="banner warn">You were logged out while editing '+(who?esc(who)+"'s job":at?"the job at "+esc(at):"a job")+'. What you typed is kept. '+
     '<button class="linkbtn" data-act="draftrestore">Restore</button><button class="linkbtn" data-act="draftdiscard">Discard</button></div>';
   renderBody();      // the banner takes room the grid was fitted to: fit it again
 }
@@ -1093,7 +1217,7 @@ function stopApp(){
   clearTimeout(S.refetchT);clearInterval(S.pollT);S.pollT=null;clearTimeout(S.tbDateT);S.tbDateT=0;S.tbDateV="";S.tbDateFocus=false;S.lastRenderKey="";
   if(S.channel){try{S.sb.removeChannel(S.channel);}catch(e){}S.channel=null;}
   if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
-  S.noPriceTbl=false;S.priceNoted=false;S.priceFailNoted=false;S.usualFail=false;      // the next person to log in finds out for themselves
+  S.noPriceTbl=false;S.priceNoted=false;S.priceFailNoted=false;S.usualFail=false;S.noPropCols=false;      // the next person to log in finds out for themselves
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
   D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
   driveWipe();      // the saved drive times have client addresses in them: they don't stay on the device after a log out (this runs for a log out, a login that ran out, and a different person logging in)
@@ -1121,11 +1245,13 @@ async function fetchJobs(silent){
       return q;
     });
     if(seq!==S.fetchSeq)return;
+    if(S.pending>0){scheduleRefetch(500);return;}      // a change was sent while this was on its way: its answer may not have it yet and would put the old values back (a ticked proposal flickering off, a moved job jumping back). Ask again after.
     if(r.error)throw r.error;
     const rows=r.data||[];
     // Master only: the prices of these jobs (and, on a refresh, the usual prices) come from their own tables and are merged into the jobs in memory. A worker never asks.
     if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null]);if(seq!==S.fetchSeq)return;}
     setJobs(rows);S.range=range;S.loaded=true;S.loadErr="";
+    checkPropCols(rows);syncSheetProps();
     renderBody();
   }catch(e){
     if(seq!==S.fetchSeq)return;
@@ -1229,6 +1355,7 @@ function menuHtml(){
     '<div class="menu" id="menu" role="menu" hidden>'+
     (M?'<button type="button" class="mi" role="menuitemcheckbox" data-act="togglecanc" aria-checked="'+(S.showCancelled?"true":"false")+'"><span class="mck" aria-hidden="true">'+IC.tick+'</span>Show cancelled</button>'+
       '<button type="button" class="mi" role="menuitem" data-act="svcpanel">Services</button>'+
+      '<button type="button" class="mi" role="menuitem" id="mi-props" data-act="proplist"'+(S.noPropCols?" hidden":"")+'>Proposals to do</button>'+
       '<div class="mi mlive" role="presentation"><span class="live"></span></div>':"")+
     '<button type="button" class="mi" role="menuitem" data-act="signout">Log out</button></div></div>';
 }
@@ -1244,7 +1371,7 @@ function closeMenu(refocus){
   if(b){b.setAttribute("aria-expanded","false");if(refocus){try{b.focus({preventScroll:true});}catch(e){}}}
 }
 function menuKey(e){      // arrow keys move between the items, Escape shuts the menu
-  const items=$$all("#menu button.mi"),i=items.indexOf(document.activeElement);
+  const items=$$all("#menu button.mi").filter(function(b){return !b.hidden;}),i=items.indexOf(document.activeElement);
   if(e.key==="ArrowDown"){e.preventDefault();(items[i+1]||items[0]).focus();}
   else if(e.key==="ArrowUp"){e.preventDefault();(items[i-1]||items[items.length-1]).focus();}
 }
@@ -1403,26 +1530,30 @@ function stLabel(st){return st==="done"?"Done":st==="cancelled"?"Cancelled":"Boo
 function noteOf(j){return trim(j&&j.client&&j.client.notes);}
 function noteMark(j){return noteOf(j)?'<span class="cn" aria-hidden="true">!</span>':"";}
 function oneLine(s,max){const t=String(s==null?"":s).replace(/\s+/g," ").trim();return t.length>max?t.slice(0,max-3)+"...":t;}
+// The small cards (the Unassigned list): time, then the address (or the client's name if there is no address), then the client's name and the services.
 function cardHtml(j,cls,style){
   const s=tmToMin(j.start_time),done=j.status==="done";
-  const sub=[suburbOf(j),svcLabel(j,30)].filter(Boolean).join(" · ");
+  const sub=[subLine(j),svcLabel(j,30)].filter(Boolean).join(" · ");
   const time=s==null?"No time":fmtMin(s);
   const range=s==null?"":" to "+fmtMin(s+j.duration_min);
   const tip=jobTip(j);
-  return '<div class="'+cls+' st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+(style||"")+'">'+
+  return '<div class="'+cls+' st-'+esc(j.status)+hpCls(j)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+(style||"")+'">'+
     '<div class="l1"><span class="tm">'+esc(time)+'</span><span class="te">'+esc(range)+'</span>'+(done?IC.tick:"")+'</div>'+
-    '<div class="nm">'+noteMark(j)+esc(cName(j))+'</div>'+      // (in the name, not the time line: the slim no-time cards hide the time line)
+    '<div class="nm">'+noteMark(j)+propMarks(j,false)+esc(mainLine(j))+'</div>'+      // (in the name, not the time line: the slim no-time cards hide the time line)
     '<div class="ds">'+esc(sub)+'</div>'+
+    (hasProp(j)?'<div class="ptagl" aria-hidden="true"><span class="ptag">'+esc(propText(j))+'</span></div>':"")+
     '<span class="stl '+esc(j.status)+'">'+esc(stLabel(j.status))+'</span></div>';
 }
 function miniHtml(j,tag,extra){
   const tagHtml=tag?'<div class="tag">'+esc(tag)+'</div>':"";
   return cardHtml(j,"jm"+(extra?" "+extra:""),"").replace('<span class="stl',function(){return tagHtml+'<span class="stl';});
 }
-// what a screen reader says and a mouse hover shows for a job: the lot
+// what a screen reader says and a mouse hover shows for a job: the lot (the full address, the client, the services, the time, and a proposal to do)
 function jobTip(j){
-  const s=tmToMin(j.start_time),subFull=[suburbOf(j),svcNames(j).join(" + ")].filter(Boolean).join(" · ");
-  return cName(j)+(s==null?", no start time":", "+fmtMin(s)+" to "+fmtMin(s+j.duration_min))+(subFull?", "+subFull:"")+", "+stLabel(j.status)+(noteOf(j)?". Client note: "+oneLine(noteOf(j),400):"");
+  const s=tmToMin(j.start_time),a=trim(j.address),c=clientNameOf(j),sv=svcNames(j).join(" + ");
+  const who=[a,c].filter(Boolean);if(!who.length)who.push("No address or client name");
+  const when=s==null?"No start time":fmtMin(s)+" to "+fmtMin(s+j.duration_min);
+  return who.concat([sv,when,stLabel(j.status)]).filter(Boolean).join(". ")+(hasProp(j)?". Proposal to do: "+propText(j):"")+(noteOf(j)?". Client note: "+oneLine(noteOf(j),400):"");
 }
 // What a timed card has room for (see the .jc CSS), from its height and width in px. Week lanes on a phone are very narrow.
 function cardFit(h,w){
@@ -1431,21 +1562,26 @@ function cardFit(h,w){
   if(w<44)c+=" xn";
   return c;
 }
-// A job on the time grid: "8:00-9:00", client, then suburb and services if there is room. Master gets the stretch handle on the bottom edge.
-function gridCardHtml(j,s,dur,fit,style){
-  const nw=/\bnw\b/.test(fit),done=j.status==="done",tip=jobTip(j);
-  const sb=suburbOf(j),sv=svcLabel(j,34);
-  return '<div class="jc '+fit+' st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+style+'">'+
-    '<div class="l1"><span class="tm">'+esc(cardTime(fit,s,dur))+'</span>'+(done?IC.tick:"")+noteMark(j)+'</div>'+
-    '<div class="nm">'+esc(nw?firstWord(cName(j)):cName(j))+'</div>'+
-    ((sb||sv)&&!nw?'<div class="ds">'+(sb?'<span class="sb">'+esc(sb)+'</span>':"")+(sb&&sv?'<span class="sep"> · </span>':"")+(sv?'<span class="sv">'+esc(sv)+'</span>':"")+'</div>':"")+
+// A job on the time grid: "8:00-9:00", the address (street and suburb if they fit, just the street when tight), then the client's name and the services if there is room.
+// Master gets the stretch handle on the bottom edge. w = the card's width in px (picks how much of the address fits).
+function gridCardHtml(j,s,dur,fit,style,w){
+  const nw=/\bnw\b/.test(fit),xn=/\bxn\b/.test(fit),done=j.status==="done",tip=jobTip(j);
+  w=+w||150;
+  const cl=subLine(j),sv=svcLabel(j,34);
+  const main=nw?mainTight(j,xn):mainLine(j,fitChars(w));
+  const pr=propOf(j),pc=hasProp(j)?(pr.b&&pr.t?" pt2":" pt1"):"";
+  return '<div class="jc '+fit+' st-'+esc(j.status)+hpCls(j)+pc+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+style+'">'+
+    '<div class="l1"><span class="tm">'+esc(cardTime(fit,s,dur))+'</span>'+(done?IC.tick:"")+noteMark(j)+propMarks(j,true)+'</div>'+
+    '<div class="nm">'+esc(main)+'</div>'+
+    ((cl||sv)&&!nw?'<div class="ds">'+(cl?'<span class="cl">'+esc(cl)+'</span>':"")+(cl&&sv?'<span class="sep"> · </span>':"")+(sv?'<span class="sv">'+esc(sv)+'</span>':"")+'</div>':"")+
     (S.isMaster?'<div class="rz" aria-hidden="true"></div>':"")+'</div>';
 }
-// a job as a small chip (no start time yet, and the week's Unassigned row). pre = a grey bit in front (the day and time), label = instead of the client name.
-function chipHtml(j,pre,label){
+// a job as a small chip (no start time yet, and the week's Unassigned row). pre = a grey bit in front (the day and time), label = instead of the job's address (or its client's name),
+// chars = about how many letters fit.
+function chipHtml(j,pre,label,chars){
   const tip=jobTip(j);
-  return '<div class="jt st-'+esc(j.status)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
-    (pre?'<span class="ct">'+esc(pre)+'</span>':"")+noteMark(j)+esc(label||cName(j))+'</div>';
+  return '<div class="jt st-'+esc(j.status)+hpCls(j)+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
+    (pre?'<span class="ct">'+esc(pre)+'</span>':"")+noteMark(j)+propMarks(j,false)+esc(label||mainLine(j,chars||26))+'</div>';
 }
 
 /* ---------- day totals: "5 jobs · 7 h" (timed and no-time jobs, cancelled ones left out) ---------- */
@@ -1502,7 +1638,8 @@ function laneCardsHtml(list,g,laneW){
   lanes(items);
   return items.map(function(it){
     const top=(it.s-g.gs)*g.ppm,h=Math.max(it.d*g.ppm-2,16),w=100/it.lanes,gap=laneW/it.lanes<44?1:3;      // the tightest lanes keep every pixel
-    return gridCardHtml(it.j,it.s,it.d,cardFit(h,laneW/it.lanes-gap),"top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - "+gap+"px)");
+    const cw=laneW/it.lanes-gap;
+    return gridCardHtml(it.j,it.s,it.d,cardFit(h,cw),"top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - "+gap+"px)",cw);
   }).join("");
 }
 
@@ -1555,7 +1692,7 @@ function dayHtml(){
     head+='<div class="ch"><span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span>'+totHtml(mine,short,c.name)+'</div>';
     const noTime=mine.filter(function(j){return !isTimed(j);}).sort(byTime);
     nt+='<div class="ntc" data-drop="notime" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">'+
-      (noTime.length?noTime.map(function(j){return chipHtml(j,"","");}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">+ Add</button>')+'</div>';
+      (noTime.length?noTime.map(function(j){return chipHtml(j,"","",fitChars(colW-12));}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">+ Add</button>')+'</div>';
     body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW)+'</div>';
   });
   return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+cols.length+'">'+
@@ -1609,7 +1746,7 @@ function weekHtml(){
       const t=dayTot(lane);
       strip+='<div class="wlh" data-drop="notime" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="--sc:'+col+'" title="'+esc(c.name+(t.n?": "+totTxt(t,false):""))+'">'+
         (many?'<div class="lt">'+esc(firstWord(c.name)+(t.n?" "+totTxt(t,true):""))+'</div>':"")+
-        lane.filter(function(j){return !isTimed(j);}).sort(byTime).map(function(j){return chipHtml(j,"",laneW<90?firstWord(cName(j)):"");}).join("")+'</div>';
+        lane.filter(function(j){return !isTimed(j);}).sort(byTime).map(function(j){return chipHtml(j,"",laneW<90?mainTight(j,laneW<44):"",fitChars(laneW-10));}).join("")+'</div>';
       body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(d,g)+laneCardsHtml(lane,g,laneW)+'</div>';
     });
     strip+='</div>';body+='</div>';
@@ -1625,7 +1762,7 @@ function weekTrayHtml(list){
   if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
   h+=sorted.map(function(j){
     const s=tmToMin(j.start_time),dd=parseYmd(j.job_date),was=j.staff_id&&S.staffById[j.staff_id];
-    return chipHtml(j,DOW[dd.getDay()]+(s==null?"":" "+hm(s)),cName(j)+(was?" (was "+was.name+")":""));
+    return chipHtml(j,DOW[dd.getDay()]+(s==null?"":" "+hm(s)),mainLine(j,34)+(was?" (was "+was.name+")":""));
   }).join("");
   return h+'</aside>';
 }
@@ -1638,16 +1775,21 @@ function techHtml(){
   mine.forEach(function(j){h+=techCard(j);});
   return h+'</div>';
 }
+// The worker's card: the job's address is the big line, the client's name under it (no address: the name is the big line and the client's own address, if they have one, goes under it).
 function techCard(j){
   const s=tmToMin(j.start_time),c=j.client||{};
-  const addr=trim(j.address)||composeAddr(c.street,c.suburb,c.state,c.postcode);
+  const jaddr=trim(j.address),cname=clientNameOf(j),caddr=composeAddr(c.street,c.suburb,c.state,c.postcode);
+  const addr=jaddr||caddr;      // (what Maps is given)
+  const main=jaddr||cname||"No client",second=jaddr?cname:caddr;
   const num=String(c.phone||"").replace(/[^\d+]/g,"");
-  let h='<div class="tcard st-'+esc(j.status)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
+  const pr=propOf(j);
+  let h='<div class="tcard st-'+esc(j.status)+hpCls(j)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
     '<div class="tmain" data-job="'+esc(j.id)+'" role="button" tabindex="0">'+
     '<div class="ttime">'+(s==null?"No time set":esc(fmtMin(s)+" to "+fmtMin(s+j.duration_min)))+(j.status==="done"?" "+IC.tick:"")+'</div>'+
-    '<div class="tname">'+esc(cName(j))+'</div>'+
-    (addr?'<div class="taddr">'+esc(addr)+'</div>':"")+
+    '<div class="tname">'+esc(main)+'</div>'+
+    (second?'<div class="taddr">'+esc(second)+'</div>':"")+
     (svcLabel(j,80)?'<div class="tsvc">'+esc(svcLabel(j,80))+'</div>':"")+
+    (hasProp(j)?'<div class="tprop">'+(pr.b?'<span class="ptag big">Barrier proposal</span>':"")+(pr.t?'<span class="ptag big">Baiting proposal</span>':"")+'</div>':"")+
     (noteOf(j)?'<div class="tcn" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(noteOf(j))+'</span></div>':"")+
     (j.notes?'<div class="tnote">'+esc(j.notes)+'</div>':"")+
     '<span class="stl '+esc(j.status)+'">'+esc(stLabel(j.status))+'</span></div><div class="tacts">';
@@ -1935,14 +2077,18 @@ function driveGeom(p){
   const aBot=(p.a.s-g.gs)*ppm+Math.max(Math.max(p.a.d,1)*ppm-2,16),topB=(p.b.s-g.gs)*ppm,free=topB-aBot;
   return {H:H,aBot:aBot,topB:topB,free:free,inGap:free>=H+4};
 }
-// The only reads from the page: the second card's width, and (when the chip has to go on the card itself) how much of its first line the time and tick use.
+// The only reads from the page: the second card's width, and (when the chip has to go on the card itself) how much of its first line the time, tick and proposal marks use.
+// m.tag = how much of that is the proposal's words ("BARRIER", "BAITING", which sit at the right end of the line): the chip is drawn to the left of them, not over them.
 function driveMeasure(p,geo){
-  const m={w:0,used:0};
+  const m={w:0,used:0,tag:0};
   if(!p.col)return m;
   const b=p.b.el;m.w=b.offsetWidth;
   if(!geo.inGap){
     const l1=b.querySelector(".l1");
-    if(l1)Array.prototype.forEach.call(l1.children,function(c){m.used+=c.offsetWidth+4;});
+    if(l1)Array.prototype.forEach.call(l1.children,function(c){
+      m.used+=c.offsetWidth+4;
+      if(c.classList.contains("ptag")&&c.offsetWidth)m.tag+=c.offsetWidth+4;      // (only the one that is showing has a width)
+    });
   }
   return m;
 }
@@ -1974,6 +2120,7 @@ function driveNode(p,hit,geo,m){
     return d;
   }
   d.className="drv "+(info.warn?"warn ":"")+cls;d.style.top=top+"px";
+  if(cls==="edge"&&m.tag>0)d.style.paddingRight=(m.tag+5)+"px";      // the chip sits to the left of the proposal's words (5px = the card's own right padding), so the words stay readable
   d.innerHTML='<span class="dc">'+IC.car+esc(txt)+'</span>';
   return d;
 }
@@ -2370,7 +2517,8 @@ function openSheet(job,defaults){
     durHand:!!job,durAuto:false,durBase:null,svcTouched:false,      // job length: set by hand (a saved job's length counts as set by hand), set from the services, services ticked on this sheet
     legacyPrice:(S.isMaster&&job&&job._price!=null&&!svc.length)?job._price:null,      // an old job with a price but no service: the only service ticked takes it (kept until the prices save)
     legacyHeld:"",      // the service that currently holds that price
-    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null};
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,
+    asSeq:0,acSites:[],acG:[],acSDone:false,acGDone:false,propBusy:{}};      // asSeq / acSites / acG: the address list's two halves (clients' sites on file, Google's suggestions)
   byId("sheet").innerHTML=sheetHtml();
   document.documentElement.classList.add("sheet-open");
   SH.prevFocus=document.activeElement;
@@ -2381,17 +2529,19 @@ function openSheet(job,defaults){
   SH.baseline=snap();
   if(SH.jobId){loadRecs();loadPhotos();}      // loadPhotos also counts photos still waiting to upload
   if(SH.clientId)loadSites(SH,SH.clientId);
-  try{if(S.isMaster&&isNew&&window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus();}}catch(e){}
+  try{if(S.isMaster&&isNew&&window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-addr");if(n)n.focus();}}catch(e){}
 }
+// The sheet's title is the job's address (the client's name if the job has none), and the client's name goes in the line under it.
+function sheetClientName(){return (SH.client&&SH.client.name)||clientNameOf(SH.job)||"";}
 function sheetTitle(){
   if(SH.isNew)return "New job";
-  const n=(SH.client&&SH.client.name)||(SH.job&&SH.job.client&&SH.job.client.name);
-  return n||"Job";
+  const a=trim(SH.job&&SH.job.address);
+  return a||sheetClientName()||"Job";
 }
 function sheetSub(){
   if(SH.isNew)return "Add a job to the calendar";
-  const j=SH.job,s=tmToMin(j.start_time);
-  let t=niceDate(j.job_date)+(s==null?", no start time":", "+fmtMin(s)+" to "+fmtMin(s+j.duration_min));
+  const j=SH.job,s=tmToMin(j.start_time),cn=trim(j.address)?sheetClientName():"";
+  let t=(cn?cn+" · ":"")+niceDate(j.job_date)+(s==null?", no start time":", "+fmtMin(s)+" to "+fmtMin(s+j.duration_min));
   t+=" · "+stLabel(j.status);
   if(j.status==="done"&&j.done_at)t+=" "+fmtStamp(j.done_at);
   return t;
@@ -2522,11 +2672,15 @@ function sheetHtml(){
     '<div class="shhead"><div class="shttl"><h2 id="sh-title">'+esc(sheetTitle())+'</h2><div class="sb" id="sh-sub">'+esc(sheetSub())+'</div></div>'+
     '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
     '<div class="cnstrip" id="cn-strip" role="note" hidden></div>'+      // the client's notes (dog, gate code ...), under the title where they can't be missed
-    '<div class="shbody"><div id="sh-msg" role="alert"></div>'+
-    '<div class="btns" id="sh-contact">'+
-      '<a class="btn" id="ln-ring">'+IC.phone+' Ring</a><a class="btn" id="ln-text">'+IC.msg+' Text</a>'+
-      '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>';
-  // client: name, phone, street and suburb. Email, state and postcode are in the More row.
+    '<div class="shbody"><div id="sh-msg" role="alert"></div>';
+  // 1. the job address comes first: the Google lookup, and (master) the sites of clients already on file. Picking a client's site fills the client in too.
+  h+='<div class="lbl">Job address</div>'+
+    '<div class="fld"><label class="fl vh" for="f-addr">Job address</label>'+
+    '<input class="inp" id="f-addr" type="text" autocomplete="off" value="'+esc(I.address)+'" placeholder="'+(M?"Start typing the address. It finds it, or a client's site.":"Where the job is. Start typing and it finds it.")+'">'+
+    '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
+    '<div class="hint" id="f-addr-hint" role="status"></div>'+
+    '<div class="sites" id="f-addr-sites" hidden></div>';
+  // 2. the client: name, phone, email (Ring, Text, Email and Maps are under them). The client's own street, suburb, state and postcode are in the More row.
   h+='<div class="lbl">Client</div>';
   if(M){
     h+='<div class="fld"><label class="fl" for="f-name">Client name</label>'+
@@ -2538,20 +2692,18 @@ function sheetHtml(){
   }
   if(lock)h+='<div class="hint" id="f-lock-hint">No client on this job. Put any contact details in the notes, or ask Mitch to add the client.</div>';
   h+=cf("f-phone","Phone",'type="tel" autocomplete="off" inputmode="tel"',I.phone)+
-     '<div class="g2">'+cf("f-street","Street",'type="text" autocomplete="off"',I.street)+cf("f-suburb","Suburb",'type="text" autocomplete="off"',I.suburb)+'</div>';
+     cf("f-email","Email",'type="email" autocomplete="off" inputmode="email" autocapitalize="none"',I.email)+
+     '<div class="btns" id="sh-contact">'+
+       '<a class="btn" id="ln-ring">'+IC.phone+' Ring</a><a class="btn" id="ln-text">'+IC.msg+' Text</a>'+
+       '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>';
   // client notes: stay with the client, not the job. A strip under the title when there are some, or a "+ Client note" link.
   if(!S.noNotesCol&&(M||SH.clientId)){
     h+='<button type="button" class="linkbtn cnadd" id="cn-add" data-sh="cnadd" hidden>+ Client note</button>'+
       '<div class="fld" id="cn-box" hidden><label class="fl" for="f-cnotes">Client notes <span class="fl2">(these stay with the client, not this job: dog, gate code, key, parking)</span></label>'+
       '<textarea class="inp cnta" id="f-cnotes" placeholder="Dog, gate code, key, parking...">'+esc(I.cnotes)+'</textarea></div>';
   }
-  // job
+  // 3. the job
   h+='<div class="lbl">Job</div>'+
-    '<div class="fld"><label class="fl" for="f-addr">Job address</label>'+
-    '<input class="inp" id="f-addr" type="text" autocomplete="off" value="'+esc(I.address)+'" placeholder="Where the job is. Start typing and it finds it.">'+
-    '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
-    '<div class="hint" id="f-addr-hint" role="status"></div>'+
-    '<div class="sites" id="f-addr-sites" hidden></div>'+
     '<div class="fld"><div class="fl" id="sv-lbl">Services</div><div id="sv-list" role="group" aria-labelledby="sv-lbl"></div></div>';
   if(M){
     h+='<div class="g2"><div class="fld"><label class="fl" for="f-date">Date</label><input class="inp" id="f-date" type="date" value="'+esc(I.date)+'"></div>'+
@@ -2569,6 +2721,11 @@ function sheetHtml(){
   h+='<div class="fld"><label class="fl" for="f-notes">Notes</label><textarea class="inp" id="f-notes" placeholder="Anything to remember about this job">'+esc(I.notes)+'</textarea></div>';
   // paperwork
   h+='<div class="lbl">Paperwork</div><div class="btns"><a class="btn" id="ln-rec" hidden>Service record</a><a class="btn" id="ln-insp" hidden>Termite inspection</a></div>'+
+    // Barrier / Baiting proposal: on an inspection job that is saved. A tap saves straight away (toggleProposal) and lights the job up on the calendar.
+    '<div class="btns" id="sh-props" role="group" aria-label="Proposals to do" hidden>'+
+      '<button type="button" class="btn pbtn" data-sh="prop" data-k="barrier" aria-pressed="false">Barrier proposal</button>'+
+      '<button type="button" class="btn pbtn" data-sh="prop" data-k="baiting" aria-pressed="false">Baiting proposal</button></div>'+
+    '<div class="hint" id="sh-prophint" hidden>Tick one when this job needs a proposal. It lights up on the calendar until you untick it.</div>'+
     '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
   // More: prices and invoice wording (a worker gets the wording only, never a price), the job total, the client's email, state and postcode, photos, cancel and delete. Shut until opened (remembered on this device).
   // It opens by itself if something in there needs a look (a bad price or email, photos that haven't uploaded, a cancelled job). For the master a price still to fill shows as a badge on the row.
@@ -2577,8 +2734,8 @@ function sheetHtml(){
     '<div class="morepanel" id="sh-more" hidden>'+
     (M?'<div class="lbl">Prices and invoice wording</div><div id="sv-det"></div><div class="hint" id="sv-pnote" role="status"></div><div class="hint" id="sv-total" role="status"></div>'
       :'<div class="lbl">Invoice wording</div><div id="sv-det"></div>')+
-    '<div class="lbl">More client details</div>'+
-    cf("f-email","Email",'type="email" autocomplete="off" inputmode="email" autocapitalize="none"',I.email)+
+    '<div class="lbl">More client details <span class="fl2">(the client\'s own address, for their record)</span></div>'+
+    '<div class="g2">'+cf("f-street","Street",'type="text" autocomplete="off"',I.street)+cf("f-suburb","Suburb",'type="text" autocomplete="off"',I.suburb)+'</div>'+
     '<div class="g2">'+cf("f-state","State",'type="text" autocomplete="off" autocapitalize="characters"',I.state)+cf("f-postcode","Postcode",'type="text" autocomplete="off" inputmode="numeric"',I.postcode)+'</div>'+
     // photos
     '<div class="lbl">Photos</div>'+
@@ -2701,6 +2858,7 @@ function updateLinks(){
   const insp=byId("ln-insp"),rec=byId("ln-rec");
   if(insp)insp.hidden=!hasInsp;
   if(rec)rec.hidden=!hasRec;
+  updateProps();
   // these two leave this page in the same tab, so they stay switched off while photos are going up (they come back by themselves when it finishes)
   if(id&&!upl){
     setLink("ln-rec",hasRec?"records.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr)+"&service="+e(recTypes.join(" + ")):"");
@@ -2833,6 +2991,7 @@ function showNameList(list,match){
     return '<button type="button" class="acitem" role="option" data-sh="pickclient" data-i="'+i+'"><b>'+esc(c.name)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':"")+'</button>';
   }).join("");
   l.hidden=false;
+  if(SH.bar)barScrollTo(byId("f-name"));      // on the bar the list is inside the part that scrolls, under the box: bring the box to the top so the list is in view
 }
 // prefer = the site address the search matched on, so that site is the one filled in
 function applyClient(c,blankOnly,prefer){
@@ -2958,6 +3117,7 @@ async function loadSites(sh,clientId){
 function addrBoxEmpty(){return !trim(val("f-addr"))||!SH.addrTouched;}
 function applySitePrefill(sh){
   if(SH!==sh||!addrBoxEmpty())return;
+  if(sh.quick&&sh.busy){sh.prefillHeld=true;return;}      // the bar is saving: the box is free for the next booking, so this client's site must not land in it (saveSheet runs this again if the save fails)
   const list=sh.sites;
   let line="";
   if(list.length){
@@ -3062,7 +3222,13 @@ async function saveNewSite(sh,clientId,addr){
   throw new Error("no free id for the new site");
 }
 
-/* ----- job address lookup (Google Places) -----
+/* ----- job address box: client sites on file first, then Google's suggestions -----
+   The address is the first box on the booking bar and on the job sheet. As it is typed, ONE list is built from two searches that run side by side:
+   - master only, 3+ characters: sites already on file (client_properties.address, and a client's own street), shown first as "<address> · <client name>". Tapping one fills the
+     client in (name, phone, email, notes, the same as picking them from the name box) and puts that site in the box.
+   - 4+ characters: Google's address suggestions (below), with Google's credit under them. Tapping one sets the job address only.
+   Either half can be missing (no signal, no key, Google saying no) and the other still shows. Each half drops its answer if the text has moved on.
+   ----- job address lookup (Google Places) -----
    Nothing goes out until 250ms after typing stops (and 4+ characters), a newer search cancels an older one, answers are remembered for the
    session, and a late answer never touches the box: results only go into the pick-list, and the box only changes when someone taps one.
    Google gives house numbers (including rural ones), so the list shows what Google says, minus ", Australia".
@@ -3077,7 +3243,7 @@ function addrHint(t){const h=byId("f-addr-hint");if(h)h.textContent=t||"";}
 function hideAddrList(){
   const l=byId("f-addr-list");if(l){l.hidden=true;l.innerHTML="";}
   addrHint("");
-  if(SH){clearTimeout(SH.acT);if(SH.acAbort){try{SH.acAbort.abort();}catch(e){}SH.acAbort=null;}SH.acSeq++;SH.acResults=[];}
+  if(SH){clearTimeout(SH.acT);clearTimeout(SH.acHoldT);if(SH.acAbort){try{SH.acAbort.abort();}catch(e){}SH.acAbort=null;}SH.acSeq++;SH.asSeq++;SH.acResults=[];SH.acSites=[];SH.acG=[];SH.acSDone=false;SH.acGDone=false;SH.acGDown=false;SH.acGShown=false;SH.acHoldAt=0;}
 }
 function gKey(){const c=window.LPC_SUPABASE||{};return trim(c.googleKey);}
 function gBlocked(){return !gKey()||Date.now()<S.gBlockUntil;}
@@ -3089,6 +3255,9 @@ async function gFail(r){
   else if(r.status===429||/RESOURCE_EXHAUSTED|OVER_QUERY_LIMIT/i.test(st))S.gBlockUntil=Date.now()+60000;
 }
 function onAddrInput(){
+  // A quick save is running (the cursor is already in the box for the next booking): this typing is for the next one. quickReset keeps it when the save is done
+  // (addrTyped says it was typed: text the page itself puts in the box during a save is not for the next one).
+  if(SH.quick&&SH.busy){SH.addrTyped=true;return;}
   SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;
   // The booking bar has no street, suburb ... boxes to see or fix for a NEW client. They only ever hold the lookup pick for this address, so they go as soon as the text is changed
   // (otherwise a cleared or corrected address comes back from them on save).
@@ -3096,9 +3265,17 @@ function onAddrInput(){
   hideAddrList();       // whatever was showing belongs to the old text
   renderSites();
   const q=trim(val("f-addr"));
-  if(q.length<ADDR_MIN)return;
+  if(q.length<ADDR_SITE_MIN)return;
   const sh=SH;
-  sh.acT=setTimeout(function(){if(SH===sh)addrLookup(q);},ADDR_WAIT);
+  sh.acT=setTimeout(function(){if(SH===sh)addrSearch(q);},ADDR_WAIT);
+}
+// both halves of the list for the text in the box (Google's needs 4+ letters, the sites on file 3+)
+function addrSearch(q){
+  const sh=SH;if(!sh)return;
+  sh.acGDone=q.length<ADDR_MIN;sh.acSDone=!S.isMaster||(sh.quick&&sh.busy);      // (a half that isn't being asked for counts as done: a worker has no sites to search, and the bar doesn't search them while it saves)
+  sh.acHoldAt=Date.now();sh.acGShown=false;
+  if(q.length>=ADDR_MIN)addrLookup(q);
+  addrSiteSearch(q);
 }
 // Enter: search now instead of waiting
 function findAddr(){
@@ -3106,7 +3283,7 @@ function findAddr(){
   const q=trim(val("f-addr"));
   clearTimeout(SH.acT);
   if(q.length<ADDR_MIN){addrHint("Type a bit more of the address.");return;}
-  addrLookup(q);
+  addrSearch(q);
 }
 function stateAbbr(st){
   const t=trim(st);if(!t)return "";
@@ -3129,7 +3306,7 @@ async function addrLookup(q){
   const seq=++sh.acSeq;
   const hit=S.addrCache.get(key);
   if(hit){showAddrList(hit);return;}
-  if(gBlocked()){addrHint(ADDR_DOWN);return;}       // no key, or Google has said no: don't ask again
+  if(gBlocked()){sh.acGDone=true;sh.acGDown=true;addrHint(ADDR_DOWN);renderAddrList();return;}       // no key, or Google has said no: don't ask again (the sites on file still show)
   const ctl=("AbortController" in window)?new AbortController():null;sh.acAbort=ctl;
   if(!sh.gTok)sh.gTok=uuid();
   addrHint("Looking...");
@@ -3150,18 +3327,78 @@ async function addrLookup(q){
   }catch(e){
     if(SH!==sh||seq!==sh.acSeq)return;
     if(e&&e.name==="AbortError")return;
-    addrHint(ADDR_DOWN);
+    sh.acGDone=true;sh.acGDown=true;addrHint(ADDR_DOWN);renderAddrList();
   }
 }
+// Google's half of the list has come in (or came from the memory of this session)
 function showAddrList(preds){
+  if(!SH)return;
+  SH.acG=preds.slice(0,8).map(function(p){return {kind:"g",id:p.id,line:p.line};});SH.acGDone=true;SH.acGDown=false;
+  renderAddrList();
+}
+// The sites on file that match the text (master): client_properties.address and a client's own street, matched on the street part of what was typed ("3 Hayter St" of
+// "3 Hayter St, Byron Bay"). Shown first in the list as "<address> · <client name>".
+async function addrSiteSearch(q){
+  const sh=SH;if(!sh||!S.isMaster||(sh.quick&&sh.busy))return;
+  const first=trim(String(q).split(",")[0]),digits=first.replace(/\D/g,"");
+  if(first.length<ADDR_SITE_MIN||(digits.length>=6&&/^[\d\s()+.-]+$/.test(first))){sh.acSDone=true;renderAddrList();return;}      // (too short, or it is a phone number)
+  const all=first.split(/\s+/).filter(Boolean).slice(0,4);
+  // all the words first; if nothing is on file with all of them ("3 hayter st byron bay": the suburb isn't in the street part) the first two ("3 hayter") are tried
+  const tries=[all];if(all.length>2)tries.push(all.slice(0,2));
+  const seq=++sh.asSeq;
+  try{
+    const seen={},hits=[];
+    const add=function(c,street,line){
+      if(!c||!c.id||isPlaceholderAddr(street))return;
+      const k=c.id+"|"+normAddr(street);if(seen[k])return;
+      seen[k]=1;hits.push({kind:"site",line:line,client:c});
+    };
+    for(let t=0;t<tries.length&&!hits.length;t++){
+      const words=tries[t];
+      const build=function(){      // built in a function so it can be built again if the database turns out not to have clients.notes yet
+        const cc=clientCols();
+        let pq=S.sb.from("client_properties").select("address,suburb,state,postcode,client:clients("+cc+")");
+        words.forEach(function(w){pq=pq.ilike("address","%"+escLike(w)+"%");});
+        let cq=S.sb.from("clients").select(cc);
+        words.forEach(function(w){cq=cq.ilike("street","%"+escLike(w)+"%");});
+        return [pq.order("job_count",{ascending:false}).limit(12),cq.order("name",{ascending:true}).limit(8)];
+      };
+      let res=await Promise.all(build());
+      if(res.some(function(r){return r.error&&noteMissing(r.error);}))res=await Promise.all(build());
+      if(SH!==sh||seq!==sh.asSeq||(sh.quick&&sh.busy)||trim(val("f-addr"))!==q)return;      // a different sheet, or the text has moved on / the list was hidden / a newer search started
+      if(!res[0].error)(res[0].data||[]).forEach(function(row){add(Array.isArray(row.client)?row.client[0]:row.client,row.address,composeAddr(row.address,row.suburb,row.state,row.postcode));});
+      if(!res[1].error)(res[1].data||[]).forEach(function(c){add(c,c.street,composeAddr(c.street,c.suburb,c.state,c.postcode));});      // (the sites table not being set up yet: the clients' own streets still show)
+    }
+    sh.acSites=hits.slice(0,ADDR_SITES);sh.acSDone=true;
+    renderAddrList();
+  }catch(e){if(SH===sh&&seq===sh.asSeq){sh.acSDone=true;renderAddrList();}}
+}
+// Draws the list from its two halves: the sites on file (each "<address> · <client name>"), then Google's suggestions with Google's credit.
+// The list doesn't jump under a finger: Google's rows wait (ADDR_HOLD at most) for the sites half, so the sites land above them before anything is drawn. If the sites are later than that,
+// Google's rows are already on screen and the sites go BELOW them instead of pushing them down (acGShown).
+function renderAddrList(){
   const l=byId("f-addr-list");if(!l||!SH)return;
-  SH.acResults=preds.slice(0,8);
-  if(!SH.acResults.length){l.hidden=true;l.innerHTML="";addrHint("No match found. Type it in.");return;}
-  addrHint("");
-  l.innerHTML=SH.acResults.map(function(p,i){return '<button type="button" class="acitem" role="option" data-sh="pickaddr" data-i="'+i+'">'+esc(p.line)+'</button>';}).join("")+
-    '<div class="acpow" role="presentation">Address suggestions: Google Maps</div>';      // Google's name with its suggestions (no Google map here)
+  const sites=SH.acSites||[],g=SH.acG||[];
+  if(g.length&&!SH.acSDone&&!SH.acGShown){
+    const left=ADDR_HOLD-(Date.now()-(SH.acHoldAt||0)),sh=SH;
+    if(left>0){clearTimeout(sh.acHoldT);sh.acHoldT=setTimeout(function(){if(SH===sh)renderAddrList();},left);return;}
+  }
+  if(g.length&&!SH.acSDone)SH.acGShown=true;
+  clearTimeout(SH.acHoldT);
+  SH.acResults=(SH.acGShown&&sites.length)?g.concat(sites):sites.concat(g);
+  if(!SH.acResults.length){
+    l.hidden=true;l.innerHTML="";
+    if(SH.acGDown)addrHint(ADDR_DOWN);
+    else if(SH.acGDone&&SH.acSDone&&trim(val("f-addr")).length>=ADDR_MIN)addrHint("No match found. Type it in.");      // (not while only 3 letters are in: the sites on file are searched from 3, Google's lookup from 4)
+    return;
+  }
+  if(SH.acGDone)addrHint(SH.acGDown?ADDR_DOWN:"");      // (still looking: the "Looking..." stays)
+  l.innerHTML=SH.acResults.map(function(p,i){
+    return p.kind==="site"
+      ?'<button type="button" class="acitem site" role="option" data-sh="pickaddr" data-i="'+i+'"><span class="sa">'+esc(p.line)+'</span><span class="sc"> \u00b7 '+esc(p.client.name)+'</span></button>'
+      :'<button type="button" class="acitem" role="option" data-sh="pickaddr" data-i="'+i+'">'+esc(p.line)+'</button>';
+  }).join("")+(g.length?'<div class="acpow" role="presentation">Address suggestions: Google Maps</div>':"");      // Google's name with its suggestions (no Google map here)
   l.hidden=false;
-  if(SH.bar)barScrollTo(byId("f-addr"));      // on the bar the list is inside the part that scrolls, under the box: bring the box to the top so the list is in view
 }
 // What Google's place details say, as {street, suburb, state, postcode, line, placeId}.
 // Street is "<number> <road>" with the unit in front ("5/296 Tyagarah Rd") when there is one. Google sometimes knows only the road for
@@ -3193,13 +3430,30 @@ function placeParts(d,pred){
 // street, suburb ... boxes and the new site get the proper details, not just the suggestion's text).
 function pickAddr(i){
   const sh=SH,p=sh&&sh.acResults[i];if(!p)return;
+  if(p.kind==="site"){pickSiteHit(p);return;}
   const seq=++sh.pickSeq;
+  if(sh.quick&&sh.busy)sh.addrTyped=true;      // (picked while the bar is saving: it is for the next booking, like typing)
   setVal("f-addr",p.line);sh.addrTouched=true;sh.addrAuto="";sh.addrPick=null;
   hideAddrList();updateLinks();renderSites();
   const shown=trim(val("f-addr"));
   const done=function(){if(sh.addrPending===pr)sh.addrPending=null;};
   const pr=pickDetails(sh,p,seq,shown).then(done,done);
   sh.addrPending=pr;
+}
+// A client's site was tapped in the address list: the site goes in the box and the client is filled in as if picked from the name box (name, phone, email, notes, their sites).
+// A site of a different client than the one on screen would swap that client out (name, phone, email, notes), so that asks first, on the bar, a new job and a saved job alike: a client
+// already picked, or a name (or phone / email) already typed. Cancel leaves everything as it was (Google's row for the same address is still there to tap).
+function pickSiteHit(p){
+  const sh=SH;if(!sh||(sh.quick&&sh.busy))return;
+  const c=p.client,typedName=trim(val("f-name"));
+  const other=sh.clientId?sh.clientId!==c.id
+    :((!!typedName&&typedName.toLowerCase()!==trim(c.name).toLowerCase())||!!trim(val("f-phone"))||!!trim(val("f-email")));
+  if(other&&!confirm('Change this job to '+c.name+'? Their details replace the ones on screen.'))return;
+  hideAddrList();
+  setVal("f-addr",p.line);sh.addrTouched=true;sh.addrAuto="";sh.addrPick=null;sh.pickSeq++;sh.gTok=null;      // (no Google details call for this one: the next lookup starts a new session)
+  applyClient(c,false,p.line);
+  if(sh.quick){const a=byId("f-addr");if(a)a.blur();}      // put the keyboard away so the services and times are in view
+  renderSites();updateLinks();
 }
 // Waits for the details of an address that was only just tapped, but never longer than ms. true = they landed. false = gave up: the pick is cancelled
 // (pickSeq), so a late answer can't rewrite the address box after the save has gone ahead, and the job is saved with the address text as it is.
@@ -3451,23 +3705,39 @@ async function retryPhotos(){
 }
 
 /* ----- validation, patches, saving ----- */
-// Contact details that would have nowhere to go on a job with no client. Street, suburb, state and postcode only count when the job
-// address box is filled in, because with that box empty they are folded into the job address and saved there.
-function hasContact(f){return !!(f.phone||f.email||(f.address&&(f.street||f.suburb||f.state||f.postcode)));}
+// Contact details that would have nowhere to go on a job with no client: a phone or an email, or a client street that is not just the job address written out again.
+// (Street, suburb, state and postcode boxes are filled from a picked address, and with the job address box empty they are folded into the job address and saved there.)
+function hasContact(f){return !!(f.phone||f.email)||ownAddrDiffers(f);}
+// The client's own street / suburb boxes (inside More on the full sheet) hold an address that is NOT the job address. Compared whole, street with street and suburb with suburb, never as a
+// piece of the text: the client's "3 Hayter St" is not the job's "13 Hayter St, Byron Bay". With the job address box empty they are folded into it on save, so that is not a difference.
+function ownAddrDiffers(f){
+  const own=composeAddr(f.street,f.suburb,f.state,f.postcode);
+  if(!own||!f.address)return false;
+  if(normAddr(f.address)===normAddr(own))return false;
+  const jb=addrBits(f.address),cs=normAddr(f.street),csub=normAddr(f.suburb),js=normAddr(jb.street),jsub=normAddr(jb.suburb);
+  if(cs&&cs!==js&&String(f.address).split(",").map(normAddr).indexOf(cs)<0)return true;      // (a whole bit between commas also counts: "Unit 2, 5 Smith St, ..." holds "5 Smith St")
+  return !!(csub&&jsub&&csub!==jsub);      // (a side with no suburb on it counts as the same place: nothing is lost by dropping it)
+}
 function validate(f){
   if(S.isMaster){
     if(!validYmd(f.date))return "Pick a date for the job.";
     if(!(f.dur>0))return "Pick how long the job takes.";
-    if(!SH.clientId&&!f.name&&SH.isNew)return "Type the client's name.";
+    // a new job needs an address OR a client name (the address can come first and the name later), and at least one service
+    if(!SH.clientId&&!f.name&&!f.address&&SH.isNew)return "Type the job address or the client's name.";
+    if(SH.isNew&&!f.services.length)return "Tick at least one service.";
   }
-  // a client-less job can't keep a phone, email or address, so say so instead of saving "Saved" and quietly dropping them
-  if(!SH.clientId&&!f.name&&hasContact(f))
-    return S.isMaster?"Type the client's name so the phone, email and address have somewhere to save, or clear those boxes."
+  // a client-less job can't keep a phone or email, so say so instead of saving "Saved" and quietly dropping them
+  if(!SH.clientId&&!f.name&&hasContact(f)){
+    // (when only the client's own street boxes are the cause they are inside More, which may be shut: open it, so the boxes that need clearing are in view)
+    const addrOnly=!f.phone&&!f.email;
+    const msg=S.isMaster?"Type the client's name so the phone, email or client address have somewhere to save, or clear those boxes."
       :"This job has no client, so phone, email and address can't be saved. Clear those boxes, or ask Mitch to add the client.";
+    return addrOnly?flagMore(msg):msg;
+  }
   for(let i=0;S.isMaster&&i<f.services.length;i++){      // (prices are the master's: a worker's sheet has none)
     if(isNaN(parsePrice(f.services[i].price)))return flagMore("The price for "+f.services[i].type+" needs to be a number, like 250 or 250.50.");
   }
-  if(f.email&&!looksEmail(f.email))return flagMore("That email address doesn't look right.");
+  if(f.email&&!looksEmail(f.email))return "That email address doesn't look right.";
   return "";
 }
 function buildJobPatch(sh,f,clientId,extra){
@@ -3594,7 +3864,7 @@ async function saveSheet(extra,opts){
           sh.dupDeclined=f.name.toLowerCase();
         }
       }
-      if(sh.quick)quickClientAddr(sh,f);
+      quickClientAddr(sh,f);      // (a new client booked address-first gets that address as their own, the bar and the full sheet alike)
       const row=await createClientRow(f);
       sh.clientId=clientId=row.id;sh.client=Object.assign({},row);sh.unlinked=null;sh.renameTo=null;
       if(SH===sh)updateClientHint();
@@ -3605,7 +3875,7 @@ async function saveSheet(extra,opts){
     lostContact=!clientId&&hasContact(f);
     // 2. the job
     // (Booking bar: a job address that was cleared on purpose stays blank. Its hidden client boxes must not put it back.)
-    if(!f.address&&!(sh.quick&&sh.addrTouched)){const a=composeAddr(f.street,f.suburb,f.state,f.postcode);if(a){f.address=a;if(SH===sh)setVal("f-addr",a);}}
+    if(!f.address&&!(sh.quick&&sh.addrTouched)){const a=composeAddr(f.street,f.suburb,f.state,f.postcode);if(a){f.address=a;if(SH===sh&&!sh.quick)setVal("f-addr",a);}}      // (not on the bar: its box is already free for the next booking)
     const patch=buildJobPatch(sh,f,clientId,extra);
     const pOld=S.isMaster?priceSnap(sh.job):null;      // the prices as they were loaded (master), taken before the job is written
     let row=null;
@@ -3649,7 +3919,7 @@ async function saveSheet(extra,opts){
     S.pending--;
     if(SH===sh)setBusy(false);
   }
-  if(!okSave)return false;
+  if(!okSave){if(SH===sh&&sh.quick&&sh.prefillHeld){sh.prefillHeld=false;applySitePrefill(sh);}return false;}      // (a site prefill that was held back while the bar saved)
   clearDraftForJob(sh.jobId);
   const siteNote="The address couldn't be added to their list of sites.",priceNote="The price didn't save. Open the job to add it.";
   if(SH!==sh){toast("Saved"+(priceMissed?". "+priceNote:"")+(siteFailed?". "+siteNote:""),siteFailed||priceMissed);return true;}       // the sheet was closed while this was saving (logged out, for one); the write itself went through
@@ -3738,6 +4008,148 @@ async function deleteJob(){
   }catch(e){
     if(SH===sh){showMsg(friendly(e),"bad");setBusy(false);}
   }finally{S.pending--;scheduleRefetch(300);}
+}
+
+/* =====================================================================
+   PROPOSAL FLAGS (10_proposal_flags.sql) AND THE "PROPOSALS TO DO" LIST
+   A termite inspection job can be marked "needs a barrier proposal" and/or "needs a baiting proposal" (jobs.proposal_barrier, jobs.proposal_baiting). Mitch or the
+   worker taps the button on the job sheet: it saves straight away (no Save), shows at once and is put back with a message if the save fails. A job with a flag on is
+   lit up orange on every card (day, week, tray, worker's list). Mitch untaps it when the proposal has gone out. The ⋯ menu's "Proposals to do" lists every flagged job
+   from any date. If the columns aren't in the database yet (the 10 update hasn't been run), the buttons and the menu item stay hidden for the session (S.noPropCols).
+   ===================================================================== */
+const PROP_MAX=200;      // jobs the Proposals to do list asks for
+// Shows or hides the two buttons on the open job sheet and sets which are on. They show on a saved job that has an inspection service ticked (or already has a flag on, so it can be cleared).
+function updateProps(){
+  const box=byId("sh-props"),hint=byId("sh-prophint");if(!box||!SH||SH.quick)return;
+  const pr=propOf(SH.job);
+  const insp=SH.svc.some(function(e){return isInspectionType(e.type);});
+  const show=!!SH.jobId&&!S.noPropCols&&(insp||pr.b||pr.t);
+  box.hidden=!show;if(hint)hint.hidden=!show;
+  box.querySelectorAll("[data-k]").forEach(function(b){
+    const k=b.getAttribute("data-k"),on=k==="barrier"?pr.b:pr.t;
+    b.setAttribute("aria-pressed",on?"true":"false");b.classList.toggle("on",on);
+    b.disabled=!!(SH.propBusy&&SH.propBusy[k]);
+  });
+}
+// The database has (or hasn't) the two columns: seen from any answer. Said by the rows that come back (a row has the keys only if the columns exist).
+function checkPropCols(rows){
+  if(!rows||!rows.length)return;
+  const has=("proposal_barrier" in rows[0])&&("proposal_baiting" in rows[0]);
+  if(S.noPropCols===!has)return;
+  S.noPropCols=!has;syncPropUI();
+}
+function syncPropUI(){
+  const mi=byId("mi-props");if(mi)mi.hidden=!!S.noPropCols;
+  if(SH&&!SH.quick)updateProps();
+}
+// A refresh brought the job in again: the open sheet's buttons follow it (unless one of them is being saved right now)
+function syncSheetProps(){
+  if(!SH||SH.quick||!SH.jobId||!SH.job)return;
+  if(SH.propBusy&&(SH.propBusy.barrier||SH.propBusy.baiting))return;
+  const fresh=S.byId[SH.jobId];if(!fresh||fresh===SH.job)return;
+  if("proposal_barrier" in fresh)SH.job.proposal_barrier=fresh.proposal_barrier;
+  if("proposal_baiting" in fresh)SH.job.proposal_baiting=fresh.proposal_baiting;
+  updateProps();
+}
+async function toggleProposal(kind){
+  const sh=SH;if(!sh||sh.quick||!sh.jobId||!sh.job||S.noPropCols)return;
+  const col=kind==="barrier"?"proposal_barrier":kind==="baiting"?"proposal_baiting":"";if(!col)return;
+  sh.propBusy=sh.propBusy||{};if(sh.propBusy[kind])return;
+  const id=sh.jobId,job=sh.job,old=!!job[col],now=!old;
+  const live=S.byId[id];
+  job[col]=now;if(live&&live!==job)live[col]=now;      // shows straight away, on the sheet and on the calendar
+  sh.propBusy[kind]=true;updateProps();renderBody();
+  S.pending++;
+  let ok=false,err=null;
+  try{
+    const patch={};patch[col]=now;
+    const r=await S.sb.from("jobs").update(patch).eq("id",id).select("id");
+    if(r.error)throw r.error;
+    if(!r.data||!r.data.length)throw plainErr("That job could not be changed. It may have been moved or deleted by someone else.");
+    ok=true;
+  }catch(e){err=e;}
+  finally{S.pending--;}
+  sh.propBusy[kind]=false;
+  if(!ok){      // put it back
+    job[col]=old;const cur=S.byId[id];if(cur)cur[col]=old;
+    if(missingCol(err,col)){S.noPropCols=true;syncPropUI();toast("The proposal buttons need the 10 database update.",true);}
+    else toast("Couldn't save that. "+friendly(err),true);
+  }
+  if(SH===sh)updateProps();
+  renderBody();
+  scheduleRefetch(300);
+}
+/* ----- the Proposals to do list (master): the ⋯ menu opens it as a panel, like the Services panel (SV.kind is "props") ----- */
+function propWhen(j){
+  const y=parseYmd(j.job_date).getFullYear(),s=tmToMin(j.start_time);
+  return dayShort(j.job_date)+(y!==new Date().getFullYear()?" "+y:"")+(s==null?"":", "+fmtMin(s));
+}
+function propRowHtml(j){
+  const a=trim(j.address),cn=trim(j.client&&j.client.name),pr=propOf(j);
+  return '<button type="button" class="prow'+(j.status==="cancelled"?" cx":"")+'" data-svp="openjob" data-id="'+esc(j.id)+'" data-date="'+esc(j.job_date)+'">'+
+    '<span class="pwhen">'+esc(propWhen(j))+(j.status==="cancelled"?'<br>Cancelled':j.status==="done"?'<br>Done':"")+'</span>'+
+    '<span class="pmain"><b>'+esc(a||cn||"No address or client name")+'</b>'+(a&&cn?'<span>'+esc(cn)+'</span>':"")+'</span>'+
+    '<span class="ptags">'+(pr.b?'<span class="ptag big">Barrier</span>':"")+(pr.t?'<span class="ptag big">Baiting</span>':"")+'</span></button>';
+}
+function propListBodyHtml(){
+  if(!SV)return "";
+  if(SV.err==="missing")return '<div class="hint">The proposal buttons need the 10 database update (10_proposal_flags.sql), so there is nothing to list yet.</div>';
+  if(SV.err)return '<div class="banner bad">'+esc(SV.err)+' <button class="linkbtn" data-svp="reload">Try again</button></div>';
+  if(!SV.rows)return '<div class="boot"><div><span class="spin"></span></div><div>Loading...</div></div>';
+  if(!SV.rows.length)return '<div class="empty"><h3>Nothing waiting</h3><p>When a job has a Barrier or Baiting proposal ticked, it shows here until you untick it.</p></div>';
+  const rows=SV.rows.slice(0,PROP_MAX);
+  return rows.map(propRowHtml).join("")+(SV.rows.length>PROP_MAX?'<div class="hint">Showing the latest '+PROP_MAX+'.</div>':"");
+}
+function propPanelHtml(){
+  return '<div class="sheet" id="svp-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="svp-title">'+
+    '<div class="shhead"><div class="shttl"><h2 id="svp-title">Proposals to do</h2><div class="sb">Jobs with a Barrier or Baiting proposal ticked, newest first. Tap one to open it, and untick the proposal there once it has been sent.</div></div>'+
+    '<button type="button" class="x" data-svp="close" aria-label="Close">'+IC.x+'</button></div>'+
+    '<div class="shbody" id="pl-body">'+propListBodyHtml()+'</div><div class="shfoot"><button type="button" class="btn pri" data-svp="close">Done</button></div></div></div>';
+}
+function openPropList(){
+  if(!S.isMaster||SV||S.screen!=="cal"||S.noPropCols)return;
+  if(SH&&(!SH.bar||!closeSheet(false)))return;      // the booking bar closes first (and asks if it has something typed in it)
+  SV={prevFocus:byId("menu-btn"),back:false,kind:"props",rows:null,err:""};
+  byId("sheet").innerHTML=propPanelHtml();
+  document.documentElement.classList.add("sheet-open");
+  const app=byId("app");app.setAttribute("inert","");app.setAttribute("aria-hidden","true");
+  const pn=$(".panel");if(pn){pn.setAttribute("tabindex","-1");try{pn.focus({preventScroll:true});}catch(e){}}
+  loadPropList();
+}
+async function loadPropList(){
+  const sv=SV;if(!sv||sv.kind!=="props")return;
+  sv.rows=null;sv.err="";
+  const b0=byId("pl-body");if(b0)b0.innerHTML=propListBodyHtml();
+  try{
+    const r=await S.sb.from("jobs").select("id,job_date,start_time,address,status,proposal_barrier,proposal_baiting,client:clients(id,name)")
+      .or("proposal_barrier.eq.true,proposal_baiting.eq.true")
+      .order("job_date",{ascending:false}).order("start_time",{ascending:false,nullsFirst:false}).limit(PROP_MAX+1);
+    if(SV!==sv)return;
+    if(r.error){
+      if(missingCol(r.error,"proposal_barrier")||missingCol(r.error,"proposal_baiting")){S.noPropCols=true;syncPropUI();sv.err="missing";}
+      else throw r.error;
+    }else sv.rows=r.data||[];
+  }catch(e){if(SV!==sv)return;sv.err=friendly(e);}
+  const b=byId("pl-body");if(b)b.innerHTML=propListBodyHtml();
+}
+// A row was tapped: close the list, take the calendar to that job's day (if it isn't on screen) and open the job. A job from another week is fetched.
+async function openPropJob(id){
+  if(!id)return;
+  closeSvcPanel();
+  let j=S.byId[id]||null;
+  if(!j){
+    try{
+      const r=await colRetry(function(){return S.sb.from("jobs").select(jobCols()).eq("id",id).maybeSingle();});
+      if(r.error)throw r.error;
+      j=r.data||null;
+      if(j&&S.isMaster)await attachPrices([j]);
+    }catch(e){toast("Couldn't open that job. "+friendly(e),true);return;}
+  }
+  if(!j){toast("That job isn't there any more.",true);return;}
+  if(SH||SV)return;
+  const rg=currentRange();
+  if(j.job_date<rg.from||j.job_date>rg.to){S.date=j.job_date;afterNav();}
+  openSheet(j,null);
 }
 
 /* =====================================================================
@@ -3895,7 +4307,7 @@ function svcPanelHtml(){
 function openSvcPanel(){
   if(!S.isMaster||SV||S.screen!=="cal")return;
   if(SH&&(!SH.bar||!closeSheet(false)))return;      // the booking bar closes first (and asks if it has something typed in it)
-  SV={prevFocus:byId("menu-btn"),back:false};
+  SV={prevFocus:byId("menu-btn"),back:false,kind:"svc"};
   byId("sheet").innerHTML=svcPanelHtml();
   document.documentElement.classList.add("sheet-open");
   const app=byId("app");app.setAttribute("inert","");app.setAttribute("aria-hidden","true");
@@ -3914,8 +4326,10 @@ function closeSvcPanel(){
   if(pf&&pf.focus&&document.contains(pf)){try{pf.focus({preventScroll:true});}catch(e){}}
 }
 function svcPanelClick(t){
-  const a=t.closest("[data-svp]");
-  if(a&&a.getAttribute("data-svp")==="close"){closeSvcPanel();return;}
+  const a=t.closest("[data-svp]"),k=a?a.getAttribute("data-svp"):"";
+  if(k==="close"){closeSvcPanel();return;}
+  if(k==="openjob"){openPropJob(a.getAttribute("data-id"));return;}
+  if(k==="reload"){loadPropList();return;}
   if(t.id==="svp-back"&&SV&&SV.back)closeSvcPanel();
 }
 // A box was changed: check it, save it straight away (the toast says so), and put the old value back if the save fails. Blank = no usual value (null).
@@ -4006,7 +4420,8 @@ function quickState(init,prevFocus){
     recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
     unlinked:null,renameTo:null,pendingN:0,svc:[],svcMemo:{},svcMore:false,legacyPrice:null,legacyHeld:"",durHand:false,durAuto:false,durBase:null,svcTouched:false,
     sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,cnTouched:false,
-    qEdit:false,qSum:null,saveName:null,prevFocus:prevFocus||null,
+    asSeq:0,acSites:[],acG:[],acSDone:false,acGDone:false,propBusy:{},
+    qEdit:false,qSum:null,saveName:null,saveAddr:null,prevFocus:prevFocus||null,
     bmore:false,      // the More panel on the bar is open
     dayHand:false,    // the day was picked by hand (or came from a tap on the grid): until then it follows the day being looked at
     dayAuto:"",       // the day that was open in Day view when the bar switched a computer to Week: it stays the bar's day while that same week is showing (see barDayDefault)
@@ -4022,31 +4437,32 @@ function quickTimes(){const out=[];for(let m=QUICK_FIRST;m<=QUICK_LAST;m+=QUICK_
 function dayLbl(s){const d=parseYmd(s),t=new Date();return DOW[d.getDay()]+" "+d.getDate()+(d.getMonth()!==t.getMonth()||d.getFullYear()!==t.getFullYear()?" "+MON[d.getMonth()]:"");}
 function quickHtml(){
   const I=SH.init;
-  // the top row (client box, More, X) is outside the part that scrolls, so the client list can open upwards over the calendar
+  // The JOB ADDRESS is the first box. The top row (address box, More, X) is outside the part that scrolls, so the address list (client sites on file, then Google's
+  // suggestions) can open upwards over the calendar. Under it: the client's name (type-ahead for a client already on file, at a new address or not), then phone and email.
   let h='<div class="barhead">'+
-    '<div class="fld qname"><label class="vh" for="f-name">Client name, phone or street</label>'+
-    '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Client: name, phone or street">'+
-    '<div class="aclist" id="f-name-list" role="listbox" hidden></div></div>'+
+    '<div class="fld qaddr"><label class="vh" for="f-addr">Job address</label>'+
+    '<input class="inp" id="f-addr" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Job address: start typing, or a client\'s site">'+
+    '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
     '<button type="button" class="linkbtn" id="q-moretog" data-sh="qmoretog" aria-expanded="false" aria-controls="q-more">More</button>'+
     '<button type="button" class="x" data-sh="close" aria-label="Close the booking bar">'+IC.x+'</button></div>'+
     '<div class="barbody" id="q-body"><div id="q-inner">'+
-    '<div id="q-sum" role="status"></div>'+
-    '<div id="q-new" class="qnew" hidden>'+
-      '<div class="fld"><label class="vh" for="f-phone">Phone</label><input class="inp" id="f-phone" type="tel" autocomplete="off" inputmode="tel" placeholder="Phone (optional, but handy)"></div>'+
-      '<div class="fld"><label class="vh" for="f-addr">Address</label>'+
-        '<input class="inp" id="f-addr" type="text" autocomplete="off" placeholder="Address (optional)">'+
-        '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
-      '<div class="hint" id="f-addr-hint" role="status"></div>'+
-      '<div class="fld"><label class="vh" for="f-email">Email</label>'+
-        '<input class="inp" id="f-email" type="email" autocomplete="off" inputmode="email" autocapitalize="none" placeholder="Email (optional)"></div>'+
-    '</div>'+
+    '<div class="hint" id="f-addr-hint" role="status"></div>'+
     '<div class="sites" id="f-addr-sites" hidden></div>'+
+    '<div class="fld qname"><label class="vh" for="f-name">Client name or phone</label>'+
+      '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" placeholder="Client name or phone (can come later)">'+
+      '<div class="aclist" id="f-name-list" role="listbox" hidden></div></div>'+
+    '<div id="q-sum" role="status"></div>'+
+    '<div id="q-new" class="qnew">'+
+      '<div class="g2"><div class="fld"><label class="vh" for="f-phone">Phone</label><input class="inp" id="f-phone" type="tel" autocomplete="off" inputmode="tel" placeholder="Phone"></div>'+
+      '<div class="fld"><label class="vh" for="f-email">Email</label>'+
+        '<input class="inp" id="f-email" type="email" autocomplete="off" inputmode="email" autocapitalize="none" placeholder="Email (optional)"></div></div>'+
+    '</div>'+
     '<div class="qsv" id="q-svc" role="group" aria-label="Services"></div>'+
     '<div class="barwho"><span class="lbl" id="q-wholbl">Who</span><div class="seg" id="q-who" role="group" aria-labelledby="q-wholbl">';
   activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
   h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
     '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
-  // More: job notes, the client's note, the day, the time, and the full job sheet (a new client's phone, address and email show straight under the name)
+  // More: job notes, the client's note, the day, the time, and the full job sheet (the phone and email show straight under the name)
   h+='<div class="barmore" id="q-more" hidden>'+
     '<div class="fld"><label class="fl" for="f-notes">Job notes</label><textarea class="inp" id="f-notes" rows="2" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>'+
     (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
@@ -4085,8 +4501,8 @@ function openQuick(o){
   // on a computer the week is the view to book from; a phone keeps what it was showing. It goes back when the bar closes (unless the view was changed by hand meanwhile).
   if(!isNarrow()&&S.view!=="week"){S.barPrevView=S.view;S.view="week";if(!SH.dayHand)SH.dayAuto=val("f-date");afterNav();}      // (the day that was on screen stays the bar's day while that week is showing. It is not a day picked by hand: go to another week and the bar's day goes with it.)
   else renderBody();
-  // a phone is left alone (the keyboard would hide the calendar); on a computer the client box is ready to type in
-  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus({preventScroll:true});}}catch(e){}
+  // a phone is left alone (the keyboard would hide the calendar); on a computer the job address box is ready to type in
+  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-addr");if(n)n.focus({preventScroll:true});}}catch(e){}
 }
 // Service chips: the first QUICK_SVC service types (by their sort order), then the rest behind "More services". A ticked one always stays showing.
 function quickRenderSvc(){
@@ -4108,7 +4524,7 @@ function setPressed(b,on){b.setAttribute("aria-pressed",on?"true":"false");b.cla
 function quickSync(){
   if(!SH||!SH.quick)return;
   const nm=trim(val("f-name")),has=!!SH.clientId,isNewC=!has&&!!nm;
-  const nb=byId("q-new");if(nb)nb.hidden=!(isNewC||(has&&SH.qEdit));
+  const nb=byId("q-new");if(nb)nb.hidden=has&&!SH.qEdit;      // phone and email boxes: always, until a client on file is picked (then their details are in the summary, and Edit opens the boxes)
   // the client note box shows the client's saved notes until it is typed in (what it holds is saved to the client with the job)
   const cta=byId("f-cnotes");
   if(cta&&has&&SH.client&&!SH.cnTouched){const n=SH.client.notes||"";if(cta.value!==n&&document.activeElement!==cta)cta.value=n;}
@@ -4119,9 +4535,8 @@ function quickSync(){
   if(sum){
     let h="";
     if(has){
-      const ph=trim(val("f-phone")),addr=trim(val("f-addr")),loaded=SH.sitesFor===SH.clientId;
-      h='<div class="qsum"><div class="qsl">'+(ph?esc(ph):'<span class="miss">No phone</span>')+" · "+
-        (addr?esc(addr):(loaded?'<span class="miss">No address</span>':"Finding address..."))+'</div>'+
+      const ph=trim(val("f-phone")),em=trim(val("f-email"));
+      h='<div class="qsum"><div class="qsl">'+(ph?esc(ph):'<span class="miss">No phone</span>')+(em?" · "+esc(em):"")+'</div>'+
         '<div class="qsa"><button type="button" class="linkbtn" data-sh="qedit" aria-expanded="'+(SH.qEdit?"true":"false")+'">'+(SH.qEdit?"Done":"Edit")+'</button>'+
         '<button type="button" class="linkbtn" data-sh="qchange">Change client</button></div></div>';
       // the client's notes (dog, gate code ...) where they can't be missed while booking
@@ -4167,11 +4582,12 @@ function quickToggleSvc(name){
   quickSync();
 }
 // "Change client", or typing in the name box after picking one: back to a blank client. (The full sheet has Rename here; the bar doesn't.)
+// The job address stays: it is the first box and it is where the job is, whoever it is for (unlinkClient clears it only if it was filled in from that client's own details).
 function quickUnlink(){
   unlinkClient();SH.unlinked=null;
-  ["f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr"].forEach(function(id){setVal(id,"");});
-  SH.addrTouched=false;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;SH.qEdit=false;
-  hideAddrList();renderSites();
+  ["f-phone","f-email","f-street","f-suburb","f-state","f-postcode"].forEach(function(id){setVal(id,"");});
+  SH.qEdit=false;
+  renderSites();
 }
 function quickChangeClient(){
   if(!SH||!SH.clientId)return;
@@ -4194,25 +4610,30 @@ function quickTakeClient(c){
   ["phone","email"].forEach(function(k){if(trim(c[k]))setVal("f-"+k,c[k]);});
   quickSync();
 }
-// A quick save failed. If a name was typed for the next caller while it was saving, it goes back to this booking's name, so that tapping Save
-// again can't book this job under someone else's name.
+// A quick save failed. If a name or an address was typed for the next caller while it was saving, it goes back to this booking's, so that tapping Save
+// again can't book this job under someone else's name or at someone else's address.
 function quickNameBack(sh){
-  if(SH!==sh||sh.saveName==null||trim(val("f-name"))===sh.saveName)return;
-  setVal("f-name",sh.saveName);hideNameList();quickSync();
+  if(SH!==sh)return;
+  let back=false;
+  if(sh.saveName!=null&&trim(val("f-name"))!==sh.saveName){setVal("f-name",sh.saveName);hideNameList();back=true;}
+  if(sh.saveAddr!=null&&trim(val("f-addr"))!==sh.saveAddr){setVal("f-addr",sh.saveAddr);hideAddrList();back=true;}
+  if(!back)return;
+  quickSync();
   const m=byId("sh-msg"),t=m?trim(m.textContent):"";
-  showMsg((t?t+" ":"")+"The name you typed was put back to this booking's. Tap Save to try again.","bad");
+  showMsg((t?t+" ":"")+"What you typed was put back to this booking's. Tap Save to try again.","bad");
 }
 async function quickSave(){
   const sh=SH;if(!sh||!sh.quick||sh.busy)return false;
   const f=readForm();
-  if(!sh.clientId&&!f.name){showMsg("Type the client's name.","bad");const n=byId("f-name");if(n){try{n.focus();}catch(e){}}return false;}
+  if(!sh.clientId&&!f.name&&!f.address){showMsg("Type the job address or the client's name.","bad");const n=byId("f-addr");if(n){try{n.focus();}catch(e){}}return false;}
   if(!sh.svc.length){showMsg("Tap at least one service.","bad");return false;}
-  sh.saveName=f.name;      // the name this booking is for: a different one in the box when the save is done was typed for the next caller
+  sh.saveName=f.name;sh.saveAddr=f.address;sh.addrTyped=false;      // the name and address this booking is for: a different one in a box when the save is done was typed for the next caller (addrTyped: the address, typed or picked during the save)
   return saveSheet(null,{quick:true});
 }
 // after a good save (called from saveSheet): a toast, a clean bar for the next booking (who is kept), and a Done link to close it
 function quickDone(sh,opts,siteFailed,siteNote,priceMissed,priceNote){
-  const j=sh.job||{},nm=trim((sh.client&&sh.client.name)||val("f-name")),s=tmToMin(j.start_time);
+  const j=sh.job||{},s=tmToMin(j.start_time);
+  const nm=addrLine(j,34)||trim((sh.client&&sh.client.name)||val("f-name"))||"job";      // the address first, as on the calendar
   const msg="Booked: "+nm+", "+dayLbl(j.job_date)+(s!=null?" "+fmtMin(s):"");
   quickReset(sh);
   SH.booked=true;barRefresh();      // the status line says so, with a Done link, until the next tap or key
@@ -4222,8 +4643,9 @@ function quickDone(sh,opts,siteFailed,siteNote,priceMissed,priceNote){
 // client box keeps its focus and the keyboard stays up if it was.
 function quickReset(old){
   clearTimeout(old.sT);clearTimeout(old.acT);clearTimeout(old.hintT);if(old.acAbort){try{old.acAbort.abort();}catch(e){}}
-  // a name may have been typed for the next caller while the save was running. That one stays.
+  // a name or an address may have been typed for the next caller while the save was running. That one stays.
   const typed=val("f-name"),keepName=(old.saveName!=null&&trim(typed)!==old.saveName)?typed:"";
+  const typedA=val("f-addr"),keepAddr=(old.saveAddr!=null&&old.addrTyped&&trim(typedA)!==old.saveAddr)?typedA:"";      // (only text that was typed or picked during the save: not whatever the page wrote in the box)
   const who=old.whoKeep!=null?old.whoKeep:(val("f-staff")||"");
   const day=barDayDefault(old);      // the same rule as the first booking: the day on screen (or today), unless a day is picked by hand
   SH=quickState(quickInit({date:day,time:"",staff:who}),old.prevFocus);
@@ -4235,7 +4657,8 @@ function quickReset(old){
   const tr=byId("q-times");if(tr)tr.scrollLeft=0;
   const b=byId("q-body");if(b)b.scrollTop=0;
   SH.baseline=snap();
-  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-name");if(n)n.focus({preventScroll:true});}}catch(e){}
+  try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-addr");if(n)n.focus({preventScroll:true});}}catch(e){}
+  if(keepAddr){setVal("f-addr",keepAddr);onAddrInput();}      // onAddrInput brings up the address list for it
   if(keepName){setVal("f-name",keepName);onNameInput();}      // onNameInput brings up the new-client note and the type-ahead for it
 }
 // "More details" (in More): the full job sheet, with what has been typed so far filled in
@@ -4260,7 +4683,7 @@ async function quickMore(){
 
 /* ----- the status line, the Book button and the green spots ----- */
 // a client (or a name typed for a new one) and at least one service are picked
-function barReady(){return !!SH&&!!SH.bar&&(!!SH.clientId||!!trim(val("f-name")))&&SH.svc.length>0;}
+function barReady(){return !!SH&&!!SH.bar&&(!!SH.clientId||!!trim(val("f-name"))||!!trim(val("f-addr")))&&SH.svc.length>0;}
 function barLen(){const d=parseInt(val("f-dur"),10);return d>0?d:QUICK_DUR;}
 // the time already chosen (a tap on an empty slot opened the bar, or a time chip): {staff, date, min}, or null
 function barSlot(){
@@ -4280,7 +4703,7 @@ function barRefresh(){
   let txt,cls="",html=null;
   if(SH.hint){txt=SH.hint;cls="warn";}
   else if(SH.booked&&!rdy){txt="Booked. Book another, or Done";cls="rdy";html='<span>Booked. Book another, or</span> <button type="button" class="linkbtn" data-sh="close">Done</button>';}
-  else if(!rdy)txt=(sl?slotTxt(sl)+" · ":"")+"Pick a client and a service";
+  else if(!rdy)txt=(sl?slotTxt(sl)+" · ":"")+"Type an address or a name, and pick a service";
   else if(!S.loaded)txt=fmtLen(L);
   else{
     const sv=canonLines(SH.svc),sm=sumPrice(sv),pr=(sm!=null&&!sv.some(function(e){return e.price==null||isNaN(e.price);}))?" · $"+(Math.round(sm)===sm?sm:sm.toFixed(2)):"";      // the price when every ticked service has one
@@ -4537,6 +4960,7 @@ function handleSheetAction(a,e){
   else if(k==="diffclient"){diffClient();}
   else if(k==="sameclient"){sameClient();}
   else if(k==="retryphotos"){retryPhotos();}
+  else if(k==="prop"){toggleProposal(a.getAttribute("data-k"));}
   else if(k==="more"){toggleMore();}
   else if(k==="cnedit"||k==="cnadd"){openCNotes();}
   else if(k==="uselen"){setDur(usualLen(SH.svc));updateLenHint();updateLinks();}
@@ -4563,6 +4987,7 @@ function handleAct(k,el){
   if(k==="signout")signOut();
   else if(k==="togglecanc"){S.showCancelled=!S.showCancelled;savePrefs();const mi=$('#menu [data-act="togglecanc"]');if(mi)mi.setAttribute("aria-checked",S.showCancelled?"true":"false");renderBody();}
   else if(k==="svcpanel")openSvcPanel();
+  else if(k==="proplist")openPropList();
   else if(k==="restart"){S.starting=false;if(S.userId)startApp();else renderLogin("","");}
   else if(k==="reload"){location.reload();}
   else if(k==="reboot"){checkSession();}
