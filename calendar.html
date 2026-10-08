@@ -454,6 +454,7 @@ html.bar-edit .bar #f-addr-list{max-height:min(200px,max(90px,calc(var(--vvh,100
 .barwho .linkbtn{flex:0 0 auto;min-height:36px;padding:0 2px 0 4px;font-size:13.5px;margin-right:-4px;white-space:nowrap}
 .barmore{margin-top:6px;padding-top:2px;border-top:1px dashed var(--line2)}
 .barmore .linkbtn{margin-left:-6px}
+.qnew{margin:4px 0 6px}      /* a new client's phone, address (Google lookup) and email, straight under the name */
 .bar .qsum .linkbtn{min-height:34px}
 .bar .qsum{flex-wrap:nowrap}
 .bar .qsum .qsl{flex:1 1 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}      /* the client summary stays on one line: the address is cut short, not wrapped */
@@ -4030,15 +4031,7 @@ function quickHtml(){
     '<button type="button" class="x" data-sh="close" aria-label="Close the booking bar">'+IC.x+'</button></div>'+
     '<div class="barbody" id="q-body"><div id="q-inner">'+
     '<div id="q-sum" role="status"></div>'+
-    '<div class="sites" id="f-addr-sites" hidden></div>'+
-    '<div class="qsv" id="q-svc" role="group" aria-label="Services"></div>'+
-    '<div class="barwho"><span class="lbl" id="q-wholbl">Who</span><div class="seg" id="q-who" role="group" aria-labelledby="q-wholbl">';
-  activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
-  h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
-    '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
-  // More: the contact boxes for a new client (or for Edit), job notes, the client's note, the day, the time, and the full job sheet
-  h+='<div class="barmore" id="q-more" hidden>'+
-    '<div id="q-new" hidden>'+
+    '<div id="q-new" class="qnew" hidden>'+
       '<div class="fld"><label class="vh" for="f-phone">Phone</label><input class="inp" id="f-phone" type="tel" autocomplete="off" inputmode="tel" placeholder="Phone (optional, but handy)"></div>'+
       '<div class="fld"><label class="vh" for="f-addr">Address</label>'+
         '<input class="inp" id="f-addr" type="text" autocomplete="off" placeholder="Address (optional)">'+
@@ -4047,6 +4040,14 @@ function quickHtml(){
       '<div class="fld"><label class="vh" for="f-email">Email</label>'+
         '<input class="inp" id="f-email" type="email" autocomplete="off" inputmode="email" autocapitalize="none" placeholder="Email (optional)"></div>'+
     '</div>'+
+    '<div class="sites" id="f-addr-sites" hidden></div>'+
+    '<div class="qsv" id="q-svc" role="group" aria-label="Services"></div>'+
+    '<div class="barwho"><span class="lbl" id="q-wholbl">Who</span><div class="seg" id="q-who" role="group" aria-labelledby="q-wholbl">';
+  activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
+  h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
+    '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
+  // More: job notes, the client's note, the day, the time, and the full job sheet (a new client's phone, address and email show straight under the name)
+  h+='<div class="barmore" id="q-more" hidden>'+
     '<div class="fld"><label class="fl" for="f-notes">Job notes</label><textarea class="inp" id="f-notes" rows="2" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>'+
     (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
       '<textarea class="inp" id="f-cnotes" rows="2" placeholder="Dog, gate code, key, parking..."></textarea></div>')+
@@ -4126,8 +4127,7 @@ function quickSync(){
       // the client's notes (dog, gate code ...) where they can't be missed while booking
       if(SH.client&&trim(SH.client.notes)&&!S.noNotesCol)h+='<div class="cnstrip inl" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(trim(SH.client.notes))+'</span></div>';
     }else if(isNewC){
-      h='<div class="qhint"><span class="hint new">New client. Added to your list when you save.</span>'+
-        '<button type="button" class="linkbtn" data-sh="qopenmore">+ phone, address</button></div>';
+      h='<div class="qhint"><span class="hint new">New client. Added to your list when you save.</span></div>';
     }
     if(SH.qSum!==h){
       const ae=document.activeElement,k=(ae&&sum.contains(ae))?ae.getAttribute("data-sh"):null;
