@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0E4F54">
 <title>Lighthouse Proposal Builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E4F54'/%3E%3Cpath d='M13 26 15 10h2l2 16zM14 7h4l-2-3z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap">
@@ -70,7 +71,8 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .warn ul{margin:4px 0 0;padding-left:20px}
 .okmsg{background:var(--okBg);color:var(--ok);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px}
 .hint{font-size:13px;color:var(--ink2);margin:6px 0}
-#cvwrap{position:relative;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#fff;height:min(62vh,520px);min-height:320px}
+#cvwrap{position:relative;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#fff;height:clamp(280px,calc(100vh - 350px),640px);height:clamp(280px,calc(100dvh - 350px),640px)}
+@media(min-width:700px){#cvwrap{height:clamp(380px,calc(100dvh - 370px),700px)}}
 #cv{width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .zoomb{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
 .zoomb .btn{min-height:44px;min-width:44px;padding:0;font-size:20px;background:rgba(255,255,255,.92);color:#14201E}
@@ -81,11 +83,11 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .dt td{padding:4px 0;border-bottom:1px solid var(--line)}
 .dt td:last-child{text-align:right;font-family:"Spline Sans Mono",monospace}
 
-.h3s{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);cursor:pointer;padding:8px 0;font-weight:600}
+.h3s{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);cursor:pointer;padding:13px 0;font-weight:600}
 .photopanel{border:1px solid var(--line2);border-radius:10px;padding:8px 10px;margin:6px 0;background:var(--bg)}
 .phrow{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--ink2)}
 .phrow input{flex:1;min-height:44px}
-.dock{position:sticky;bottom:0;z-index:4;background:var(--surface);border:1px solid var(--line2);border-radius:12px;padding:4px 6px 6px;margin-top:8px;box-shadow:0 -3px 10px rgba(0,0,0,.14);padding-bottom:max(6px,env(safe-area-inset-bottom))}
+.dock{background:var(--surface2);border:1px solid var(--line2);border-radius:12px;padding:4px 6px 6px;margin-top:8px}
 .tools{display:flex;gap:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
 .tg{display:flex;flex-direction:column;gap:2px;flex:0 0 auto}
 .tg>b{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
@@ -104,43 +106,49 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .legrow input{flex:1}
 .banner{background:var(--okBg);color:var(--ok);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .hide{display:none!important}
+header .hbtn{min-height:44px;padding:0 12px;border-radius:10px;border:1px solid rgba(255,255,255,.55);background:transparent;color:var(--deepInk);font:inherit;font-size:14px;font-weight:600;cursor:pointer;touch-action:manipulation}
+header .hbtn.fix{background:var(--soonBg);color:var(--soon);border-color:var(--soonBg)}
+.hbtns{display:flex;gap:8px;align-items:center}
+#fixPanel{position:sticky;top:64px;z-index:6;margin:0 0 12px}
+#fixPanel .warn{margin:0;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.jump{display:block;width:100%;text-align:left;min-height:44px;padding:8px 10px;margin:4px 0;border:1px solid currentColor;border-radius:8px;background:transparent;color:inherit;font:inherit;font-size:14px;cursor:pointer;touch-action:manipulation}
+.fld-bad{outline:3px solid var(--over);outline-offset:2px;border-radius:8px}
+.modal{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .box{background:var(--surface);border-radius:14px;padding:18px;max-width:420px;width:100%}
+.modal .box h2{font-family:Newsreader,Georgia,serif;font-size:21px;margin:0 0 8px}
+.modal .btn{width:100%;margin-top:8px}
+.moreLims{border-top:1px dashed var(--line2);margin-top:8px;padding-top:2px}
+summary{padding:11px 0;cursor:pointer}
+.moreLims summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+.tl,.chip,.btn,.jump{-webkit-tap-highlight-color:transparent}
+@media(max-width:480px){main{padding:8px 8px 80px}section{padding:12px 10px}header{padding-left:10px;padding-right:10px}header h1{font-size:18px}}
 .limrow .txt{flex:1}
 </style>
 </head>
 <body>
 <header>
   <h1>Proposal Builder</h1>
-  <span class="hb" id="hdrWarn"></span>
+  <span class="hbtns"><button class="hbtn hide" id="hdrWarn" type="button" aria-expanded="false" aria-controls="fixPanel"></button><button class="hbtn" id="btnNewJob" type="button">New job</button></span>
 </header>
 <main>
-<div id="banner" class="banner hide"><span id="bannerTxt"></span><span class="btns"><button class="btn sm" id="btnNew" type="button">Start a new proposal</button></span></div>
-
-<!-- 0. PROPOSAL TYPE -->
-<section id="stype">
-  <h2>Proposal type</h2>
-  <div class="btns" id="typeBtns" role="radiogroup" aria-label="Proposal type">
-    <label class="chk"><input type="radio" name="ptype" value="barrier" checked><span>Barrier treatment</span></label>
-    <label class="chk"><input type="radio" name="ptype" value="baiting"><span>Baiting</span></label>
-  </div>
-  <div class="warn hide" id="baitNote">Baiting proposals are not built by the Mac script yet. The drawing and quantities still save.</div>
-</section>
+<div id="fixPanel" class="hide" role="region" aria-label="What is missing"></div>
 
 <!-- 1. SITE PLAN -->
 <section id="s4">
   <h2>1. Site plan</h2>
+  <div class="btns" id="typeBtns" role="radiogroup" aria-label="Proposal type" style="margin-bottom:2px">
+    <label class="chk" style="min-height:44px;padding:0 6px"><input type="radio" name="ptype" value="barrier" checked><span>Barrier treatment</span></label>
+    <label class="chk" style="min-height:44px;padding:0 6px"><input type="radio" name="ptype" value="baiting"><span>Baiting</span></label>
+  </div>
+  <div class="warn hide" id="baitNote">The Mac script does not build baiting proposals yet. The drawing and quantities still save.</div>
   <div class="btns" style="margin-bottom:6px">
-    <button class="btn sm" id="btnPhoto" type="button">Photo</button>
+    <button class="btn sm" id="btnPhoto" type="button">Add photo to trace</button>
     <input type="file" id="photoFile" accept="image/*" class="hide">
     <label class="chk" style="min-height:44px;padding:0 6px"><input type="checkbox" id="ntsOn" checked><span>Not to scale</span></label>
-    <label class="chk" id="snapWrap" style="min-height:44px;padding:0 6px"><input type="checkbox" id="snapOn"><span>Snap to grid (0.5 m)</span></label>
-  </div>
-  <div class="hint">Photo: take or pick a picture of your sketch (or paste one), then trace over it.</div>
-  <div class="hint" id="toolHint"></div>
-  <div class="btns" style="margin:6px 0">
-    <button class="btn sm" id="btnClear" type="button">Clear drawing</button>
+    <label class="chk" id="snapWrap" style="min-height:44px;padding:0 6px"><input type="checkbox" id="snapOn"><span>Snap to 0.5 m</span></label>
   </div>
   <div id="cvwrap">
-    <canvas id="cv"></canvas>
+    <canvas id="cv" aria-label="Site plan drawing"></canvas>
     <div class="zoomb">
       <button class="btn" id="zIn" type="button" aria-label="Zoom in">+</button>
       <button class="btn" id="zOut" type="button" aria-label="Zoom out">&minus;</button>
@@ -149,9 +157,11 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     <div class="cvact">
       <button class="btn pri hide" id="btnFinish" type="button">Finish shape</button>
       <button class="btn" id="btnUndo" type="button">Undo</button>
+      <button class="btn" id="btnClear" type="button">Clear</button>
     </div>
   </div>
   <div class="dock"><div class="tools" id="toolbar" role="toolbar" aria-label="Drawing tools"></div></div>
+  <div class="hint" id="toolHint"></div>
   <div id="coPanel" class="copanel hide">
     <div class="hint" style="margin-top:0"><b id="coTitle">Callout text</b></div>
     <div class="chips" id="coChips"></div>
@@ -169,27 +179,25 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
       <button class="btn sm" id="phTurnR" type="button" aria-label="Turn photo 90 degrees right">Turn 90 right</button>
       <button class="btn sm" id="phRemove" type="button">Remove photo</button>
     </div>
-    <label class="chk" style="min-height:44px"><input type="checkbox" id="photoInc"><span>Include photo in the saved PNG (off = clean tracing only)</span></label>
-    <div class="btns"><button class="btn sm" id="btnPngPhoto" type="button">Download PNG with photo and tracing</button></div>
+    <label class="chk" style="min-height:44px"><input type="checkbox" id="photoInc"><span>Put the photo in the saved PNG (off = just your tracing)</span></label>
+    <div class="hint" id="photoNote">The photo stays on this device. It is not in the packet.</div>
   </div>
-  <div class="hint hide" id="photoNote">The photo is kept on this device only. It is not saved in the packet.</div>
-  <div class="hint" id="gridHint"></div>
   <div id="legendWrap" class="hide">
-    <h3>Legend (only items you used)</h3>
-    <div class="hint">Type over a label to change it. Add a date yourself if you want one, for example (October 2026). Nothing is filled in for you.</div>
+    <h3>Legend (only what you used)</h3>
+    <div class="hint">Type over a label to change it. Add a date yourself if you want one, like (October 2026).</div>
     <div id="legend"></div>
   </div>
   <details id="wallsBox" style="margin-top:8px">
-    <summary class="h3s" id="wallsTitle">Wall lengths (type to correct)</summary>
+    <summary class="h3s" id="wallsTitle">Wall lengths</summary>
     <div id="walls" class="walls" style="margin-top:8px"></div>
-    <div class="hint" id="wallsHint">Draw an outline first. Changing a wall moves every wall after it along with it.</div>
+    <div class="hint" id="wallsHint">Draw an outline first. Changing a wall moves the walls after it.</div>
   </details>
   <div id="baitCounts" class="hide"></div>
   <div id="totalsBox">
     <h3>Drawing totals</h3>
     <table class="dt" id="dtotals"></table>
     <div class="btns" style="margin-top:10px"><button class="btn" id="btnUseTotals" type="button">Use drawing totals</button></div>
-    <div class="hint" id="useTotalsHint">Asks you first, then fills the matching scope lines (slab perimeter, external perimeter, subfloor).</div>
+    <div class="hint" id="useTotalsHint">Asks first, then fills slab perimeter, external perimeter and subfloor in section 3.</div>
   </div>
 </section>
 
@@ -215,10 +223,10 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 <!-- 3. SCOPE -->
 <section id="s2">
   <h2>3. Scope of work</h2>
-  <details style="margin-bottom:8px"><summary>Heading and intro paragraph (optional)</summary>
+  <details style="margin-bottom:8px"><summary>Heading and intro (optional)</summary>
   <label class="f" for="heading">Heading</label>
   <input type="text" id="heading" value="Recommended Treatment">
-  <label class="f" for="narrative">Short intro paragraph</label>
+  <label class="f" for="narrative">Intro paragraph</label>
   <textarea id="narrative"></textarea>
   </details>
   <h3 id="scopeH">Tick what applies</h3>
@@ -251,8 +259,9 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 <!-- 4. LIMITATIONS -->
 <section id="s3">
   <h2>4. Limitations</h2>
-  <div class="hint">Tick the sentences you want. They go in as written.</div>
+  <div class="hint">Tick the ones you want. They go in word for word.</div>
   <div id="limList"></div>
+  <details class="moreLims" id="moreLims"><summary>More limitations</summary><div id="limMore"></div></details>
   <label class="f" for="limExtra">Anything else (free text)</label>
   <textarea id="limExtra"></textarea>
 </section>
@@ -269,7 +278,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     <button class="btn" id="btnLoad" type="button">Load packet (.json)</button>
     <input type="file" id="fileLoad" accept=".json,application/json" class="hide">
   </div>
-  <div class="hint">Save both files into the iCloud Drive folder "Proposal Packets". A draft also saves on this device as you type.</div>
+  <div class="hint">Put both files in the iCloud Drive folder "Proposal Packets". Your draft also keeps itself on this device as you go.</div>
   <div id="saveMsg" class="hint"></div>
 </section>
 </main>
@@ -302,28 +311,30 @@ const BAIT_SCOPE=[
 const UNITS=["lm","m2","each","lump"];
 const SUB_DESC={m2:"Treat accessible subfloor",pier:"Treat accessible subfloor, piers",perim:"Treat accessible subfloor, internal perimeter"};
 const DEFAULT_RATE={lm:50,m2:50};
+/* Sentences are Mitch's fixed wording, never reworded. Order = how often they appeared in his past proposals (analysis/limitation_sentences_ranked.txt). First six show up front, the rest sit under "More limitations". */
 const LIMS=[
+ "We strongly recommend the installation of a termite baiting and monitoring system as a secondary (supplementary) termite management measure.",
+ "This provides ongoing monitoring and early detection of termite activity, particularly in areas where physical or chemical barriers may be limited, compromised, breached, or bypassed.",
+ "Where slab-on-ground construction is present and there is no indication of an existing underslab termite management system, we recommend a complete grid drill and treat of the slab to achieve adequate coverage.",
  "The proposed treatment is limited to accessible areas only.",
- "Treatment coverage is limited to accessible areas at the time of service and may be affected by site conditions, building design, and access limitations.",
  "As a result, some concealed termite entry points may remain inaccessible to treatment.",
  "Whilst the proposed treatment will significantly reduce the risk of termite attack to the accessible treated areas, no chemical treatment can guarantee complete protection where a continuous treated zone cannot be achieved due to construction or access limitations.",
  "Due to restricted access, the building's construction type, older building works, concealed structural elements, inaccessible voids and varying construction methods, it is not possible to establish a complete continuous treated zone to all sections of the property.",
- "Where slab-on-ground construction is present and there is no indication of an existing underslab termite management system, we recommend a complete grid drill and treat of the slab to achieve adequate coverage.",
- "Should future circumstances warrant additional protection, an internal grid drill treatment may be considered to selected slab-on-ground areas where there is no visible evidence of an existing termite management system.",
- "We strongly recommend the installation of a termite baiting and monitoring system as a secondary (supplementary) termite management measure.",
- "This provides ongoing monitoring and early detection of termite activity, particularly in areas where physical or chemical barriers may be limited, compromised, breached, or bypassed.",
  "Annual termite inspections remain essential and are recommended in accordance with AS 3660.2 to monitor the effectiveness of the treatment, detect any termite activity at the earliest opportunity, and identify changes to the property that may increase the risk of future termite attack.",
+ "Should future circumstances warrant additional protection, an internal grid drill treatment may be considered to selected slab-on-ground areas where there is no visible evidence of an existing termite management system.",
+ "Treatment coverage is limited to accessible areas at the time of service and may be affected by site conditions, building design, and access limitations.",
  "Access limitations were noted to some areas of the subfloor, which may restrict treatment coverage.",
+ "Ongoing termite inspections remain essential.",
  "Should active termites, concealed damage, inaccessible areas, or construction details affecting treatment continuity be identified, additional works and costs may be incurred to achieve effective termite management.",
- "Clear external perimeter areas of stored items, vegetation and other obstructions to provide suitable access for treatment.",
- "Ongoing termite inspections remain essential."
+ "Clear external perimeter areas of stored items, vegetation and other obstructions to provide suitable access for treatment."
 ];
+const LIMS_FRONT=6;
 const RETREAT_STD="Re-treatment recommended every 5 yrs";
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
 function num(v){const n=parseFloat(String(v).replace(/,/g,""));return isFinite(n)?n:null}
-function r2(x){return Math.round((x+Number.EPSILON)*100)/100}
+function r2(x){const n=Math.round(Math.abs(parseFloat((x*100).toFixed(6))));return (x<0?-n:n)/100} // half-up to the cent, no float noise
 function money(x){return "$"+x.toLocaleString("en-AU",{minimumFractionDigits:2,maximumFractionDigits:2})}
 function isoToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function isoToLong(iso){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");if(!m)return "";return (+m[3])+" "+MONTHS[+m[2]-1]+" "+m[1]}
@@ -331,7 +342,7 @@ function longToIso(s){const m=/^\s*(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})\s*$/.exec(s
 
 /* ---------- money maths (must match SPEC and the Mac script) ---------- */
 function calc(lines,pct,credit){
-  let sub=0;lines.forEach(l=>{sub+=(l.qty||0)*(l.rate||0)});
+  let sub=0;lines.forEach(l=>{sub+=r2((l.qty||0)*(l.rate||0))}); // each line rounds to the cent first, same as the Mac script
   sub=r2(sub);
   const discount=r2(sub*(pct||0)/100);
   const cr=credit||0;
@@ -375,7 +386,9 @@ function setLine(el,d){ // d: {on,desc,qty,unit,rate}
 function lineVals(el){
   const custom=el.dataset.id==="custom";
   const d=custom?el.querySelector(".d").value.trim():el.dataset.desc;
-  return {on:el.querySelector(".on").checked,desc:d,qty:num(el.querySelector(".q").value),unit:el.querySelector(".u").value,rate:num(el.querySelector(".r").value)};
+  const unit=el.querySelector(".u").value;let qty=num(el.querySelector(".q").value);
+  if(unit==="lump"&&qty==null)qty=1; // a lump sum is one of it (the Mac script does the same)
+  return {on:el.querySelector(".on").checked,desc:d,qty:qty,unit:unit,rate:num(el.querySelector(".r").value)};
 }
 function lineTotal(el){
   const v=lineVals(el);
@@ -477,20 +490,21 @@ function addCustom(d){
   update();
   return el;
 }
-function addLimRow(text,checked){
+function addLimRow(text,checked,more){
   const l=document.createElement("label");l.className="chk limrow";
   l.innerHTML='<input type="checkbox"><span class="txt">'+esc(text)+'</span>';
   l.querySelector("input").checked=!!checked;
-  $("#limList").appendChild(l);
+  (more?$("#limMore"):$("#limList")).appendChild(l);
+  if(more&&checked)$("#moreLims").open=true;
   return l;
 }
-function buildLims(){LIMS.forEach(t=>addLimRow(t,false))}
+function buildLims(){$("#limList").innerHTML="";$("#limMore").innerHTML="";$("#moreLims").open=false;LIMS.forEach((t,i)=>addLimRow(t,false,i>=LIMS_FRONT))}
 
 /* ---------- collect / apply (one packet shape for save, autosave and load) ---------- */
 function collect(){
   const lines=[];
   activeLineEls().forEach(el=>{const v=lineVals(el);if(v.on&&(v.desc||el.dataset.id!=="custom")){lines.push({desc:v.desc,qty:v.qty,unit:v.unit,rate:v.rate})}});
-  const lims=Array.from(document.querySelectorAll("#limList .limrow")).filter(l=>l.querySelector("input").checked).map(l=>l.querySelector(".txt").textContent);
+  const lims=Array.from(document.querySelectorAll("#limList .limrow, #limMore .limrow")).filter(l=>l.querySelector("input").checked).map(l=>l.querySelector(".txt").textContent);
   const anc=(document.querySelector('input[name=anc]:checked')||{}).value||"";
   const same=$("#sameOwner").checked;
   const pk={
@@ -525,7 +539,7 @@ function clearForm(){
   document.querySelectorAll('input[name=anc]').forEach(r=>r.checked=false);
   allLineEls().forEach(el=>{if(el.dataset.id==="sub")setSubDesc(el,SUB_DESC.m2);if(el.dataset.id==="custom")el.remove();else setLine(el,{on:false,qty:null,unit:(SCOPE.concat(BAIT_SCOPE)).find(s=>s.id===el.dataset.id).unit,rate:null})});
   ptype="barrier";
-  $("#limList").innerHTML="";buildLims();
+  buildLims();
   propNoEdited=false;
   D=blankD(true);cur=null;undoStack=[];legSig="";
 }
@@ -552,10 +566,10 @@ function apply(pk){
   if(pk.ancillary){const r=document.querySelector('input[name=anc][value="'+pk.ancillary+'"]');if(r)r.checked=true}
   $("#recheck").value=pk.recheck_interval||"";
   set("retreat",pk.retreatment_note);$("#retreatChk").checked=(pk.retreatment_note===RETREAT_STD);
-  const rows=Array.from(document.querySelectorAll("#limList .limrow"));
+  const rows=Array.from(document.querySelectorAll("#limList .limrow, #limMore .limrow"));
   (pk.limitations||[]).forEach(t=>{
     const hit=rows.find(r=>r.querySelector(".txt").textContent===t);
-    if(hit)hit.querySelector("input").checked=true;else addLimRow(t,true);
+    if(hit){hit.querySelector("input").checked=true;if(hit.parentNode.id==="limMore")$("#moreLims").open=true}else addLimRow(t,true,true);
   });
   set("limExtra",pk.limitations_extra);
   const sp=pk._site_plan_data;
@@ -567,19 +581,35 @@ function apply(pk){
 /* ---------- warnings, totals ---------- */
 function warnings(pk){
   const bad=[],note=[];
-  if(!pk.client)bad.push("Client name is blank.");
-  if(!pk.property)bad.push("Property address is blank.");
-  if(!pk.date)bad.push("Date is blank.");
-  if(!pk.proposal_no)bad.push("Proposal no. is blank.");
-  if(!pk.scope.length)bad.push("No scope lines ticked.");
-  pk.scope.forEach(l=>{
-    if(l.qty==null)bad.push('"'+(l.desc||"(no description)")+'" has no quantity.');
-    if(l.rate==null)bad.push('"'+(l.desc||"(no description)")+'" has no rate.');
+  const B=(m,sel)=>bad.push({m:m,sel:sel});
+  if(!pk.client)B("Client name is blank.","#client");
+  if(!pk.property)B("Property address is blank.","#property");
+  if(!pk.date)B("Date is blank.","#date");
+  if(!pk.proposal_no)B("Proposal no. is blank.","#propNo");
+  if(!pk.scope.length)B("No scope lines ticked.","#s2");
+  activeLineEls().forEach(el=>{
+    const v=lineVals(el);if(!v.on||(el.dataset.id==="custom"&&!v.desc))return;
+    const nm='"'+(v.desc||"(no description)")+'"';
+    if(v.qty==null)B(nm+" has no quantity.",el.querySelector(".q"));
+    if(v.rate==null)B(nm+" has no rate.",el.querySelector(".r"));
   });
-  if(!pk.ancillary)note.push("Ancillary work (will / will not) is not chosen, so it will be saved blank.");
-  if(!pk.recheck_interval)note.push("Re-check interval is blank. It will be saved blank (not defaulted).");
+  const c=calc(pk.scope.map(l=>({qty:l.qty,rate:l.rate})),pk.package_discount_pct,pk.inspection_credit);
+  if(c.ex_gst<0)B("The discount and credit are more than the job. Total is below zero.","#credit");
+  if(pk.package_discount_pct>100)B("Discount is over 100%.","#discPct");
+  if(!pk.ancillary)note.push({m:"Ancillary work (will or will not) is not picked. It saves blank.",sel:"#ancBtns"});
+  if(!pk.recheck_interval)note.push({m:"Re-check interval is blank. It saves blank, never a default.",sel:"#recheck"});
   return {bad:bad,note:note};
 }
+function jumpTo(sel){
+  const el=typeof sel==="string"?document.querySelector(sel):sel;if(!el)return;
+  $("#fixPanel").classList.add("hide");$("#hdrWarn").setAttribute("aria-expanded","false");
+  const d=el.closest("details");if(d)d.open=true;
+  try{el.scrollIntoView({block:"center",behavior:"smooth"})}catch(e){el.scrollIntoView()}
+  setTimeout(()=>{try{el.focus({preventScroll:true})}catch(e){}},250);
+  el.classList.add("fld-bad");setTimeout(()=>el.classList.remove("fld-bad"),2200);
+}
+function jumpList(items){return items.map((x,i)=>'<button type="button" class="jump" data-j="'+i+'">'+esc(x.m)+'</button>').join("")}
+let lastW=null;
 function update(skipSave){
   allLineEls().forEach(lineTotal);
   const pk=collect();
@@ -589,52 +619,95 @@ function update(skipSave){
   if(c.credit)h+='<div><span>Inspection credit</span><span>-'+money(c.credit)+'</span></div>';
   h+='<div><span>Total ex GST</span><span>'+money(c.ex_gst)+'</span></div><div><span>GST (10%)</span><span>'+money(c.gst)+'</span></div><div class="big"><span>Total inc GST</span><span>'+money(c.total)+'</span></div>';
   $("#totals").innerHTML=h;
-  const w=warnings(pk);
+  const w=warnings(pk);lastW=w;
   let wh="";
-  if(w.bad.length)wh+='<div class="warn bad"><b>Check before saving</b><ul>'+w.bad.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
-  if(w.note.length)wh+='<div class="warn"><ul style="margin:0">'+w.note.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
+  if(w.bad.length)wh+='<div class="warn bad" data-k="bad"><b>Still to fix (tap one to go there)</b>'+jumpList(w.bad)+'</div>';
+  if(w.note.length)wh+='<div class="warn" data-k="note"><b>Saves blank unless you fill it in</b>'+jumpList(w.note)+'</div>';
   if(!w.bad.length&&!w.note.length)wh='<div class="okmsg">Nothing missing.</div>';
   $("#warnBox").innerHTML=wh;
-  $("#hdrWarn").textContent=w.bad.length?(w.bad.length+" to fix"):"";
-  $("#retreatChk").checked=($("#retreat").value.trim()===RETREAT_STD);
+  const hb=$("#hdrWarn");
+  hb.classList.toggle("hide",!w.bad.length);hb.classList.add("fix");
+  hb.textContent=w.bad.length+" to fix";
+  if(!w.bad.length){$("#fixPanel").classList.add("hide");hb.setAttribute("aria-expanded","false")}
+  else if(!$("#fixPanel").classList.contains("hide"))renderFixPanel();
   renderTotals();renderWalls();renderLegend();redraw();
   if(!skipSave)scheduleSave();
 }
+function renderFixPanel(){
+  if(!lastW)return;
+  $("#fixPanel").innerHTML='<div class="warn bad"><b>Still to fix</b>'+jumpList(lastW.bad)+'</div>';
+}
+$("#hdrWarn").addEventListener("click",()=>{
+  if(!lastW||!lastW.bad.length)return;
+  const p=$("#fixPanel"),open=p.classList.contains("hide");
+  if(open)renderFixPanel();
+  p.classList.toggle("hide",!open);$("#hdrWarn").setAttribute("aria-expanded",open?"true":"false");
+});
+$("#fixPanel").addEventListener("click",e=>{const b=e.target.closest(".jump");if(b&&lastW)jumpTo(lastW.bad[+b.dataset.j].sel)});
+$("#warnBox").addEventListener("click",e=>{const b=e.target.closest(".jump");if(!b||!lastW)return;const k=b.closest(".warn").dataset.k;jumpTo(lastW[k][+b.dataset.j].sel)});
 
 /* ---------- autosave ---------- */
-let saveT=null;
-function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(doAutosave,500)}
+let saveT=null,saveOK=false; // saveOK stays false until the boot question is answered, so a saved draft is never overwritten unasked
+function scheduleSave(){if(!saveOK)return;clearTimeout(saveT);saveT=setTimeout(doAutosave,500)}
 function doAutosave(){
+  if(!saveOK)return;
   try{
     const pk=collect();pk._site_plan_data=D;
     localStorage.setItem(STORE,JSON.stringify({t:Date.now(),pk:pk}));
   }catch(e){}
 }
-function tryRestore(){
-  try{
-    const raw=localStorage.getItem(STORE);if(!raw)return;
-    const o=JSON.parse(raw);if(!o||!o.pk)return;
-    apply(o.pk);
-    const d=new Date(o.t);
-    $("#bannerTxt").textContent="Draft from "+d.toLocaleString("en-AU")+" reopened.";
-    $("#banner").classList.remove("hide");
-  }catch(e){}
+function pkHasContent(pk){
+  const sp=pk&&pk._site_plan_data;
+  return !!(pk&&(pk.client||pk.property||pk.narrative||(pk.scope&&pk.scope.length)||(sp&&((sp.b||[]).length||(sp.sh||[]).length||(sp.mk||[]).length||(sp.co||[]).length))));
+}
+function formHasContent(){const pk=collect();pk._site_plan_data=D;return pkHasContent(pk)}
+function askModal(title,text,buttons){
+  return new Promise(res=>{
+    const m=document.createElement("div");m.className="modal";m.setAttribute("role","dialog");m.setAttribute("aria-modal","true");
+    m.innerHTML='<div class="box"><h2>'+esc(title)+'</h2><div class="hint" style="font-size:15px">'+esc(text)+'</div></div>';
+    buttons.forEach(b=>{const x=document.createElement("button");x.type="button";x.className="btn"+(b.pri?" pri":"");x.textContent=b.label;x.addEventListener("click",()=>{m.remove();res(b.val)});m.firstChild.appendChild(x)});
+    document.body.appendChild(m);
+    const f=m.querySelector("button");if(f)f.focus();
+  });
+}
+async function tryRestore(){
+  let o=null;
+  try{const raw=localStorage.getItem(STORE);if(raw)o=JSON.parse(raw)}catch(e){}
+  if(!o||!o.pk||!pkHasContent(o.pk)){saveOK=true;return}
+  const d=new Date(o.t),when=d.toLocaleString("en-AU",{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"});
+  const who=o.pk.property||o.pk.client||"an unnamed job";
+  const ans=await askModal("Saved draft found","You have a draft for "+who+" (saved "+when+"). Carry on with it, or start a fresh proposal? Starting new throws that draft away.",
+    [{label:"Continue the saved draft",val:"cont",pri:true},{label:"Start new",val:"new"}]);
+  if(ans==="cont"){try{apply(o.pk)}catch(e){}}
+  else{try{localStorage.removeItem(STORE)}catch(e){}removePhoto()}
+  saveOK=true;update(true);
 }
 
 /* ---------- client section behaviours ---------- */
 let propNoEdited=false;
+function stripUnit(a){ // "2/9 The Esplanade", "Unit 2/9 ...", "5:296 Tyagarah" -> number part after the unit
+  return a.replace(/^\s*(?:unit|apt|apartment|shop|suite)?\s*[A-Za-z]?\d+[A-Za-z]?\s*[\/:]\s*(?=\d)/i,"");
+}
 function suggestNo(addr){
-  let a=(addr||"").split(",")[0].trim().replace(/^\s*[\w\s]*?\d+\s*\/\s*/,"");
+  let a=(addr||"").trim();if(!a)return "";
+  let lot="";
+  const lm=/^\s*lot\s*(\d+)\s*[,\s]\s*/i.exec(a);
+  if(lm){lot="LOT"+lm[1];a=a.slice(lm[0].length)}
+  a=stripUnit(a.split(",")[0].trim());
   const m=/^(\d+)[A-Za-z]?\s+(?:the\s+)?([A-Za-z]+)/i.exec(a);
-  if(!m)return "";
-  return m[1]+m[2].slice(0,3).toUpperCase();
+  if(m)return m[1]+m[2].slice(0,3).toUpperCase();
+  if(lot){const w=/^(?:the\s+)?([A-Za-z]+)/i.exec(a);return lot+(w?w[1].slice(0,3).toUpperCase():"")}
+  return ""; // nothing sensible to suggest: leave it for Mitch to type
 }
 const STREET_TYPES=["street","st","road","rd","drive","dr","avenue","ave","lane","ln","court","ct","crescent","cres","place","pl","way","close","cl","terrace","tce","parade","pde","boulevard","blvd","circuit","cct","highway","hwy"];
 function slug(addr){
-  let a=(addr||"").split(",")[0].trim().replace(/^[^\d]*\d+\s*\//,"");
+  let a=(addr||"").trim();
+  const lm=/^\s*lot\s*(\d+)\s*[,\s]\s*/i.exec(a);
+  let pre="";if(lm){pre="Lot_"+lm[1]+"_";a=a.slice(lm[0].length)}
+  a=stripUnit(a.split(",")[0].trim());
   let w=a.split(/\s+/).filter(Boolean);
   if(w.length>2&&STREET_TYPES.indexOf(w[w.length-1].toLowerCase().replace(/\./g,""))>=0)w.pop();
-  return w.join("_").replace(/[^A-Za-z0-9_]/g,"")||"job";
+  return (pre+w.join("_")).replace(/[^A-Za-z0-9_]/g,"").replace(/_+$/,"")||"job";
 }
 
 /* ---------- DRAWING ---------- */
@@ -662,25 +735,25 @@ const TOOLGROUPS=[
  ["Edit",[["photo","Photo"],["move","Move"],["edit","Edit text"],["del","Delete"],["pan","Pan"]]]
 ];
 const HINTS={
- bldg:"Tap or drag to place each corner of the building. Tap the first corner again (or Finish shape) to close it.",
- ver:"Tap the corners of a veranda or deck (dashed outline). Finish shape closes it.",
- slab:"Tap along the slab perimeter you will treat. Finish shape when done.",
- ext:"Tap along the external perimeter you will treat (thick blue bar). Finish shape when done.",
- sub:"Tap the corners of the subfloor area (pink). Finish shape closes it.",
- int:"Tap along the internal treatment (red dotted line). Finish shape when done.",
- prev:"Tap the corners of an area with a previous treatment. Finish shape closes it.",
- brick:"Tap along a brick wall (thick black line). Finish shape when done.",
- bait:"Tap where each bait station goes (green circle with a B).",drill:"Tap each hole to be core drilled through slab or paving.",
- pen:"Tap each penetration treated.",term:"Tap where active termites were found.",dmg:"Tap where there is damage or workings.",post:"Tap each pole, post or pier.",xout:"Tap to place a red cross-out.",
- callout:"Tap the spot you want to point at, then pick or type the words. Or drag from the spot to where the box should sit.",
- label:"Tap where you want some text, then type it.",
- photo:"Drag to move the photo. Pinch with two fingers to resize and twist it. Use the photo controls below for fine changes.",
+ bldg:"Tap each corner of the building. Tap the first corner again, or Finish shape, to close it.",
+ ver:"Tap the corners of the veranda or deck, then Finish shape.",
+ slab:"Tap along the slab perimeter you will treat, then Finish shape.",
+ ext:"Tap along the external perimeter you will treat, then Finish shape.",
+ sub:"Tap the corners of the subfloor area, then Finish shape.",
+ int:"Tap along the internal treatment, then Finish shape.",
+ prev:"Tap the corners of the area treated before, then Finish shape.",
+ brick:"Tap along the brick wall, then Finish shape.",
+ bait:"Tap where each bait station goes.",drill:"Tap each hole to be core drilled.",
+ pen:"Tap each penetration treated.",term:"Tap where you found active termites.",dmg:"Tap where there is damage or workings.",post:"Tap each pole, post or pier.",xout:"Tap to place a red cross-out.",
+ callout:"Tap the spot to point at, then pick or type the words. Or drag from the spot to where the box should sit.",
+ label:"Tap where the text goes, then type it.",
+ photo:"Drag the photo into place. Pinch with two fingers to resize and twist it.",
  move:"Drag a corner, symbol or callout box to move it.",edit:"Tap a callout or text to change the words.",del:"Tap a shape, symbol or callout to remove it.",pan:"Drag to move the view."
 };
 const STY={
  bldg:{c:"#14201E",w:3,name:"Building outline"},
  slab:{c:"#1F5FBF",w:5,name:"Slab perimeter treatment"},
- ext:{c:"#0A1FE0",w:9,name:"Proposed external treatment"},
+ ext:{c:"#0A1FE0",w:8,name:"Proposed external treatment"},
  sub:{c:"#FF9C9C",fill:"rgba(255,160,160,.55)",w:0,name:"Subfloor treatment"},
  int:{c:"#E3000B",w:4.5,dash:[1,1.1],rel:true,name:"Internal treatment"},
  prev:{c:"#7B3FA0",fill:"rgba(123,63,160,.18)",w:2,name:"Previous treatment",dash:[4,4]},
@@ -766,7 +839,7 @@ function buildToolbar(){
     });
     grp.appendChild(row);tb.appendChild(grp);
   });
-  $("#toolHint").textContent=(tool==="photo"&&!photo)?"Add a photo first (Photo button above the drawing), then drag it into place here.":(HINTS[tool]||"");
+  $("#toolHint").textContent=(tool==="photo"&&!photo)?"Add a photo first (Add photo to trace, above the drawing).":(HINTS[tool]||"");
   $("#btnFinish").classList.toggle("hide",!(cur&&cur.pts.length));
 }
 
@@ -806,12 +879,11 @@ function savePhoto(){
   if(!photo)return;
   try{
     localStorage.setItem(PHOTO_KEY,JSON.stringify({d:photo.data,x:photo.x,y:photo.y,scale:photo.scale,rot:photo.rot,op:$("#photoOp").value,inc:$("#photoInc").checked}));
-    $("#photoNote").textContent="The photo is kept on this device only. It is not saved in the packet.";
-  }catch(e){$("#photoNote").textContent="The photo is too big to keep on this device, so it will be gone if you reload. It is not saved in the packet either way."}
+    $("#photoNote").textContent="The photo stays on this device. It is not in the packet.";
+  }catch(e){$("#photoNote").textContent="The photo is too big to keep on this device, so it is gone if you reload. It is not in the packet either way."}
 }
 function syncPhotoUI(){
   $("#photoPanel").classList.toggle("hide",!photo);
-  $("#photoNote").classList.toggle("hide",!photo);
 }
 function setPhotoFromImage(im){
   const mw=im.naturalWidth||im.width,mh=im.naturalHeight||im.height;
@@ -890,7 +962,7 @@ function drawCallout(c,tf,k,co){
     const ex=R.cx+dx*sc,ey=R.cy+dy*sc;
     c.beginPath();c.moveTo(ex,ey);c.lineTo(R.tx,R.ty);c.lineWidth=1.5*k;c.strokeStyle="#14201E";c.stroke();
     const a=Math.atan2(R.ty-ey,R.tx-ex),L=11*k;
-    c.beginPath();c.moveTo(R.tx,R.ty);c.lineTo(R.tx-L*Math.cos(a-0.4),R.ty-L*Math.sin(a-0.4));c.lineTo(R.tx-L*Math.cos(a+0.4),R.ty-L*Math.sin(a+0.4));c.closePath();c.fillStyle="#14201E";c.fill();
+    c.beginPath();c.moveTo(R.tx-L*Math.cos(a-0.4),R.ty-L*Math.sin(a-0.4));c.lineTo(R.tx,R.ty);c.lineTo(R.tx-L*Math.cos(a+0.4),R.ty-L*Math.sin(a+0.4));c.lineWidth=1.5*k;c.lineJoin="miter";c.strokeStyle="#14201E";c.stroke();
   }
   c.fillStyle="#fff";c.fillRect(R.x0,R.y0,R.w,R.h);
   c.lineWidth=1.5*k;c.strokeStyle="#14201E";c.strokeRect(R.x0,R.y0,R.w,R.h);
@@ -910,8 +982,8 @@ function paintScene(c,tf,k,opts){
   // buildings
   D.b.forEach(b=>{
     c.beginPath();b.pts.forEach((p,i)=>{const q=tf(p);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});
-    if(b.closed){c.closePath();c.fillStyle="rgba(20,32,30,.06)";c.fill()}
-    c.setLineDash([]);c.lineWidth=3*k;c.strokeStyle="#14201E";c.lineJoin="miter";c.lineCap="butt";c.stroke();
+    if(b.closed){c.closePath();if(!(opts&&opts.bw)){c.fillStyle="rgba(20,32,30,.06)";c.fill()}}
+    c.setLineDash([]);c.lineWidth=(opts&&opts.bw)||3*k;c.strokeStyle="#14201E";c.lineJoin="miter";c.lineCap="butt";c.stroke();
     if(D.nts)return; // not to scale: no wall length labels
     const n=b.pts.length,cnt=b.closed?n:n-1;
     c.font="600 "+(12*k)+"px Arial, sans-serif";c.textAlign="center";c.textBaseline="middle";
@@ -963,8 +1035,8 @@ function paint(){
     c.setLineDash([6,4]);c.lineWidth=2.5;c.strokeStyle=st.c;c.stroke();c.setLineDash([]);
     cur.pts.forEach((p,i)=>{const q=w2s(p);c.beginPath();c.arc(q[0],q[1],i===0?8:5,0,7);c.fillStyle=i===0?"#fff":st.c;c.fill();c.lineWidth=2;c.strokeStyle=st.c;c.stroke()});
   }
-  if(coPend&&coPend.mode==="new"){ // show where the callout will point
-    const q=w2s([coPend.ax,coPend.ay]);c.beginPath();c.arc(q[0],q[1],7,0,7);c.fillStyle="#14201E";c.fill();
+  if(coPend&&(coPend.mode==="new"||coPend.mode==="label")){ // show where it will go
+    const q=w2s(coPend.mode==="new"?[coPend.ax,coPend.ay]:[coPend.x,coPend.y]);c.beginPath();c.arc(q[0],q[1],7,0,7);c.fillStyle="#14201E";c.fill();
   }
   if(!hasContent()&&!photo&&!(cur&&cur.pts.length)){
     c.fillStyle="#7E8D88";c.font="15px Public Sans, Arial, sans-serif";c.textAlign="center";c.textBaseline="middle";
@@ -1031,22 +1103,21 @@ function finishPath(closedByTap){
   cur=null;buildToolbar();changed();
 }
 function addMark(sp){
-  const w=snapPt(sp);let text="";
-  if(tool==="label"){
-    text=(window.prompt("Text","")||"").trim();
-    if(!text)return;
-  }
-  pushUndo();D.mk.push({t:tool,x:w[0],y:w[1],text:text});changed();
+  const w=snapPt(sp);
+  if(tool==="label"){openCo({mode:"label",x:w[0],y:w[1]});return}
+  pushUndo();D.mk.push({t:tool,x:w[0],y:w[1],text:""});changed();
 }
 
-/* callouts: boxed text with an arrow to a point */
-let coPend=null; // {mode:"new",ax,ay,x,y} or {mode:"edit",co}
+/* callouts: boxed text with an arrow to a point. The same panel also takes plain text labels (no pop-up boxes). */
+let coPend=null; // {mode:"new"|"edit"|"label"|"editlabel", ...}
+const CO_TXT={new:["Callout text","Add callout"],edit:["Change callout text","Save text"],label:["Text on the plan","Add text"],editlabel:["Change text","Save text"]};
 function openCo(p){
   coPend=p;
   $("#coPanel").classList.remove("hide");
-  $("#coTitle").textContent=p.mode==="edit"?"Change callout text":"Callout text";
-  $("#coOk").textContent=p.mode==="edit"?"Save text":"Add callout";
-  $("#coText").value=p.mode==="edit"?p.co.text:"";
+  $("#coTitle").textContent=CO_TXT[p.mode][0];
+  $("#coOk").textContent=CO_TXT[p.mode][1];
+  $("#coChips").classList.toggle("hide",p.mode==="label"||p.mode==="editlabel");
+  $("#coText").value=p.mode==="edit"?p.co.text:(p.mode==="editlabel"?(p.mk.text||""):"");
   redraw();
   try{$("#coPanel").scrollIntoView({block:"nearest"})}catch(e){}
   setTimeout(()=>{try{$("#coText").focus({preventScroll:true})}catch(e){}},50);
@@ -1063,9 +1134,12 @@ function buildCoChips(){
 $("#coOk").addEventListener("click",()=>{
   const txt=$("#coText").value.trim();
   if(!coPend)return;
-  if(!txt){alert("Pick a preset or type some words first.");return}
+  if(!txt){$("#coText").classList.add("fld-bad");setTimeout(()=>$("#coText").classList.remove("fld-bad"),1500);$("#coText").focus();return}
   pushUndo();
-  if(coPend.mode==="edit"){coPend.co.text=txt}
+  const m=coPend.mode;
+  if(m==="edit")coPend.co.text=txt;
+  else if(m==="editlabel")coPend.mk.text=txt;
+  else if(m==="label")D.mk.push({t:"label",x:coPend.x,y:coPend.y,text:txt});
   else D.co.push({x:coPend.x,y:coPend.y,ax:coPend.ax,ay:coPend.ay,text:txt});
   closeCo();changed();
 });
@@ -1114,9 +1188,7 @@ function editAt(sp){
   if(hc){openCo({mode:"edit",co:hc.co});return}
   const w=s2w(sp),tolW=18/view.s;
   for(let i=D.mk.length-1;i>=0;i--){const m=D.mk[i];if(m.t==="label"&&Math.hypot(m.x-w[0],m.y-w[1])<tolW*2.5){
-    const t=window.prompt("Text",m.text||"");
-    if(t!==null&&t.trim()){pushUndo();m.text=t.trim();changed()}
-    return}}
+    openCo({mode:"editlabel",mk:m});return}}
 }
 
 /* pointer handling */
@@ -1143,8 +1215,8 @@ cv.addEventListener("pointerdown",e=>{
   tap={id:e.pointerId,sx:p[0],sy:p[1],moved:false};
   if(tool==="move"){
     const h=hitVertex(p);
-    if(h){pushUndo();drag=h}
-    else{const hc=hitCallout(p);if(hc){pushUndo();drag={co:hc.co,part:"b",off:[p[0]-hc.R.cx,p[1]-hc.R.cy]}}}
+    if(h){drag=h;drag.pend=true;drag.snap=JSON.stringify(D)}
+    else{const hc=hitCallout(p);if(hc){drag={co:hc.co,part:"b",off:[p[0]-hc.R.cx,p[1]-hc.R.cy],pend:true,snap:JSON.stringify(D)}}}
   }else if(tool==="pan"){panning={lx:p[0],ly:p[1]}}
   else if(tool==="photo"&&photo){panning={lx:p[0],ly:p[1],ph:true}}
 },{passive:false});
@@ -1171,6 +1243,7 @@ cv.addEventListener("pointermove",e=>{
   if(tap&&tap.id===e.pointerId){
     if(Math.hypot(p[0]-tap.sx,p[1]-tap.sy)>8)tap.moved=true;
     if(drag){
+      if(drag.pend){if(!tap.moved)return;drag.pend=false;drag.moved=true;undoStack.push(drag.snap)}
       if(drag.co&&drag.part==="b"){const w=s2w([p[0]-drag.off[0],p[1]-drag.off[1]]);drag.co.x=w[0];drag.co.y=w[1]}
       else if(drag.co){const w=snapPt(p);drag.co.ax=w[0];drag.co.ay=w[1]}
       else{
@@ -1192,7 +1265,7 @@ function endPtr(e,cancel){
   const t=tap;
   if(ptrs.size===0){const nt=noTap;noTap=false;
     if(t&&t.id===e.pointerId&&!nt&&!cancel){
-      if(drag){drag=null;changed()}
+      if(drag){const mv=drag.moved;drag=null;if(mv)changed()}
       else if(PATHTOOLS[tool]){
         if(!t.moved){addPathPoint(p)}
         else{
@@ -1231,8 +1304,7 @@ function syncNts(){
   $("#ntsOn").checked=D.nts;
   $("#totalsBox").classList.toggle("hide",D.nts);
   $("#wallsBox").open=!D.nts;
-  $("#wallsTitle").textContent=D.nts?"Wall lengths (optional, not needed for a not-to-scale drawing)":"Wall lengths (type to correct)";
-  $("#gridHint").textContent=D.nts?"Not to scale: draw it like a sketch. You type the quantities in section 3 yourself.":"Grid squares are 1 m. Pinch with two fingers to zoom and pan, or use +/- and the Pan tool.";
+  $("#wallsTitle").textContent=D.nts?"Wall lengths (not needed when not to scale)":"Wall lengths (type to correct)";
   $("#snapWrap").classList.toggle("hide",D.nts);
 }
 $("#ntsOn").addEventListener("change",()=>{
@@ -1363,64 +1435,76 @@ document.addEventListener("paste",e=>{
   }
 });
 
-/* ---------- PNG export ---------- */
+/* ---------- PNG export ----------
+   Fixed look whatever the on-screen zoom or sketch size: a 984 px wide page (drawn at 2x so it is crisp),
+   drawing fitted to it, symbols, lines and text at one fixed size, legend boxed under it, caption last. */
+const EXP={LW:984,R:2,M:28,TOP:24,MAXH:700,K:1.25,BW:2,LEGTXT:16,CAP:14};
 function renderPNG(opts){
   opts=opts||{};
   const withPhoto=!!(opts.photo&&photo);
   return new Promise(res=>{
     let bb=bbox();
-    if(withPhoto){
-      photoCorners().forEach(p=>{
-        if(!bb)bb={x0:p[0],y0:p[1],x1:p[0],y1:p[1]};
-        bb.x0=Math.min(bb.x0,p[0]);bb.y0=Math.min(bb.y0,p[1]);bb.x1=Math.max(bb.x1,p[0]);bb.y1=Math.max(bb.y1,p[1]);
-      });
-    }
+    const pc=withPhoto?photoCorners():[];
+    pc.forEach(p=>{
+      if(!bb)bb={x0:p[0],y0:p[1],x1:p[0],y1:p[1]};
+      bb.x0=Math.min(bb.x0,p[0]);bb.y0=Math.min(bb.y0,p[1]);bb.x1=Math.max(bb.x1,p[0]);bb.y1=Math.max(bb.y1,p[1]);
+    });
     if(!bb){res(null);return}
-    const pad=withPhoto?0.5:2.5,bx0=bb.x0-pad,by0=bb.y0-pad,bx1=bb.x1+pad,by1=bb.y1+pad;
-    const ww=bx1-bx0,hh=by1-by0;
-    const s=Math.max(8,Math.min(80,Math.min(1500/ww,1100/hh)));
-    const k=Math.max(1,s/20*0.9+0.4);
-    const W0=Math.max(900,Math.round(ww*s)),Hc=Math.round(hh*s);
-    let offx=(W0-ww*s)/2,offy=0;
-    let tf=p=>[(p[0]-bx0)*s+offx,(p[1]-by0)*s+offy];
-    // grow the picture so callout boxes are never cut off
+    const E=EXP,k=E.K,LW=E.LW,availW=LW-2*E.M,availH=E.MAXH;
     const mc=document.createElement("canvas").getContext("2d");
-    let eL=0,eR=0,eT=0,eB=0;
-    D.co.forEach(co=>{const R=coRect(mc,co,k,tf);eL=Math.max(eL,12-R.x0);eR=Math.max(eR,R.x0+R.w+12-W0);eT=Math.max(eT,12-R.y0);eB=Math.max(eB,R.y0+R.h+12-Hc)});
-    eL=Math.ceil(eL);eR=Math.ceil(eR);eT=Math.ceil(eT);eB=Math.ceil(eB);
-    
-    const leg0=usedLegend();let lw0=0;{const kq=1.1*Math.max(1,W0/1000);mc.font=(15*kq)+"px Arial, sans-serif";leg0.forEach(t=>{lw0=Math.max(lw0,mc.measureText(legendName(t)).width)});lw0=leg0.length?lw0+(14*2+52+14)*kq+24:0}
-    const W=Math.max(W0+eL+eR,Math.ceil(lw0)),H0=Hc+eT+eB;
-    offx+=eL+(W-(W0+eL+eR))/2;offy+=eT;
-    tf=p=>[(p[0]-bx0)*s+offx,(p[1]-by0)*s+offy];
-    // legend box, sized from the text
-    const leg=usedLegend(),kk=1.1*Math.max(1,W0/1000);
-    const rowH=34*kk,lpad=14*kk,swW=52*kk;
-    mc.font=(15*kk)+"px Arial, sans-serif";
+    const ww=Math.max(bb.x1-bb.x0,1),hh=Math.max(bb.y1-bb.y0,1);
+    let s=Math.max(3,Math.min(70,Math.min(availW/ww,availH/hh)));
+    // pixel extent of everything drawn (symbols, text and callout boxes have a fixed pixel size, so iterate)
+    function extent(sc){
+      const tf=p=>[(p[0]-bb.x0)*sc,(p[1]-bb.y0)*sc];
+      let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+      const add=(x,y,r)=>{r=r||0;x0=Math.min(x0,x-r);y0=Math.min(y0,y-r);x1=Math.max(x1,x+r);y1=Math.max(y1,y+r)};
+      D.b.forEach(b=>b.pts.forEach(p=>{const q=tf(p);add(q[0],q[1],3)}));
+      D.sh.forEach(sh=>sh.pts.forEach(p=>{const q=tf(p);add(q[0],q[1],6*k)}));
+      D.mk.forEach(m=>{const q=tf([m.x,m.y]);
+        if(m.t==="label"){mc.font="600 "+(14*k)+"px Arial, sans-serif";const hw=mc.measureText(m.text||"").width/2+4;add(q[0]-hw,q[1],8*k);add(q[0]+hw,q[1],8*k)}
+        else add(q[0],q[1],13*k)});
+      D.co.forEach(co=>{const R=coRect(mc,co,k,tf);add(R.x0,R.y0,2);add(R.x0+R.w,R.y0+R.h,2);add(R.tx,R.ty,3)});
+      pc.forEach(p=>{const q=tf(p);add(q[0],q[1],0)});
+      return {x0:x0,y0:y0,x1:x1,y1:y1,tf:tf};
+    }
+    let e=extent(s);
+    for(let n=0;n<8;n++){
+      const w=e.x1-e.x0,h=e.y1-e.y0;
+      if(w<=availW+0.5&&h<=availH+0.5)break;
+      s=Math.max(1,s*Math.min(availW/w,availH/h)*0.985);e=extent(s);
+    }
+    const cw=e.x1-e.x0,ch=e.y1-e.y0;
+    const ox=E.M+(availW-cw)/2-e.x0,oy=E.TOP-e.y0;
+    const tf=p=>{const q=e.tf(p);return [q[0]+ox,q[1]+oy]};
+    // legend
+    const leg=usedLegend(),lk=1.15,lf=E.LEGTXT;
+    const rowH=30,lpad=14,swW=64,gapT=12;
+    mc.font=lf+"px Arial, sans-serif";
     let tw=0;leg.forEach(t=>{tw=Math.max(tw,mc.measureText(legendName(t)).width)});
-    const boxW=Math.min(W-10,lpad*2+swW+14*kk+tw),boxH=leg.length?leg.length*rowH+lpad*2:0;
-    const gap=22*kk,capH=48*kk;
-    const H=Math.round(H0+gap+(leg.length?boxH+gap:0)+capH);
-    const c=document.createElement("canvas");c.width=W;c.height=H;
-    const g=c.getContext("2d");
-    g.fillStyle="#fff";g.fillRect(0,0,W,H);
+    const boxW=leg.length?Math.min(LW-2*E.M,Math.max(320,lpad*2+swW+gapT+tw+10)):0,boxH=leg.length?leg.length*rowH+lpad*2:0;
+    const gap=26,capH=40;
+    const Hlogical=Math.ceil(E.TOP+ch+gap+(leg.length?boxH+gap:0)+capH);
+    const R=E.R,c=document.createElement("canvas");c.width=LW*R;c.height=Hlogical*R;
+    const g=c.getContext("2d");g.scale(R,R);g.imageSmoothingQuality="high";
+    g.fillStyle="#fff";g.fillRect(0,0,LW,Hlogical);
     if(withPhoto)paintPhoto(g,tf);
-    paintScene(g,tf,k,{});
-    let y=H0+gap;
+    paintScene(g,tf,k,{bw:E.BW});
+    let y=E.TOP+ch+gap;
     if(leg.length){
-      const bx=Math.round((W-boxW)/2);
+      const bx=Math.round((LW-boxW)/2);
       g.fillStyle="#fff";g.fillRect(bx,y,boxW,boxH);
-      g.lineWidth=1.5*kk;g.strokeStyle="#14201E";g.setLineDash([]);g.strokeRect(bx,y,boxW,boxH);
-      g.font=(15*kk)+"px Arial, sans-serif";g.textAlign="left";g.textBaseline="middle";
+      g.lineWidth=1.5;g.strokeStyle="#14201E";g.setLineDash([]);g.strokeRect(bx+.75,y+.75,boxW-1.5,boxH-1.5);
+      g.font=lf+"px Arial, sans-serif";g.textAlign="left";g.textBaseline="middle";
       leg.forEach((t,i)=>{
         const cy=y+lpad+i*rowH+rowH/2;
-        g.save();g.translate(bx+lpad,cy-rowH/2);swatchDraw(g,t,swW,rowH,kk);g.restore();
-        g.fillStyle="#14201E";g.fillText(legendName(t),bx+lpad+swW+14*kk,cy);
+        g.save();g.translate(bx+lpad,cy-rowH/2);swatchDraw(g,t,swW,rowH,lk);g.restore();
+        g.fillStyle="#14201E";g.fillText(legendName(t),bx+lpad+swW+gapT,cy);
       });
       y+=boxH+gap;
     }
-    g.font="italic "+(14*kk)+"px Arial, sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillStyle="#4B5B57";
-    g.fillText("Diagram indicative only and not to scale.",W/2,y+capH/2);
+    g.font=E.CAP+"px Arial, sans-serif";g.textAlign="center";g.textBaseline="middle";g.fillStyle="#14201E";
+    g.fillText("Diagram indicative only and not to scale.",LW/2,y+capH/2-4);
     c.toBlob(b=>res(b),"image/png");
   });
 }
@@ -1440,7 +1524,7 @@ async function buildPacket(){
 }
 $("#btnSave").addEventListener("click",async()=>{
   const w=warnings(collect());
-  if(w.bad.length&&!confirm("These are not filled in yet:\n\n- "+w.bad.join("\n- ")+"\n\nSave the packet anyway?"))return;
+  if(w.bad.length&&!confirm("These are not sorted yet:\n\n- "+w.bad.map(x=>x.m).join("\n- ")+"\n\nSave the packet anyway?"))return;
   const p=await buildPacket();
   dl(p.json,p.base+".json");
   if(p.png)setTimeout(()=>dl(p.png,p.base+".png"),700);
@@ -1448,10 +1532,6 @@ $("#btnSave").addEventListener("click",async()=>{
   doAutosave();
 });
 function photoInc(){return !!(photo&&$("#photoInc").checked)}
-$("#btnPngPhoto").addEventListener("click",async()=>{
-  if(!photo){alert("Add a photo first.");return}
-  const pk=collect(),png=await renderPNG({photo:true});dl(png,fileBase(pk)+"_with_photo.png");
-});
 $("#btnPng").addEventListener("click",async()=>{
   if(!hasContent()&&!photoInc()){alert("Nothing drawn yet.");return}
   const pk=collect(),png=await renderPNG({photo:photoInc()});dl(png,fileBase(pk)+".png");
@@ -1476,16 +1556,22 @@ $("#fileLoad").addEventListener("change",e=>{
     try{
       const pk=JSON.parse(r.result);
       if(!pk||typeof pk!=="object"||!Array.isArray(pk.scope))throw new Error("not a packet");
-      apply(pk);
+      if(formHasContent()&&!confirm("Open "+f.name+"? It replaces what is on screen now."))return;
+      apply(pk);doAutosave();
       $("#saveMsg").textContent="Loaded "+f.name+(pk._site_plan_data?"":". This packet has no drawing data, so the site plan is empty.");
-    }catch(err){alert("That file is not a proposal packet.")}
+    }catch(err){alert("That file is not a proposal packet (.json from this page).")}
   };
   r.readAsText(f);e.target.value="";
 });
-$("#btnNew").addEventListener("click",()=>{
-  if(!confirm("Start a new proposal? This clears the form and drawing (the saved draft is replaced)."))return;
-  clearForm();syncType();removePhoto();$("#banner").classList.add("hide");update();fitView();
-});
+function newJob(){
+  if(formHasContent()&&!confirm("Start a new job? This clears the form and the drawing on screen. Save the packet first if you need it."))return;
+  clearTimeout(saveT);
+  clearForm();syncType();removePhoto();
+  try{localStorage.removeItem(STORE)}catch(e){}
+  $("#saveMsg").textContent="";$("#fixPanel").classList.add("hide");
+  syncNts();update(true);fitView();window.scrollTo(0,0);
+}
+$("#btnNewJob").addEventListener("click",newJob);
 $("#btnAddCustom").addEventListener("click",()=>{const el=addCustom();const d=el.querySelector(".d");if(d)d.focus()});
 
 /* ---------- form wiring ---------- */
@@ -1495,6 +1581,7 @@ $("#property").addEventListener("input",()=>{
   if(!propNoEdited){$("#propNo").value=suggestNo($("#property").value)}
 });
 $("#propNo").addEventListener("input",()=>{propNoEdited=$("#propNo").value.trim()!==""});
+$("#retreat").addEventListener("input",()=>{$("#retreatChk").checked=($("#retreat").value.trim()===RETREAT_STD)});
 $("#retreatChk").addEventListener("change",()=>{
   const r=$("#retreat");
   if($("#retreatChk").checked)r.value=RETREAT_STD;else if(r.value.trim()===RETREAT_STD)r.value="";
@@ -1509,8 +1596,8 @@ if(window.ResizeObserver)new ResizeObserver(resize).observe(cv.parentElement);
 buildScope();buildBait();buildLims();buildToolbar();buildCoChips();syncNts();restorePhoto();syncType();
 $("#date").value=isoToday();
 resize();fitView();
-tryRestore();
 update(true);
+tryRestore();
 window.__test={get D(){return D},set D(v){D=v},collect:collect,apply:apply,drawingTotals:drawingTotals,renderPNG:renderPNG,update:update,suggestNo:suggestNo,slug:slug,get view(){return view},get photo(){return photo},fitView:fitView};
 })();
 </script>
