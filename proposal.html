@@ -119,7 +119,7 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
   <label class="chk"><input type="checkbox" id="sameOwner" checked><span>Owner is the same as the client</span></label>
   <div id="ownerWrap" class="hide"><label class="f" for="owner">Owner name(s)</label><input type="text" id="owner" autocomplete="off"></div>
   <label class="f" for="property">Property address</label>
-  <input type="text" id="property" autocomplete="off" placeholder="14 Beachside Drive, Suffolk Park">
+  <input type="text" id="property" autocomplete="off" placeholder="Street number, street, suburb">
   <div class="row two">
     <div><label class="f" for="propNo">Proposal no.</label><input type="text" id="propNo" autocomplete="off" autocapitalize="characters"><div class="hint" id="propNoHint">Suggested from the address. You can change it.</div></div>
     <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
@@ -129,10 +129,12 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 <!-- 2. SCOPE -->
 <section id="s2">
   <h2>2. Scope of work</h2>
+  <details style="margin-bottom:8px"><summary>Heading and intro paragraph (optional)</summary>
   <label class="f" for="heading">Heading</label>
   <input type="text" id="heading" value="Recommended Treatment">
-  <label class="f" for="narrative">Short intro paragraph (optional)</label>
+  <label class="f" for="narrative">Short intro paragraph</label>
   <textarea id="narrative"></textarea>
+  </details>
   <h3>Tick what applies</h3>
   <div id="scopeList"></div>
   <h3>Your own lines</h3>
