@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0E4F54">
+<title>Lighthouse Proposal Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap">
+<style>
+/* Look is a placeholder (same palette as the other pages). Mitch brings the design later. */
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --surface2:#EDF0EC; --ink:#14201E; --ink2:#4B5B57; --ink3:#7E8D88;
+  --line:#DCE1DD; --line2:#C9D1CC; --deep:#0E4F54; --deepInk:#FFFFFF;
+  --over:#A23C29; --overBg:#F8E8E3; --soon:#8C6314; --soonBg:#F8F0DC; --ok:#276B59; --okBg:#E2EFE9;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E;
+  --line:#27342F; --line2:#33423D; --deep:#57B3BA; --deepInk:#08201F;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;line-height:1.4;padding-bottom:env(safe-area-inset-bottom)}
+header{position:sticky;top:0;z-index:5;background:var(--deep);color:var(--deepInk);padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));display:flex;gap:10px;align-items:center;justify-content:space-between}
+header h1{font-family:Newsreader,Georgia,serif;font-size:20px;margin:0;font-weight:600}
+header .hb{font-size:13px;opacity:.95}
+main{max-width:860px;margin:0 auto;padding:12px 12px 80px}
+section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin:0 0 14px}
+section>h2{font-family:Newsreader,Georgia,serif;font-size:21px;margin:0 0 10px;font-weight:600}
+h3{font-size:14px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);margin:16px 0 6px}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--ink2);margin:10px 0 3px}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],select,textarea{
+  width:100%;min-height:46px;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line2);border-radius:8px;padding:8px 10px}
+textarea{min-height:80px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--deep);outline-offset:1px}
+.row{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:600px){.row.two{grid-template-columns:1fr 1fr}.row.three{grid-template-columns:1fr 1fr 1fr}}
+.chk{display:flex;gap:12px;align-items:flex-start;min-height:48px;padding:8px 6px;cursor:pointer;border-radius:8px}
+.chk input{width:26px;height:26px;flex:0 0 26px;margin:0;accent-color:var(--deep)}
+.chk span{flex:1;padding-top:2px}
+.btn{min-height:48px;padding:10px 16px;font:inherit;font-weight:600;font-size:15px;border-radius:10px;border:1px solid var(--line2);background:var(--surface2);color:var(--ink);cursor:pointer;touch-action:manipulation}
+.btn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.btn.sm{min-height:44px;padding:6px 12px;font-size:14px}
+.btn.on{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.btn:active{filter:brightness(.92)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.scopeline{border:1px solid var(--line);border-radius:10px;padding:4px 8px;margin:6px 0;background:var(--bg)}
+.scopeline.on{border-color:var(--deep)}
+.sl-in{display:none;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:2px 4px 10px}
+.scopeline.on .sl-in{display:grid}
+.sl-in .lt{grid-column:1/-1;font-size:14px;color:var(--ink2);font-family:"Spline Sans Mono",monospace}
+.sl-in small{display:block;font-size:12px;color:var(--ink3);margin-bottom:2px}
+.sl-desc{width:100%;margin-bottom:6px;grid-column:1/-1}
+.totals{background:var(--surface2);border-radius:10px;padding:10px 14px;margin-top:12px;font-family:"Spline Sans Mono",monospace;font-size:15px}
+.totals div{display:flex;justify-content:space-between;padding:3px 0}
+.totals .big{font-weight:600;border-top:1px solid var(--line2);margin-top:4px;padding-top:6px}
+.warn{background:var(--soonBg);color:var(--soon);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px}
+.warn.bad{background:var(--overBg);color:var(--over)}
+.warn ul{margin:4px 0 0;padding-left:20px}
+.okmsg{background:var(--okBg);color:var(--ok);border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px}
+.hint{font-size:13px;color:var(--ink2);margin:6px 0}
+#cvwrap{position:relative;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#fff;height:min(62vh,520px);min-height:320px}
+#cv{width:100%;height:100%;display:block;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.zoomb{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px}
+.zoomb .btn{min-height:44px;min-width:44px;padding:0;font-size:20px;background:rgba(255,255,255,.92);color:#14201E}
+.walls{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.walls label{font-size:12px;color:var(--ink2);font-weight:600}
+.walls .wi{display:flex;align-items:center;gap:6px}
+.dt{width:100%;font-size:14px;border-collapse:collapse;margin-top:6px}
+.dt td{padding:4px 0;border-bottom:1px solid var(--line)}
+.dt td:last-child{text-align:right;font-family:"Spline Sans Mono",monospace}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.banner{background:var(--okBg);color:var(--ok);border-radius:10px;padding:10px 14px;margin:0 0 12px;font-size:14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.hide{display:none!important}
+.limrow .txt{flex:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Proposal Builder</h1>
+  <span class="hb" id="hdrWarn"></span>
+</header>
+<main>
+<div id="banner" class="banner hide"><span id="bannerTxt"></span><span class="btns"><button class="btn sm" id="btnNew" type="button">Start a new proposal</button></span></div>
+
+<!-- 1. CLIENT -->
+<section id="s1">
+  <h2>1. Client</h2>
+  <label class="f" for="client">Client name(s)</label>
+  <input type="text" id="client" autocomplete="off">
+  <div class="row two">
+    <div><label class="f" for="email">Email</label><input type="email" id="email" autocomplete="off" inputmode="email"></div>
+    <div><label class="f" for="phone">Phone</label><input type="tel" id="phone" autocomplete="off" inputmode="tel"></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="sameOwner" checked><span>Owner is the same as the client</span></label>
+  <div id="ownerWrap" class="hide"><label class="f" for="owner">Owner name(s)</label><input type="text" id="owner" autocomplete="off"></div>
+  <label class="f" for="property">Property address</label>
+  <input type="text" id="property" autocomplete="off" placeholder="14 Beachside Drive, Suffolk Park">
+  <div class="row two">
+    <div><label class="f" for="propNo">Proposal no.</label><input type="text" id="propNo" autocomplete="off" autocapitalize="characters"><div class="hint" id="propNoHint">Suggested from the address. You can change it.</div></div>
+    <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
+  </div>
+</section>
+
+<!-- 2. SCOPE -->
+<section id="s2">
+  <h2>2. Scope of work</h2>
+  <label class="f" for="heading">Heading</label>
+  <input type="text" id="heading" value="Recommended Treatment">
+  <label class="f" for="narrative">Short intro paragraph (optional)</label>
+  <textarea id="narrative"></textarea>
+  <h3>Tick what applies</h3>
+  <div id="scopeList"></div>
+  <h3>Your own lines</h3>
+  <div id="customList"></div>
+  <div class="btns" style="margin-top:8px"><button class="btn" id="btnAddCustom" type="button">+ Add a custom line</button></div>
+
+  <h3>Discount and credit</h3>
+  <div class="row two">
+    <div><label class="f" for="discPct">Package discount %</label><input type="number" id="discPct" inputmode="decimal" min="0" max="100" step="any" placeholder="0"></div>
+    <div><label class="f" for="credit">Inspection credit $ (ex GST)</label><input type="number" id="credit" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+  </div>
+  <h3>Other</h3>
+  <label class="f">Ancillary work</label>
+  <div class="btns" id="ancBtns" role="radiogroup" aria-label="Ancillary work">
+    <label class="chk"><input type="radio" name="anc" value="will"><span>Building Owner will be required to carry out Ancillary Work</span></label>
+    <label class="chk"><input type="radio" name="anc" value="will not"><span>Building Owner will not be required to carry out Ancillary Work</span></label>
+  </div>
+  <label class="f" for="recheck">Re-check interval</label>
+  <select id="recheck"><option value="">(blank)</option><option>Six Months</option><option>Three Months</option><option>One Month</option></select>
+  <label class="chk"><input type="checkbox" id="retreatChk"><span>Re-treatment recommended every 5 yrs</span></label>
+  <label class="f" for="retreat">Re-treatment note (edit if needed)</label>
+  <input type="text" id="retreat">
+
+  <div class="totals" id="totals" aria-live="polite"></div>
+</section>
+
+<!-- 3. LIMITATIONS -->
+<section id="s3">
+  <h2>3. Limitations</h2>
+  <div class="hint">Tick the sentences you want. They go in as written.</div>
+  <div id="limList"></div>
+  <label class="f" for="limExtra">Anything else (free text)</label>
+  <textarea id="limExtra"></textarea>
+</section>
+
+<!-- 4. SITE PLAN -->
+<section id="s4">
+  <h2>4. Site plan</h2>
+  <div class="hint" id="toolHint"></div>
+  <div class="btns" id="toolbar" role="toolbar" aria-label="Drawing tools"></div>
+  <div class="btns" style="margin:8px 0">
+    <button class="btn sm pri hide" id="btnFinish" type="button">Finish shape</button>
+    <button class="btn sm" id="btnUndo" type="button">Undo</button>
+    <button class="btn sm" id="btnClear" type="button">Clear drawing</button>
+    <label class="chk" style="min-height:44px;padding:0 6px"><input type="checkbox" id="snapOn" checked><span>Snap to grid (0.5 m)</span></label>
+  </div>
+  <div id="cvwrap">
+    <canvas id="cv"></canvas>
+    <div class="zoomb">
+      <button class="btn" id="zIn" type="button" aria-label="Zoom in">+</button>
+      <button class="btn" id="zOut" type="button" aria-label="Zoom out">&minus;</button>
+      <button class="btn" id="zFit" type="button" aria-label="Fit to drawing" style="font-size:13px">Fit</button>
+    </div>
+  </div>
+  <div class="hint">Grid squares are 1 m. Pinch with two fingers to zoom and pan, or use +/- and the Pan tool.</div>
+  <h3>Wall lengths (type to correct)</h3>
+  <div id="walls" class="walls"></div>
+  <div class="hint" id="wallsHint">Draw an outline first. Changing a wall moves every wall after it along with it.</div>
+  <h3>Drawing totals</h3>
+  <table class="dt" id="dtotals"></table>
+  <div class="btns" style="margin-top:10px"><button class="btn" id="btnUseTotals" type="button">Use drawing totals</button></div>
+  <div class="hint">Asks you first, then fills the matching scope lines (slab perimeter, external perimeter, subfloor).</div>
+  <div class="legend" id="legend"></div>
+</section>
+
+<!-- 5. SAVE -->
+<section id="s5">
+  <h2>5. Save</h2>
+  <div id="warnBox"></div>
+  <div class="btns">
+    <button class="btn pri" id="btnSave" type="button">Save packet (.json and .png)</button>
+    <button class="btn hide" id="btnShare" type="button">Share to Files</button>
+    <button class="btn" id="btnPng" type="button">Download drawing PNG only</button>
+    <button class="btn" id="btnLoad" type="button">Load packet (.json)</button>
+    <input type="file" id="fileLoad" accept=".json,application/json" class="hide">
+  </div>
+  <div class="hint">Save both files into the iCloud Drive folder "Proposal Packets". A draft also saves on this device as you type.</div>
+  <div id="saveMsg" class="hint"></div>
+</section>
+</main>
+
+<script>
+(function(){
+"use strict";
+const $=s=>document.querySelector(s);
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const STORE="lpc-proposal-draft-v1";
+
+/* ---------- catalogues ---------- */
+const SCOPE=[
+ {id:"slab",desc:"Treat accessible slab perimeter",unit:"lm"},
+ {id:"ext",desc:"Treat accessible external perimeter",unit:"lm"},
+ {id:"sub",desc:"Treat accessible subfloor",unit:"m2"},
+ {id:"ver",desc:"Treat accessible verandas",unit:"lm"},
+ {id:"gar",desc:"Treat accessible garage",unit:"lm"},
+ {id:"stu",desc:"Treat accessible studio",unit:"lm"},
+ {id:"int",desc:"Internal drill and inject",unit:"lm"},
+ {id:"pole",desc:"Treat around poles, piers and posts",unit:"each"},
+ {id:"pen",desc:"Treat slab penetrations",unit:"each"},
+ {id:"dust",desc:"Dust to active termites",unit:"lump"}
+];
+const UNITS=["lm","m2","each","lump"];
+const DEFAULT_RATE={lm:50,m2:50};
+const LIMS=[
+ "The proposed treatment is limited to accessible areas only.",
+ "Treatment coverage is limited to accessible areas at the time of service and may be affected by site conditions, building design, and access limitations.",
+ "As a result, some concealed termite entry points may remain inaccessible to treatment.",
+ "Whilst the proposed treatment will significantly reduce the risk of termite attack to the accessible treated areas, no chemical treatment can guarantee complete protection where a continuous treated zone cannot be achieved due to construction or access limitations.",
+ "Due to restricted access, the building's construction type, older building works, concealed structural elements, inaccessible voids and varying construction methods, it is not possible to establish a complete continuous treated zone to all sections of the property.",
+ "Where slab-on-ground construction is present and there is no indication of an existing underslab termite management system, we recommend a complete grid drill and treat of the slab to achieve adequate coverage.",
+ "Should future circumstances warrant additional protection, an internal grid drill treatment may be considered to selected slab-on-ground areas where there is no visible evidence of an existing termite management system.",
+ "We strongly recommend the installation of a termite baiting and monitoring system as a secondary (supplementary) termite management measure.",
+ "This provides ongoing monitoring and early detection of termite activity, particularly in areas where physical or chemical barriers may be limited, compromised, breached, or bypassed.",
+ "Annual termite inspections remain essential and are recommended in accordance with AS 3660.2 to monitor the effectiveness of the treatment, detect any termite activity at the earliest opportunity, and identify changes to the property that may increase the risk of future termite attack.",
+ "Access limitations were noted to some areas of the subfloor, which may restrict treatment coverage.",
+ "Should active termites, concealed damage, inaccessible areas, or construction details affecting treatment continuity be identified, additional works and costs may be incurred to achieve effective termite management.",
+ "Clear external perimeter areas of stored items, vegetation and other obstructions to provide suitable access for treatment.",
+ "Ongoing termite inspections remain essential."
+];
+const RETREAT_STD="Re-treatment recommended every 5 yrs";
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;")}
+function num(v){const n=parseFloat(String(v).replace(/,/g,""));return isFinite(n)?n:null}
+function r2(x){return Math.round((x+Number.EPSILON)*100)/100}
+function money(x){return "$"+x.toLocaleString("en-AU",{minimumFractionDigits:2,maximumFractionDigits:2})}
+function isoToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function isoToLong(iso){const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");if(!m)return "";return (+m[3])+" "+MONTHS[+m[2]-1]+" "+m[1]}
+function longToIso(s){const m=/^\s*(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})\s*$/.exec(s||"");if(!m)return "";const mi=MONTHS.findIndex(x=>x.toLowerCase()===m[2].toLowerCase());if(mi<0)return "";return m[3]+"-"+String(mi+1).padStart(2,"0")+"-"+String(+m[1]).padStart(2,"0")}
+
+/* ---------- money maths (must match SPEC and the Mac script) ---------- */
+function calc(lines,pct,credit){
+  let sub=0;lines.forEach(l=>{sub+=(l.qty||0)*(l.rate||0)});
+  sub=r2(sub);
+  const discount=r2(sub*(pct||0)/100);
+  const cr=credit||0;
+  const ex=r2(sub-discount-cr);
+  const gst=r2(ex*0.10);
+  const total=r2(ex+gst);
+  return {subtotal:sub,discount:discount,credit:cr,ex_gst:ex,gst:gst,total:total};
+}
+window.__calc=calc;
+
+/* ---------- scope UI ---------- */
+function unitSelect(sel){return '<select class="u" aria-label="Unit">'+UNITS.map(u=>'<option'+(u===sel?' selected':'')+'>'+u+'</option>').join("")+'</select>'}
+function lineHTML(id,desc,unit,custom){
+  return '<label class="chk"><input type="checkbox" class="on"'+(custom?' checked':'')+'><span>'+(custom?'Custom line':esc(desc))+'</span></label>'+
+  '<div class="sl-in">'+
+  (custom?'<input type="text" class="sl-desc d" placeholder="What the line says" aria-label="Description">':'')+
+  '<div><small>Qty</small><input type="number" class="q" inputmode="decimal" step="any" min="0"></div>'+
+  '<div><small>Unit</small>'+unitSelect(unit||"lm")+'</div>'+
+  '<div><small>Rate $</small><input type="number" class="r" inputmode="decimal" step="any" min="0"></div>'+
+  '<div class="lt"></div>'+
+  (custom?'<div style="grid-column:1/-1"><button type="button" class="btn sm rm">Remove this line</button></div>':'')+
+  '</div>';
+}
+function addLineEl(host,id,desc,unit,custom){
+  const el=document.createElement("div");
+  el.className="scopeline"+(custom?" on":"");
+  el.dataset.id=id;el.dataset.desc=desc||"";
+  el.innerHTML=lineHTML(id,desc,unit,custom);
+  host.appendChild(el);
+  return el;
+}
+function setLine(el,d){ // d: {on,desc,qty,unit,rate}
+  el.querySelector(".on").checked=!!d.on;el.classList.toggle("on",!!d.on);
+  if(d.desc!==undefined&&el.querySelector(".d"))el.querySelector(".d").value=d.desc;
+  el.querySelector(".q").value=d.qty==null?"":d.qty;
+  if(d.unit)el.querySelector(".u").value=d.unit;
+  el.querySelector(".r").value=d.rate==null?"":d.rate;
+  lineTotal(el);
+}
+function lineVals(el){
+  const custom=el.dataset.id==="custom";
+  const d=custom?el.querySelector(".d").value.trim():el.dataset.desc;
+  return {on:el.querySelector(".on").checked,desc:d,qty:num(el.querySelector(".q").value),unit:el.querySelector(".u").value,rate:num(el.querySelector(".r").value)};
+}
+function lineTotal(el){
+  const v=lineVals(el);
+  el.querySelector(".lt").textContent=(v.qty!=null&&v.rate!=null)?("Line total "+money(r2(v.qty*v.rate))+" ex GST"):"Line total: enter qty and rate";
+}
+function allLineEls(){return Array.from(document.querySelectorAll("#scopeList .scopeline, #customList .scopeline"))}
+function tickDefaultRate(el){
+  const r=el.querySelector(".r");
+  if(r.value==="" ){const u=el.querySelector(".u").value;if(DEFAULT_RATE[u]!=null)r.value=DEFAULT_RATE[u]}
+}
+function wireLine(el){
+  el.addEventListener("change",e=>{
+    if(e.target.classList.contains("on")){
+      el.classList.toggle("on",e.target.checked);
+      if(e.target.checked)tickDefaultRate(el);
+    }
+    if(e.target.classList.contains("u")){
+      const r=el.querySelector(".r");
+      // only refill when rate was blank or still a default rate
+      if(r.value===""||r.value==="50"){r.value=DEFAULT_RATE[e.target.value]!=null?DEFAULT_RATE[e.target.value]:""}
+    }
+    update();
+  });
+  el.addEventListener("input",()=>update());
+  const rm=el.querySelector(".rm");
+  if(rm)rm.addEventListener("click",()=>{el.remove();update()});
+}
+function buildScope(){
+  const host=$("#scopeList");
+  SCOPE.forEach(s=>{const el=addLineEl(host,s.id,s.desc,s.unit,false);wireLine(el)});
+}
+function addCustom(d){
+  const el=addLineEl($("#customList"),"custom","","lm",true);
+  wireLine(el);
+  if(d)setLine(el,Object.assign({on:true},d));
+  else{tickDefaultRate(el);}
+  update();
+  return el;
+}
+function addLimRow(text,checked){
+  const l=document.createElement("label");l.className="chk limrow";
+  l.innerHTML='<input type="checkbox"><span class="txt">'+esc(text)+'</span>';
+  l.querySelector("input").checked=!!checked;
+  $("#limList").appendChild(l);
+  return l;
+}
+function buildLims(){LIMS.forEach(t=>addLimRow(t,false))}
+
+/* ---------- collect / apply (one packet shape for save, autosave and load) ---------- */
+function collect(){
+  const lines=[];
+  allLineEls().forEach(el=>{const v=lineVals(el);if(v.on&&(v.desc||el.dataset.id!=="custom")){lines.push({desc:v.desc,qty:v.qty,unit:v.unit,rate:v.rate})}});
+  const lims=Array.from(document.querySelectorAll("#limList .limrow")).filter(l=>l.querySelector("input").checked).map(l=>l.querySelector(".txt").textContent);
+  const anc=(document.querySelector('input[name=anc]:checked')||{}).value||"";
+  const same=$("#sameOwner").checked;
+  const pk={
+    proposal_no:$("#propNo").value.trim(),
+    date:isoToLong($("#date").value),
+    property:$("#property").value.trim(),
+    owner:same?$("#client").value.trim():$("#owner").value.trim(),
+    client:$("#client").value.trim(),
+    email:$("#email").value.trim(),
+    phone:$("#phone").value.trim(),
+    ancillary:anc,
+    heading:$("#heading").value.trim(),
+    narrative:$("#narrative").value.trim(),
+    scope:lines,
+    package_discount_pct:num($("#discPct").value)||0,
+    inspection_credit:num($("#credit").value)||0,
+    recheck_interval:$("#recheck").value,
+    retreatment_note:$("#retreat").value.trim(),
+    limitations:lims,
+    limitations_extra:$("#limExtra").value.trim(),
+    drawing:""
+  };
+  return pk;
+}
+function clearForm(){
+  ["client","email","phone","owner","property","propNo","narrative","discPct","credit","retreat","limExtra"].forEach(i=>$("#"+i).value="");
+  $("#heading").value="Recommended Treatment";
+  $("#sameOwner").checked=true;$("#ownerWrap").classList.add("hide");
+  $("#date").value=isoToday();
+  $("#recheck").value="";$("#retreatChk").checked=false;
+  document.querySelectorAll('input[name=anc]').forEach(r=>r.checked=false);
+  allLineEls().forEach(el=>{if(el.dataset.id==="custom")el.remove();else setLine(el,{on:false,qty:null,unit:SCOPE.find(s=>s.id===el.dataset.id).unit,rate:null})});
+  $("#limList").innerHTML="";buildLims();
+  propNoEdited=false;
+  D={b:[],sh:[],mk:[]};cur=null;undoStack=[];
+}
+function apply(pk){
+  clearForm();
+  const set=(i,v)=>{$("#"+i).value=(v==null?"":v)};
+  set("client",pk.client);set("email",pk.email);set("phone",pk.phone);set("property",pk.property);
+  const same=!pk.owner||pk.owner===pk.client;
+  $("#sameOwner").checked=same;$("#ownerWrap").classList.toggle("hide",same);
+  if(!same)set("owner",pk.owner);
+  set("propNo",pk.proposal_no);propNoEdited=!!pk.proposal_no;
+  const iso=longToIso(pk.date);if(iso)$("#date").value=iso;else if(pk.date===""||pk.date==null)$("#date").value="";
+  set("heading",pk.heading||"Recommended Treatment");set("narrative",pk.narrative);
+  (pk.scope||[]).forEach(l=>{
+    const cat=SCOPE.find(s=>s.desc===l.desc);
+    const el=cat?allLineEls().find(e=>e.dataset.id===cat.id):null;
+    if(el)setLine(el,{on:true,qty:l.qty,unit:l.unit||cat.unit,rate:l.rate});
+    else addCustom({desc:l.desc,qty:l.qty,unit:l.unit||"lm",rate:l.rate});
+  });
+  set("discPct",pk.package_discount_pct||"");set("credit",pk.inspection_credit||"");
+  if(pk.ancillary){const r=document.querySelector('input[name=anc][value="'+pk.ancillary+'"]');if(r)r.checked=true}
+  $("#recheck").value=pk.recheck_interval||"";
+  set("retreat",pk.retreatment_note);$("#retreatChk").checked=(pk.retreatment_note===RETREAT_STD);
+  const rows=Array.from(document.querySelectorAll("#limList .limrow"));
+  (pk.limitations||[]).forEach(t=>{
+    const hit=rows.find(r=>r.querySelector(".txt").textContent===t);
+    if(hit)hit.querySelector("input").checked=true;else addLimRow(t,true);
+  });
+  set("limExtra",pk.limitations_extra);
+  const sp=pk._site_plan_data;
+  D=(sp&&sp.b&&sp.sh&&sp.mk)?sp:{b:[],sh:[],mk:[]};cur=null;undoStack=[];
+  update(true);fitView();
+}
+
+/* ---------- warnings, totals ---------- */
+function warnings(pk){
+  const bad=[],note=[];
+  if(!pk.client)bad.push("Client name is blank.");
+  if(!pk.property)bad.push("Property address is blank.");
+  if(!pk.date)bad.push("Date is blank.");
+  if(!pk.proposal_no)bad.push("Proposal no. is blank.");
+  if(!pk.scope.length)bad.push("No scope lines ticked.");
+  pk.scope.forEach(l=>{
+    if(l.qty==null)bad.push('"'+(l.desc||"(no description)")+'" has no quantity.');
+    if(l.rate==null)bad.push('"'+(l.desc||"(no description)")+'" has no rate.');
+  });
+  if(!pk.ancillary)note.push("Ancillary work (will / will not) is not chosen, so it will be saved blank.");
+  if(!pk.recheck_interval)note.push("Re-check interval is blank. It will be saved blank (not defaulted).");
+  return {bad:bad,note:note};
+}
+function update(skipSave){
+  allLineEls().forEach(lineTotal);
+  const pk=collect();
+  const c=calc(pk.scope.map(l=>({qty:l.qty,rate:l.rate})),pk.package_discount_pct,pk.inspection_credit);
+  let h='<div><span>Subtotal</span><span>'+money(c.subtotal)+'</span></div>';
+  if(c.discount)h+='<div><span>Package discount ('+pk.package_discount_pct+'%)</span><span>-'+money(c.discount)+'</span></div>';
+  if(c.credit)h+='<div><span>Inspection credit</span><span>-'+money(c.credit)+'</span></div>';
+  h+='<div><span>Total ex GST</span><span>'+money(c.ex_gst)+'</span></div><div><span>GST (10%)</span><span>'+money(c.gst)+'</span></div><div class="big"><span>Total inc GST</span><span>'+money(c.total)+'</span></div>';
+  $("#totals").innerHTML=h;
+  const w=warnings(pk);
+  let wh="";
+  if(w.bad.length)wh+='<div class="warn bad"><b>Check before saving</b><ul>'+w.bad.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
+  if(w.note.length)wh+='<div class="warn"><ul style="margin:0">'+w.note.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul></div>';
+  if(!w.bad.length&&!w.note.length)wh='<div class="okmsg">Nothing missing.</div>';
+  $("#warnBox").innerHTML=wh;
+  $("#hdrWarn").textContent=w.bad.length?(w.bad.length+" to fix"):"";
+  $("#retreatChk").checked=($("#retreat").value.trim()===RETREAT_STD);
+  renderTotals();renderWalls();renderLegend();redraw();
+  if(!skipSave)scheduleSave();
+}
+
+/* ---------- autosave ---------- */
+let saveT=null;
+function scheduleSave(){clearTimeout(saveT);saveT=setTimeout(doAutosave,500)}
+function doAutosave(){
+  try{
+    const pk=collect();pk._site_plan_data=D;
+    localStorage.setItem(STORE,JSON.stringify({t:Date.now(),pk:pk}));
+  }catch(e){}
+}
+function tryRestore(){
+  try{
+    const raw=localStorage.getItem(STORE);if(!raw)return;
+    const o=JSON.parse(raw);if(!o||!o.pk)return;
+    apply(o.pk);
+    const d=new Date(o.t);
+    $("#bannerTxt").textContent="Draft from "+d.toLocaleString("en-AU")+" reopened.";
+    $("#banner").classList.remove("hide");
+  }catch(e){}
+}
+
+/* ---------- client section behaviours ---------- */
+let propNoEdited=false;
+function suggestNo(addr){
+  let a=(addr||"").split(",")[0].trim().replace(/^\s*[\w\s]*?\d+\s*\/\s*/,"");
+  const m=/^(\d+)[A-Za-z]?\s+(?:the\s+)?([A-Za-z]+)/i.exec(a);
+  if(!m)return "";
+  return m[1]+m[2].slice(0,3).toUpperCase();
+}
+const STREET_TYPES=["street","st","road","rd","drive","dr","avenue","ave","lane","ln","court","ct","crescent","cres","place","pl","way","close","cl","terrace","tce","parade","pde","boulevard","blvd","circuit","cct","highway","hwy"];
+function slug(addr){
+  let a=(addr||"").split(",")[0].trim().replace(/^[^\d]*\d+\s*\//,"");
+  let w=a.split(/\s+/).filter(Boolean);
+  if(w.length>2&&STREET_TYPES.indexOf(w[w.length-1].toLowerCase().replace(/\./g,""))>=0)w.pop();
+  return w.join("_").replace(/[^A-Za-z0-9_]/g,"")||"job";
+}
+
+/* ---------- DRAWING ---------- */
+const cv=$("#cv"),ctx=cv.getContext("2d");
+let D={b:[],sh:[],mk:[]};     // b: buildings {pts,closed}; sh: shapes {t,pts,closed}; mk: marks {t,x,y,text}
+let cur=null;                 // in-progress path {k,pts}
+let undoStack=[];
+let view={s:20,ox:20,oy:20};
+let tool="bldg";
+const PATHTOOLS={bldg:{min:3,label:"Outline"},slab:{min:2,label:"Slab perimeter"},ext:{min:2,label:"External perimeter"},sub:{min:3,label:"Subfloor",poly:true},prev:{min:3,label:"Previous treatment",poly:true},brick:{min:2,label:"Brick wall"}};
+const POINTTOOLS={pen:"Penetration",term:"Active termites",dmg:"Damage",post:"Pole / post",label:"Label"};
+const TOOLS=[["bldg","Outline"],["slab","Slab perimeter"],["ext","External perimeter"],["sub","Subfloor"],["prev","Previous treatment"],["pen","Penetration"],["brick","Brick wall"],["term","Active termites"],["dmg","Damage"],["post","Pole / post"],["label","Label"],["move","Move"],["del","Delete"],["pan","Pan"]];
+const HINTS={
+ bldg:"Tap or drag to place each corner of the building. Tap the first corner again (or Finish shape) to close it. Then type each wall length below.",
+ slab:"Tap along the slab perimeter you will treat. Finish shape when done. Counts as lm.",
+ ext:"Tap along the external perimeter you will treat. Finish shape when done. Counts as lm.",
+ sub:"Tap the corners of the subfloor area. Finish shape closes it. Counts as m2.",
+ prev:"Tap the corners of an area with a previous treatment. Finish shape closes it.",
+ brick:"Tap along a brick wall. Finish shape when done.",
+ pen:"Tap each penetration.",term:"Tap where active termites were found.",dmg:"Tap where there is damage.",post:"Tap each pole, post or pier.",label:"Tap where you want a label, then type it.",
+ move:"Drag a corner or symbol to move it.",del:"Tap a shape or symbol to remove it.",pan:"Drag to move the view."
+};
+const STY={
+ bldg:{c:"#14201E",w:3,name:"Building outline"},
+ slab:{c:"#1F5FBF",w:5,name:"Slab perimeter treatment"},
+ ext:{c:"#2E8B3D",w:5,name:"External perimeter treatment",dash:[10,6]},
+ sub:{c:"#C2570A",fill:"rgba(194,87,10,.22)",w:2,name:"Subfloor treatment"},
+ prev:{c:"#7B3FA0",fill:"rgba(123,63,160,.18)",w:2,name:"Previous treatment",dash:[4,4]},
+ brick:{c:"#8B4A2B",w:7,name:"Brick wall",dash:[12,4]},
+ pen:{c:"#14201E",name:"Penetration"},
+ term:{c:"#D0021B",name:"Active termites"},
+ dmg:{c:"#F5C400",name:"Damage"},
+ post:{c:"#14201E",name:"Pole / post / pier"}
+};
+function pushUndo(){undoStack.push(JSON.stringify(D));if(undoStack.length>100)undoStack.shift()}
+function changed(){update()}
+
+function dist(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1])}
+function polyLen(pts,closed){let L=0;for(let i=1;i<pts.length;i++)L+=dist(pts[i-1],pts[i]);if(closed&&pts.length>2)L+=dist(pts[pts.length-1],pts[0]);return L}
+function polyArea(pts){let a=0;for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2}
+function drawingTotals(){
+  const t={slab:0,ext:0,sub:0};
+  D.sh.forEach(s=>{
+    if(s.t==="slab")t.slab+=polyLen(s.pts,s.closed);
+    else if(s.t==="ext")t.ext+=polyLen(s.pts,s.closed);
+    else if(s.t==="sub")t.sub+=polyArea(s.pts);
+  });
+  return t;
+}
+function w2s(p){return [p[0]*view.s+view.ox,p[1]*view.s+view.oy]}
+function s2w(p){return [(p[0]-view.ox)/view.s,(p[1]-view.oy)/view.s]}
+function hasContent(){return D.b.length||D.sh.length||D.mk.length}
+
+/* toolbar */
+function buildToolbar(){
+  const tb=$("#toolbar");tb.innerHTML="";
+  TOOLS.forEach(t=>{
+    const b=document.createElement("button");b.type="button";b.className="btn sm"+(tool===t[0]?" on":"");b.textContent=t[1];b.dataset.t=t[0];
+    b.addEventListener("click",()=>{if(cur&&cur.pts.length)finishPath(false);tool=t[0];cur=null;buildToolbar();redraw()});
+    tb.appendChild(b);
+  });
+  $("#toolHint").textContent=HINTS[tool]||"";
+  $("#btnFinish").classList.toggle("hide",!(cur&&cur.pts.length));
+}
+
+/* canvas sizing */
+let cssW=300,cssH=300,dpr=1;
+function resize(){
+  const r=cv.parentElement.getBoundingClientRect();
+  dpr=window.devicePixelRatio||1;cssW=Math.max(100,r.width);cssH=Math.max(100,r.height);
+  cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);
+  redraw();
+}
+let rafP=false;
+function redraw(){if(rafP)return;rafP=true;requestAnimationFrame(()=>{rafP=false;paint()})}
+
+/* generic painter: tf maps world->px; k scales line widths and symbols */
+function paintScene(c,tf,k,opts){
+  const sty=(t)=>STY[t];
+  // shapes
+  D.sh.forEach(s=>{
+    const st=sty(s.t);
+    c.beginPath();
+    s.pts.forEach((p,i)=>{const q=tf(p);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});
+    if(s.closed||PATHTOOLS[s.t].poly)c.closePath();
+    if(st.fill){c.fillStyle=st.fill;c.fill()}
+    c.setLineDash((st.dash||[]).map(x=>x*k*0.7));c.lineWidth=st.w*k*0.8;c.strokeStyle=st.c;c.lineJoin="round";c.lineCap="butt";c.stroke();c.setLineDash([]);
+  });
+  // buildings
+  D.b.forEach(b=>{
+    c.beginPath();b.pts.forEach((p,i)=>{const q=tf(p);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});
+    if(b.closed){c.closePath();c.fillStyle="rgba(20,32,30,.06)";c.fill()}
+    c.lineWidth=3*k;c.strokeStyle="#14201E";c.lineJoin="miter";c.stroke();
+    // wall length labels
+    const n=b.pts.length,cnt=b.closed?n:n-1;
+    c.font="600 "+(12*k)+"px Arial, sans-serif";c.textAlign="center";c.textBaseline="middle";
+    for(let i=0;i<cnt;i++){
+      const p=b.pts[i],q=b.pts[(i+1)%n];const L=dist(p,q);if(L<0.05)continue;
+      const a=tf(p),z=tf(q);let mx=(a[0]+z[0])/2,my=(a[1]+z[1])/2;
+      const dx=z[0]-a[0],dy=z[1]-a[1],dl=Math.hypot(dx,dy)||1;
+      let nx=-dy/dl,ny=dx/dl; // offset to the outside-ish (below/left)
+      mx+=nx*12*k;my+=ny*12*k;
+      const txt=L.toFixed(1)+" m";
+      c.lineWidth=3*k;c.strokeStyle="#fff";c.strokeText(txt,mx,my);c.fillStyle="#14201E";c.fillText(txt,mx,my);
+    }
+  });
+  // marks
+  D.mk.forEach(m=>{
+    const q=tf([m.x,m.y]);drawMark(c,m.t,q[0],q[1],k,m.text);
+  });
+}
+function drawMark(c,t,x,y,k,text){
+  c.setLineDash([]);
+  if(t==="pen"){c.beginPath();c.arc(x,y,5*k,0,7);c.fillStyle="#14201E";c.fill()}
+  else if(t==="term"){const r=10*k;c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();c.fillStyle="#D0021B";c.fill();c.lineWidth=1.5*k;c.strokeStyle="#fff";c.stroke()}
+  else if(t==="dmg"){const r=11*k;c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y+r*0.8);c.lineTo(x-r,y+r*0.8);c.closePath();c.fillStyle="#F5C400";c.fill();c.lineWidth=1.5*k;c.strokeStyle="#14201E";c.stroke()}
+  else if(t==="post"){const r=7*k;c.beginPath();c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.lineWidth=3*k;c.strokeStyle="#14201E";c.lineCap="round";c.stroke();c.lineCap="butt"}
+  else if(t==="label"){
+    c.font="600 "+(14*k)+"px Arial, sans-serif";c.textAlign="center";c.textBaseline="middle";
+    c.lineWidth=4*k;c.strokeStyle="#fff";c.strokeText(text||"",x,y);c.fillStyle="#14201E";c.fillText(text||"",x,y);
+  }
+}
+function paint(){
+  const c=ctx;c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,cssW,cssH);c.fillStyle="#fff";c.fillRect(0,0,cssW,cssH);
+  // grid
+  if(view.s>=6){
+    const w0=s2w([0,0]),w1=s2w([cssW,cssH]);
+    c.lineWidth=1;
+    for(let x=Math.floor(w0[0]);x<=w1[0];x++){c.strokeStyle=(x%5===0)?"#C9D1CC":"#E6EAE7";const sx=Math.round(x*view.s+view.ox)+.5;c.beginPath();c.moveTo(sx,0);c.lineTo(sx,cssH);c.stroke()}
+    for(let y=Math.floor(w0[1]);y<=w1[1];y++){c.strokeStyle=(y%5===0)?"#C9D1CC":"#E6EAE7";const sy=Math.round(y*view.s+view.oy)+.5;c.beginPath();c.moveTo(0,sy);c.lineTo(cssW,sy);c.stroke()}
+  }
+  paintScene(c,w2s,1,{});
+  // in-progress
+  if(cur&&cur.pts.length){
+    const st=cur.k==="bldg"?{c:"#14201E"}:STY[cur.k];
+    c.beginPath();cur.pts.forEach((p,i)=>{const q=w2s(p);i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])});
+    if(hoverW){const q=w2s(hoverW);c.lineTo(q[0],q[1])}
+    c.setLineDash([6,4]);c.lineWidth=2.5;c.strokeStyle=st.c;c.stroke();c.setLineDash([]);
+    cur.pts.forEach((p,i)=>{const q=w2s(p);c.beginPath();c.arc(q[0],q[1],i===0?8:5,0,7);c.fillStyle=i===0?"#fff":st.c;c.fill();c.lineWidth=2;c.strokeStyle=st.c;c.stroke()});
+  }
+  if(!hasContent()&&!(cur&&cur.pts.length)){
+    c.fillStyle="#7E8D88";c.font="15px Public Sans, Arial, sans-serif";c.textAlign="center";c.textBaseline="middle";
+    c.fillText("Tap to place the first corner of the building",cssW/2,cssH/2);
+  }
+}
+let hoverW=null;
+
+/* view helpers */
+function bbox(){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  const add=p=>{x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1])};
+  D.b.forEach(b=>b.pts.forEach(add));D.sh.forEach(s=>s.pts.forEach(add));D.mk.forEach(m=>add([m.x,m.y]));
+  if(x0>x1)return null;return {x0:x0,y0:y0,x1:x1,y1:y1};
+}
+function fitView(){
+  const bb=bbox();
+  if(!bb){view={s:20,ox:cssW/2-100,oy:cssH/2-100};redraw();return}
+  const pad=40,w=Math.max(bb.x1-bb.x0,2),h=Math.max(bb.y1-bb.y0,2);
+  const s=Math.max(4,Math.min(120,Math.min((cssW-2*pad)/w,(cssH-2*pad)/h)));
+  view.s=s;view.ox=cssW/2-((bb.x0+bb.x1)/2)*s;view.oy=cssH/2-((bb.y0+bb.y1)/2)*s;redraw();
+}
+function zoomAt(f,cx,cy){
+  const ns=Math.max(4,Math.min(200,view.s*f));f=ns/view.s;
+  view.ox=cx-(cx-view.ox)*f;view.oy=cy-(cy-view.oy)*f;view.s=ns;redraw();
+}
+
+/* snapping */
+function snapPt(sp){ // sp: screen point -> world point
+  let w=s2w(sp);
+  // snap to existing vertices first
+  let best=null,bd=14;
+  const test=(p)=>{const q=w2s(p);const d=Math.hypot(q[0]-sp[0],q[1]-sp[1]);if(d<bd){bd=d;best=p}};
+  D.b.forEach(b=>b.pts.forEach(test));D.sh.forEach(s=>s.pts.forEach(test));
+  if(best)return [best[0],best[1]];
+  if($("#snapOn").checked)w=[Math.round(w[0]*2)/2,Math.round(w[1]*2)/2];
+  return w;
+}
+
+/* path ops */
+function startPath(k){cur={k:k,pts:[]};}
+function addPathPoint(sp){
+  if(!cur)startPath(tool);
+  const w=snapPt(sp);
+  if(cur.pts.length>=PATHTOOLS[cur.k].min&&cur.pts.length>=3){
+    const f=w2s(cur.pts[0]);
+    if(Math.hypot(f[0]-sp[0],f[1]-sp[1])<18){finishPath(true);return}
+  }
+  const last=cur.pts[cur.pts.length-1];
+  if(last&&dist(last,w)<0.01)return;
+  cur.pts.push(w);
+  buildToolbar();redraw();
+}
+function finishPath(closedByTap){
+  if(!cur||!cur.pts.length){cur=null;buildToolbar();return}
+  const def=PATHTOOLS[cur.k];
+  const minPts=cur.k==="bldg"?2:def.min;
+  if(cur.pts.length<(def.poly?3:2)){ // too short, discard
+    cur=null;buildToolbar();redraw();return;
+  }
+  pushUndo();
+  if(cur.k==="bldg"){
+    D.b.push({pts:cur.pts.slice(),closed:cur.pts.length>=3});
+  }else{
+    D.sh.push({t:cur.k,pts:cur.pts.slice(),closed:!!(def.poly||closedByTap)});
+  }
+  cur=null;buildToolbar();changed();
+}
+function addMark(sp){
+  const w=snapPt(sp);let text="";
+  if(tool==="label"){
+    text=(window.prompt("Label text","")||"").trim();
+    if(!text)return;
+  }
+  pushUndo();D.mk.push({t:tool,x:w[0],y:w[1],text:text});changed();
+}
+
+/* hit testing */
+function hitVertex(sp){
+  let best=null,bd=22;
+  const test=(p,ref)=>{const q=w2s(p);const d=Math.hypot(q[0]-sp[0],q[1]-sp[1]);if(d<bd){bd=d;best=ref}};
+  D.b.forEach(b=>b.pts.forEach(p=>test(p,{pt:p})));
+  D.sh.forEach(s=>s.pts.forEach(p=>test(p,{pt:p})));
+  D.mk.forEach(m=>test([m.x,m.y],{mk:m}));
+  return best;
+}
+function segDist(p,a,b){
+  const dx=b[0]-a[0],dy=b[1]-a[1],l2=dx*dx+dy*dy;let t=l2?((p[0]-a[0])*dx+(p[1]-a[1])*dy)/l2:0;t=Math.max(0,Math.min(1,t));
+  return Math.hypot(p[0]-(a[0]+t*dx),p[1]-(a[1]+t*dy));
+}
+function inPoly(p,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){if(((pts[i][1]>p[1])!==(pts[j][1]>p[1]))&&(p[0]<(pts[j][0]-pts[i][0])*(p[1]-pts[i][1])/(pts[j][1]-pts[i][1])+pts[i][0]))c=!c}return c}
+function deleteAt(sp){
+  const tolW=16/view.s,w=s2w(sp);
+  // marks first
+  for(let i=D.mk.length-1;i>=0;i--){const m=D.mk[i];if(Math.hypot(m.x-w[0],m.y-w[1])<tolW*1.2){pushUndo();D.mk.splice(i,1);changed();return}}
+  const nearLine=(pts,closed)=>{const n=pts.length,cnt=closed?n:n-1;for(let i=0;i<cnt;i++)if(segDist(w,pts[i],pts[(i+1)%n])<tolW)return true;return false};
+  for(let i=D.sh.length-1;i>=0;i--){const s=D.sh[i];if(nearLine(s.pts,s.closed||PATHTOOLS[s.t].poly)||(PATHTOOLS[s.t].poly&&inPoly(w,s.pts))){pushUndo();D.sh.splice(i,1);changed();return}}
+  for(let i=D.b.length-1;i>=0;i--){const b=D.b[i];if(nearLine(b.pts,b.closed)){pushUndo();D.b.splice(i,1);changed();return}}
+}
+
+/* pointer handling */
+const ptrs=new Map();
+let tap=null,drag=null,panning=null,gest=null,noTap=false;
+function rel(e){const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}
+cv.addEventListener("pointerdown",e=>{
+  e.preventDefault();
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  const p=rel(e);ptrs.set(e.pointerId,p);
+  if(ptrs.size===2){
+    const a=Array.from(ptrs.values());
+    gest={d0:Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1,m0:[(a[0][0]+a[1][0])/2,(a[0][1]+a[1][1])/2],v0:{s:view.s,ox:view.ox,oy:view.oy}};
+    tap=null;drag=null;panning=null;noTap=true;return;
+  }
+  if(ptrs.size>2){noTap=true;return}
+  noTap=false;
+  tap={id:e.pointerId,sx:p[0],sy:p[1],moved:false};
+  if(tool==="move"){
+    const h=hitVertex(p);if(h){pushUndo();drag=h}
+  }else if(tool==="pan"){panning={lx:p[0],ly:p[1]}}
+},{passive:false});
+cv.addEventListener("pointermove",e=>{
+  if(!ptrs.has(e.pointerId)){ // mouse hover
+    if(cur&&cur.pts.length&&e.pointerType==="mouse"){hoverW=snapPt(rel(e));redraw()}
+    return;
+  }
+  const p=rel(e);ptrs.set(e.pointerId,p);
+  if(gest&&ptrs.size>=2){
+    const a=Array.from(ptrs.values());
+    const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1,m=[(a[0][0]+a[1][0])/2,(a[0][1]+a[1][1])/2];
+    const ns=Math.max(4,Math.min(200,gest.v0.s*d/gest.d0));
+    const wx=(gest.m0[0]-gest.v0.ox)/gest.v0.s,wy=(gest.m0[1]-gest.v0.oy)/gest.v0.s;
+    view.s=ns;view.ox=m[0]-wx*ns;view.oy=m[1]-wy*ns;redraw();return;
+  }
+  if(tap&&tap.id===e.pointerId){
+    if(Math.hypot(p[0]-tap.sx,p[1]-tap.sy)>8)tap.moved=true;
+    if(drag){
+      const w=snapPt(p);
+      if(drag.pt){drag.pt[0]=w[0];drag.pt[1]=w[1]}else{drag.mk.x=w[0];drag.mk.y=w[1]}
+      redraw();
+    }else if(panning){
+      view.ox+=p[0]-panning.lx;view.oy+=p[1]-panning.ly;panning.lx=p[0];panning.ly=p[1];redraw();
+    }
+  }
+},{passive:false});
+function endPtr(e,cancel){
+  if(!ptrs.has(e.pointerId))return;
+  const p=rel(e);ptrs.delete(e.pointerId);
+  try{cv.releasePointerCapture(e.pointerId)}catch(_){}
+  if(ptrs.size<2)gest=null;
+  const t=tap;
+  if(ptrs.size===0){const nt=noTap;noTap=false;
+    if(t&&t.id===e.pointerId&&!nt&&!cancel){
+      if(drag){drag=null;changed()}
+      else if(PATHTOOLS[tool]){
+        if(!t.moved){addPathPoint(p)}
+        else{ // drag to draw: start point at press, end point at release
+          if(!cur||!cur.pts.length)addPathPoint([t.sx,t.sy]);
+          addPathPoint(p);
+        }
+      }
+      else if(POINTTOOLS[tool]){if(!t.moved)addMark(p)}
+      else if(tool==="del"){if(!t.moved)deleteAt(p)}
+    }
+    tap=null;drag=null;panning=null;
+  }
+}
+cv.addEventListener("pointerup",e=>endPtr(e,false));
+cv.addEventListener("pointercancel",e=>endPtr(e,true));
+cv.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"&&hoverW){hoverW=null;redraw()}});
+cv.addEventListener("wheel",e=>{e.preventDefault();const r=cv.getBoundingClientRect();zoomAt(e.deltaY<0?1.15:1/1.15,e.clientX-r.left,e.clientY-r.top)},{passive:false});
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+$("#zIn").addEventListener("click",()=>zoomAt(1.3,cssW/2,cssH/2));
+$("#zOut").addEventListener("click",()=>zoomAt(1/1.3,cssW/2,cssH/2));
+$("#zFit").addEventListener("click",fitView);
+$("#btnFinish").addEventListener("click",()=>finishPath(false));
+$("#btnUndo").addEventListener("click",()=>{
+  if(cur&&cur.pts.length){cur.pts.pop();if(!cur.pts.length)cur=null;buildToolbar();redraw();return}
+  if(undoStack.length){D=JSON.parse(undoStack.pop());changed()}
+});
+$("#btnClear").addEventListener("click",()=>{
+  if(!hasContent()&&!cur)return;
+  if(confirm("Clear the whole drawing?")){pushUndo();D={b:[],sh:[],mk:[]};cur=null;buildToolbar();changed()}
+});
+
+/* wall lengths */
+function renderWalls(){
+  const host=$("#walls");
+  if(host.contains(document.activeElement)&&document.activeElement.tagName==="INPUT")return;
+  host.innerHTML="";
+  let any=false;
+  D.b.forEach((b,bi)=>{
+    const n=b.pts.length,cnt=b.closed?n:n-1;
+    for(let i=0;i<cnt;i++){
+      any=true;
+      const L=dist(b.pts[i],b.pts[(i+1)%n]);
+      const d=document.createElement("div");
+      d.innerHTML='<label>'+(D.b.length>1?'Building '+(bi+1)+', ':'')+'Wall '+(i+1)+' (m)</label><div class="wi"><input type="number" inputmode="decimal" step="0.1" min="0.1" value="'+L.toFixed(2)+'" data-b="'+bi+'" data-i="'+i+'"></div>';
+      host.appendChild(d);
+    }
+  });
+  $("#wallsHint").classList.toggle("hide",any);
+}
+$("#walls").addEventListener("change",e=>{
+  const inp=e.target;if(inp.tagName!=="INPUT")return;
+  const bi=+inp.dataset.b,i=+inp.dataset.i,L=num(inp.value);
+  const b=D.b[bi];if(!b||!(L>0))return;
+  const n=b.pts.length,p=b.pts[i],q=b.pts[(i+1)%n];
+  const cl=dist(p,q);
+  let ux=1,uy=0;if(cl>1e-6){ux=(q[0]-p[0])/cl;uy=(q[1]-p[1])/cl}
+  const dx=p[0]+ux*L-q[0],dy=p[1]+uy*L-q[1];
+  pushUndo();
+  const j0=(i+1);
+  if(i+1<n){for(let j=j0;j<n;j++){b.pts[j][0]+=dx;b.pts[j][1]+=dy}}
+  else{ // closing wall of a closed building: slide the last corner so this wall is the typed length
+    p[0]=q[0]-ux*L;p[1]=q[1]-uy*L;
+  }
+  inp.blur();
+  document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+  changed();
+});
+
+/* totals + legend */
+function renderTotals(){
+  const t=drawingTotals();
+  $("#dtotals").innerHTML=
+   '<tr><td>Slab perimeter</td><td>'+t.slab.toFixed(1)+' lm</td></tr>'+
+   '<tr><td>External perimeter</td><td>'+t.ext.toFixed(1)+' lm</td></tr>'+
+   '<tr><td>Subfloor</td><td>'+t.sub.toFixed(1)+' m2</td></tr>';
+}
+function usedLegend(){
+  const u=[];
+  if(D.b.length)u.push("bldg");
+  ["slab","ext","sub","prev","brick"].forEach(k=>{if(D.sh.some(s=>s.t===k))u.push(k)});
+  ["pen","term","dmg","post"].forEach(k=>{if(D.mk.some(m=>m.t===k))u.push(k)});
+  return u;
+}
+function swatch(t,size){
+  const cvs=document.createElement("canvas");cvs.width=size*2;cvs.height=size*2;cvs.style.width=size+"px";cvs.style.height=size+"px";
+  const c=cvs.getContext("2d");swatchDraw(c,t,size*2,size*2,1.6);return cvs;
+}
+function swatchDraw(c,t,w,h,k){
+  const st=STY[t];
+  if(["bldg","slab","ext","brick"].indexOf(t)>=0){c.beginPath();c.moveTo(2*k,h/2);c.lineTo(w-2*k,h/2);c.setLineDash((st.dash||[]).map(x=>x*k*0.5));c.lineWidth=(t==="bldg"?3:st.w*0.8)*k;c.strokeStyle=st.c;c.stroke();c.setLineDash([])}
+  else if(t==="sub"||t==="prev"){c.fillStyle=st.fill;c.fillRect(2*k,h*0.2,w-4*k,h*0.6);c.setLineDash((st.dash||[]).map(x=>x*k*0.5));c.lineWidth=2*k;c.strokeStyle=st.c;c.strokeRect(2*k,h*0.2,w-4*k,h*0.6);c.setLineDash([])}
+  else drawMark(c,t,w/2,h/2,k*0.9);
+}
+function renderLegend(){
+  const host=$("#legend");host.innerHTML="";
+  usedLegend().forEach(t=>{const s=document.createElement("span");s.appendChild(swatch(t,26));s.appendChild(document.createTextNode(STY[t].name));host.appendChild(s)});
+}
+$("#btnUseTotals").addEventListener("click",()=>{
+  const t=drawingTotals();
+  const map=[["slab","Slab perimeter","lm"],["ext","External perimeter","lm"],["sub","Subfloor","m2"]];
+  const changes=[];
+  map.forEach(m=>{
+    const v=Math.round(t[m[0]]*10)/10;if(!(v>0))return;
+    const el=allLineEls().find(e=>e.dataset.id===m[0]);
+    const old=lineVals(el);
+    changes.push({el:el,key:m[0],label:m[1],unit:m[2],val:v,oldQ:old.on?old.qty:null,on:old.on});
+  });
+  if(!changes.length){alert("Nothing to use yet. Draw a slab perimeter, external perimeter or subfloor area first.");return}
+  const msg="Fill these scope lines from the drawing?\n\n"+changes.map(c=>"- "+c.label+": "+c.val+" "+c.unit+(c.on&&c.oldQ!=null?" (replaces "+c.oldQ+")":(c.on?"":" (will tick this line)"))).join("\n");
+  if(!confirm(msg))return;
+  changes.forEach(c=>{
+    const cur=lineVals(c.el);
+    setLine(c.el,{on:true,qty:c.val,unit:c.unit,rate:cur.rate==null?DEFAULT_RATE[c.unit]:cur.rate});
+  });
+  update();
+});
+
+/* ---------- PNG export ---------- */
+function renderPNG(){
+  return new Promise(res=>{
+    const bb=bbox();if(!bb){res(null);return}
+    const pad=2.5,bx0=bb.x0-pad,by0=bb.y0-pad,bx1=bb.x1+pad,by1=bb.y1+pad;
+    const ww=bx1-bx0,hh=by1-by0;
+    const s=Math.max(8,Math.min(80,Math.min(1500/ww,1100/hh)));
+    const k=Math.max(1,s/20*0.9+0.4);
+    const W=Math.max(900,Math.round(ww*s)),H0=Math.round(hh*s);
+    const leg=usedLegend();
+    const cols=Math.max(1,Math.floor(W/(360*k/1.4)));
+    const legRows=Math.ceil(leg.length/cols);
+    const legH=leg.length?(legRows*36*k*0.9+20):0;
+    const capH=60*k*0.8;
+    const H=H0+legH+capH;
+    const c=document.createElement("canvas");c.width=W;c.height=H;
+    const g=c.getContext("2d");
+    g.fillStyle="#fff";g.fillRect(0,0,W,H);
+    const offx=(W-ww*s)/2;
+    paintScene(g,p=>[(p[0]-bx0)*s+offx,(p[1]-by0)*s],k,{});
+    // legend
+    let y=H0+14;
+    g.font="600 "+(15*k*0.9)+"px Arial, sans-serif";g.textAlign="left";g.textBaseline="middle";
+    const colW=W/cols;
+    leg.forEach((t,i)=>{
+      const cx=(i%cols)*colW+20,cy=y+Math.floor(i/cols)*36*k*0.9+16*k*0.9;
+      g.save();g.translate(cx,cy-18*k*0.9);swatchDraw(g,t,44*k*0.9,36*k*0.9,k*0.9);g.restore();
+      g.fillStyle="#14201E";g.fillText(STY[t].name,cx+44*k*0.9+10,cy);
+    });
+    g.font="italic "+(15*k*0.9)+"px Arial, sans-serif";g.textAlign="center";g.fillStyle="#4B5B57";
+    g.fillText("Diagram indicative only and not to scale.",W/2,H-capH/2);
+    c.toBlob(b=>res(b),"image/png");
+  });
+}
+function dl(blob,name){
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+}
+function fileBase(pk){return (pk.proposal_no||"NOREF")+"_"+slug(pk.property)}
+async function buildPacket(){
+  const pk=collect();
+  const base=fileBase(pk);
+  const png=hasContent()?await renderPNG():null;
+  pk.drawing=png?base+".png":"";
+  const out=Object.assign({},pk);
+  out._site_plan_data=D; // extra key so the job can be reopened and edited here
+  return {pk:out,base:base,png:png,json:new Blob([JSON.stringify(out,null,2)],{type:"application/json"})};
+}
+$("#btnSave").addEventListener("click",async()=>{
+  const w=warnings(collect());
+  if(w.bad.length&&!confirm("These are not filled in yet:\n\n- "+w.bad.join("\n- ")+"\n\nSave the packet anyway?"))return;
+  const p=await buildPacket();
+  dl(p.json,p.base+".json");
+  if(p.png)setTimeout(()=>dl(p.png,p.base+".png"),700);
+  $("#saveMsg").textContent="Saved "+p.base+".json"+(p.png?" and "+p.base+".png":" (no drawing yet, so no PNG)")+". Put them in the Proposal Packets folder.";
+  doAutosave();
+});
+$("#btnPng").addEventListener("click",async()=>{
+  if(!hasContent()){alert("Nothing drawn yet.");return}
+  const pk=collect(),png=await renderPNG();dl(png,fileBase(pk)+".png");
+});
+if(navigator.canShare&&navigator.share){
+  $("#btnShare").classList.remove("hide");
+  $("#btnShare").addEventListener("click",async()=>{
+    const p=await buildPacket();
+    const files=[new File([p.json],p.base+".json",{type:"application/json"})];
+    if(p.png)files.push(new File([p.png],p.base+".png",{type:"image/png"}));
+    try{
+      if(navigator.canShare({files:files}))await navigator.share({files:files,title:p.base});
+      else alert("This device will not share these files. Use Save packet instead.");
+    }catch(e){}
+  });
+}
+$("#btnLoad").addEventListener("click",()=>$("#fileLoad").click());
+$("#fileLoad").addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const pk=JSON.parse(r.result);
+      if(!pk||typeof pk!=="object"||!Array.isArray(pk.scope))throw new Error("not a packet");
+      apply(pk);
+      $("#saveMsg").textContent="Loaded "+f.name+(pk._site_plan_data?"":". This packet has no drawing data, so the site plan is empty.");
+    }catch(err){alert("That file is not a proposal packet.")}
+  };
+  r.readAsText(f);e.target.value="";
+});
+$("#btnNew").addEventListener("click",()=>{
+  if(!confirm("Start a new proposal? This clears the form and drawing (the saved draft is replaced)."))return;
+  clearForm();$("#banner").classList.add("hide");update();fitView();
+});
+$("#btnAddCustom").addEventListener("click",()=>{const el=addCustom();const d=el.querySelector(".d");if(d)d.focus()});
+
+/* ---------- form wiring ---------- */
+$("#sameOwner").addEventListener("change",()=>{$("#ownerWrap").classList.toggle("hide",$("#sameOwner").checked);update()});
+$("#property").addEventListener("input",()=>{
+  if(!propNoEdited){$("#propNo").value=suggestNo($("#property").value)}
+});
+$("#propNo").addEventListener("input",()=>{propNoEdited=$("#propNo").value.trim()!==""});
+$("#retreatChk").addEventListener("change",()=>{
+  const r=$("#retreat");
+  if($("#retreatChk").checked)r.value=RETREAT_STD;else if(r.value.trim()===RETREAT_STD)r.value="";
+  update();
+});
+document.querySelector("main").addEventListener("input",e=>{if(!e.target.closest("#scopeList,#customList"))update()});
+document.querySelector("main").addEventListener("change",e=>{if(!e.target.closest("#scopeList,#customList,#walls,#fileLoad"))update()});
+window.addEventListener("resize",resize);
+if(window.ResizeObserver)new ResizeObserver(resize).observe(cv.parentElement);
+
+/* ---------- boot ---------- */
+buildScope();buildLims();buildToolbar();
+$("#date").value=isoToday();
+resize();fitView();
+tryRestore();
+update(true);
+window.__test={get D(){return D},set D(v){D=v},collect:collect,apply:apply,drawingTotals:drawingTotals,renderPNG:renderPNG,update:update,suggestNo:suggestNo,slug:slug,get view(){return view},fitView:fitView};
+})();
+</script>
+</body>
+</html>
