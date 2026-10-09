@@ -54,6 +54,14 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 .sl-in .lt{grid-column:1/-1;font-size:14px;color:var(--ink2);font-family:"Spline Sans Mono",monospace}
 .sl-in small{display:block;font-size:12px;color:var(--ink3);margin-bottom:2px}
 .sl-desc{width:100%;margin-bottom:6px;grid-column:1/-1}
+.subhelp{border:1px dashed var(--line2);border-radius:10px;padding:6px 10px;margin:6px 0 10px}
+.subhelp summary{min-height:44px;display:flex;align-items:center;cursor:pointer;font-weight:600}
+.sh-grid{display:grid;grid-template-columns:1fr;gap:10px;padding:4px 0 8px}
+.sh-opt{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--bg)}
+.sh-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sh-row small{display:block;font-size:12px;color:var(--ink3);margin-bottom:2px}
+.sh-price{font-family:"Spline Sans Mono",monospace;font-size:15px;margin:6px 0}
+@media(min-width:600px){.sh-grid{grid-template-columns:1fr 1fr 1fr}}
 .totals{background:var(--surface2);border-radius:10px;padding:10px 14px;margin-top:12px;font-family:"Spline Sans Mono",monospace;font-size:15px}
 .totals div{display:flex;justify-content:space-between;padding:3px 0}
 .totals .big{font-weight:600;border-top:1px solid var(--line2);margin-top:4px;padding-top:6px}
@@ -292,6 +300,7 @@ const BAIT_SCOPE=[
  {id:"b_annual",desc:"Annual service and renewal",unit:"lump"}
 ];
 const UNITS=["lm","m2","each","lump"];
+const SUB_DESC={m2:"Treat accessible subfloor",pier:"Treat accessible subfloor, piers",perim:"Treat accessible subfloor, internal perimeter"};
 const DEFAULT_RATE={lm:50,m2:50};
 const LIMS=[
  "The proposed treatment is limited to accessible areas only.",
@@ -399,7 +408,48 @@ function wireLine(el){
 }
 function buildScope(){
   const host=$("#scopeList");
-  SCOPE.forEach(s=>{const el=addLineEl(host,s.id,s.desc,s.unit,false);wireLine(el)});
+  SCOPE.forEach(s=>{const el=addLineEl(host,s.id,s.desc,s.unit,false);wireLine(el);if(s.id==="sub")host.appendChild(subHelper())});
+}
+/* Subfloor helper: compares three ways to price the subfloor. Never picks one for Mitch. */
+function subLineEl(){return document.querySelector('#scopeList .scopeline[data-id="sub"]')}
+function setSubDesc(el,desc){
+  el.dataset.desc=desc;
+  const sp=el.querySelector(".chk span");if(sp)sp.textContent=desc;
+}
+function subHelper(){
+  const d=document.createElement("details");d.className="subhelp";d.id="subHelp";
+  const opts=[["m2","Area m2","Per m2"],["pier","Number of piers","Per pier"],["perim","Internal perimeter lm","Per lm"]];
+  d.innerHTML='<summary>Not sure how to price the subfloor?</summary>'+
+   '<div class="hint">Fill in what you know. Each box is optional. Compare the prices, then press Use this on the one you want. Nothing is picked for you.</div>'+
+   '<div class="sh-grid">'+opts.map(o=>
+    '<div class="sh-opt" data-k="'+o[0]+'">'+
+    '<div class="sh-row"><div><small>'+o[1]+'</small><input type="number" class="shq" inputmode="decimal" step="any" min="0" aria-label="'+o[1]+'"></div>'+
+    '<div><small>Rate $ ('+o[2].toLowerCase()+')</small><input type="number" class="shr" inputmode="decimal" step="any" min="0" value="50" aria-label="Rate '+o[2].toLowerCase()+'"></div></div>'+
+    '<div class="sh-price">Enter a quantity</div>'+
+    '<button type="button" class="btn sm shuse" disabled>Use this</button></div>').join("")+'</div>';
+  const calcOpt=o=>{
+    const q=num(o.querySelector(".shq").value),r=num(o.querySelector(".shr").value);
+    const ok=q!=null&&q>0&&r!=null;
+    o.querySelector(".sh-price").textContent=ok?(q+" x "+money(r).replace(".00","")+" = "+money(r2(q*r))+" ex GST"):"Enter a quantity";
+    o.querySelector(".shuse").disabled=!ok;
+    return ok?{q:q,r:r}:null;
+  };
+  d.addEventListener("input",e=>{const o=e.target.closest(".sh-opt");if(o)calcOpt(o)});
+  d.addEventListener("click",e=>{
+    const b=e.target.closest(".shuse");if(!b)return;
+    const o=b.closest(".sh-opt"),k=o.dataset.k,v=calcOpt(o);if(!v)return;
+    const el=subLineEl();
+    setSubDesc(el,SUB_DESC[k]);
+    setLine(el,{on:true,qty:v.q,unit:k==="pier"?"each":(k==="perim"?"lm":"m2"),rate:v.r});
+    update();
+  });
+  d.addEventListener("toggle",()=>{
+    if(!d.open||typeof D==="undefined"||D.nts)return;
+    const q=d.querySelector('.sh-opt[data-k="m2"] .shq');
+    const t=drawingTotals(),a=Math.round(t.sub*10)/10;
+    if(q.value===""&&a>0){q.value=a;calcOpt(q.closest(".sh-opt"))}
+  });
+  return d;
 }
 function buildBait(){
   const host=$("#baitList");
@@ -473,7 +523,7 @@ function clearForm(){
   $("#date").value=isoToday();
   $("#recheck").value="";$("#retreatChk").checked=false;
   document.querySelectorAll('input[name=anc]').forEach(r=>r.checked=false);
-  allLineEls().forEach(el=>{if(el.dataset.id==="custom")el.remove();else setLine(el,{on:false,qty:null,unit:(SCOPE.concat(BAIT_SCOPE)).find(s=>s.id===el.dataset.id).unit,rate:null})});
+  allLineEls().forEach(el=>{if(el.dataset.id==="sub")setSubDesc(el,SUB_DESC.m2);if(el.dataset.id==="custom")el.remove();else setLine(el,{on:false,qty:null,unit:(SCOPE.concat(BAIT_SCOPE)).find(s=>s.id===el.dataset.id).unit,rate:null})});
   ptype="barrier";
   $("#limList").innerHTML="";buildLims();
   propNoEdited=false;
@@ -491,7 +541,9 @@ function apply(pk){
   set("heading",pk.heading||"Recommended Treatment");set("narrative",pk.narrative);
   ptype=pk.type==="baiting"?"baiting":"barrier";
   (pk.scope||[]).forEach(l=>{
-    const cat=SCOPE.concat(BAIT_SCOPE).find(s=>s.desc===l.desc);
+    const subKey=Object.keys(SUB_DESC).find(k=>SUB_DESC[k]===l.desc);
+    const cat=subKey?SCOPE.find(s=>s.id==="sub"):SCOPE.concat(BAIT_SCOPE).find(s=>s.desc===l.desc);
+    if(subKey)setSubDesc(subLineEl(),l.desc);
     const el=cat?allLineEls().find(e=>e.dataset.id===cat.id):null;
     if(el)setLine(el,{on:true,qty:l.qty,unit:l.unit||cat.unit,rate:l.rate});
     else addCustom({desc:l.desc,qty:l.qty,unit:l.unit||"lm",rate:l.rate});
@@ -1284,6 +1336,7 @@ $("#btnUseTotals").addEventListener("click",()=>{
   if(!confirm(msg))return;
   changes.forEach(c=>{
     const cur=lineVals(c.el);
+    if(c.key==="sub")setSubDesc(c.el,SUB_DESC.m2);
     setLine(c.el,{on:true,qty:c.val,unit:c.unit,rate:cur.rate==null?DEFAULT_RATE[c.unit]:cur.rate});
   });
   update();
