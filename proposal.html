@@ -107,72 +107,19 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
 <main>
 <div id="banner" class="banner hide"><span id="bannerTxt"></span><span class="btns"><button class="btn sm" id="btnNew" type="button">Start a new proposal</button></span></div>
 
-<!-- 1. CLIENT -->
-<section id="s1">
-  <h2>1. Client</h2>
-  <label class="f" for="client">Client name(s)</label>
-  <input type="text" id="client" autocomplete="off">
-  <div class="row two">
-    <div><label class="f" for="email">Email</label><input type="email" id="email" autocomplete="off" inputmode="email"></div>
-    <div><label class="f" for="phone">Phone</label><input type="tel" id="phone" autocomplete="off" inputmode="tel"></div>
+<!-- 0. PROPOSAL TYPE -->
+<section id="stype">
+  <h2>Proposal type</h2>
+  <div class="btns" id="typeBtns" role="radiogroup" aria-label="Proposal type">
+    <label class="chk"><input type="radio" name="ptype" value="barrier" checked><span>Barrier treatment</span></label>
+    <label class="chk"><input type="radio" name="ptype" value="baiting"><span>Baiting</span></label>
   </div>
-  <label class="chk"><input type="checkbox" id="sameOwner" checked><span>Owner is the same as the client</span></label>
-  <div id="ownerWrap" class="hide"><label class="f" for="owner">Owner name(s)</label><input type="text" id="owner" autocomplete="off"></div>
-  <label class="f" for="property">Property address</label>
-  <input type="text" id="property" autocomplete="off" placeholder="Street number, street, suburb">
-  <div class="row two">
-    <div><label class="f" for="propNo">Proposal no.</label><input type="text" id="propNo" autocomplete="off" autocapitalize="characters"><div class="hint" id="propNoHint">Suggested from the address. You can change it.</div></div>
-    <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
-  </div>
+  <div class="warn hide" id="baitNote">Baiting proposals are not built by the Mac script yet. The drawing and quantities still save.</div>
 </section>
 
-<!-- 2. SCOPE -->
-<section id="s2">
-  <h2>2. Scope of work</h2>
-  <details style="margin-bottom:8px"><summary>Heading and intro paragraph (optional)</summary>
-  <label class="f" for="heading">Heading</label>
-  <input type="text" id="heading" value="Recommended Treatment">
-  <label class="f" for="narrative">Short intro paragraph</label>
-  <textarea id="narrative"></textarea>
-  </details>
-  <h3>Tick what applies</h3>
-  <div id="scopeList"></div>
-  <h3>Your own lines</h3>
-  <div id="customList"></div>
-  <div class="btns" style="margin-top:8px"><button class="btn" id="btnAddCustom" type="button">+ Add a custom line</button></div>
-
-  <h3>Discount and credit</h3>
-  <div class="row two">
-    <div><label class="f" for="discPct">Package discount %</label><input type="number" id="discPct" inputmode="decimal" min="0" max="100" step="any" placeholder="0"></div>
-    <div><label class="f" for="credit">Inspection credit $ (ex GST)</label><input type="number" id="credit" inputmode="decimal" min="0" step="any" placeholder="0"></div>
-  </div>
-  <h3>Other</h3>
-  <label class="f">Ancillary work</label>
-  <div class="btns" id="ancBtns" role="radiogroup" aria-label="Ancillary work">
-    <label class="chk"><input type="radio" name="anc" value="will"><span>Building Owner will be required to carry out Ancillary Work</span></label>
-    <label class="chk"><input type="radio" name="anc" value="will not"><span>Building Owner will not be required to carry out Ancillary Work</span></label>
-  </div>
-  <label class="f" for="recheck">Re-check interval</label>
-  <select id="recheck"><option value="">(blank)</option><option>Six Months</option><option>Three Months</option><option>One Month</option></select>
-  <label class="chk"><input type="checkbox" id="retreatChk"><span>Re-treatment recommended every 5 yrs</span></label>
-  <label class="f" for="retreat">Re-treatment note (edit if needed)</label>
-  <input type="text" id="retreat">
-
-  <div class="totals" id="totals" aria-live="polite"></div>
-</section>
-
-<!-- 3. LIMITATIONS -->
-<section id="s3">
-  <h2>3. Limitations</h2>
-  <div class="hint">Tick the sentences you want. They go in as written.</div>
-  <div id="limList"></div>
-  <label class="f" for="limExtra">Anything else (free text)</label>
-  <textarea id="limExtra"></textarea>
-</section>
-
-<!-- 4. SITE PLAN -->
+<!-- 1. SITE PLAN -->
 <section id="s4">
-  <h2>4. Site plan</h2>
+  <h2>1. Site plan</h2>
   <div class="btns" style="margin-bottom:6px">
     <button class="btn sm" id="btnPhoto" type="button">Photo</button>
     <input type="file" id="photoFile" accept="image/*" class="hide">
@@ -229,13 +176,79 @@ input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid v
     <div id="walls" class="walls" style="margin-top:8px"></div>
     <div class="hint" id="wallsHint">Draw an outline first. Changing a wall moves every wall after it along with it.</div>
   </details>
+  <div id="baitCounts" class="hide"></div>
   <div id="totalsBox">
     <h3>Drawing totals</h3>
     <table class="dt" id="dtotals"></table>
     <div class="btns" style="margin-top:10px"><button class="btn" id="btnUseTotals" type="button">Use drawing totals</button></div>
-    <div class="hint">Asks you first, then fills the matching scope lines (slab perimeter, external perimeter, subfloor).</div>
+    <div class="hint" id="useTotalsHint">Asks you first, then fills the matching scope lines (slab perimeter, external perimeter, subfloor).</div>
   </div>
 </section>
+
+<!-- 2. CLIENT -->
+<section id="s1">
+  <h2>2. Client</h2>
+  <label class="f" for="client">Client name(s)</label>
+  <input type="text" id="client" autocomplete="off">
+  <div class="row two">
+    <div><label class="f" for="email">Email</label><input type="email" id="email" autocomplete="off" inputmode="email"></div>
+    <div><label class="f" for="phone">Phone</label><input type="tel" id="phone" autocomplete="off" inputmode="tel"></div>
+  </div>
+  <label class="chk"><input type="checkbox" id="sameOwner" checked><span>Owner is the same as the client</span></label>
+  <div id="ownerWrap" class="hide"><label class="f" for="owner">Owner name(s)</label><input type="text" id="owner" autocomplete="off"></div>
+  <label class="f" for="property">Property address</label>
+  <input type="text" id="property" autocomplete="off" placeholder="Street number, street, suburb">
+  <div class="row two">
+    <div><label class="f" for="propNo">Proposal no.</label><input type="text" id="propNo" autocomplete="off" autocapitalize="characters"><div class="hint" id="propNoHint">Suggested from the address. You can change it.</div></div>
+    <div><label class="f" for="date">Date</label><input type="date" id="date"></div>
+  </div>
+</section>
+
+<!-- 3. SCOPE -->
+<section id="s2">
+  <h2>3. Scope of work</h2>
+  <details style="margin-bottom:8px"><summary>Heading and intro paragraph (optional)</summary>
+  <label class="f" for="heading">Heading</label>
+  <input type="text" id="heading" value="Recommended Treatment">
+  <label class="f" for="narrative">Short intro paragraph</label>
+  <textarea id="narrative"></textarea>
+  </details>
+  <h3 id="scopeH">Tick what applies</h3>
+  <div id="scopeList"></div>
+  <div id="baitList" class="hide"></div>
+  <h3>Your own lines</h3>
+  <div id="customList"></div>
+  <div class="btns" style="margin-top:8px"><button class="btn" id="btnAddCustom" type="button">+ Add a custom line</button></div>
+
+  <h3>Discount and credit</h3>
+  <div class="row two">
+    <div><label class="f" for="discPct">Package discount %</label><input type="number" id="discPct" inputmode="decimal" min="0" max="100" step="any" placeholder="0"></div>
+    <div><label class="f" for="credit">Inspection credit $ (ex GST)</label><input type="number" id="credit" inputmode="decimal" min="0" step="any" placeholder="0"></div>
+  </div>
+  <h3>Other</h3>
+  <label class="f">Ancillary work</label>
+  <div class="btns" id="ancBtns" role="radiogroup" aria-label="Ancillary work">
+    <label class="chk"><input type="radio" name="anc" value="will"><span>Building Owner will be required to carry out Ancillary Work</span></label>
+    <label class="chk"><input type="radio" name="anc" value="will not"><span>Building Owner will not be required to carry out Ancillary Work</span></label>
+  </div>
+  <label class="f" for="recheck">Re-check interval</label>
+  <select id="recheck"><option value="">(blank)</option><option>Six Months</option><option>Three Months</option><option>One Month</option></select>
+  <label class="chk"><input type="checkbox" id="retreatChk"><span>Re-treatment recommended every 5 yrs</span></label>
+  <label class="f" for="retreat">Re-treatment note (edit if needed)</label>
+  <input type="text" id="retreat">
+
+  <div class="totals" id="totals" aria-live="polite"></div>
+</section>
+
+<!-- 4. LIMITATIONS -->
+<section id="s3">
+  <h2>4. Limitations</h2>
+  <div class="hint">Tick the sentences you want. They go in as written.</div>
+  <div id="limList"></div>
+  <label class="f" for="limExtra">Anything else (free text)</label>
+  <textarea id="limExtra"></textarea>
+</section>
+
 
 <!-- 5. SAVE -->
 <section id="s5">
@@ -272,6 +285,11 @@ const SCOPE=[
  {id:"pole",desc:"Treat around poles, piers and posts",unit:"each"},
  {id:"pen",desc:"Treat slab penetrations",unit:"each"},
  {id:"dust",desc:"Dust to active termites",unit:"lump"}
+];
+const BAIT_SCOPE=[
+ {id:"b_inst",desc:"Install baiting system, initial stations (qty)",unit:"each"},
+ {id:"b_drill",desc:"Core drill through slab or paving (per hole)",unit:"each"},
+ {id:"b_annual",desc:"Annual service and renewal",unit:"lump"}
 ];
 const UNITS=["lm","m2","each","lump"];
 const DEFAULT_RATE={lm:50,m2:50};
@@ -330,6 +348,7 @@ function lineHTML(id,desc,unit,custom){
 }
 function addLineEl(host,id,desc,unit,custom){
   const el=document.createElement("div");
+  if(host.id==="baitList")el.dataset.bait="1";
   el.className="scopeline"+(custom?" on":"");
   el.dataset.id=id;el.dataset.desc=desc||"";
   el.innerHTML=lineHTML(id,desc,unit,custom);
@@ -353,8 +372,10 @@ function lineTotal(el){
   const v=lineVals(el);
   el.querySelector(".lt").textContent=(v.qty!=null&&v.rate!=null)?("Line total "+money(r2(v.qty*v.rate))+" ex GST"):"Line total: enter qty and rate";
 }
-function allLineEls(){return Array.from(document.querySelectorAll("#scopeList .scopeline, #customList .scopeline"))}
+function allLineEls(){return Array.from(document.querySelectorAll("#scopeList .scopeline, #baitList .scopeline, #customList .scopeline"))}
+function activeLineEls(){return allLineEls().filter(el=>el.dataset.id==="custom"||(ptype==="baiting"?!!el.dataset.bait:!el.dataset.bait))}
 function tickDefaultRate(el){
+  if(el.dataset.bait)return; // baiting lines never get a default rate
   const r=el.querySelector(".r");
   if(r.value==="" ){const u=el.querySelector(".u").value;if(DEFAULT_RATE[u]!=null)r.value=DEFAULT_RATE[u]}
 }
@@ -366,6 +387,7 @@ function wireLine(el){
     }
     if(e.target.classList.contains("u")){
       const r=el.querySelector(".r");
+      if(el.dataset.bait){update();return}
       // only refill when rate was blank or still a default rate
       if(r.value===""||r.value==="50"){r.value=DEFAULT_RATE[e.target.value]!=null?DEFAULT_RATE[e.target.value]:""}
     }
@@ -378,6 +400,24 @@ function wireLine(el){
 function buildScope(){
   const host=$("#scopeList");
   SCOPE.forEach(s=>{const el=addLineEl(host,s.id,s.desc,s.unit,false);wireLine(el)});
+}
+function buildBait(){
+  const host=$("#baitList");
+  BAIT_SCOPE.forEach(s=>{const el=addLineEl(host,s.id,s.desc,s.unit,false);wireLine(el)});
+}
+let ptype="barrier";
+function syncType(){
+  const b=ptype==="baiting";
+  const r=document.querySelector('input[name=ptype][value="'+ptype+'"]');if(r)r.checked=true;
+  $("#baitNote").classList.toggle("hide",!b);
+  $("#scopeList").classList.toggle("hide",b);
+  $("#baitList").classList.toggle("hide",!b);
+  $("#scopeH").textContent=b?"Baiting lines (tick what applies, type the quantity and price)":"Tick what applies";
+  $("#btnUseTotals").classList.toggle("hide",b);
+  $("#useTotalsHint").classList.toggle("hide",b);
+  $("#baitCounts").classList.toggle("hide",!b);
+  if(!b&&(tool==="bait"||tool==="drill")){tool="bldg";cur=null}
+  buildToolbar();
 }
 function addCustom(d){
   const el=addLineEl($("#customList"),"custom","","lm",true);
@@ -399,11 +439,12 @@ function buildLims(){LIMS.forEach(t=>addLimRow(t,false))}
 /* ---------- collect / apply (one packet shape for save, autosave and load) ---------- */
 function collect(){
   const lines=[];
-  allLineEls().forEach(el=>{const v=lineVals(el);if(v.on&&(v.desc||el.dataset.id!=="custom")){lines.push({desc:v.desc,qty:v.qty,unit:v.unit,rate:v.rate})}});
+  activeLineEls().forEach(el=>{const v=lineVals(el);if(v.on&&(v.desc||el.dataset.id!=="custom")){lines.push({desc:v.desc,qty:v.qty,unit:v.unit,rate:v.rate})}});
   const lims=Array.from(document.querySelectorAll("#limList .limrow")).filter(l=>l.querySelector("input").checked).map(l=>l.querySelector(".txt").textContent);
   const anc=(document.querySelector('input[name=anc]:checked')||{}).value||"";
   const same=$("#sameOwner").checked;
   const pk={
+    type:ptype,
     proposal_no:$("#propNo").value.trim(),
     date:isoToLong($("#date").value),
     property:$("#property").value.trim(),
@@ -432,7 +473,8 @@ function clearForm(){
   $("#date").value=isoToday();
   $("#recheck").value="";$("#retreatChk").checked=false;
   document.querySelectorAll('input[name=anc]').forEach(r=>r.checked=false);
-  allLineEls().forEach(el=>{if(el.dataset.id==="custom")el.remove();else setLine(el,{on:false,qty:null,unit:SCOPE.find(s=>s.id===el.dataset.id).unit,rate:null})});
+  allLineEls().forEach(el=>{if(el.dataset.id==="custom")el.remove();else setLine(el,{on:false,qty:null,unit:(SCOPE.concat(BAIT_SCOPE)).find(s=>s.id===el.dataset.id).unit,rate:null})});
+  ptype="barrier";
   $("#limList").innerHTML="";buildLims();
   propNoEdited=false;
   D=blankD(true);cur=null;undoStack=[];legSig="";
@@ -447,8 +489,9 @@ function apply(pk){
   set("propNo",pk.proposal_no);propNoEdited=!!pk.proposal_no;
   const iso=longToIso(pk.date);if(iso)$("#date").value=iso;else if(pk.date===""||pk.date==null)$("#date").value="";
   set("heading",pk.heading||"Recommended Treatment");set("narrative",pk.narrative);
+  ptype=pk.type==="baiting"?"baiting":"barrier";
   (pk.scope||[]).forEach(l=>{
-    const cat=SCOPE.find(s=>s.desc===l.desc);
+    const cat=SCOPE.concat(BAIT_SCOPE).find(s=>s.desc===l.desc);
     const el=cat?allLineEls().find(e=>e.dataset.id===cat.id):null;
     if(el)setLine(el,{on:true,qty:l.qty,unit:l.unit||cat.unit,rate:l.rate});
     else addCustom({desc:l.desc,qty:l.qty,unit:l.unit||"lm",rate:l.rate});
@@ -465,7 +508,7 @@ function apply(pk){
   set("limExtra",pk.limitations_extra);
   const sp=pk._site_plan_data;
   D=(sp&&sp.b&&sp.sh&&sp.mk)?fixD(sp):blankD(true);cur=null;undoStack=[];legSig="";
-  $("#snapOn").checked=!D.nts;syncNts();
+  $("#snapOn").checked=!D.nts;syncNts();syncType();
   update(true);fitView();
 }
 
@@ -557,11 +600,12 @@ let view={s:20,ox:20,oy:20};
 let tool="bldg";
 let legSig="";
 const PATHTOOLS={bldg:{min:3,label:"Outline"},slab:{min:2,label:"Slab perimeter"},ext:{min:2,label:"External"},sub:{min:3,label:"Subfloor",poly:true},prev:{min:3,label:"Previous",poly:true},brick:{min:2,label:"Brick wall"},int:{min:2,label:"Internal"},ver:{min:3,label:"Veranda",poly:true}};
-const POINTTOOLS={pen:"Penetration",term:"Active termites",dmg:"Damage",post:"Pole / post",xout:"Cross-out",label:"Text"};
+const POINTTOOLS={bait:"Bait station",drill:"Core drill hole",pen:"Penetration",term:"Active termites",dmg:"Damage",post:"Pole / post",xout:"Cross-out",label:"Text"};
 const TOOLGROUPS=[
  ["Outline",[["bldg","Outline"],["ver","Veranda"]]],
  ["Treatment",[["sub","Subfloor"],["int","Internal"],["ext","External"],["slab","Slab"],["pen","Penetration"],["prev","Previous"]]],
  ["Findings",[["term","Termites"],["dmg","Damage"],["post","Post"],["xout","Cross-out"],["brick","Brick wall"]]],
+ ["Baiting",[["bait","Bait station"],["drill","Core drill hole"]]],
  ["Notes",[["callout","Callout"],["label","Text"]]],
  ["Edit",[["photo","Photo"],["move","Move"],["edit","Edit text"],["del","Delete"],["pan","Pan"]]]
 ];
@@ -574,6 +618,7 @@ const HINTS={
  int:"Tap along the internal treatment (red dotted line). Finish shape when done.",
  prev:"Tap the corners of an area with a previous treatment. Finish shape closes it.",
  brick:"Tap along a brick wall (thick black line). Finish shape when done.",
+ bait:"Tap where each bait station goes (green circle with a B).",drill:"Tap each hole to be core drilled through slab or paving.",
  pen:"Tap each penetration treated.",term:"Tap where active termites were found.",dmg:"Tap where there is damage or workings.",post:"Tap each pole, post or pier.",xout:"Tap to place a red cross-out.",
  callout:"Tap the spot you want to point at, then pick or type the words. Or drag from the spot to where the box should sit.",
  label:"Tap where you want some text, then type it.",
@@ -593,9 +638,11 @@ const STY={
  term:{c:"#E00000",name:"Active termites"},
  dmg:{c:"#F5C400",name:"Termite damage or workings"},
  post:{c:"#14201E",name:"Pole / post / pier"},
- xout:{c:"#E00000",name:"Cross-out"}
+ xout:{c:"#E00000",name:"Cross-out"},
+ bait:{c:"#1E8A3C",name:"Bait station"},
+ drill:{c:"#14201E",name:"Core-drilled hole"}
 };
-const LEGEND_ORDER=["sub","int","pen","ext","slab","prev","brick","ver","term","dmg","post","xout"];
+const LEGEND_ORDER=["sub","int","pen","ext","slab","prev","brick","ver","bait","drill","term","dmg","post","xout"];
 const PRESETS=[
  "Treat accessible subfloor",
  "Treat accessible external perimeter",
@@ -621,6 +668,8 @@ const IC={
  dmg:'<polygon points="20,8 33,31 7,31" fill="#F5C400" stroke="#14201E" stroke-width="2"/>',
  post:'<path d="M12,12 L28,28 M28,12 L12,28" stroke="#14201E" stroke-width="4.5" stroke-linecap="round"/>',
  xout:'<path d="M9,9 L31,31 M31,9 L9,31" stroke="#E00000" stroke-width="4.5" stroke-linecap="round"/>',
+ bait:'<circle cx="20" cy="20" r="11" fill="#1E8A3C"/><text x="20" y="25.5" text-anchor="middle" font-family="Arial" font-weight="700" font-size="15" fill="#fff">B</text>',
+ drill:'<circle cx="20" cy="20" r="6" fill="none" stroke="#14201E" stroke-width="3"/>',
  brick:'<line x1="7" y1="20" x2="33" y2="20" stroke="#14201E" stroke-width="9"/>',
  callout:'<rect x="5" y="6" width="22" height="14" fill="#fff" stroke="#14201E" stroke-width="1.8"/><line x1="9" y1="11" x2="23" y2="11" stroke="#14201E" stroke-width="1.5"/><line x1="9" y1="15" x2="19" y2="15" stroke="#14201E" stroke-width="1.5"/><line x1="17" y1="20" x2="32" y2="33" stroke="#14201E" stroke-width="1.8"/><polygon points="34,35 27,32 31,28" fill="#14201E"/>',
  label:'<text x="20" y="26" text-anchor="middle" font-family="Arial" font-weight="700" font-size="17" fill="#14201E">Abc</text>',
@@ -652,6 +701,7 @@ function hasContent(){return D.b.length||D.sh.length||D.mk.length||D.co.length}
 function buildToolbar(){
   const tb=$("#toolbar");tb.innerHTML="";
   TOOLGROUPS.forEach(g=>{
+    if(g[0]==="Baiting"&&ptype!=="baiting")return;
     const grp=document.createElement("div");grp.className="tg";
     grp.innerHTML='<b>'+g[0]+'</b>';
     const row=document.createElement("div");row.className="tgb";
@@ -829,7 +879,10 @@ function paintScene(c,tf,k,opts){
 }
 function drawMark(c,t,x,y,k,text){
   c.setLineDash([]);c.lineCap="butt";
-  if(t==="pen"){c.beginPath();c.arc(x,y,6*k,0,7);c.lineWidth=3*k;c.strokeStyle="#0A1FE0";c.stroke()}
+  if(t==="bait"){c.beginPath();c.arc(x,y,10*k,0,7);c.fillStyle="#1E8A3C";c.fill();c.lineWidth=1.5*k;c.strokeStyle="#fff";c.stroke();
+    c.font="700 "+(13*k)+"px Arial, sans-serif";c.textAlign="center";c.textBaseline="middle";c.fillStyle="#fff";c.fillText("B",x,y+0.5*k)}
+  else if(t==="drill"){c.beginPath();c.arc(x,y,5*k,0,7);c.lineWidth=2.5*k;c.strokeStyle="#14201E";c.stroke()}
+  else if(t==="pen"){c.beginPath();c.arc(x,y,6*k,0,7);c.lineWidth=3*k;c.strokeStyle="#0A1FE0";c.stroke()}
   else if(t==="term"){const r=10*k;c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();c.fillStyle="#E00000";c.fill();c.lineWidth=1.5*k;c.strokeStyle="#fff";c.stroke()}
   else if(t==="dmg"){const r=11*k;c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y+r*0.8);c.lineTo(x-r,y+r*0.8);c.closePath();c.fillStyle="#F5C400";c.fill();c.lineWidth=1.5*k;c.strokeStyle="#14201E";c.stroke()}
   else if(t==="post"){const r=7*k;c.beginPath();c.moveTo(x-r,y-r);c.lineTo(x+r,y+r);c.moveTo(x+r,y-r);c.lineTo(x-r,y+r);c.lineWidth=3*k;c.strokeStyle="#14201E";c.lineCap="round";c.stroke();c.lineCap="butt"}
@@ -1127,7 +1180,7 @@ function syncNts(){
   $("#totalsBox").classList.toggle("hide",D.nts);
   $("#wallsBox").open=!D.nts;
   $("#wallsTitle").textContent=D.nts?"Wall lengths (optional, not needed for a not-to-scale drawing)":"Wall lengths (type to correct)";
-  $("#gridHint").textContent=D.nts?"Not to scale: draw it like a sketch. You type the quantities in section 2 yourself.":"Grid squares are 1 m. Pinch with two fingers to zoom and pan, or use +/- and the Pan tool.";
+  $("#gridHint").textContent=D.nts?"Not to scale: draw it like a sketch. You type the quantities in section 3 yourself.":"Grid squares are 1 m. Pinch with two fingers to zoom and pan, or use +/- and the Pan tool.";
   $("#snapWrap").classList.toggle("hide",D.nts);
 }
 $("#ntsOn").addEventListener("change",()=>{
@@ -1178,6 +1231,7 @@ function renderTotals(){
    '<tr><td>Slab perimeter</td><td>'+t.slab.toFixed(1)+' lm</td></tr>'+
    '<tr><td>External perimeter</td><td>'+t.ext.toFixed(1)+' lm</td></tr>'+
    '<tr><td>Subfloor</td><td>'+t.sub.toFixed(1)+' m2</td></tr>';
+  $("#baitCounts").innerHTML='<h3>Baiting counts</h3><table class="dt"><tr><td>Bait stations</td><td>'+D.mk.filter(m=>m.t==="bait").length+'</td></tr><tr><td>Core-drilled holes</td><td>'+D.mk.filter(m=>m.t==="drill").length+'</td></tr></table>';
 }
 function usedLegend(){
   const u=[];
@@ -1377,11 +1431,12 @@ $("#fileLoad").addEventListener("change",e=>{
 });
 $("#btnNew").addEventListener("click",()=>{
   if(!confirm("Start a new proposal? This clears the form and drawing (the saved draft is replaced)."))return;
-  clearForm();removePhoto();$("#banner").classList.add("hide");update();fitView();
+  clearForm();syncType();removePhoto();$("#banner").classList.add("hide");update();fitView();
 });
 $("#btnAddCustom").addEventListener("click",()=>{const el=addCustom();const d=el.querySelector(".d");if(d)d.focus()});
 
 /* ---------- form wiring ---------- */
+document.querySelectorAll('input[name=ptype]').forEach(r=>r.addEventListener("change",()=>{ptype=r.value;syncType();update()}));
 $("#sameOwner").addEventListener("change",()=>{$("#ownerWrap").classList.toggle("hide",$("#sameOwner").checked);update()});
 $("#property").addEventListener("input",()=>{
   if(!propNoEdited){$("#propNo").value=suggestNo($("#property").value)}
@@ -1398,7 +1453,7 @@ window.addEventListener("resize",resize);
 if(window.ResizeObserver)new ResizeObserver(resize).observe(cv.parentElement);
 
 /* ---------- boot ---------- */
-buildScope();buildLims();buildToolbar();buildCoChips();syncNts();restorePhoto();
+buildScope();buildBait();buildLims();buildToolbar();buildCoChips();syncNts();restorePhoto();syncType();
 $("#date").value=isoToday();
 resize();fitView();
 tryRestore();
