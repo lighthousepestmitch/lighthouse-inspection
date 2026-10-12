@@ -1444,7 +1444,7 @@ function viewClients(m){
   s.value=S.q; s.oninput=()=>{S.q=s.value; renderClientList();}; m.appendChild(s);
   const chips=el("div","chips");
   [["active","Active"],["lapsed","Haven't seen in a while"],["barrier","Barriers"],
-   ["cold","Cold list"],["*","Everyone"]]
+   ["cold","Cold list"],["regular","Old regulars"],["*","Everyone"]]
    .concat(Object.keys(S.gone).length?[["gone","Deleted ("+Object.keys(S.gone).length+")"]]:[])
    .forEach(([k,lab])=>{
     const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.grp===k));
@@ -1458,7 +1458,8 @@ function renderClientList(){
   let ids=Object.keys(S.clients);
   if(S.grp==="gone") ids=ids.filter(i=>S.gone[i]);
   else { ids=ids.filter(i=>!S.gone[i]);
-    if(S.grp!=="*") ids=ids.filter(i=>(S.clients[i].g||"active")===S.grp); }
+    if(S.grp==="regular") ids=ids.filter(i=>(S.clients[i].g||"active")!=="active"&&(S.clients[i].ic||0)>=2);
+    else if(S.grp!=="*") ids=ids.filter(i=>(S.clients[i].g||"active")===S.grp); }
   if(q) ids=ids.filter(i=>{const c=S.clients[i];
     return (c.n+" "+(c.e||"")+" "+(c.p||"")+" "+((c.a||[]).join(" "))).toLowerCase().includes(q);});
   ids.sort((a,b)=>S.clients[a].n.localeCompare(S.clients[b].n));
