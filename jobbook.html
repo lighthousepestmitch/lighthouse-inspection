@@ -253,6 +253,7 @@ body.locked .stats{display:none}          /* no empty counters on the login scre
 <nav class="bottom" id="nav" hidden>
   <button data-go="due" aria-current="true"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Due</button>
   <button data-go="clients"><svg viewBox="0 0 24 24"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17 11h4M19 9v4"/></svg>Clients</button>
+  <button data-go="leads"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Leads</button>
   <button data-go="reviews"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>Reviews</button>
   <button data-go="sync"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Setup</button>
 </nav>
@@ -265,7 +266,7 @@ body.locked .stats{display:none}          /* no empty counters on the login scre
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-08a";
+const BUILD="2026-10-12a";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -321,7 +322,7 @@ const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
 const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
-  ov:{},bookings:{},gone:{},asked:{},rq:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
+  ov:{},bookings:{},gone:{},asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
 
 /* ---------- storage ----------
    Client list and job history come from the database (behind the login) and only change
@@ -346,6 +347,7 @@ const EMAIL_KEY="lpc_jobbook_last_email", CAL_EMAIL_KEY="lpc_calendar_last_email
 const PRIVATE_BASES=["clients","properties","jobs","due","replies"];       // file families that hold customer data
 const PRIVATE_RE=/^(clients|properties|jobs|due|replies)_(\d+)$/;
 const ASKS_NAME="review_asks";
+const LEADS_NAME="leads";                     // optional: the prospecting list (business contacts), private like the rest
 const MANIFEST_NAME="jobbook_manifest";       // written last by every upload: the list of rows that belong together
 const isLocal=location.hostname==="127.0.0.1"||location.hostname==="localhost";   // the Mac, running the page from the repo folder
 let SB=null;
@@ -545,15 +547,17 @@ async function loadAll(gen){
   S.sync=sync||{lastSyncedDate:S.settings.seedDataEnds};
   const got=await fetchPrivate();                       // clients, properties, jobs, due, replies, review asks
   if(gen!==A.gen) return;
-  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null;
+  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null, leadsF=null;
   for(const r of (got.rows||[])){
     if(r.name===ASKS_NAME){ asks=r.data; continue; }
+    if(r.name===LEADS_NAME){ leadsF=r.data; continue; }
     const m=PRIVATE_RE.exec(r.name); if(m) fam[m[1]].push([+m[2],r.data]);
   }
   if(!fam.clients.length){ renderNoData(); return; }
   for(const k in fam) fam[k].sort((a,b)=>a[0]-b[0]);       // file order, so the due list reads the same as it did from files
   S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={};
-  S.asked=(asks&&asks.rows)||{};                           // review texts already sent, pulled off his Mac
+  S.asked=(asks&&asks.rows)||{};
+  S.leads=(leadsF&&Array.isArray(leadsF.rows))?leadsF.rows:[];                           // review texts already sent, pulled off his Mac
   for(const k of PRIVATE_BASES) for(const [,d] of fam[k]){ if(!d) continue;
     if(k==="due") S.due=S.due.concat(d.rows||[]);
     else if(k==="replies") Object.assign(S.replies,d.rows||{});
@@ -564,14 +568,14 @@ async function loadAll(gen){
   for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
     S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
   const mine=STORE.read();
-  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK;
+  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK; S.lead=mine.lead||{};
   S.ready=true; A.screen="app"; $("#nav").hidden=false; document.body.classList.remove("locked"); render();
 }
 
 /* every write goes through here: updates memory first so the screen is never a lie,
    then persists. A failed write shouts instead of failing silently. */
 function persist(){
-  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,reviewLink:S.reviewLink,at:new Date().toISOString()});
+  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,lead:S.lead,reviewLink:S.reviewLink,at:new Date().toISOString()});
   if(!ok) toast("Couldn't save to this device. If you're in a private window, storage is turned off.",true);
   return ok;
 }
@@ -613,6 +617,11 @@ async function localPlan(){
   if(asks!=null){
     if(typeof asks!=="object"||Array.isArray(asks)) throw plainErr(ASKS_NAME+".json doesn't look right. Nothing was uploaded.");
     names.push(ASKS_NAME);
+  }
+  const lf=await localJson(LEADS_NAME);                     // optional: only there once a lead list has been built
+  if(lf!=null){
+    if(typeof lf!=="object"||Array.isArray(lf)||!Array.isArray(lf.rows)) throw plainErr(LEADS_NAME+".json doesn't look right. Nothing was uploaded.");
+    names.push(LEADS_NAME);
   }
   return {names,man};
 }
@@ -844,6 +853,7 @@ function render(){
     else if(S.view==="todo") viewTodo(m,L);
     else if(S.view==="clients") viewClients(m);
     else if(S.view==="reviews") viewReviews(m);
+    else if(S.view==="leads") viewLeads(m);
     else if(S.view==="sync") viewSync(m);
   }catch(err){
     reportErr("the "+S.view+" screen",err);
@@ -1556,6 +1566,99 @@ function viewReviews(m){
   draw();
 }
 
+/* ---------- leads tab ----------
+   The prospecting list (public business contacts: agencies, strata, builders and so on), kept apart from the
+   customer due list. leads.json is private like the client files (database, behind the login, never in the repo).
+   His progress on each lead lives on this device (S.lead, key = lead id), same as ticks and the contact log.
+   Cadence from the Big Bad Wolf hunt: touch 1 day 1 (call), 2 day 1 (email), 3 day 4, 4 day 7, 5 day 10.
+   After touch 5 it stops: no follow-up date is guessed. */
+const LEAD_TOUCH=["Call the decision maker","Email and capability sheet","Second call or drop-in time","Drop in with coffee","Close: lock pricing or first job"];
+const LEAD_OFFSET=[0,0,3,6,9];            // days after touch 1 that touch n+1 is due
+const LEAD_DAILY=20;
+const leadSt=id=>S.lead[id]||{n:0,st:"new",log:[]};
+function leadAddDays(d,n){ const x=parse(d); x.setDate(x.getDate()+n); return iso(x); }
+function leadNext(id){ const L=leadSt(id); if(L.st!=="active"||L.n>=5||!L.start) return ""; return leadAddDays(L.start,LEAD_OFFSET[L.n]); }
+function leadSave(id,patch){ const before=S.lead[id]; S.lead[id]=Object.assign({n:0,st:"new",log:[]},S.lead[id],patch);
+  if(!persist()){ if(before) S.lead[id]=before; else delete S.lead[id]; } render(); }
+function leadLog(id,kind,note){ const L=leadSt(id); return (L.log||[]).concat([{t:TODAY,k:kind,note:note||""}]); }
+function viewLeads(m){
+  const h=el("div","sechead"); h.appendChild(el("h2",null,"Leads")); m.appendChild(h);
+  if(!S.leads.length){
+    m.appendChild(el("div","note","No lead list loaded yet. Ask Claude to build the lead list, then on the Mac open the Setup tab and tap Upload from this Mac."));
+    return;
+  }
+  m.appendChild(el("div","note","Your 20 touches today are at the top: follow-ups that are due first, then fresh leads in priority order. "
+    +"Ring or email, then tap Done to log the touch and set the next one. Progress is saved on this device."));
+  const sb=el("input","search"); sb.type="search"; sb.placeholder="Search business, town or group"; sb.value=S.lq; m.appendChild(sb);
+  const gs=[...new Set(S.leads.map(l=>l.group).filter(Boolean))];
+  const sel=el("select","search"); sel.style.marginTop="8px";
+  [["","All groups"]].concat(gs.map(g=>[g,g])).forEach(([v,t])=>{ const o=document.createElement("option"); o.value=v; o.textContent=t; sel.appendChild(o); });
+  sel.value=S.lg; m.appendChild(sel);
+  const host=el("div"); m.appendChild(host);
+  const row=l=>{
+    const L=leadSt(l.id), nx=leadNext(l.id);
+    const w=el("div","row "+(L.st==="won"?"ok":nx&&nx<=TODAY?"over":"soon"));
+    w.style.flexWrap="wrap";
+    const main=el("div","rowmain"), tx=el("div","rowtext");
+    tx.appendChild(el("div","nm",l.business));
+    tx.appendChild(el("div","pl",[l.contact,l.town,l.group].filter(Boolean).join(" · ")));
+    let st=L.st==="won"?"Won":L.st==="meeting"?"Meeting booked":L.st==="notyet"?"Not yet":L.st==="skip"?"Skipped":
+      L.n>=5?"Cadence finished, no reply":L.n?("Touch "+L.n+" of 5 done"+(nx?" · next "+LEAD_TOUCH[L.n].toLowerCase()+" "+(nx<=TODAY?"today":nice(nx)):"")):("New · touch 1: "+LEAD_TOUCH[0].toLowerCase());
+    tx.appendChild(el("div","mt",st+(l.client?" · ALREADY A CLIENT":"")));
+    if(l.notes) tx.appendChild(el("div","mt",l.notes.length>140?l.notes.slice(0,140)+"…":l.notes));
+    if(L.note) tx.appendChild(el("div","mt","Your note: "+L.note));
+    main.appendChild(tx); w.appendChild(main);
+    const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
+    const ph=String(l.phone||"").replace(/[^\d+]/g,"");
+    const lk=(href,svgp,label,on)=>{ if(!on){ const b=el("button","iact"); b.innerHTML=ico(svgp); b.title=label; b.disabled=true; return b; }
+      const a=document.createElement("a"); a.className="iact"; a.href=href; a.innerHTML=ico(svgp); a.title=label; a.setAttribute("aria-label",label); return a; };
+    const ia=el("div","acts");
+    ia.appendChild(lk("tel:"+ph,SVG.phone,"Ring "+l.business,!!ph));
+    ia.appendChild(lk("mailto:"+(l.email||""),SVG.mail,"Email "+l.business,!!l.email));
+    acts.appendChild(ia);
+    if(L.st==="won"||L.st==="skip"||L.st==="notyet"||L.st==="meeting"){
+      acts.appendChild(btn("Put back in play",null,"",()=>leadSave(l.id,{st:L.n?"active":"new"})));
+    } else {
+      if(L.n<5) acts.appendChild(btn("Done: "+LEAD_TOUCH[L.n],SVG.tick,"pri",()=>{
+        const start=L.start||TODAY;
+        leadSave(l.id,{n:L.n+1,st:"active",start,log:leadLog(l.id,"touch "+(L.n+1))}); }));
+      acts.appendChild(btn("Meeting booked",null,"",()=>leadSave(l.id,{st:"meeting",log:leadLog(l.id,"meeting booked")})));
+      acts.appendChild(btn("Won",null,"",()=>leadSave(l.id,{st:"won",log:leadLog(l.id,"won")})));
+      acts.appendChild(btn("Not yet",null,"",()=>leadSave(l.id,{st:"notyet",log:leadLog(l.id,"not yet")})));
+      acts.appendChild(btn("Skip",SVG.x,"",()=>leadSave(l.id,{st:"skip",log:leadLog(l.id,"skipped")})));
+    }
+    acts.appendChild(btn("Note",SVG.note,"",()=>{ const t=window.prompt("Note for "+l.business,L.note||""); if(t!==null) leadSave(l.id,{note:t.trim()}); }));
+    w.appendChild(acts);
+    return w;
+  };
+  const draw=()=>{
+    host.innerHTML="";
+    const q=S.lq.trim().toLowerCase();
+    let list=S.leads.filter(l=>(!S.lg||l.group===S.lg)&&(!q||(l.business+" "+(l.town||"")+" "+(l.group||"")).toLowerCase().includes(q)));
+    const live=l=>{ const s=leadSt(l.id).st; return s==="new"||s==="active"; };
+    const open=list.filter(l=>live(l)&&!l.client);
+    const due=open.filter(l=>{ const x=leadNext(l.id); return x&&x<=TODAY; }).sort((a,b)=>leadNext(a.id).localeCompare(leadNext(b.id))||a.pri-b.pri);
+    const fresh=open.filter(l=>leadSt(l.id).n===0).sort((a,b)=>a.pri-b.pri||a.i-b.i);
+    const today=due.concat(fresh.slice(0,Math.max(0,LEAD_DAILY-due.length)));
+    const ids=new Set(today.map(l=>l.id));
+    const waiting=open.filter(l=>!ids.has(l.id));
+    const meet=list.filter(l=>leadSt(l.id).st==="meeting"), won=list.filter(l=>leadSt(l.id).st==="won");
+    const parked=list.filter(l=>["notyet","skip"].includes(leadSt(l.id).st));
+    const clients=list.filter(l=>l.client&&live(l));
+    const cap=60, U=["lead","leads"];
+    section(host,"Today's touches",today.length,today.map(row),today.length?"":"Nothing due. Clear the search or pick another group.",U);
+    if(meet.length) section(host,"Meeting booked",meet.length,meet.map(row),null,U);
+    if(won.length) section(host,"Won",won.length,won.map(row),null,U);
+    section(host,"Still to come",waiting.length,waiting.slice(0,cap).map(row),null,U);
+    if(waiting.length>cap) host.appendChild(el("div","note","Showing "+cap+" of "+waiting.length+". Search or pick a group to see the rest."));
+    if(parked.length) section(host,"Not yet or skipped",parked.length,parked.slice(0,cap).map(row),null,U);
+    if(clients.length) section(host,"Already your clients (ask for referrals, don't cold call)",clients.length,clients.slice(0,cap).map(row),null,U);
+  };
+  sb.oninput=()=>{ S.lq=sb.value; draw(); };
+  sel.onchange=()=>{ S.lg=sel.value; draw(); };
+  draw();
+}
+
 function viewSync(m){
   const last=(S.sync&&S.sync.lastSyncedDate)||S.settings.seedDataEnds;
   m.appendChild(el("div","sechead")).appendChild(el("h2",null,"Keeping it current"));
@@ -1591,7 +1694,7 @@ function viewSync(m){
   const imp=el("input"); imp.type="file"; imp.accept="application/json"; imp.hidden=true;
   imp.onchange=async()=>{ const f=imp.files&&imp.files[0]; if(!f) return;
     try{ const o=JSON.parse(await f.text());
-      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{};
+      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{}; S.lead=o.lead||{};
       S.reviewLink=o.reviewLink||S.reviewLink; persist(); render();
       toast("Brought your changes across."); }
     catch(e){ toast("That file didn't read properly.",true); } };
