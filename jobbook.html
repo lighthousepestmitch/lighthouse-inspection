@@ -266,7 +266,7 @@ body.locked .stats{display:none}          /* no empty counters on the login scre
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-12a";
+const BUILD="2026-10-12b";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1616,6 +1616,10 @@ function viewLeads(m){
     ia.appendChild(lk("tel:"+ph,SVG.phone,"Ring "+l.business,!!ph));
     ia.appendChild(lk("mailto:"+(l.email||""),SVG.mail,"Email "+l.business,!!l.email));
     acts.appendChild(ia);
+    if(L.st==="deleted"){
+      acts.appendChild(btn("Bring back",null,"",()=>leadSave(l.id,{st:L.n?"active":"new",log:leadLog(l.id,"brought back")})));
+      w.appendChild(acts); return w;
+    }
     if(L.st==="won"||L.st==="skip"||L.st==="notyet"||L.st==="meeting"){
       acts.appendChild(btn("Put back in play",null,"",()=>leadSave(l.id,{st:L.n?"active":"new"})));
     } else {
@@ -1628,6 +1632,7 @@ function viewLeads(m){
       acts.appendChild(btn("Skip",SVG.x,"",()=>leadSave(l.id,{st:"skip",log:leadLog(l.id,"skipped")})));
     }
     acts.appendChild(btn("Note",SVG.note,"",()=>{ const t=window.prompt("Note for "+l.business,L.note||""); if(t!==null) leadSave(l.id,{note:t.trim()}); }));
+    acts.appendChild(btn("Delete",SVG.x,"warn",()=>{ if(window.confirm("Delete "+l.business+" from your leads? You can bring it back from the Deleted section at the bottom.")) leadSave(l.id,{st:"deleted",log:leadLog(l.id,"deleted")}); }));
     w.appendChild(acts);
     return w;
   };
@@ -1652,6 +1657,8 @@ function viewLeads(m){
     section(host,"Still to come",waiting.length,waiting.slice(0,cap).map(row),null,U);
     if(waiting.length>cap) host.appendChild(el("div","note","Showing "+cap+" of "+waiting.length+". Search or pick a group to see the rest."));
     if(parked.length) section(host,"Not yet or skipped",parked.length,parked.slice(0,cap).map(row),null,U);
+    const gone=list.filter(l=>leadSt(l.id).st==="deleted");
+    if(gone.length) section(host,"Deleted",gone.length,gone.slice(0,cap).map(row),"Hidden from everything above. Bring one back if you deleted it by mistake.",U);
     if(clients.length) section(host,"Already your clients (ask for referrals, don't cold call)",clients.length,clients.slice(0,cap).map(row),null,U);
   };
   sb.oninput=()=>{ S.lq=sb.value; draw(); };
