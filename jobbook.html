@@ -1066,7 +1066,7 @@ function openMsg(l,channel,firedWith,preset){
     let subj=null;
     if(channel==="email"){
       b.appendChild(el("div","lbl","Subject"));
-      subj=el("input","inp"); subj.value="Lighthouse Pest Control"; b.appendChild(subj);
+      subj=el("input","inp"); subj.value=(preset&&preset.subject)||"Lighthouse Pest Control"; b.appendChild(subj);
     }
     b.appendChild(el("div","note","Edit it however you like, then open it in "
       +(channel==="email"?"Mail":"Messages")+". Nothing counts as sent until you say it went."));
@@ -1229,18 +1229,47 @@ function deleteBtn(b,id){
 }
 
 /* ---------- Google review ask ----------
-   Mitch's own wording, the one that's worked for him. His GBP review link is built in. */
+   Text = his short wording + call-me line; email = longer thank-you, referral ask, then "we also do" (2026-10-13). His GBP review link is built in. */
 const REVIEW_LINK="https://g.page/r/CYF7d8dUejtsEAE/review";
+/* "Did you know we also do..." lists up to three things we do that this client has never had from us, across all their
+   properties and jobs. Each entry: the wording for the email, then the job names (lower case) that count as "had it". */
+const ALSO_DO=[
+  ["termite inspections",["termite inspection","pre-purchase"]],
+  ["cockroach, ant and spider treatments",["general pest","cockroach","ant treatment","spider"]],
+  ["rodent control",["rodent treatment"]],
+  ["pre-purchase inspections",["pre-purchase"]],
+  ["termite barriers and treatments",["barrier","termite treatment","trelona","nemesis"]],
+  ["wasp and bee treatments",["wasp"]]];
+function alsoDo(pid){
+  const cid=S.props[pid]&&S.props[pid].c;
+  const pids=Object.keys(S.props).filter(p=>S.props[p].c===cid);
+  const had=pids.map(p=>(S.jobs[p]||[]).map(j=>j.s.map(x=>String(x.s).toLowerCase()).join("|")).join("|")).join("|");
+  const out=ALSO_DO.filter(a=>!a[1].some(k=>had.includes(k))).map(a=>a[0]).slice(0,3);
+  return out.length>1?out.slice(0,-1).join(", ")+" and "+out[out.length-1]:out.join("");
+}
 function reviewMsg(pid,link){
   return `Hey ${firstName(cOf(pid).n)}, bit awkward asking this \u{1F605} but if you've got a sec, `
     +`a quick Google review would help me out heaps. It really helps me show up on Google. `
-    +`Totally no stress at all if not\n${link}\nCheers, Mitch\nLighthouse Pest`;
+    +`Totally no stress at all if not\n${link}\n`
+    +`If anything wasn't right, give me a ring on 0432 181 689 and I'll sort it.\nCheers, Mitch\nLighthouse Pest`;
+}
+function reviewEmail(pid,link){
+  const more=alsoDo(pid);
+  return `Hi ${firstName(cOf(pid).n)},\n\nThanks for giving Lighthouse Pest Control the chance to look after you.\n\n`
+    +`If you were happy with the job, a quick Google review would help me out heaps:\n${link}\n\n`
+    +`If there's something we didn't quite get right, give me a ring on 0432 181 689 or reply to this email and I'll sort it.`
+    +`\n\nThere's nothing better than working with people you enjoy working with, and I've enjoyed looking after you. `
+    +`It would mean the world to me if you shared Lighthouse with a few close friends or family.`
+    +(more?`\n\nDid you know we also do ${more}? Hope to see you again soon.`:"")
+    +`\n\nCheers, Mitch`;   // his email signature adds the rest
 }
 const reviewSkipped=pid=>!!(S.ov[pid]||{}).noReview;
 const lastReviewAsk=pid=>((S.ov[pid]||{}).log||[]).find(e=>e.kind==="review"&&e.st!=="drafted");
-function askReview(l){
-  if(!S.reviewLink) return openSheet(reviewLinkSpec(()=>askReview(l)));
-  openMsg(l,"text",null,{msg:reviewMsg(l.pid,S.reviewLink),kind:"review",title:"Ask "+cOf(l.pid).n+" for a review"});
+function askReview(l,ch){
+  ch=ch||"text";
+  if(!S.reviewLink) return openSheet(reviewLinkSpec(()=>askReview(l,ch)));
+  openMsg(l,ch,null,{msg:(ch==="email"?reviewEmail:reviewMsg)(l.pid,S.reviewLink),kind:"review",
+    subject:"Thanks from Lighthouse Pest Control",title:"Ask "+cOf(l.pid).n+" for a review"});
 }
 function reviewLinkSpec(then){
   return {title:"Your Google review link",sub:"one-off setup",build:b=>{
@@ -1541,13 +1570,17 @@ function viewReviews(m){
     const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
     if(!r.asked&&!r.skip){
       acts.appendChild(btn("Ask",SVG.star,"pri",()=>askReview(myLine(r.pid))));
+      if(r.c.e) acts.appendChild(btn("Ask by email",SVG.mail,"",()=>askReview(myLine(r.pid),"email")));
       acts.appendChild(btn("Not this one",SVG.x,"",async()=>{
         await saveOv(r.pid,{noReview:true}); toast("Won't ask "+r.c.n+"."); }));
     } else if(r.skip){
       acts.appendChild(btn("Put back",null,"",async()=>{
         for(const p of r.pids) if(reviewSkipped(p)) S.ov[p]=Object.assign({},S.ov[p],{noReview:false});
         persist(); render(); }));
-    } else acts.appendChild(btn("Ask again",SVG.star,"",()=>askReview(myLine(r.pid))));
+    } else {
+      acts.appendChild(btn("Ask again",SVG.star,"",()=>askReview(myLine(r.pid))));
+      if(r.c.e) acts.appendChild(btn("Ask by email",SVG.mail,"",()=>askReview(myLine(r.pid),"email")));
+    }
     w.appendChild(acts);
     return w;
   };
