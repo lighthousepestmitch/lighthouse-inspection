@@ -112,6 +112,19 @@ nav.bottom .badge{position:absolute;transform:translate(13px,-4px);background:va
   display:grid;place-items:center;color:var(--ink2)}
 .iact svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .iact:hover{color:var(--deep);border-color:var(--deep)}
+.iact.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.iact.pri:hover{color:var(--deepInk);filter:brightness(1.08)}
+button.sechead{width:100%;text-align:left;cursor:pointer;align-items:center;background:none;border:none;
+  border-bottom:1px solid var(--line);color:inherit;font:inherit}
+.sechead .ttl{font-family:Newsreader,Georgia,serif;font-weight:600;font-size:16px}
+.sechead .chev{display:inline-block;width:16px;color:var(--ink3);transition:transform .15s}
+button.sechead[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.sechead .ready{color:var(--over);font-weight:700;margin-left:9px}
+.batchbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;background:var(--surface2);
+  border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:13px;color:var(--ink2)}
+.batchbar .inp{width:68px;padding:7px 8px;text-align:center}
+.batchbar .btn{flex:0 0 auto;min-width:0;padding:8px 14px}
+.batchbar .chip{padding:5px 10px}
 .iact[disabled]{opacity:.32;cursor:default}
 
 .empty{text-align:center;padding:44px 20px;color:var(--ink3)}
@@ -239,9 +252,9 @@ body.locked .stats{display:none}          /* no empty counters on the login scre
       <h1>Job Book</h1><span class="sub">Lighthouse Pest</span>
     </div>
     <div class="stats">
-      <button class="stat hot" data-go="due" data-band="fresh"><b id="s-fresh">-</b><span>Ring today</span></button>
+      <button class="stat hot" data-go="due" data-band="fresh"><b id="s-fresh">-</b><span>Ready to text</span></button>
       <button class="stat" data-go="due" data-band="over"><b id="s-over">-</b><span>Well overdue</span></button>
-      <button class="stat" data-go="todo"><b id="s-todo">-</b><span>Needs an interval</span></button>
+      <button class="stat" data-go="due" data-band="soon"><b id="s-soon">-</b><span>Next 30 days</span></button>
     </div>
   </div>
 </header>
@@ -311,7 +324,7 @@ const plain=s=>PLAIN[s]||("a "+String(s).toLowerCase());
 /* how intervals are named and how long they are */
 const INTERVAL_GROUPS=[
  {label:"Weeks",  items:[{k:"2 weeks",m:0.5},{k:"4 weeks",m:1},{k:"6 weeks",m:1.5},{k:"8 weeks",m:2}]},
- {label:"Months", items:[{k:"Quarterly",m:3},{k:"Biannual",m:6},{k:"9 months",m:9},{k:"Annual",m:12}]},
+ {label:"Months", items:[{k:"Quarterly",m:3},{k:"4 months",m:4},{k:"5 months",m:5},{k:"Biannual",m:6},{k:"9 months",m:9},{k:"Annual",m:12}]},
  {label:"Years",  items:[{k:"2 years",m:24},{k:"3 years",m:36},{k:"4 years",m:48},{k:"5 years",m:60}]},
  {label:"Neither",items:[{k:"One-off",m:null}]}];
 const INTERVALS=INTERVAL_GROUPS.reduce((a,g)=>a.concat(g.items),[]);
@@ -322,7 +335,7 @@ const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
 const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
-  ov:{},bookings:{},gone:{},asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",cal:new Date(),calDay:null,stack:[]};
+  ov:{},bookings:{},gone:{},asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[]};
 
 /* ---------- storage ----------
    Client list and job history come from the database (behind the login) and only change
@@ -450,7 +463,7 @@ function wipeData(){
   A.gen++; A.starting=false;
   S.ready=false; S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={}; S.asked={};
   S.ov={}; S.bookings={}; S.gone={}; S.stack.length=0; drawSheet();
-  ["#s-fresh","#s-over","#s-todo"].forEach(id=>{ const n=$(id); if(n) n.textContent="-"; });
+  ["#s-fresh","#s-over","#s-soon"].forEach(id=>{ const n=$(id); if(n) n.textContent="-"; });
 }
 async function signOut(){
   A.uid=null; A.me=null; A.email=""; wipeData();
@@ -745,7 +758,7 @@ function lines(){
     if(so.nextDue!==undefined) nextDue=so.nextDue;                       // hand-picked date wins
     else if(so.interval!==undefined) nextDue=lastDone&&monthsOf(interval)?addMonths(lastDone,monthsOf(interval)):null;
     else nextDue=d.nd;
-    out.push({pid:d.p,svc:d.s,lastDone,interval,nextDue,src:d.src,manual:so.nextDue!==undefined});
+    out.push({pid:d.p,svc:d.s,lastDone,interval,nextDue,src:d.src,bt:d.bt,manual:so.nextDue!==undefined});
   }
   return out;
 }
@@ -772,9 +785,20 @@ function msgFor(l){
     return `Hi ${firstName(c.n)}, Mitch here from Lighthouse Pest Control. It's been a while since we were out${st}, `
       +`just checking in to see if there's any pest or termite work you need a hand with. Reach out whenever you need. Cheers, Mitch`;
   }
-  const svcs=(l.svcs||[l.svc]).map(plain);
+  if(l.oneoff){   // one-off jobs (wasp, mosquito, flea...): a check-in, not a rebook. Wording is a placeholder for Mitch to rewrite.
+    const what=(l.svcs||[l.svc]).map(s=>plain(s).replace(/^(an?|the) /,""));
+    return `Hey ${firstName(c.n)}, hope you're going well! Just checking in after your ${joinNat(what)}, hope everything is still all good. `
+         + `If you need anything else, just let me know. Cheers, Mitch`;
+  }
+  const svcs=plainSvcs(l.svcs||[l.svc]);
   return `Hey ${firstName(c.n)}, hope you're going well! Just checking if you'd like me to book you in for `
        + joinNat(svcs) + ` to keep on top of things. Let me know what suits. Cheers, Mitch`;
+}
+/* the wording for a visit: each thing once, and an ant or spider job is covered by the general pest one */
+function plainSvcs(svcs){
+  const out=[]; svcs.forEach(s=>{ const p=plain(s); if(!out.includes(p)) out.push(p); });
+  const gp="a cockroach, ant and spider treatment";
+  return out.includes(gp)?out.filter(p=>p===gp||!/^an? (cockroach|ant|spider)( and ant)? treatment$/.test(p)):out;
 }
 const isApple=/iPad|iPhone|iPod|Macintosh|Mac OS X/.test(navigator.userAgent);
 /* Apple Messages wants sms:NUMBER&body=..., everything else uses ? */
@@ -843,8 +867,8 @@ const reminders=()=>{const out=[];
 /* ---------- render ---------- */
 function render(){
   if(!S.ready) return;
-  const L=lines(), b=L.reduce((a,l)=>{a[band(l)]=(a[band(l)]||0)+1;return a;},{});
-  $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-todo").textContent=b.todo||0;
+  const L=lines(), b=dueRows(L,false).reduce((a,r)=>{const k=band(r);a[k]=(a[k]||0)+1;return a;},{});
+  $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-soon").textContent=b.soon||0;
   document.querySelectorAll("#nav button").forEach(x=>
     x.setAttribute("aria-current", String(x.dataset.go===S.view||(S.view==="todo"&&x.dataset.go==="due"))));
   const m=$("#main"); m.innerHTML="";
@@ -873,6 +897,86 @@ function groupLines(list){
     if(l.lastDone&&(!g.lastDone||l.lastDone>g.lastDone)) g.lastDone=l.lastDone; });
   return [...map.values()];
 }
+/* ---------- what kind of job, one job per visit, one row per client ----------
+   A visit is one property on one day (same-day jobs are one visit, Mitch 2026-10-17). Its section comes
+   from what was done: CAS + TI, TI only, CAS only, rodent only, rodent with CAS or TI, barriers, Nemesis. */
+const FAM={"General Pest Treatment":"CAS","Cockroach Treatment":"CAS","Cockroach & Ant Treatment":"CAS",
+ "Ant Treatment":"CAS","Spider Treatment":"CAS","Termite Inspection":"TI","Rodent Treatment":"ROD",
+ "Barrier Follow-Up Inspection":"BAR","Pre-Construction Barrier":"BAR","Post-Construction Barrier":"BAR",
+ "Nemesis Renewal":"NEM","Nemesis New":"NEM","Trelona Baiting":"NEM"};
+const SHORT={CAS:"CAS",TI:"TI",ROD:"Rodents",BAR:"Barrier check"};
+const isBarrierSvc=s=>FAM[s]==="BAR";
+const SECTIONS=[["casti","CAS + TI"],["ti","TI only"],["cas","CAS only"],["rod","Rodent only"],
+ ["mix","Rodent with CAS or TI"],["pre","Pre-construction barriers"],["post","Post-construction barriers"],
+ ["bar","Barriers (pre or post not recorded)"],["nem","Nemesis and Trelona"],["oth","Other repeats"],
+ ["old","Old, 2+ years overdue"],["one","One-offs"]];
+const SPLIT=/strata|body corp|rentals|realty|real estate|property manage/i;   // these keep one row per property
+const grpOf=f=>f==="BAR"||f==="NEM"?f:(f?"CORE":"OTH");
+function visitLabel(svcs){
+  const out=[]; svcs.forEach(s=>{ const f=FAM[s];
+    const t=f&&SHORT[f]?SHORT[f]:String(s).replace(/ Treatment$/,""); if(!out.includes(t)) out.push(t); });
+  const order=["CAS","TI","Rodents"];
+  out.sort((a,b)=>{ const x=order.indexOf(a), y=order.indexOf(b); return (x<0?9:x)-(y<0?9:y); });
+  return out.join(" + ");
+}
+function secOf(v){
+  if(v.grp==="BAR") return v.bt==="pre"?"pre":v.bt==="post"?"post":"bar";
+  if(v.grp==="NEM") return "nem";
+  if(v.grp==="OTH") return "oth";
+  const c=v.fams.has("CAS"), t=v.fams.has("TI"), r=v.fams.has("ROD");
+  return r?(c||t?"mix":"rod"):c&&t?"casti":t?"ti":c?"cas":"oth";
+}
+function visits(list){
+  const map=new Map();
+  list.forEach(l=>{ const f=FAM[l.svc]||"", g=grpOf(f), k=l.pid+"|"+(l.lastDone||"none")+"|"+g;
+    if(!map.has(k)) map.set(k,{pid:l.pid,grp:g,lastDone:l.lastDone,nextDue:l.nextDue,interval:l.interval,
+                               manual:l.manual,bt:l.bt,svcs:[],fams:new Set(),lines:[]});
+    const v=map.get(k); v.svcs.push(l.svc); v.fams.add(f); v.lines.push(l);
+    if(l.nextDue&&(!v.nextDue||l.nextDue<v.nextDue)){ v.nextDue=l.nextDue; v.interval=l.interval; v.manual=l.manual; }
+    if(l.bt&&!v.bt) v.bt=l.bt; });
+  return [...map.values()];
+}
+function clientRows(list){
+  const rows=new Map();
+  visits(list).forEach(v=>{
+    const cid=pOf(v.pid).c, sec=v.sec=band(v)==="stale"?"old":secOf(v);
+    const k=cid+"|"+sec+(SPLIT.test(cOf(v.pid).n)?"|"+v.pid:"");
+    if(!rows.has(k)) rows.set(k,{cid,sec,vis:[]});
+    rows.get(k).vis.push(v); });
+  return [...rows.values()].map(r=>{
+    r.vis.sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"));
+    const f=r.vis[0];
+    const near=r.vis.filter(v=>f.nextDue&&v.nextDue&&Math.abs(days(f.nextDue,v.nextDue))<=45);
+    const svcs=[]; near.forEach(v=>v.svcs.forEach(s=>{ if(!svcs.includes(s)) svcs.push(s); }));
+    return {pid:f.pid,cid:r.cid,sec:r.sec,svc:f.svcs[0],svcs,
+      lines:near.reduce((a,v)=>a.concat(v.lines),[]),lastDone:f.lastDone,interval:f.interval,
+      nextDue:f.nextDue,manual:f.manual,sites:[...new Set(r.vis.map(v=>v.pid))]};
+  });
+}
+/* the rows the Due tab shows by default: repeat work for clients you're still seeing */
+function dueRows(L,all){
+  let list=L.filter(l=>band(l)!=="todo");
+  if(!all) list=list.filter(l=>{ const g=cOf(l.pid).g; return g!=="lapsed"&&g!=="cold"; });
+  return clientRows(list);
+}
+/* one-off jobs (wasp, mosquito, flea...): no repeat, so no due date. Latest per client, last 2 years,
+   skipping anyone already in the chase list. A place to look for repeat customers. */
+const ONEOFF=new Set(["Mosquito Treatment","Wasp/Bee Treatment","Flea Treatment","Bed Bug Treatment",
+ "Drain Fly Treatment","Clothes Moth Treatment","Carpet Beetle Treatment","Lawn Grub Treatment",
+ "Termite Treatment","Specialist Treatment"]);
+function oneOffRows(L){
+  const has=new Set(L.map(l=>pOf(l.pid).c)), cutoff=iso(new Date(Date.now()-730*DAY)), best=new Map();
+  for(const pid in S.jobs){
+    const cid=pOf(pid).c; if(!cid||S.gone[cid]||has.has(cid)) continue;
+    const cl=S.clients[cid]; if(!cl||(cl.g||"active")!=="active") continue;
+    for(const j of S.jobs[pid]){
+      if(!j.d||j.d<cutoff) continue;
+      const sv=j.s.map(x=>x.s).filter(s=>ONEOFF.has(s)); if(!sv.length) continue;
+      const cur=best.get(cid);
+      if(!cur||j.d>cur.lastDone) best.set(cid,{pid,cid,sec:"one",svc:sv[0],svcs:[...new Set(sv)],lines:[],
+        lastDone:j.d,interval:null,nextDue:null,sites:[pid],oneoff:true}); } }
+  return [...best.values()].sort((a,b)=>b.lastDone.localeCompare(a.lastDone));
+}
 /* These are anchors, not buttons, on purpose. The page is sandboxed without
    allow-top-navigation, so JS asking to open Messages gets swallowed. A direct tap on a
    real link is the one thing with a chance of getting through. The onclick still runs
@@ -889,18 +993,18 @@ function actionLink(href,svgp,title,after,enabled){
 function actionBtns(l){
   const c=cOf(l.pid), acts=el("div","acts");
   const num=String(c.p||"").replace(/[^\d+]/g,"");
-  const mk=(href,svgp,title,after,on)=>{
+  const mk=(href,svgp,title,after,on,pri)=>{
     if(!on){ const b=el("button","iact"); b.innerHTML=ico(svgp); b.title=title;
       b.setAttribute("aria-label",title); b.disabled=true; return b; }
     const a=document.createElement("a");
-    a.className="iact"; a.href=href; a.innerHTML=ico(svgp);
+    a.className="iact"+(pri?" pri":""); a.href=href; a.innerHTML=ico(svgp);
     a.title=title; a.setAttribute("aria-label",title);
     a.onclick=e=>{ e.stopPropagation(); try{ after(); }catch(err){ reportErr(title,err); } };
     return a;
   };
   const msg=msgFor(l);
+  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,"Text "+c.n,()=>afterSend(l,"text",msg),!!c.p,true));   // text first, he texts more than rings
   acts.appendChild(mk("tel:"+num,SVG.phone,"Ring "+c.n,()=>afterRing(l),!!c.p));
-  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,"Text "+c.n,()=>afterSend(l,"text",msg),!!c.p));
   acts.appendChild(mk(mailHref(c.e,"Lighthouse Pest Control",msg),SVG.mail,"Email "+c.n,
     ()=>afterSend(l,"email",msg),!!c.e));
   return acts;
@@ -926,22 +1030,22 @@ function afterSend(l,channel,msg){
   setTimeout(()=>openSheet(confirmSpec(l.pid,entry)),700);
 }
 function rowFor(l,extra){
-  const c=cOf(l.pid), p=pOf(l.pid), bd=band(l), svcs=l.svcs||[l.svc];
+  const c=cOf(l.pid), bd=l.oneoff?"ok":band(l), svcs=l.svcs||[l.svc];
+  const multi=(l.sites||[]).length>1;
   const r=el("div","row "+bd);
   const hit=el("button","rowhit");
   hit.appendChild(el("div","stripe"));
   const main=el("div","rowmain"), tx=el("div","rowtext");
   tx.appendChild(el("div","nm",c.n));
-  tx.appendChild(el("div","pl",p.l||"(no address)"));
-  const bits=[svcs.join(" + ")];
+  const bits=[multi?l.sites.length+" sites":(pOf(l.pid).l||"(no address)"),visitLabel(svcs)];
   if(l.lastDone) bits.push("last "+nice(l.lastDone));
-  if(l.interval) bits.push(l.interval.toLowerCase());
+  if(l.interval&&!l.oneoff) bits.push(l.interval.toLowerCase());
   if(l.manual) bits.push("date set by you");
   tx.appendChild(el("div","mt",bits.join(" · ")));
   main.appendChild(tx);
-  main.appendChild(el("span","pill "+bd, extra||ago(l)));
+  main.appendChild(el("span","pill "+bd, extra||(l.oneoff?nice(l.lastDone):ago(l))));
   hit.appendChild(main);
-  hit.onclick=()=>openProp(l.pid,svcs[0]);
+  hit.onclick=()=>multi&&l.cid?openClient(l.cid):openProp(l.pid,svcs[0]);
   r.appendChild(hit);
   r.appendChild(actionBtns(l));
   return r;
@@ -967,32 +1071,105 @@ function viewDue(m,L){
     n.textContent=rem.length+" reminder"+(rem.length===1?"":"s")+" you set has come around.";
     n.style.cursor="pointer"; n.onclick=()=>openReminders(); m.appendChild(n);
   }
+  const nTodo=L.filter(l=>band(l)==="todo").length;
+  if(nTodo){
+    const n=el("div","banner warn"); n.style.cursor="pointer";
+    n.textContent=nTodo+" job"+(nTodo===1?" has":"s have")+" no repeat set. Tap to sort them.";
+    n.onclick=()=>{ S.view="todo"; render(); }; m.appendChild(n);
+  }
   const chips=el("div","chips");
-  [["","Everything"],["fresh","Ring today"],["over","Well overdue"],["soon","Next 30 days"],
-   ["ok","Later"],["stale","Old barriers"]].forEach(([k,lab])=>{
+  [["","Everything"],["fresh","Ready to text"],["over","Well overdue"],["soon","Next 30 days"],["ok","Later"]].forEach(([k,lab])=>{
     const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.band===k));
     c.onclick=()=>{S.band=k;render();}; chips.appendChild(c); });
   const gc=el("button","chip","Lapsed clients too"); gc.setAttribute("aria-pressed",String(S.grp==="all"));
   gc.onclick=()=>{S.grp=S.grp==="all"?"active":"all";render();}; chips.appendChild(gc);
   m.appendChild(chips);
-  let list=L.filter(l=>band(l)!=="todo" && (S.band==="stale"||band(l)!=="stale"));
-  if(S.grp!=="all") list=list.filter(l=>{const g=cOf(l.pid).g; return g!=="lapsed"&&g!=="cold";});
-  const groups=[["fresh","Ready for a nudge",null],["over","Been a while",null],
-    ["soon","Coming up in the next 30 days",null],["ok","Further out",null],
-    ["stale","Barriers that never got followed up",null]];
+  const rows=dueRows(L,S.grp==="all");
+  const one=S.band?[]:oneOffRows(L);
   let any=false;
-  for(const [k,title] of groups){
-    if(S.band&&S.band!==k) continue;
-    const g=groupLines(list.filter(l=>band(l)===k)); if(!g.length) continue;
+  for(const [k,title] of SECTIONS){
+    let g=k==="one"?one:rows.filter(r=>r.sec===k&&(!S.band||band(r)===S.band));
+    if(!g.length) continue;
     any=true;
-    g.sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"));
-    const note=k==="fresh"?`Your invoices run to ${nice(S.settings.seedDataEnds)}. Ask Claude to refresh it and anything since then comes in.`
-      :k==="stale"?"Barriers from years back that never got a follow-up. A job on its own, not a daily chase. Most have no phone number."
-      :null;
-    section(m,title,g.length,g.slice(0,400).map(x=>rowFor(x)),note);
-    if(g.length>400) m.appendChild(el("div","note",`Showing the first 400 of ${g.length}. Use Clients to find someone.`));
+    if(k!=="one") g.sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"));
+    foldSection(m,k,title,g);
   }
   if(!any){ const e=el("div","empty"); e.innerHTML="<h3>Nothing waiting</h3><p>Nobody to chase right now.</p>"; m.appendChild(e); }
+}
+/* a section that opens and shuts: name and count on the bar, the people underneath */
+function foldSection(host,key,title,g){
+  const open=!!S.open[key];
+  const h=el("button","sechead fold"); h.setAttribute("aria-expanded",String(open));
+  const ready=key==="one"?0:g.filter(r=>band(r)==="fresh").length;
+  h.innerHTML=`<span class="ttl"><span class="chev">&#9656;</span>${esc(title)}</span>`
+    +`<span class="n">${g.length} ${g.length===1?"client":"clients"}${ready?`<b class="ready">${ready} ready</b>`:""}</span>`;
+  h.onclick=()=>{ S.open[key]=!open; render(); };
+  host.appendChild(h);
+  if(!open) return;
+  const note=key==="old"?"Years overdue and never followed up. A job on its own, not a daily chase. Most have no phone number."
+    :key==="one"?"Done once, no repeat set. Most recent per client, last 2 years. Texts here are a check-in, not a rebook."
+    :key==="bar"?"Barrier jobs where Xero doesn't say if the barrier was before or after the build."
+    :null;
+  if(note) host.appendChild(el("div","note",note));
+  batchBar(host,title,g);
+  g.slice(0,200).forEach(x=>host.appendChild(rowFor(x)));
+  if(g.length>200) host.appendChild(el("div","note",`Showing the first 200 of ${g.length}. Use Clients to find someone.`));
+}
+/* Text the next N people in this section, one tap each. The page can only open Messages with the
+   words already in it, so every one still needs your tap to send. */
+function batchEligible(r){
+  const c=cOf(r.pid); if(!c.p) return false;
+  const cut=Date.now()-30*DAY;
+  return !r.sites.some(pid=>((S.ov[pid]||{}).log||[]).some(e=>(e.ch==="text"||e.ch==="email")&&e.kind!=="review"&&Date.parse(e.t)>cut));
+}
+function batchBar(host,title,rows){
+  const bar=el("div","batchbar");
+  bar.appendChild(el("span",null,"Text the next"));
+  const n=el("input","inp"); n.type="number"; n.min="1"; n.max="100"; n.value=String(S.batchN); n.setAttribute("inputmode","numeric");
+  n.setAttribute("aria-label","How many to text");
+  [10,15,20].forEach(x=>{ const c=el("button","chip",String(x)); c.onclick=()=>{ n.value=String(x); S.batchN=x; }; bar.appendChild(c); });
+  bar.appendChild(n);
+  bar.appendChild(btn("Start",SVG.msg,"pri",()=>{
+    const N=Math.max(1,Math.min(100,parseInt(n.value,10)||0)); S.batchN=N;
+    const q=rows.filter(batchEligible).slice(0,N);
+    if(!q.length){ toast("Nobody to text here: no mobile, or already contacted in the last 30 days.",true); return; }
+    openSheet(batchSpec(title,q,0,[]));
+  }));
+  host.appendChild(bar);
+}
+function batchSpec(title,q,i,ids){
+  const total=q.length;
+  if(i>=total) return {title:"That's the batch",sub:title,build:b=>{
+    b.appendChild(el("div","note",ids.length+" of "+total+" opened in Messages. I can't see inside Messages, so tell me what went."));
+    const row=el("div","btns");
+    if(ids.length) row.appendChild(btn("They all went",SVG.tick,"pri",async()=>{
+      closeSheet(true); for(const x of ids) await setLogStatus(x.pid,x.id,"sent"); toast(ids.length+" logged as sent."); }));
+    if(ids.length) row.appendChild(btn("Sort them one by one",null,"",()=>replaceSheet(unconfirmedSpec())));
+    row.appendChild(btn("Decide later",null,"",()=>closeSheet(true)));
+    b.appendChild(row);
+  }};
+  const r=q[i], c=cOf(r.pid);
+  const spec={title:c.n,sub:(i+1)+" of "+total+" · "+title,build:b=>{
+    const multi=(r.sites||[]).length>1;
+    b.appendChild(el("div","note",(multi?r.sites.length+" sites":(pOf(r.pid).l||"(no address)"))+" · "+visitLabel(r.svcs)
+      +(r.lastDone?" · last "+nice(r.lastDone):"")));
+    b.appendChild(el("div","lbl","Message"));
+    const ta=el("textarea","msgbox"); ta.value=msgFor(r); b.appendChild(ta);
+    const next=()=>{ if(S.stack[S.stack.length-1]===spec) replaceSheet(batchSpec(title,q,i+1,ids)); };
+    const go=document.createElement("a");
+    go.className="btn pri"; go.href=smsHref(c.p,ta.value);
+    go.innerHTML=ico(SVG.msg)+"<span>Open in Messages</span>";
+    ta.addEventListener("input",()=>{ go.href=smsHref(c.p,ta.value); });
+    go.onclick=()=>{                       // no preventDefault, the link has to fire
+      const entry={id:uid(),t:new Date().toISOString(),ch:"text",to:c.p,subject:"",msg:ta.value,svcs:r.svcs,st:"drafted",kind:"batch"};
+      ids.push({pid:r.pid,id:entry.id}); logContact(r.pid,entry); setTimeout(next,700);
+    };
+    const row=el("div","btns"); row.appendChild(go);
+    row.appendChild(btn("Skip",null,"",()=>next()));
+    b.appendChild(row);
+    b.appendChild(btn("Stop here",null,"",()=>closeSheet(true)));
+  }};
+  return spec;
 }
 function viewTodo(m,L){
   const todo=L.filter(l=>band(l)==="todo");
@@ -1117,8 +1294,9 @@ function confirmSpec(pid,entry){
     b.appendChild(btn("Decide later",null,"",()=>closeSheet(true)));
   }};
 }
-function openUnconfirmed(){
-  openSheet({title:"Not confirmed sent",sub:"you opened these but didn't say if they went",build:b=>{
+function openUnconfirmed(){ openSheet(unconfirmedSpec()); }
+function unconfirmedSpec(){
+  return ({title:"Not confirmed sent",sub:"you opened these but didn't say if they went",build:b=>{
     const list=unconfirmed();
     if(!list.length){ b.appendChild(el("div","note","Nothing waiting.")); return; }
     list.forEach(({pid,e})=>{
@@ -1293,21 +1471,80 @@ function reviewLinkSpec(then){
 function myLine(pid,svc){
   const all=lines().filter(l=>l.pid===pid);
   if(!all.length) return {pid,svc:svc||"pest control",svcs:[svc||"pest control"],lastDone:null,interval:null,nextDue:null};
-  const seed=all.find(l=>l.svc===svc)||all[0];
-  const near=all.filter(l=>l.nextDue&&seed.nextDue?Math.abs(days(l.nextDue,seed.nextDue))<=30:l.nextDue===seed.nextDue);
-  const g=near.length?near:[seed];
-  return {pid,svc:seed.svc,svcs:g.map(l=>l.svc),lines:g,
-          lastDone:g.map(l=>l.lastDone).filter(Boolean).sort().pop()||seed.lastDone,
-          interval:seed.interval,nextDue:seed.nextDue};
+  const vs=visits(all);
+  const v=vs.find(x=>x.svcs.includes(svc))||vs.slice().sort((a,b)=>(b.lastDone||"").localeCompare(a.lastDone||""))[0];
+  return {pid,svc:v.svcs[0],svcs:v.svcs.slice(),lines:v.lines,lastDone:v.lastDone,interval:v.interval,nextDue:v.nextDue};
+}
+/* one card for one visit: the services done that day, how often they come back, and the date */
+function visitCard(b,pid,v){
+  const label=visitLabel(v.svcs), card=el("div","svc");
+  const top=el("div","top"); top.appendChild(el("b",null,label));
+  top.appendChild(el("span","pill "+band(v),v.nextDue?nice(v.nextDue):"not set")); card.appendChild(top);
+  card.appendChild(el("div","mt","Last done "+nice(v.lastDone)
+    +(v.interval?" · "+v.interval.toLowerCase():" · no repeat set")
+    +(v.manual?" · date you picked":"")));
+
+  card.appendChild(el("div","lbl2","How often it comes back"));
+  const sel=el("select","inp sel");
+  const ph=document.createElement("option");
+  ph.value=""; ph.textContent=v.interval?v.interval:"Pick one…"; sel.appendChild(ph);
+  const barrier=v.svcs.some(isBarrierSvc);
+  INTERVAL_GROUPS.filter(g=>g.label!=="Years"||barrier).forEach(g=>{      // years only make sense for barriers
+    const og=document.createElement("optgroup"); og.label=g.label;
+    g.items.forEach(o=>{ const op=document.createElement("option");
+      op.value=o.k; op.textContent=o.k;
+      if(v.interval===o.k) op.selected=true;
+      og.appendChild(op); });
+    sel.appendChild(og);
+  });
+  sel.onchange=async()=>{
+    const k=sel.value; if(!k) return;
+    const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
+    v.lines.forEach(l=>{
+      if(k==="One-off") svc[l.svc]={skip:true};
+      else { svc[l.svc]=Object.assign({},svc[l.svc],{interval:k,lastDone:l.lastDone});
+             delete svc[l.svc].nextDue; }   // a repeat takes over from a hand-picked date
+    });
+    closeSheet(true);
+    const ok=await saveOv(pid,{svc});
+    if(ok) toast(k==="One-off"?"Taken off the list.":label+" set to "+k.toLowerCase()+".");
+  };
+  card.appendChild(sel);
+
+  card.appendChild(el("div","lbl2","Or pick the exact date"));
+  const dr=el("div","daterow");
+  const dp=el("input","inp"); dp.type="date"; dp.value=v.nextDue||"";
+  const set=btn("Set date",SVG.cal,"pri",async()=>{
+    if(!dp.value){ toast("Pick a date first.",true); return; }
+    const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
+    v.lines.forEach(l=>{ svc[l.svc]=Object.assign({},svc[l.svc],{nextDue:dp.value,lastDone:l.lastDone}); });
+    closeSheet(true);
+    const ok=await saveOv(pid,{svc});
+    if(ok) toast(label+" set to "+nice(dp.value)+".");
+  });
+  dr.appendChild(dp); dr.appendChild(set); card.appendChild(dr);
+
+  const done=btn("Did this one today",SVG.tick,"",async()=>{
+    const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
+    v.lines.forEach(l=>{
+      const iv=l.interval&&monthsOf(l.interval)?l.interval:null;
+      svc[l.svc]=Object.assign({},svc[l.svc],{lastDone:TODAY,interval:iv||undefined});
+      delete svc[l.svc].nextDue; });
+    closeSheet(true);
+    const ok=await saveOv(pid,{svc});
+    if(ok) toast("Marked as done today.");
+  });
+  done.style.marginTop="10px"; card.appendChild(done);
+  b.appendChild(card);
 }
 function openProp(pid,focusSvc){
   const c=cOf(pid), p=pOf(pid);
-  openSheet({title:c.n, sub:p.l||"(no address)", build:b=>{
+  const spec={title:c.n, sub:p.l||"(no address)", showOld:false, build:b=>{
     if(!c.p&&!c.e) b.appendChild(el("div","banner warn","No phone or email on file. You'll need to dig up a number before you can reach them."));
     const L=myLine(pid,focusSvc);
     const acts=el("div","btns");
-    acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(L),!!c.p));
     acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(L,"text"),!!c.p));
+    acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(L),!!c.p));
     acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(L,"email"),!!c.e));
     b.appendChild(acts);
     const acts2=el("div","btns");
@@ -1325,73 +1562,21 @@ function openProp(pid,focusSvc){
     const ra=lastReviewAsk(pid);
     if(ra) kv(b,"Review",when(ra.t)+" · asked for one");
 
-    b.appendChild(el("div","lbl","Repeat work here"));
-    const mine=lines().filter(l=>l.pid===pid);
-    if(!mine.length) b.appendChild(el("div","note","No repeat work recorded at this address."));
-    mine.forEach(l=>{
-      const card=el("div","svc");
-      const top=el("div","top"); top.appendChild(el("b",null,l.svc));
-      top.appendChild(el("span","pill "+band(l),l.nextDue?nice(l.nextDue):"not set")); card.appendChild(top);
-      card.appendChild(el("div","mt","Last done "+nice(l.lastDone)
-        +(l.interval?" · "+l.interval.toLowerCase():" · no repeat set")
-        +(l.manual?" · date you picked":"")));
-
-      card.appendChild(el("div","lbl2","How often it comes back"));
-      const sel=el("select","inp sel");
-      const ph=document.createElement("option");
-      ph.value=""; ph.textContent=l.interval?l.interval:"Pick one…"; sel.appendChild(ph);
-      INTERVAL_GROUPS.forEach(g=>{
-        const og=document.createElement("optgroup"); og.label=g.label;
-        g.items.forEach(o=>{ const op=document.createElement("option");
-          op.value=o.k; op.textContent=o.k;
-          if(l.interval===o.k) op.selected=true;
-          og.appendChild(op); });
-        sel.appendChild(og);
-      });
-      sel.onchange=async()=>{
-        const k=sel.value; if(!k) return;
-        const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
-        if(k==="One-off") svc[l.svc]={skip:true};
-        else { svc[l.svc]=Object.assign({},svc[l.svc],{interval:k,lastDone:l.lastDone});
-               delete svc[l.svc].nextDue; }   // a repeat takes over from a hand-picked date
-        closeSheet(true);
-        const ok=await saveOv(pid,{svc});
-        if(ok) toast(k==="One-off"?"Taken off the list.":l.svc+" set to "+k.toLowerCase()+".");
-      };
-      card.appendChild(sel);
-
-      card.appendChild(el("div","lbl2","Or pick the exact date"));
-      const dr=el("div","daterow");
-      const dp=el("input","inp"); dp.type="date"; dp.value=l.nextDue||"";
-      const set=btn("Set date",SVG.cal,"pri",async()=>{
-        if(!dp.value){ toast("Pick a date first.",true); return; }
-        const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
-        svc[l.svc]=Object.assign({},svc[l.svc],{nextDue:dp.value,lastDone:l.lastDone});
-        closeSheet(true);
-        const ok=await saveOv(pid,{svc});
-        if(ok) toast(l.svc+" set to "+nice(dp.value)+".");
-      });
-      dr.appendChild(dp); dr.appendChild(set); card.appendChild(dr);
-
-      const done=btn("Did this one today",SVG.tick,"",async()=>{
-        const ov=S.ov[pid]||{}, svc=Object.assign({},ov.svc);
-        const iv=l.interval&&monthsOf(l.interval)?l.interval:null;
-        svc[l.svc]=Object.assign({},svc[l.svc],{lastDone:TODAY,interval:iv||undefined});
-        delete svc[l.svc].nextDue;
-        closeSheet(true);
-        const ok=await saveOv(pid,{svc});
-        if(ok) toast(iv?("Next one "+nice(addMonths(TODAY,monthsOf(iv)))+"."):"Marked as done today.");
-      });
-      done.style.marginTop="10px"; card.appendChild(done);
-      b.appendChild(card);
-    });
+    b.appendChild(el("div","lbl","Latest job and repeat"));
+    const vs=visits(lines().filter(l=>l.pid===pid)).sort((a,z)=>(z.lastDone||"").localeCompare(a.lastDone||""));
+    if(!vs.length) b.appendChild(el("div","note","No repeat work recorded at this address."));
+    (spec.showOld?vs:vs.slice(0,1)).forEach(v=>visitCard(b,pid,v));
+    if(!spec.showOld&&vs.length>1)
+      b.appendChild(btn("Show older jobs ("+(vs.length-1)+" more repeat"+(vs.length===2?"":"s")+")",null,"",()=>{ spec.showOld=true; drawSheet(); }));
 
     contactHistory(b,p.c,pid);
 
     b.appendChild(el("div","lbl","Job history"));
     const js2=(S.jobs[pid]||[]);
     if(!js2.length) b.appendChild(el("div","note","No invoices on record for this address."));
-    js2.slice(0,14).forEach(j=>{
+    // newest day only: invoices from the same day are one job. "Show older jobs" opens the rest.
+    const shown=spec.showOld?js2.slice(0,14):js2.filter(j=>j.d===js2[0].d);
+    shown.forEach(j=>{
       const h=el("div","hist");
       h.appendChild(el("div","hd",nice(j.d)+" · "+j.i+(j.t?" · $"+Math.round(Number(j.t)):"")));
       j.s.forEach(x=>{
@@ -1402,9 +1587,12 @@ function openProp(pid,focusSvc){
       });
       b.appendChild(h);
     });
-    if(js2.length>14) b.appendChild(el("div","note",`${js2.length-14} older invoices not shown.`));
+    if(!spec.showOld&&js2.length>shown.length)
+      b.appendChild(btn("Show older jobs ("+(js2.length-shown.length)+" more)",null,"",()=>{ spec.showOld=true; drawSheet(); }));
+    if(spec.showOld&&js2.length>14) b.appendChild(el("div","note",`${js2.length-14} older invoices not shown.`));
     deleteBtn(b,p.c);
-  }});
+  }};
+  openSheet(spec);
 }
 /* one timeline: what you sent (from here) and what they sent you (off your Mac) */
 function contactHistory(b,clientId,pid){
@@ -1468,7 +1656,8 @@ function openClient(id){
       hit.appendChild(el("div","stripe"));
       const main=el("div","rowmain"), tx=el("div","rowtext");
       tx.appendChild(el("div","nm",p.l||"(no address)"));
-      tx.appendChild(el("div","mt",(p.n||0)+" job"+(p.n===1?"":"s")));
+      const lj=(S.jobs[pid]||[])[0];
+      tx.appendChild(el("div","mt",(lj?visitLabel(lj.s.map(x=>x.s))+" · "+nice(lj.d)+" · ":"")+(p.n||0)+" job"+(p.n===1?"":"s")));
       main.appendChild(tx); hit.appendChild(main);
       hit.onclick=()=>openProp(pid);
       r.appendChild(hit); b.appendChild(r);

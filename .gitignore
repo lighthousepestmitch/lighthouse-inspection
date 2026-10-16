@@ -12,6 +12,7 @@ jobbook-data/replies_*.json
 jobbook-data/review_asks.json
 # a client name + property id: the refresh reads it from here, the website must not serve it
 tools/confirmed_intervals.json
+tools/client_intervals.json
 
 # the prospecting list (public business contacts, but still his private list). Uploaded the same way.
 jobbook-data/leads.json

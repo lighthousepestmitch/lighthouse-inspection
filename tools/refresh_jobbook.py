@@ -58,7 +58,7 @@ SERVICE = {
  "TT":"Termite Treatment","Dust":"Termite Treatment","Termite foaming":"Termite Treatment",
  "TDF":"Termite Treatment","AST":"Specialist Treatment","SPOTTREATMENT":"Specialist Treatment",
  "MTHSLV":"Specialist Treatment","OCINSP":"OC Site Assessment","MA":"Specialist Treatment",
- "TMB":"Specialist Treatment","FUN":"Specialist Treatment","BS":"Specialist Treatment",
+ "CR-COMM":"Cockroach Treatment","TMB":"Specialist Treatment","FUN":"Specialist Treatment","BS":"Specialist Treatment",
  "CD":"Specialist Treatment","LA":"Specialist Treatment","SUPG":"Specialist Treatment",
 }
 # Mitch's sections (set 2026-10-04)
@@ -80,14 +80,24 @@ DEFAULT_INTERVAL = {
  "Nemesis Renewal":"Annual","Nemesis New":"Annual","Trelona Baiting":"Annual",
  "Barrier Follow-Up Inspection":"Biannual",
 }
-MONTHS = {"2 weeks":0.5,"4 weeks":1,"6 weeks":1.5,"8 weeks":2,"Quarterly":3,"Biannual":6,
-          "9 months":9,"Annual":12,"2 years":24,"3 years":36,"4 years":48,"5 years":60}
+MONTHS = {"2 weeks":0.5,"4 weeks":1,"6 weeks":1.5,"8 weeks":2,"Quarterly":3,"4 months":4,"5 months":5,
+          "Biannual":6,"9 months":9,"Annual":12,"2 years":24,"3 years":36,"4 years":48,"5 years":60}
 LEGACY = {"3 months":"Quarterly","6 months":"Biannual","12 months":"Annual","1 year":"Annual",
           "one-off":"One-off","1 month":"Quarterly","2 months":"Quarterly"}
 # installing a barrier is a one-off job; what repeats is the inspection of it (Mitch, 2026-10-04)
 BARRIER_INSTALL = {"Pre-Construction Barrier","Post-Construction Barrier"}
 FOLLOWUP = "Barrier Follow-Up Inspection"
 RECURRING = set(DEFAULT_INTERVAL)
+
+# invoice lines with no usable item code, matched on the wording instead (Mitch, 2026-10-17)
+RECLASS = [(re.compile(r"^commercial cockroach", re.I), "Cockroach Treatment"),
+           (re.compile(r"^installation of trelona", re.I), "Trelona Baiting")]
+# service families the interval rules touch. Barriers and Nemesis/Trelona are left alone.
+FAMILY = {"General Pest Treatment":"CAS","Cockroach Treatment":"CAS","Cockroach & Ant Treatment":"CAS",
+          "Ant Treatment":"CAS","Spider Treatment":"CAS","Termite Inspection":"TI","Rodent Treatment":"ROD"}
+
+def snap_gap(months):
+    return "Quarterly" if months <= 4.5 else "Biannual" if months <= 8.5 else "Annual"
 
 def slug(s):
     s = unicodedata.normalize("NFKD", s or "").encode("ascii","ignore").decode()
@@ -156,7 +166,7 @@ def load(name):
     return json.load(open(p)) if os.path.exists(p) else None
 
 # also local only: has a client name and a property id in it, and the website would serve it from /tools/
-LOCAL_ONLY = ["tools/confirmed_intervals.json"]
+LOCAL_ONLY = ["tools/confirmed_intervals.json", "tools/client_intervals.json"]
 PRIVATE_GLOBS = ["jobbook-data/clients_*.json", "jobbook-data/properties_*.json", "jobbook-data/jobs_*.json",
                  "jobbook-data/due_*.json", "jobbook-data/replies_*.json", "jobbook-data/review_asks.json",
                  *LOCAL_ONLY]
@@ -281,12 +291,28 @@ def main():
                 newdue.append({"p":pid, "s":FOLLOWUP, "ld":v["date"],
                                "iv":DEFAULT_INTERVAL[FOLLOWUP],
                                "nd":add_months(v["date"], MONTHS[DEFAULT_INTERVAL[FOLLOWUP]]),
-                               "src":"after a barrier install"})
+                               "src":"after a barrier install",
+                               "bt":"pre" if s == "Pre-Construction Barrier" else "post"})
             elif s in RECURRING:
                 iv = norm_iv(clients[cid].get("iv")) or DEFAULT_INTERVAL[s]
                 newdue.append({"p":pid, "s":s, "ld":v["date"], "iv":iv,
                                "nd":add_months(v["date"], MONTHS[iv]) if MONTHS.get(iv) else None,
                                "src":"default for this service"})
+
+    # Lines with no item code that the wording gives away (commercial cockroach, Trelona installs)
+    reclassed = 0
+    for pid, js in jobs.items():
+        for j in js:
+            for sv in j["s"]:
+                if sv["s"] != "Other": continue
+                for rx, name in RECLASS:
+                    if rx.search(sv["d"] or ""):
+                        sv["s"] = name; reclassed += 1
+                        if name in RECURRING and j.get("d"):
+                            iv = DEFAULT_INTERVAL[name]
+                            newdue.append({"p":pid, "s":name, "ld":j["d"], "iv":iv,
+                                           "nd":add_months(j["d"], MONTHS[iv]), "src":"default for this service"})
+                        break
 
     # Installing a barrier is a one-off. What repeats is the inspection of it.
     # Any barrier-install row (old seed data included) becomes a follow-up inspection.
@@ -298,7 +324,8 @@ def main():
             rewritten.append({"p":d["p"], "s":FOLLOWUP, "ld":d.get("ld"),
                               "iv":DEFAULT_INTERVAL[FOLLOWUP],
                               "nd":add_months(d["ld"], MONTHS[DEFAULT_INTERVAL[FOLLOWUP]]) if d.get("ld") else None,
-                              "src":"after a barrier install"})
+                              "src":"after a barrier install",
+                              "bt":"pre" if d["s"] == "Pre-Construction Barrier" else "post"})
         else:
             rewritten.append(d)
     due = rewritten
@@ -318,6 +345,67 @@ def main():
         k = (d["p"], d["s"])
         if k not in merged or (d.get("ld") or "") > (merged[k].get("ld") or ""): merged[k] = d
     due = list(merged.values())
+
+    # ---- how often each repeat comes back (Mitch, 2026-10-17)
+    # 1. a property with 2+ visits keeps its real pattern, snapped to quarterly / 6 months / yearly
+    # 2. one visit only: 12 months (rodent keeps its quarterly default)
+    # 3. his named clients (tools/client_intervals.json) beat both
+    # Barriers and Nemesis/Trelona are not touched. A client-confirmed interval (below) still wins.
+    def visit_dates(pid, fam):
+        out = set()
+        for j in jobs.get(pid, []):
+            if j.get("d") and any(FAMILY.get(x["s"]) == fam for x in j["s"]): out.add(j["d"])
+        return sorted(out)
+    pat = flat = 0
+    for d in due:
+        fam = FAMILY.get(d["s"])
+        if not fam or not d.get("ld"): continue
+        if str(d.get("src","")).startswith("client confirmed"): continue
+        ds = [dt.date.fromisoformat(x) for x in visit_dates(d["p"], fam)]
+        gaps = sorted((b - a).days / 30.44 for a, b in zip(ds, ds[1:]) if (b - a).days >= 45)
+        if gaps:
+            iv, why = snap_gap(gaps[len(gaps)//2]), "usual pattern"; pat += 1
+        elif fam == "ROD" and d.get("iv"):
+            continue
+        else:
+            iv, why = "Annual", "12 month default"; flat += 1
+        d["iv"], d["nd"], d["src"] = iv, add_months(d["ld"], MONTHS[iv]), why
+    ovr_path = os.path.join(HERE_TOOLS, "client_intervals.json")
+    ovr = json.load(open(ovr_path)) if os.path.exists(ovr_path) else []
+    named = 0
+    for rule in ovr:
+        if not isinstance(rule, dict) or "client" not in rule: continue
+        fams = set(rule.get("fam") or ["CAS", "TI", "ROD"])
+        hit = 0
+        for d in due:
+            fam = FAMILY.get(d["s"])
+            if fam not in fams or not d.get("ld"): continue
+            c = clients.get(props.get(d["p"], {}).get("c"), {})
+            if rule["client"].lower() not in c.get("n", "").lower(): continue
+            if rule.get("prop") and rule["prop"].lower() not in props[d["p"]].get("l", "").lower(): continue
+            d["iv"], d["nd"], d["src"] = rule["iv"], add_months(d["ld"], MONTHS[rule["iv"]]), "your list"
+            hit += 1
+        named += hit
+        if not hit: print(f"  NO MATCH for client rule: {rule}")
+    print(f"  intervals: {pat} from real pattern, {flat} 12 month default, {named} from your named list")
+
+    # barrier follow-ups: say whether the barrier was pre or post construction
+    for d in due:
+        if d["s"] != FOLLOWUP or d.get("bt"): continue
+        bj = [j for j in jobs.get(d["p"], []) if any(x["s"] in BARRIER_INSTALL for x in j["s"])]
+        near = [j for j in bj if j.get("d") == d.get("ld")] or [j for j in bj if (j.get("d") or "") <= (d.get("ld") or "9")]
+        if near:
+            near.sort(key=lambda j: j.get("d") or "", reverse=True)
+            names = {x["s"] for x in near[0]["s"]}
+            d["bt"] = "pre" if "Pre-Construction Barrier" in names and "Post-Construction Barrier" not in names else "post"
+
+    # post-construction barriers come back every 5 years (Mitch, 2026-10-17). Pre-con keeps its 6 month check.
+    # Only rows the script set itself; a client-confirmed or hand-picked date is never touched here.
+    post5 = 0
+    for d in due:
+        if d["s"] == FOLLOWUP and d.get("bt") == "post" and d.get("src") == "after a barrier install" and d.get("ld"):
+            d["iv"], d["nd"] = "5 years", add_months(d["ld"], MONTHS["5 years"]); post5 += 1
+    print(f"  post-construction barriers set to 5 years: {post5}")
 
     # Intervals the client confirmed with Mitch beat every default (tools/confirmed_intervals.json)
     conf = json.load(open(os.path.join(HERE_TOOLS, "confirmed_intervals.json"))) \
