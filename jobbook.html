@@ -773,7 +773,7 @@ function ago(l){ if(!l.nextDue) return "set it";
   if(n<0){ const a=-n; return a>=365?Math.floor(a/365)+"y "+Math.floor(a%365/30)+"m":a>=60?Math.floor(a/30)+"m":a+"d"; }
   if(n===0) return "today"; return n<=30?n+"d":nice(l.nextDue); }
 function firstName(n){
-  if(/\b(pty|ltd|strata|realty|construction|constructions|building|builders|group|holdings|retreats|hotel|resort|brewery|cafe|committee|council|services|plan|yha|management|properties|estate|bakery)\b/i.test(n)) return "there";
+  if(/\b(pty|ltd|strata|realty|construction|constructions|building|builders|group|holdings|retreats|hotel|resort|brewery|cafe|committee|council|services|plan|yha|management|properties|estate|bakery|farm|farms|club|shop|motel|inn|bars?|store|studio|centre|center|school|church|trust|partnership|cattle|bottle|brewery|cottage|bistro|kitchen)\b/i.test(n)) return "there";
   const a=String(n).split(/\s*&\s*/)[0].trim().split(/\s+/)[0];
   return a&&a.length>1?a:"there";
 }
@@ -790,9 +790,50 @@ function msgFor(l){
     return `Hey ${firstName(c.n)}, hope you're going well! Just checking in after your ${joinNat(what)}, hope everything is still all good. `
          + `If you need anything else, just let me know. Cheers, Mitch`;
   }
-  const svcs=plainSvcs(l.svcs||[l.svc]);
-  return `Hey ${firstName(c.n)}, hope you're going well! Just checking if you'd like me to book you in for `
-       + joinNat(svcs) + ` to keep on top of things. Let me know what suits. Cheers, Mitch`;
+  const t=repeatBits(l);
+  return `Hey ${firstName(c.n)}, hope you're going well! `+seasonLine()
+    +(t.soon?`It's coming up to ${t.period} since your last ${t.what}, so just a duty of care check in. `
+             :`Your ${t.what} ${t.are} fairly overdue, so just checking in as a duty of care. `)
+    +`If you'd like me to schedule it in, let me know, no pressure at all. Cheers, Mitch`;
+}
+/* the email says the same thing, a bit longer */
+function emailFor(l){
+  const c=cOf(l.pid);
+  if(l.oneoff||(c.g==="lapsed"&&!(l.lines&&l.lines.length)))
+    return msgFor(l).replace(/^(Hey|Hi) ([^,]+), /,"Hi $2,\n\n").replace(/ Cheers, Mitch$/,"\n\nCheers, Mitch");
+  const t=repeatBits(l);
+  return `Hi ${firstName(c.n)},\n\nHope you're going well! `+seasonLine()
+    +(t.soon?`It's coming up to ${t.period} since your last ${t.what}, so just a duty of care check in.`
+             :`Your ${t.what} ${t.are} fairly overdue, so I just wanted to do a duty of care check in.`)
+    +`\n\nIf you'd like me to schedule it in, just reply and let me know what suits. No pressure at all.\n\nCheers, Mitch`;
+}
+/* one line for the time of year (Australian seasons), same for every job. Mitch approved the wording 2026-10-18.
+   Autumn only talks about mice and rats: that is the part Australian pest sources back up. */
+function seasonLine(d){
+  d=d||new Date(); const m=d.getMonth()+1, day=d.getDate();
+  const v=m*100+day;
+  const t=v>=901&&v<=1015?"With it warming up, it's a good time to get on top of things before the busy season."
+    :v>=1016&&v<=1215?"I'm trying to get everyone in before Christmas gets busy."
+    :v>=1216||v<=229?"It's been nice and warm and humid lately, which the bugs love."
+    :v>=301&&v<=531?"With the weather starting to cool down, mice and rats like to find somewhere warm and dry, so it's a good time to get ahead of it."
+    :"Good time to get ahead of things before it warms up again.";
+  return t+" ";
+}
+const EMAIL_SUBJECT="A quick check-in from Lighthouse Pest";
+/* soon = coming up (or only just gone past); otherwise it's fairly overdue */
+function repeatBits(l){
+  const svcs=plainSvcs(l.svcs||[l.svc]).map(x=>x.replace(/^(an?|the) /,""));
+  const soon=!l.nextDue||days(TODAY,l.nextDue)>=-30;
+  return {soon,what:joinNat(svcs),are:svcs.length>1?"are":"is",period:periodOf(l.interval)};
+}
+function periodOf(iv){
+  const m=monthsOf(iv);
+  if(m==null) return "the next one";
+  if(m===12) return "a year";
+  if(m<1) return Math.round(m*4)+" weeks";
+  if(m<2.5&&m%0.5===0&&m<=2) return Math.round(m*4)+" weeks";
+  if(m>=24) return (m/12)+" years";
+  return m+" months";
 }
 /* the wording for a visit: each thing once, and an ant or spider job is covered by the general pest one */
 function plainSvcs(svcs){
@@ -1005,8 +1046,8 @@ function actionBtns(l){
   const msg=msgFor(l);
   acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,"Text "+c.n,()=>afterSend(l,"text",msg),!!c.p,true));   // text first, he texts more than rings
   acts.appendChild(mk("tel:"+num,SVG.phone,"Ring "+c.n,()=>afterRing(l),!!c.p));
-  acts.appendChild(mk(mailHref(c.e,"Lighthouse Pest Control",msg),SVG.mail,"Email "+c.n,
-    ()=>afterSend(l,"email",msg),!!c.e));
+  acts.appendChild(mk(mailHref(c.e,EMAIL_SUBJECT,emailFor(l)),SVG.mail,"Email "+c.n,
+    ()=>afterSend(l,"email",emailFor(l)),!!c.e));
   return acts;
 }
 /* The link has already handed off to the Phone app. Come back to this. */
@@ -1024,7 +1065,7 @@ function afterRing(l){
 function afterSend(l,channel,msg){
   const c=cOf(l.pid), to=channel==="email"?c.e:c.p;
   const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
-               subject:channel==="email"?"Lighthouse Pest Control":"",
+               subject:channel==="email"?EMAIL_SUBJECT:"",
                msg,svcs:(l.svcs||[l.svc]),st:"drafted"};
   logContact(l.pid,entry);
   setTimeout(()=>openSheet(confirmSpec(l.pid,entry)),700);
@@ -1249,7 +1290,7 @@ function openMsg(l,channel,firedWith,preset){
   if(firedWith){
     // the link has already fired - log it and go straight to "did that send?"
     const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
-                 subject:channel==="email"?"Lighthouse Pest Control":"",
+                 subject:channel==="email"?EMAIL_SUBJECT:"",
                  msg:firedWith,svcs:(l.svcs||[l.svc]),st:"drafted"};
     logContact(l.pid,entry);
     openSheet(confirmSpec(l.pid,entry));
@@ -1257,11 +1298,11 @@ function openMsg(l,channel,firedWith,preset){
   }
   openSheet({title:(preset&&preset.title)||((channel==="email"?"Email ":"Text ")+c.n), sub:to, build:b=>{
     b.appendChild(el("div","lbl","Message"));
-    const ta=el("textarea","msgbox"); ta.value=preset?preset.msg:msgFor(l); b.appendChild(ta);
+    const ta=el("textarea","msgbox"); ta.value=preset?preset.msg:(channel==="email"?emailFor(l):msgFor(l)); b.appendChild(ta);
     let subj=null;
     if(channel==="email"){
       b.appendChild(el("div","lbl","Subject"));
-      subj=el("input","inp"); subj.value=(preset&&preset.subject)||"Lighthouse Pest Control"; b.appendChild(subj);
+      subj=el("input","inp"); subj.value=(preset&&preset.subject)||EMAIL_SUBJECT; b.appendChild(subj);
     }
     b.appendChild(el("div","note","Edit it however you like, then open it in "
       +(channel==="email"?"Mail":"Messages")+". Nothing counts as sent until you say it went."));
