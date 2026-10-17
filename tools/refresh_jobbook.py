@@ -347,31 +347,15 @@ def main():
     due = list(merged.values())
 
     # ---- how often each repeat comes back (Mitch, 2026-10-17)
-    # 1. a property with 2+ visits keeps its real pattern, snapped to quarterly / 6 months / yearly
-    # 2. one visit only: 12 months (rodent keeps its quarterly default)
-    # 3. his named clients (tools/client_intervals.json) beat both
-    # Barriers and Nemesis/Trelona are not touched. A client-confirmed interval (below) still wins.
-    def visit_dates(pid, fam):
-        out = set()
-        for j in jobs.get(pid, []):
-            if j.get("d") and any(FAMILY.get(x["s"]) == fam for x in j["s"]): out.add(j["d"])
-        return sorted(out)
-    pat = flat = 0
+    # CAS and TI are 12 months unless he has said otherwise: tools/client_intervals.json (below), a client-confirmed
+    # interval, or a change he makes in the app. No guessing from visit history (it set Sam Boyd to quarterly off two jobs).
+    # Rodent keeps its own quarterly default. Barriers and Nemesis/Trelona are not touched.
+    flat = 0
     for d in due:
         fam = FAMILY.get(d["s"])
-        if not fam or not d.get("ld"): continue
+        if fam not in ("CAS", "TI") or not d.get("ld"): continue
         if str(d.get("src","")).startswith("client confirmed"): continue
-        ds = [dt.date.fromisoformat(x) for x in visit_dates(d["p"], fam)]
-        gaps = sorted((b - a).days / 30.44 for a, b in zip(ds, ds[1:]) if (b - a).days >= 60)
-        # one gap can be a callback or a separate job (Sam Boyd: general pest, then an ant treatment 11 weeks later).
-        # Need 3+ visits (2 real gaps) before a pattern counts. Otherwise 12 months.
-        if len(gaps) >= 2:
-            iv, why = snap_gap(gaps[len(gaps)//2]), "usual pattern"; pat += 1
-        elif fam == "ROD" and d.get("iv"):
-            continue
-        else:
-            iv, why = "Annual", "12 month default"; flat += 1
-        d["iv"], d["nd"], d["src"] = iv, add_months(d["ld"], MONTHS[iv]), why
+        d["iv"], d["nd"], d["src"] = "Annual", add_months(d["ld"], MONTHS["Annual"]), "12 month default"; flat += 1
     ovr_path = os.path.join(HERE_TOOLS, "client_intervals.json")
     ovr = json.load(open(ovr_path)) if os.path.exists(ovr_path) else []
     named = 0
@@ -389,7 +373,7 @@ def main():
             hit += 1
         named += hit
         if not hit: print(f"  NO MATCH for client rule: {rule}")
-    print(f"  intervals: {pat} from real pattern, {flat} 12 month default, {named} from your named list")
+    print(f"  intervals: {flat} CAS/TI on 12 months, {named} from your named list")
 
     # barrier follow-ups: say whether the barrier was pre or post construction
     for d in due:
