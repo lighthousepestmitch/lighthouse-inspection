@@ -1029,6 +1029,25 @@ function afterSend(l,channel,msg){
   logContact(l.pid,entry);
   setTimeout(()=>openSheet(confirmSpec(l.pid,entry)),700);
 }
+/* "CAS 12 mo · TI 12 mo · Rodents 3 mo · next: Rodents": each job with its own repeat, so one quarterly job
+   doesn't make the whole row look quarterly. The date and overdue pill on the row are the "next" job's. */
+function ivShort(k){
+  const m=monthsOf(k); if(m==null) return k?String(k).toLowerCase():"no repeat";
+  return m<1?"2 wk":m<1.5?"4 wk":m<2?"6 wk":m===2?"8 wk":m>=24?(m/12)+" yr":(m%1?m.toFixed(1):m)+" mo";
+}
+function jobsLabel(l){
+  const by=new Map();
+  (l.lines&&l.lines.length?l.lines:[{svc:l.svc,interval:l.interval,nextDue:l.nextDue}]).forEach(x=>{
+    const f=FAM[x.svc], t=f&&SHORT[f]?SHORT[f]:String(x.svc).replace(/ Treatment$/,"");
+    const cur=by.get(t);
+    if(!cur||(x.nextDue||"9")<(cur.nextDue||"9")) by.set(t,{t,interval:x.interval,nextDue:x.nextDue}); });
+  const order=["CAS","TI","Rodents"], parts=[...by.values()].sort((a,b)=>{
+    const i=order.indexOf(a.t), j=order.indexOf(b.t); return (i<0?9:i)-(j<0?9:j); });
+  let out=parts.map(x=>x.t+" "+ivShort(x.interval)).join(" · ");
+  if(parts.length>1){ const nx=parts.slice().sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"))[0];
+    out+=" · next: "+nx.t; }
+  return out;
+}
 function rowFor(l,extra){
   const c=cOf(l.pid), bd=l.oneoff?"ok":band(l), svcs=l.svcs||[l.svc];
   const multi=(l.sites||[]).length>1;
@@ -1037,9 +1056,8 @@ function rowFor(l,extra){
   hit.appendChild(el("div","stripe"));
   const main=el("div","rowmain"), tx=el("div","rowtext");
   tx.appendChild(el("div","nm",c.n));
-  const bits=[multi?l.sites.length+" sites":(pOf(l.pid).l||"(no address)"),visitLabel(svcs)];
+  const bits=[multi?l.sites.length+" sites":(pOf(l.pid).l||"(no address)"),l.oneoff?visitLabel(svcs):jobsLabel(l)];
   if(l.lastDone) bits.push("last "+nice(l.lastDone));
-  if(l.interval&&!l.oneoff) bits.push(l.interval.toLowerCase());
   if(l.manual) bits.push("date set by you");
   tx.appendChild(el("div","mt",bits.join(" · ")));
   main.appendChild(tx);
