@@ -362,8 +362,10 @@ def main():
         if not fam or not d.get("ld"): continue
         if str(d.get("src","")).startswith("client confirmed"): continue
         ds = [dt.date.fromisoformat(x) for x in visit_dates(d["p"], fam)]
-        gaps = sorted((b - a).days / 30.44 for a, b in zip(ds, ds[1:]) if (b - a).days >= 45)
-        if gaps:
+        gaps = sorted((b - a).days / 30.44 for a, b in zip(ds, ds[1:]) if (b - a).days >= 60)
+        # one gap can be a callback or a separate job (Sam Boyd: general pest, then an ant treatment 11 weeks later).
+        # Need 3+ visits (2 real gaps) before a pattern counts. Otherwise 12 months.
+        if len(gaps) >= 2:
             iv, why = snap_gap(gaps[len(gaps)//2]), "usual pattern"; pat += 1
         elif fam == "ROD" and d.get("iv"):
             continue
