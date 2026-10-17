@@ -772,26 +772,30 @@ function ago(l){ if(!l.nextDue) return "set it";
   const n=days(TODAY,l.nextDue);
   if(n<0){ const a=-n; return a>=365?Math.floor(a/365)+"y "+Math.floor(a%365/30)+"m":a>=60?Math.floor(a/30)+"m":a+"d"; }
   if(n===0) return "today"; return n<=30?n+"d":nice(l.nextDue); }
-function firstName(n){
-  if(/\b(pty|ltd|strata|realty|construction|constructions|building|builders|group|holdings|retreats|hotel|resort|brewery|cafe|committee|council|services|plan|yha|management|properties|estate|bakery|farm|farms|club|shop|motel|inn|bars?|store|studio|centre|center|school|church|trust|partnership|cattle|bottle|brewery|cottage|bistro|kitchen)\b/i.test(n)) return "there";
+/* a business gets the contact person Xero has for it (c.f), else "there" */
+const BIZ=/\b(pty|ltd|strata|realty|construction|constructions|building|builders|group|holdings|retreats|hotel|resort|brewery|cafe|committee|council|services|plan|yha|management|properties|estate|bakery|farm|farms|club|shop|motel|inn|bars?|store|studio|centre|center|school|church|trust|partnership|cattle|bottle|brewery|cottage|bistro|kitchen)\b/i;
+function firstName(n,c){
+  if(BIZ.test(n)) return c&&c.f?c.f:"there";
   const a=String(n).split(/\s*&\s*/)[0].trim().split(/\s+/)[0];
   return a&&a.length>1?a:"there";
 }
+/* only a mobile can take a text. Landlines and 13/1300/1800 numbers never get one. */
+const canText=c=>{ let d=String((c&&c.p)||"").replace(/\D/g,""); if(d.startsWith("61")) d="0"+d.slice(2); return /^04\d{8}$/.test(d); };
 const joinNat=a=>a.length===1?a[0]:a.slice(0,-1).join(", ")+" and "+a[a.length-1];
 function msgFor(l){
   const c=cOf(l.pid);
   if(c.g==="lapsed"&&!(l.lines&&l.lines.length)){
     const st=(c.a&&c.a[0]&&!/^\s*(po box|p\.?o\.?\s)/i.test(c.a[0]))?" at "+c.a[0]:"";
-    return `Hi ${firstName(c.n)}, Mitch here from Lighthouse Pest Control. It's been a while since we were out${st}, `
+    return `Hi ${firstName(c.n,c)}, Mitch here from Lighthouse Pest Control. It's been a while since we were out${st}, `
       +`just checking in to see if there's any pest or termite work you need a hand with. Reach out whenever you need. Cheers, Mitch`;
   }
   if(l.oneoff){   // one-off jobs (wasp, mosquito, flea...): a check-in, not a rebook. Wording is a placeholder for Mitch to rewrite.
     const what=(l.svcs||[l.svc]).map(s=>plain(s).replace(/^(an?|the) /,""));
-    return `Hey ${firstName(c.n)}, hope you're going well! Just checking in after your ${joinNat(what)}, hope everything is still all good. `
+    return `Hey ${firstName(c.n,c)}, hope you're going well! Just checking in after your ${joinNat(what)}, hope everything is still all good. `
          + `If you need anything else, just let me know. Cheers, Mitch`;
   }
   const t=repeatBits(l);
-  return `Hey ${firstName(c.n)}, hope you're going well! `+seasonLine()
+  return `Hey ${firstName(c.n,c)}, hope you're going well! `+seasonLine()
     +(t.soon?`It's coming up to ${t.period} since your last ${t.what}, so just a duty of care check in. `
              :`Your ${t.what} ${t.are} fairly overdue, so just checking in as a duty of care. `)
     +`If you'd like me to schedule it in, let me know, no pressure at all. Cheers, Mitch`;
@@ -802,7 +806,7 @@ function emailFor(l){
   if(l.oneoff||(c.g==="lapsed"&&!(l.lines&&l.lines.length)))
     return msgFor(l).replace(/^(Hey|Hi) ([^,]+), /,"Hi $2,\n\n").replace(/ Cheers, Mitch$/,"\n\nCheers, Mitch");
   const t=repeatBits(l);
-  return `Hi ${firstName(c.n)},\n\nHope you're going well! `+seasonLine()
+  return `Hi ${firstName(c.n,c)},\n\nHope you're going well! `+seasonLine()
     +(t.soon?`It's coming up to ${t.period} since your last ${t.what}, so just a duty of care check in.`
              :`Your ${t.what} ${t.are} fairly overdue, so I just wanted to do a duty of care check in.`)
     +`\n\nIf you'd like me to schedule it in, just reply and let me know what suits. No pressure at all.\n\nCheers, Mitch`;
@@ -1044,7 +1048,7 @@ function actionBtns(l){
     return a;
   };
   const msg=msgFor(l);
-  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,"Text "+c.n,()=>afterSend(l,"text",msg),!!c.p,true));   // text first, he texts more than rings
+  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,canText(c)||!c.p?"Text "+c.n:"Landline, can't text",()=>afterSend(l,"text",msg),canText(c),true));   // text first, he texts more than rings
   acts.appendChild(mk("tel:"+num,SVG.phone,"Ring "+c.n,()=>afterRing(l),!!c.p));
   acts.appendChild(mk(mailHref(c.e,EMAIL_SUBJECT,emailFor(l)),SVG.mail,"Email "+c.n,
     ()=>afterSend(l,"email",emailFor(l)),!!c.e));
@@ -1177,7 +1181,7 @@ function foldSection(host,key,title,g){
 /* Text the next N people in this section, one tap each. The page can only open Messages with the
    words already in it, so every one still needs your tap to send. */
 function batchEligible(r){
-  const c=cOf(r.pid); if(!c.p) return false;
+  const c=cOf(r.pid); if(!canText(c)) return false;
   const cut=Date.now()-30*DAY;
   return !r.sites.some(pid=>((S.ov[pid]||{}).log||[]).some(e=>(e.ch==="text"||e.ch==="email")&&e.kind!=="review"&&Date.parse(e.t)>cut));
 }
@@ -1287,6 +1291,7 @@ function openMsg(l,channel,firedWith,preset){
   const c=cOf(l.pid), p=pOf(l.pid);
   const to=channel==="email"?c.e:c.p;
   if(!to){ toast(channel==="email"?"No email on file for this one.":"No phone number on file for this one.",true); return; }
+  if(channel!=="email"&&!canText(c)){ toast("That's a landline, so it can't take a text.",true); return; }
   if(firedWith){
     // the link has already fired - log it and go straight to "did that send?"
     const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
@@ -1485,14 +1490,14 @@ function alsoDo(pid){
   return out.length>1?out.slice(0,-1).join(", ")+" and "+out[out.length-1]:out.join("");
 }
 function reviewMsg(pid,link){
-  return `Hey ${firstName(cOf(pid).n)}, bit awkward asking this \u{1F605} but if you've got a sec, `
+  return `Hey ${firstName(cOf(pid).n,cOf(pid))}, bit awkward asking this \u{1F605} but if you've got a sec, `
     +`a quick Google review would help me out heaps. It really helps me show up on Google. `
     +`Totally no stress at all if not\n${link}\n`
     +`If anything wasn't right, give me a ring on 0432 181 689 and I'll sort it.\nCheers, Mitch\nLighthouse Pest`;
 }
 function reviewEmail(pid,link){
   const more=alsoDo(pid);
-  return `Hi ${firstName(cOf(pid).n)},\n\nThanks for giving Lighthouse Pest Control the chance to look after you.\n\n`
+  return `Hi ${firstName(cOf(pid).n,cOf(pid))},\n\nThanks for giving Lighthouse Pest Control the chance to look after you.\n\n`
     +`If you were happy with the job, a quick Google review would help me out heaps:\n${link}\n\n`
     +`If there's something we didn't quite get right, give me a ring on 0432 181 689 or reply to this email and I'll sort it.`
     +`\n\nThere's nothing better than working with people you enjoy working with, and I've enjoyed looking after you. `
@@ -1602,14 +1607,15 @@ function openProp(pid,focusSvc){
     if(!c.p&&!c.e) b.appendChild(el("div","banner warn","No phone or email on file. You'll need to dig up a number before you can reach them."));
     const L=myLine(pid,focusSvc);
     const acts=el("div","btns");
-    acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(L,"text"),!!c.p));
+    acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(L,"text"),canText(c)));
+    if(c.p&&!canText(c)) b.appendChild(el("div","hint","That's a landline, so it can't take a text. Ring or email instead."));
     acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(L),!!c.p));
     acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(L,"email"),!!c.e));
     b.appendChild(acts);
     const acts2=el("div","btns");
     acts2.appendChild(btn("Record contact",SVG.note,"",()=>openSheet(recordSpec({pid}))));
     acts2.appendChild(btn("Remind me later",SVG.bell,"",()=>openSheet(remindSpec({pid}))));
-    acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(L),!!c.p));
+    acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(L),canText(c)));
     b.appendChild(acts2);
 
     kv(b,"Phone",c.p||"-"); kv(b,"Email",c.e||"-");
@@ -1702,11 +1708,11 @@ function openClient(id){
     const acts=el("div","btns");
     const seed=props.length?myLine(props[0]):{pid:null};
     acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(seed),!!c.p&&!!props.length));
-    acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(seed,"text"),!!c.p&&!!props.length));
+    acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(seed,"text"),canText(c)&&!!props.length));
     acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(seed,"email"),!!c.e&&!!props.length));
     b.appendChild(acts);
     const acts2=el("div","btns");
-    acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(seed),!!c.p&&!!props.length));
+    acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(seed),canText(c)&&!!props.length));
     b.appendChild(acts2);
     b.appendChild(el("div","lbl","Properties"));
     if(!props.length) b.appendChild(el("div","note","No properties on record."));

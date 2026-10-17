@@ -166,7 +166,7 @@ def load(name):
     return json.load(open(p)) if os.path.exists(p) else None
 
 # also local only: has a client name and a property id in it, and the website would serve it from /tools/
-LOCAL_ONLY = ["tools/confirmed_intervals.json", "tools/client_intervals.json"]
+LOCAL_ONLY = ["tools/confirmed_intervals.json", "tools/client_intervals.json", "tools/client_names.json"]
 PRIVATE_GLOBS = ["jobbook-data/clients_*.json", "jobbook-data/properties_*.json", "jobbook-data/jobs_*.json",
                  "jobbook-data/due_*.json", "jobbook-data/replies_*.json", "jobbook-data/review_asks.json",
                  *LOCAL_ONLY]
@@ -408,7 +408,10 @@ def main():
         by_slug, by_em = {}, {}
         for r in csv.DictReader(open(con_csv, encoding="utf-8-sig")):
             nm = (r.get("*ContactName") or r.get("ContactName") or "").strip()
-            rec = {"p": nph(r.get("PhoneNumber") or r.get("MobileNumber") or ""),
+            fn = (r.get("FirstName") or "").strip().split(" ")[0].strip(".,")
+            rec = {"f": fn if len(fn) > 1 else "",
+                   "m": nph(r.get("MobileNumber") or ""),
+                   "p": nph(r.get("MobileNumber") or r.get("PhoneNumber") or ""),
                    "e": (r.get("EmailAddress") or "").strip(),
                    "a": [(r.get("SAAddressLine1") or r.get("POAddressLine1") or "").strip(),
                          (r.get("SACity") or r.get("POCity") or "").strip().title(),
@@ -419,9 +422,18 @@ def main():
         for cid, c in clients.items():
             r = by_slug.get(cid) or (by_em.get(c["e"].lower()) if c.get("e") else None)
             if not r: continue
+            if r.get("f"): c["f"] = r["f"]          # the contact's first name in Xero, used for businesses
             if r["p"] and not c.get("p"): c["p"] = r["p"]; filled += 1
+            elif r.get("m") and re.match(r"^04\d{8}$", r["m"]) and not re.match(r"^04\d{8}$", c.get("p","")):
+                c["p"] = r["m"]; filled += 1        # Xero has a mobile and we only had a landline: texts need the mobile
             if r["e"] and not c.get("e"): c["e"] = r["e"]
             if r["a"][0] and not (c.get("a") or [""])[0]: c["a"] = r["a"]
+
+    # first names Mitch has given for businesses (tools/client_names.json) beat what Xero has
+    names_path = os.path.join(HERE_TOOLS, "client_names.json")
+    if os.path.exists(names_path):
+        for cid, nm in json.load(open(names_path)).items():
+            if cid in clients and not cid.startswith("_") and nm: clients[cid]["f"] = nm
 
     # ---- rewrite the data files
     def chunk(obj, n, name, islist=False):
