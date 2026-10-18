@@ -1896,26 +1896,82 @@ function viewReviews(m){
 /* ---------- leads tab ----------
    The prospecting list (public business contacts: agencies, strata, builders and so on), kept apart from the
    customer due list. leads.json is private like the client files (database, behind the login, never in the repo).
-   His progress on each lead lives on this device (S.lead, key = lead id), same as ticks and the contact log.
-   Cadence from the Big Bad Wolf hunt: touch 1 day 1 (call), 2 day 1 (email), 3 day 4, 4 day 7, 5 day 10.
-   After touch 5 it stops: no follow-up date is guessed. */
-const LEAD_TOUCH=["Call the decision maker","Email and capability sheet","Second call or drop-in time","Drop in with coffee","Close: lock pricing or first job"];
-const LEAD_OFFSET=[0,0,3,6,9];            // days after touch 1 that touch n+1 is due
+   Simplified 2026-10-18: no pipeline stages and no touch cadence. It is just a record of the contact Mitch has made
+   with each lead (how, when, and what was said or sent). His log lives on this device (S.lead, key = lead id). */
 const LEAD_DAILY=20;
 const leadSt=id=>S.lead[id]||{n:0,st:"new",log:[]};
-function leadAddDays(d,n){ const x=parse(d); x.setDate(x.getDate()+n); return iso(x); }
-function leadNext(id){ const L=leadSt(id); if(L.st!=="active"||L.n>=5||!L.start) return ""; return leadAddDays(L.start,LEAD_OFFSET[L.n]); }
 function leadSave(id,patch){ const before=S.lead[id]; S.lead[id]=Object.assign({n:0,st:"new",log:[]},S.lead[id],patch);
   if(!persist()){ if(before) S.lead[id]=before; else delete S.lead[id]; } render(); }
-function leadLog(id,kind,note){ const L=leadSt(id); return (L.log||[]).concat([{t:TODAY,k:kind,note:note||""}]); }
+/* the contact record: newest first. msg is the words he sent (emails) or what was said (his own note). */
+const leadContacts=id=>(leadSt(id).log||[]).filter(e=>e.c).sort((a,b)=>String(b.t).localeCompare(String(a.t)));
+function leadRecord(id,how,msg,date){
+  const L=leadSt(id), log=(L.log||[]).concat([{t:date||TODAY,k:how,c:1,msg:msg||""}]);
+  leadSave(id,{n:(L.n||0)+1,st:L.st==="deleted"?"active":"active",log});
+}
+const HOWS=[["call","Call"],["text","Text"],["email","Email"],["inperson","In person"],["note","Note"]];
+const howLabel=k=>(HOWS.find(x=>x[0]===k)||[0,k])[1];
+/* the intro email. Group changes one line and which brochure to attach. Written with Mitch 2026-10-18. */
+const LEAD_PM=new Set(["Property manager","Holiday rental/accommodation","Strata"]);
+const LEAD_BUILD=new Set(["Builder","Building inspector"]);
+function leadBrochure(l){ return LEAD_BUILD.has(l.group)?"Builders brochure (Lighthouse_Brochure_Builders.pdf)":"Property Managers brochure (Lighthouse_Brochure_Property_Managers.pdf)"; }
+const LEAD_SUBJECT="Lighthouse Pest Control, here if you need a hand";
+function leadEmail(l){
+  const line=LEAD_PM.has(l.group)?" Routine pest and termite inspections, tenant call-outs, whatever suits."
+    :LEAD_BUILD.has(l.group)?" Pre-construction termite barriers, slab treatments and certificates, quoted to the standard.":"";
+  return `Hi there,\n\nHope you're going well! I'm Mitch from Lighthouse Pest Control. We're a local family business (my dad Wayne started it back in 1986) and we're expanding, so I've got room to take on more work.\n\n`
+    +`I'm happy to take on as much or as little as you need, and I'm not trying to steal anyone else's work. If you've already got someone you're happy with, that's all good. I'm just here as a hand when you've got extra on, need a backup, or something's urgent.${line} We're working right through Christmas too, so I can help over the busy period.\n\n`
+    +`I've attached a quick brochure with what we do. If it's easier to chat, give me a ring on 0432 181 689.\n\nCheers, Mitch`;
+}
+function leadEmailSpec(l){
+  return {title:"Email "+l.business,sub:l.email||"",build:b=>{
+    b.appendChild(el("div","note","Mail can't attach files for me, so attach the "+leadBrochure(l)+" yourself before you send."));
+    b.appendChild(el("div","lbl","Message"));
+    const ta=el("textarea","msgbox"); ta.value=leadEmail(l); ta.style.minHeight="260px"; b.appendChild(ta);
+    b.appendChild(el("div","lbl","Subject"));
+    const subj=el("input","inp"); subj.value=LEAD_SUBJECT; b.appendChild(subj);
+    const hrefNow=()=>mailHref(l.email,subj.value,ta.value);
+    const go=document.createElement("a"); go.className="btn pri"; go.href=hrefNow();
+    go.innerHTML=ico(SVG.mail)+"<span>Open in Mail</span>";
+    const sync=()=>{ go.href=hrefNow(); }; ta.addEventListener("input",sync); subj.addEventListener("input",sync);
+    go.onclick=()=>{ const words=ta.value; setTimeout(()=>replaceSheet(leadSentSpec(l,"email",words)),700); };   // the link still fires
+    const row=el("div","btns"); row.appendChild(go); b.appendChild(row);
+  }};
+}
+function leadSentSpec(l,how,msg){
+  return {title:"Did that send?",sub:l.business,build:b=>{
+    b.appendChild(el("div","note","I can't see inside Mail, so tell me. It only goes on the record if you say yes."));
+    b.appendChild(el("div","quote",msg));
+    const row=el("div","btns");
+    row.appendChild(btn("Yes, I sent it",SVG.tick,"pri",()=>{ closeSheet(true); leadRecord(l.id,how,msg); toast("Logged."); }));
+    row.appendChild(btn("No",SVG.x,"",()=>closeSheet(true)));
+    b.appendChild(row);
+  }};
+}
+function leadLogSpec(l){
+  return {title:"Log contact",sub:l.business,build:b=>{
+    b.appendChild(el("div","note","For anything you did outside this page: a call, a text from your phone, a drop-in. Say what was said or sent."));
+    b.appendChild(el("div","lbl","How"));
+    const seg=el("div","ivgrid"); let how="call";
+    HOWS.forEach(([k,lab])=>{ const x=el("button","iv",lab); x.setAttribute("aria-pressed",String(k===how));
+      x.onclick=()=>{ how=k; [...seg.children].forEach(c=>c.setAttribute("aria-pressed",String(c===x))); }; seg.appendChild(x); });
+    b.appendChild(seg);
+    b.appendChild(el("div","lbl","What was said or sent"));
+    const ta=el("textarea","msgbox"); ta.placeholder="e.g. Spoke to Jess, she'll pass me on to the rentals team"; b.appendChild(ta);
+    b.appendChild(el("div","lbl","Date"));
+    const dp=el("input","inp"); dp.type="date"; dp.value=TODAY; b.appendChild(dp);
+    const row=el("div","btns");
+    row.appendChild(btn("Save",SVG.tick,"pri",()=>{ closeSheet(true); leadRecord(l.id,how,ta.value.trim(),dp.value||TODAY); toast("Logged."); }));
+    b.appendChild(row);
+  }};
+}
 function viewLeads(m){
   const h=el("div","sechead"); h.appendChild(el("h2",null,"Leads")); m.appendChild(h);
   if(!S.leads.length){
     m.appendChild(el("div","note","No lead list loaded yet. Ask Claude to build the lead list, then on the Mac open the Setup tab and tap Upload from this Mac."));
     return;
   }
-  m.appendChild(el("div","note","Your 20 touches today are at the top: follow-ups that are due first, then fresh leads in priority order. "
-    +"Ring or email, then tap Done to log the touch and set the next one. Progress is saved on this device."));
+  m.appendChild(el("div","note","A record of who you've contacted, how, and what you said or sent. The next "+LEAD_DAILY+" you haven't contacted are at the top, "
+    +"in priority order. Saved on this device."));
   const sb=el("input","search"); sb.type="search"; sb.placeholder="Search business, town or group"; sb.value=S.lq; m.appendChild(sb);
   const gs=[...new Set(S.leads.map(l=>l.group).filter(Boolean))];
   const sel=el("select","search"); sel.style.marginTop="8px";
@@ -1923,17 +1979,16 @@ function viewLeads(m){
   sel.value=S.lg; m.appendChild(sel);
   const host=el("div"); m.appendChild(host);
   const row=l=>{
-    const L=leadSt(l.id), nx=leadNext(l.id);
-    const w=el("div","row "+(L.st==="won"?"ok":nx&&nx<=TODAY?"over":"soon"));
+    const L=leadSt(l.id), cs=leadContacts(l.id), deleted=L.st==="deleted";
+    const w=el("div","row "+(cs.length?"ok":"soon"));
     w.style.flexWrap="wrap";
     const main=el("div","rowmain"), tx=el("div","rowtext");
     tx.appendChild(el("div","nm",l.business));
     tx.appendChild(el("div","pl",[l.contact,l.town,l.group].filter(Boolean).join(" · ")));
-    let st=L.st==="won"?"Won":L.st==="meeting"?"Meeting booked":L.st==="notyet"?"Not yet":L.st==="skip"?"Skipped":
-      L.n>=5?"Cadence finished, no reply":L.n?("Touch "+L.n+" of 5 done"+(nx?" · next "+LEAD_TOUCH[L.n].toLowerCase()+" "+(nx<=TODAY?"today":nice(nx)):"")):("New · touch 1: "+LEAD_TOUCH[0].toLowerCase());
-    tx.appendChild(el("div","mt",st+(l.client?" · ALREADY A CLIENT":"")));
-    if(l.notes) tx.appendChild(el("div","mt",l.notes.length>140?l.notes.slice(0,140)+"…":l.notes));
+    tx.appendChild(el("div","mt",(cs.length?("Contacted "+cs.length+(cs.length===1?" time":" times")+" · last "+howLabel(cs[0].k).toLowerCase()+" "+nice(cs[0].t))
+      :"Not contacted yet")+(l.client?" · ALREADY A CLIENT":"")));
     if(L.note) tx.appendChild(el("div","mt","Your note: "+L.note));
+    if(l.notes) tx.appendChild(el("div","mt",l.notes.length>140?l.notes.slice(0,140)+"…":l.notes));
     main.appendChild(tx); w.appendChild(main);
     const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
     const ph=String(l.phone||"").replace(/[^\d+]/g,"");
@@ -1941,50 +1996,42 @@ function viewLeads(m){
       const a=document.createElement("a"); a.className="iact"; a.href=href; a.innerHTML=ico(svgp); a.title=label; a.setAttribute("aria-label",label); return a; };
     const ia=el("div","acts");
     ia.appendChild(lk("tel:"+ph,SVG.phone,"Ring "+l.business,!!ph));
-    ia.appendChild(lk("mailto:"+(l.email||""),SVG.mail,"Email "+l.business,!!l.email));
     acts.appendChild(ia);
-    if(L.st==="deleted"){
-      acts.appendChild(btn("Bring back",null,"",()=>leadSave(l.id,{st:L.n?"active":"new",log:leadLog(l.id,"brought back")})));
+    if(deleted){
+      acts.appendChild(btn("Bring back",null,"",()=>leadSave(l.id,{st:L.n?"active":"new"})));
       w.appendChild(acts); return w;
     }
-    if(L.st==="won"||L.st==="skip"||L.st==="notyet"||L.st==="meeting"){
-      acts.appendChild(btn("Put back in play",null,"",()=>leadSave(l.id,{st:L.n?"active":"new"})));
-    } else {
-      if(L.n<5) acts.appendChild(btn("Done: "+LEAD_TOUCH[L.n],SVG.tick,"pri",()=>{
-        const start=L.start||TODAY;
-        leadSave(l.id,{n:L.n+1,st:"active",start,log:leadLog(l.id,"touch "+(L.n+1))}); }));
-      acts.appendChild(btn("Meeting booked",null,"",()=>leadSave(l.id,{st:"meeting",log:leadLog(l.id,"meeting booked")})));
-      acts.appendChild(btn("Won",null,"",()=>leadSave(l.id,{st:"won",log:leadLog(l.id,"won")})));
-      acts.appendChild(btn("Not yet",null,"",()=>leadSave(l.id,{st:"notyet",log:leadLog(l.id,"not yet")})));
-      acts.appendChild(btn("Skip",SVG.x,"",()=>leadSave(l.id,{st:"skip",log:leadLog(l.id,"skipped")})));
-    }
+    acts.appendChild(btn("Email",SVG.mail,"pri",()=>openSheet(leadEmailSpec(l)),!!l.email));
+    acts.appendChild(btn("Log contact",SVG.tick,"",()=>openSheet(leadLogSpec(l))));
     acts.appendChild(btn("Note",SVG.note,"",()=>{ const t=window.prompt("Note for "+l.business,L.note||""); if(t!==null) leadSave(l.id,{note:t.trim()}); }));
-    acts.appendChild(btn("Delete",SVG.x,"warn",()=>{ if(window.confirm("Delete "+l.business+" from your leads? You can bring it back from the Deleted section at the bottom.")) leadSave(l.id,{st:"deleted",log:leadLog(l.id,"deleted")}); }));
+    acts.appendChild(btn("Delete",SVG.bin,"warn",()=>{ if(window.confirm("Delete "+l.business+" from your leads? You can bring it back from the Deleted section at the bottom.")) leadSave(l.id,{st:"deleted"}); }));
     w.appendChild(acts);
+    if(cs.length){       // what you did and sent, newest first
+      const hist=el("div"); hist.style.cssText="flex-basis:100%;padding:0 12px 12px";
+      cs.slice(0,6).forEach(e=>{
+        const hh=el("div","hist"); hh.appendChild(el("div","hd",nice(e.t)+" · "+howLabel(e.k)));
+        if(e.msg) hh.appendChild(el("div","quote",e.msg)); hist.appendChild(hh); });
+      if(cs.length>6) hist.appendChild(el("div","note",(cs.length-6)+" older ones not shown."));
+      w.appendChild(hist);
+    }
     return w;
   };
   const draw=()=>{
     host.innerHTML="";
     const q=S.lq.trim().toLowerCase();
     let list=S.leads.filter(l=>(!S.lg||l.group===S.lg)&&(!q||(l.business+" "+(l.town||"")+" "+(l.group||"")).toLowerCase().includes(q)));
-    const live=l=>{ const s=leadSt(l.id).st; return s==="new"||s==="active"; };
+    const live=l=>leadSt(l.id).st!=="deleted";
     const open=list.filter(l=>live(l)&&!l.client);
-    const due=open.filter(l=>{ const x=leadNext(l.id); return x&&x<=TODAY; }).sort((a,b)=>leadNext(a.id).localeCompare(leadNext(b.id))||a.pri-b.pri);
-    const fresh=open.filter(l=>leadSt(l.id).n===0).sort((a,b)=>a.pri-b.pri||a.i-b.i);
-    const today=due.concat(fresh.slice(0,Math.max(0,LEAD_DAILY-due.length)));
-    const ids=new Set(today.map(l=>l.id));
-    const waiting=open.filter(l=>!ids.has(l.id));
-    const meet=list.filter(l=>leadSt(l.id).st==="meeting"), won=list.filter(l=>leadSt(l.id).st==="won");
-    const parked=list.filter(l=>["notyet","skip"].includes(leadSt(l.id).st));
+    const fresh=open.filter(l=>!leadContacts(l.id).length).sort((a,b)=>a.pri-b.pri||a.i-b.i);
+    const today=fresh.slice(0,LEAD_DAILY), waiting=fresh.slice(LEAD_DAILY);
+    const done=open.filter(l=>leadContacts(l.id).length).sort((a,b)=>leadContacts(b.id)[0].t.localeCompare(leadContacts(a.id)[0].t));
     const clients=list.filter(l=>l.client&&live(l));
     const cap=60, U=["lead","leads"];
-    section(host,"Today's touches",today.length,today.map(row),today.length?"":"Nothing due. Clear the search or pick another group.",U);
-    if(meet.length) section(host,"Meeting booked",meet.length,meet.map(row),null,U);
-    if(won.length) section(host,"Won",won.length,won.map(row),null,U);
-    section(host,"Still to come",waiting.length,waiting.slice(0,cap).map(row),null,U);
+    section(host,"Next to contact",today.length,today.map(row),today.length?"":"Everyone in this view has been contacted. Clear the search or pick another group.",U);
+    if(done.length) section(host,"Contacted",done.length,done.slice(0,cap).map(row),null,U);
+    if(waiting.length) section(host,"Still to come",waiting.length,waiting.slice(0,cap).map(row),null,U);
     if(waiting.length>cap) host.appendChild(el("div","note","Showing "+cap+" of "+waiting.length+". Search or pick a group to see the rest."));
-    if(parked.length) section(host,"Not yet or skipped",parked.length,parked.slice(0,cap).map(row),null,U);
-    const gone=list.filter(l=>leadSt(l.id).st==="deleted");
+    const gone=list.filter(l=>!live(l));
     if(gone.length) section(host,"Deleted",gone.length,gone.slice(0,cap).map(row),"Hidden from everything above. Bring one back if you deleted it by mistake.",U);
     if(clients.length) section(host,"Already your clients (ask for referrals, don't cold call)",clients.length,clients.slice(0,cap).map(row),null,U);
   };
