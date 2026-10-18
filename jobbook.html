@@ -751,7 +751,7 @@ function lines(){
   const out=[];
   for(const d of S.due){
     const o=S.ov[d.p]||{}, so=(o.svc&&o.svc[d.s])||{};
-    if(so.skip||S.gone[pOf(d.p).c]) continue;
+    if(so.skip||S.gone[pOf(d.p).c]||S.gone[d.p]) continue;      // a deleted client, or a deleted address (S.gone holds both)
     const interval=so.interval!==undefined?normIv(so.interval):normIv(d.iv);
     const lastDone=so.lastDone||d.ld;
     let nextDue;
@@ -902,11 +902,11 @@ async function setLogStatus(pid,id,st){
 }
 const uid=()=>"c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const unconfirmed=()=>{const out=[];
-  for(const pid in S.ov){ if(S.gone[pOf(pid).c]) continue;
+  for(const pid in S.ov){ if(S.gone[pOf(pid).c]||S.gone[pid]) continue;
     (S.ov[pid].log||[]).forEach(e=>{ if(e.st==="drafted") out.push({pid,e}); }); }
   return out.sort((a,b)=>(b.e.t||"").localeCompare(a.e.t||""));};
 const reminders=()=>{const out=[];
-  for(const pid in S.ov){ const r=S.ov[pid].remind; if(r&&r.on&&!S.gone[pOf(pid).c]) out.push({pid,r}); }
+  for(const pid in S.ov){ const r=S.ov[pid].remind; if(r&&r.on&&!S.gone[pOf(pid).c]&&!S.gone[pid]) out.push({pid,r}); }
   return out.sort((a,b)=>(a.r.on||"").localeCompare(b.r.on||""));};
 
 /* ---------- render ---------- */
@@ -1012,7 +1012,7 @@ const ONEOFF=new Set(["Mosquito Treatment","Wasp/Bee Treatment","Flea Treatment"
 function oneOffRows(L){
   const has=new Set(L.map(l=>pOf(l.pid).c)), cutoff=iso(new Date(Date.now()-730*DAY)), best=new Map();
   for(const pid in S.jobs){
-    const cid=pOf(pid).c; if(!cid||S.gone[cid]||has.has(cid)) continue;
+    const cid=pOf(pid).c; if(!cid||S.gone[cid]||S.gone[pid]||has.has(cid)) continue;
     const cl=S.clients[cid]; if(!cl||(cl.g||"active")!=="active") continue;
     for(const j of S.jobs[pid]){
       if(!j.d||j.d<cutoff) continue;
@@ -1698,11 +1698,35 @@ function contactHistory(b,clientId,pid){
     });
     if(timeline.length>16) b.appendChild(el("div","note",(timeline.length-16)+" older ones not shown."));
 }
+/* Deleting an address (a property manager stops looking after it) hides that address only, in S.gone under
+   its property id. Same rules as deleting a client: this device only, survives a refresh, Xero is untouched. */
+function propDeleteSpec(pid){
+  const p=S.props[pid]||{l:"this address"};
+  return {title:"Delete "+(p.l||"this address")+"?",sub:"takes just this address off the Job Book",build:b=>{
+    b.appendChild(el("div","note","It comes off your due list and reminders. The client and their other addresses stay. "
+      +"Xero isn't touched, and you can bring it back from the client's page."));
+    const row=el("div","btns");
+    row.appendChild(btn("Yes, delete it",SVG.bin,"warn",()=>{
+      S.gone[pid]={t:new Date().toISOString()};
+      if(persist()){ closeSheet(); drawSheet(); render(); toast("Address deleted."); }
+      else { delete S.gone[pid]; render(); }
+    }));
+    row.appendChild(btn("Cancel",null,"",()=>closeSheet()));
+    b.appendChild(row);
+  }};
+}
+function restoreProp(pid){
+  const was=S.gone[pid]; delete S.gone[pid];
+  if(persist()){ drawSheet(); render(); toast("Address is back."); } else { S.gone[pid]=was; render(); }
+}
 function openClient(id){
-  const props=Object.keys(S.props).filter(p=>S.props[p].c===id);
-  if(props.length===1) return openProp(props[0]);
+  const all=Object.keys(S.props).filter(p=>S.props[p].c===id);
+  if(all.length===1) return openProp(all[0]);
   const c=S.clients[id];
-  openSheet({title:c.n, sub:props.length+" properties", build:b=>{
+  const spec={title:c.n, sub:"", build:b=>{
+    const props=all.filter(p=>!S.gone[p]), hidden=all.filter(p=>S.gone[p]);
+    spec.sub=props.length+" propert"+(props.length===1?"y":"ies");
+    const sb=document.querySelector(".shhead .sb"); if(sb) sb.textContent=spec.sub;
     kv(b,"Phone",c.p||"-"); kv(b,"Email",c.e||"-");
     kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||"-");
     const acts=el("div","btns");
@@ -1725,11 +1749,27 @@ function openClient(id){
       tx.appendChild(el("div","mt",(lj?visitLabel(lj.s.map(x=>x.s))+" · "+nice(lj.d)+" · ":"")+(p.n||0)+" job"+(p.n===1?"":"s")));
       main.appendChild(tx); hit.appendChild(main);
       hit.onclick=()=>openProp(pid);
-      r.appendChild(hit); b.appendChild(r);
+      r.appendChild(hit);
+      const ac=el("div","acts"), del=el("button","iact"); del.innerHTML=ico(SVG.bin);
+      del.title="Delete this address"; del.setAttribute("aria-label","Delete "+(p.l||"this address"));
+      del.onclick=e=>{ e.stopPropagation(); openSheet(propDeleteSpec(pid)); };
+      ac.appendChild(del); r.appendChild(ac);
+      b.appendChild(r);
     });
+    if(hidden.length){
+      b.appendChild(el("div","lbl","Deleted addresses"));
+      hidden.forEach(pid=>{
+        const r=el("div","row"), tx=el("div","rowtext"); tx.style.padding="10px 12px";
+        tx.appendChild(el("div","nm",S.props[pid].l||"(no address)"));
+        r.appendChild(tx);
+        const ac=el("div","acts"); ac.appendChild(btn("Bring back",SVG.tick,"",()=>restoreProp(pid)));
+        r.appendChild(ac); b.appendChild(r);
+      });
+    }
     contactHistory(b,id,null);
     deleteBtn(b,id);
-  }});
+  }};
+  openSheet(spec);
 }
 /* ---------- clients ---------- */
 function viewClients(m){
@@ -1738,7 +1778,7 @@ function viewClients(m){
   const chips=el("div","chips");
   [["active","Active"],["lapsed","Haven't seen in a while"],["barrier","Barriers"],
    ["cold","Cold list"],["regular","Old regulars"],["*","Everyone"]]
-   .concat(Object.keys(S.gone).length?[["gone","Deleted ("+Object.keys(S.gone).length+")"]]:[])
+   .concat(Object.keys(S.gone).filter(k=>S.clients[k]).length?[["gone","Deleted ("+Object.keys(S.gone).filter(k=>S.clients[k]).length+")"]]:[])
    .forEach(([k,lab])=>{
     const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.grp===k));
     c.onclick=()=>{S.grp=k; render();}; chips.appendChild(c); });
