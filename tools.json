@@ -1,8 +1,55 @@
-{"tools":[
- {"id":"capture","name":"Inspection Capture","does":"Termite inspection on site","url":"index.html","field":true,"status":"Working","todo":[]},
- {"id":"calendar","name":"Job Calendar","does":"Who is where, when","url":"calendar.html","field":true,"status":"Working","todo":["Mark done to Xero draft invoice","Google quota caps when trial ends (about 4 Jan 2027)"]},
- {"id":"jobbook","name":"Job Book","does":"Repeat work, ring list, leads","url":"jobbook.html","field":true,"status":"Needs work","todo":["Cloud sync phone and laptop","Morning due in 7 days task"]},
- {"id":"sds","name":"SDS Sheets","does":"Safety data sheets, works offline","url":"sds/index.html","field":true,"status":"Working","todo":[]},
- {"id":"proposal","name":"Proposals","does":"Termite management proposals","url":"proposal.html","field":true,"status":"Working","todo":[]},
- {"id":"records","name":"Service Records","does":"Pesticide use records","url":"records.html","field":true,"status":"Working","todo":[]}
-]}
+{
+ "tools": [
+  {
+   "id": "capture",
+   "name": "Inspection Capture",
+   "does": "Termite inspection on site",
+   "url": "index.html",
+   "field": true,
+   "status": "Working",
+   "todo": []
+  },
+  {
+   "id": "calendar",
+   "name": "Job Calendar",
+   "does": "Who is where, when",
+   "url": "calendar.html",
+   "field": true,
+   "status": "Working",
+   "todo": [
+    "Mark done to Xero draft invoice",
+    "Google quota caps when trial ends (about 4 Jan 2027)"
+   ]
+  },
+  {
+   "id": "jobbook",
+   "name": "Job Book",
+   "does": "Repeat work, ring list, leads",
+   "url": "jobbook.html",
+   "field": true,
+   "status": "Needs work",
+   "todo": [
+    "Cloud sync phone and laptop",
+    "Morning due in 7 days task"
+   ]
+  },
+  {
+   "id": "sds",
+   "name": "SDS Sheets",
+   "does": "Safety data sheets, works offline",
+   "url": "sds/index.html",
+   "field": true,
+   "status": "Working",
+   "todo": []
+  },
+  {
+   "id": "records",
+   "name": "Service Records",
+   "does": "Pesticide use records",
+   "url": "records.html",
+   "field": true,
+   "status": "Working",
+   "todo": []
+  }
+ ]
+}
