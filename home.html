@@ -11,6 +11,46 @@ h1{font-size:1.4rem;margin:18px 0 14px}.g{display:grid;grid-template-columns:1fr
 .b{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:110px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;box-shadow:0 1px 2px rgba(20,32,30,.06)}
 .b b{font-size:1.05rem;color:var(--deep)}.b span{font-size:.9rem;color:var(--ink2)}.b:active{background:#EDF0EC}
 @media(min-width:700px){.g{grid-template-columns:repeat(3,1fr)}}
+.sec{margin:0 0 18px}.sec h2{font-size:.95rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin:0 0 8px}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px}.row{padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
+.row b{display:block}.row small{color:var(--ink2);font-size:.9rem}.flag{display:inline-block;margin-top:4px;padding:1px 10px;border-radius:99px;font-size:.8rem;font-weight:600;background:#F8F0DC;color:#8C6314}.none{padding:10px 0;color:var(--ink2)}
+.sec a{color:var(--deep);font-weight:600}
 </style></head><body>
-<h1>Lighthouse Pest Control</h1><div class="g"><a class="b" href="index.html"><b>Inspection Capture</b><span>Termite inspection on site</span></a><a class="b" href="calendar.html"><b>Job Calendar</b><span>Who is where, when</span></a><a class="b" href="jobbook.html"><b>Job Book</b><span>Repeat work, ring list, leads</span></a><a class="b" href="sds/index.html"><b>SDS Sheets</b><span>Safety data sheets, works offline</span></a><a class="b" href="proposal.html"><b>Proposals</b><span>Termite management proposals</span></a><a class="b" href="records.html"><b>Service Records</b><span>Pesticide use records</span></a></div>
+<h1>Lighthouse Pest Control</h1>
+<div class="sec" id="today"><h2>Today</h2><div class="box" id="tbox"><div class="none">Checking...</div></div></div><div class="g"><a class="b" href="index.html"><b>Inspection Capture</b><span>Termite inspection on site</span></a><a class="b" href="calendar.html"><b>Job Calendar</b><span>Who is where, when</span></a><a class="b" href="jobbook.html"><b>Job Book</b><span>Repeat work, ring list, leads</span></a><a class="b" href="sds/index.html"><b>SDS Sheets</b><span>Safety data sheets, works offline</span></a><a class="b" href="proposal.html"><b>Proposals</b><span>Termite management proposals</span></a><a class="b" href="records.html"><b>Service Records</b><span>Pesticide use records</span></a></div>
+<script src="lpc-config.js?v=2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
+<script>
+/* Today's jobs, read only. Uses the login Job Calendar already made on this site (same address, same saved session).
+   No login here, no data in the page itself: jobs come from the private database after sign-in. Never writes anything. */
+(function(){
+  var box=document.getElementById("tbox");
+  function say(t,link){box.textContent="";var d=document.createElement("div");d.className="none";d.textContent=t;if(link){d.appendChild(document.createTextNode(" "));var a=document.createElement("a");a.href="calendar.html";a.textContent="Open Job Calendar";d.appendChild(a);}box.appendChild(d);}
+  function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  function row(j,flag){var r=document.createElement("div");r.className="row";var b=document.createElement("b");
+    b.textContent=((j.start_time||"").slice(0,5)+" "+((j.client&&j.client.name)||"")).trim()||"Job";r.appendChild(b);
+    var s=document.createElement("small");s.textContent=[j.service_type,j.address].filter(Boolean).join(" · ");r.appendChild(s);
+    if(flag){var f=document.createElement("div");var sp=document.createElement("span");sp.className="flag";sp.textContent=flag;f.appendChild(sp);r.appendChild(f);}return r;}
+  async function go(){
+    try{
+      var cfg=window.LPC_SUPABASE;
+      if(!cfg||!window.supabase){say("Today's jobs need a connection.");return;}
+      var sb=window.supabase.createClient(cfg.url,cfg.anonKey);
+      var ses=(await sb.auth.getSession()).data.session;
+      if(!ses){say("Sign in once on the calendar and today's jobs show here.",true);return;}
+      var now=new Date(),t=iso(now),back=new Date(now.getTime()-14*864e5);
+      var r=await sb.from("jobs").select("id,job_date,start_time,service_type,address,status,client:clients(name)")
+        .gte("job_date",iso(back)).lte("job_date",t).neq("status","cancelled").order("job_date").order("start_time");
+      if(r.error){say("Couldn't load jobs. Open the calendar to check your sign in.",true);return;}
+      var jobs=r.data||[],today=jobs.filter(function(j){return j.job_date===t;});
+      var late=jobs.filter(function(j){return j.job_date<t&&j.status==="booked";});
+      box.textContent="";
+      if(!today.length){var n=document.createElement("div");n.className="none";n.textContent="No jobs booked today.";box.appendChild(n);}
+      today.forEach(function(j){box.appendChild(row(j,j.status==="done"?"Done":""));});
+      late.forEach(function(j){box.appendChild(row(j,"Past job, not marked done ("+j.job_date+")"));});
+    }catch(e){say("Couldn't load today's jobs.",true);}
+  }
+  go();
+})();
+</script>
 </body></html>
