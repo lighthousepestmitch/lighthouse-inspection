@@ -4,10 +4,12 @@
 <meta name="theme-color" content="#0E4F54"><meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Lighthouse"><link rel="manifest" href="home.webmanifest">
 <title>Lighthouse Tools</title>
+<link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
+<link rel="apple-touch-icon" href="logo/icon-180.png">
 <style>
 :root{--bg:#F6F7F5;--surface:#fff;--ink:#14201E;--ink2:#4B5B57;--line:#DCE1DD;--deep:#0E4F54}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Public Sans",system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 16px 24px}
-h1{font-size:1.4rem;margin:18px 0 14px}.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+h1{font-size:1.4rem;margin:18px 0 16px;line-height:0}.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .b{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:110px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;box-shadow:0 1px 2px rgba(20,32,30,.06)}
 .b b{font-size:1.05rem;color:var(--deep)}.b span{font-size:.9rem;color:var(--ink2)}.b:active{background:#EDF0EC}
 @media(min-width:700px){.g{grid-template-columns:repeat(3,1fr)}}
@@ -16,7 +18,7 @@ h1{font-size:1.4rem;margin:18px 0 14px}.g{display:grid;grid-template-columns:1fr
 .row b{display:block}.row small{color:var(--ink2);font-size:.9rem}.flag{display:inline-block;margin-top:4px;padding:1px 10px;border-radius:99px;font-size:.8rem;font-weight:600;background:#F8F0DC;color:#8C6314}.none{padding:10px 0;color:var(--ink2)}
 .sec a{color:var(--deep);font-weight:600}
 </style></head><body>
-<h1>Lighthouse Pest Control</h1>
+<h1><img src="logo/logo-horizontal.svg" alt="Lighthouse Pest Control" style="display:block;height:46px;width:auto"></h1>
 <div class="sec" id="today"><h2>Today</h2><div class="box" id="tbox"><div class="none">Checking...</div></div></div><div class="g"><a class="b" href="index.html"><b>Inspection Capture</b><span>Termite inspection on site</span></a><a class="b" href="calendar.html"><b>Job Calendar</b><span>Who is where, when</span></a><a class="b" href="jobbook.html"><b>Job Book</b><span>Repeat work, ring list, leads</span></a><a class="b" href="sds/index.html"><b>SDS Sheets</b><span>Safety data sheets, works offline</span></a><a class="b" href="proposal.html"><b>Proposals</b><span>Termite management proposals</span></a><a class="b" href="records.html"><b>Service Records</b><span>Pesticide use records</span></a></div>
 <script src="lpc-config.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>

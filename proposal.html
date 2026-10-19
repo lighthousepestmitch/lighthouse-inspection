@@ -6,10 +6,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0E4F54">
 <title>Lighthouse Proposal Builder</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230E4F54'/%3E%3Cpath d='M13 26 15 10h2l2 16zM14 7h4l-2-3z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap">
+<link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
+<link rel="apple-touch-icon" href="logo/icon-180.png">
 <style>
 /* Look is a placeholder (same palette as the other pages). Mitch brings the design later. */
 :root{
@@ -123,11 +124,12 @@ summary{padding:11px 0;cursor:pointer}
 .tl,.chip,.btn,.jump{-webkit-tap-highlight-color:transparent}
 @media(max-width:480px){main{padding:8px 8px 80px}section{padding:12px 10px}header{padding-left:10px;padding-right:10px}header h1{font-size:18px}}
 .limrow .txt{flex:1}
+.lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
 </style>
 </head>
 <body>
 <header>
-  <h1>Proposal Builder</h1>
+  <span style="display:flex;align-items:center;gap:10px;min-width:0"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><h1>Proposal Builder</h1></span>
   <span class="hbtns"><button class="hbtn hide" id="hdrWarn" type="button" aria-expanded="false" aria-controls="fixPanel"></button><button class="hbtn" id="btnNewJob" type="button">New job</button></span>
 </header>
 <main>

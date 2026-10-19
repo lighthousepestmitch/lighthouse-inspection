@@ -11,6 +11,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap">
+<link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
+<link rel="apple-touch-icon" href="logo/icon-180.png">
 <style>
 /* Same look as jobbook.html: same variables, header, chips, buttons. */
 :root{
@@ -176,13 +178,14 @@ select.inp{appearance:none;-webkit-appearance:none}
   .rec .thumbs .thumb button{display:none}
   .rec .thumbs{page-break-inside:avoid}
 }
+.lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <div class="brand"><h1>Service records</h1><span class="sub">Lighthouse Pest</span></div>
+    <div class="brand"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><h1>Service records</h1><span class="sub">Lighthouse Pest</span></div>
     <div class="tabs">
       <button data-a="tab" data-v="new" id="t-new" aria-current="true">New</button>
       <button data-a="tab" data-v="records" id="t-records">Records</button>

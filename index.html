@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap">
 
+<link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
+<link rel="apple-touch-icon" href="logo/icon-180.png">
 <style>
   :root{
     --paper:#F6F7F5; --raised:#FFFFFF; --sunk:#EDF0EC;
@@ -257,13 +259,14 @@
   .nowtag{font-size:.62rem;background:var(--timber-soft);color:var(--timber);border-radius:6px;padding:1px 6px;font-weight:700;margin-left:6px;vertical-align:middle}
   .jobdel{width:42px;flex:none;border:1px solid var(--edge);background:var(--raised);border-radius:10px;color:var(--muted);font-size:1.2rem;cursor:pointer}
   .jobdel.armed{background:var(--find);color:#fff;border-color:var(--find);font-size:.76rem;font-weight:700;width:70px}
+.lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <div class="hrow">
-      <div class="htitle">Inspection Capture<small id="hsub">New regular termite inspection</small></div>
+      <div style="display:flex;align-items:center;gap:10px"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><div class="htitle">Inspection Capture<small id="hsub">New regular termite inspection</small></div></div>
       <div class="prog"><span id="pcount">0/14</span><span class="bar"><i id="pbar"></i></span></div>
     </div>
     <nav class="jump" id="jump"></nav>
