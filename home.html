@@ -7,27 +7,91 @@
 <link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
 <link rel="apple-touch-icon" href="logo/icon-180.png">
 <style>
-:root{--bg:#F6F7F5;--surface:#fff;--ink:#14201E;--ink2:#4B5B57;--line:#DCE1DD;--deep:#0E4F54}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 "Public Sans",system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 16px 24px}
-h1{font-size:1.4rem;margin:18px 0 16px;line-height:0}.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.b{display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:110px;padding:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;box-shadow:0 1px 2px rgba(20,32,30,.06)}
-.b b{font-size:1.05rem;color:var(--deep)}.b span{font-size:.9rem;color:var(--ink2)}.b:active{background:#EDF0EC}
-@media(min-width:700px){.g{grid-template-columns:repeat(3,1fr)}}
-.sec{margin:0 0 18px}.sec h2{font-size:.95rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink2);margin:0 0 8px}
-.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px}.row{padding:10px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}
-.row b{display:block}.row small{color:var(--ink2);font-size:.9rem}.flag{display:inline-block;margin-top:4px;padding:1px 10px;border-radius:99px;font-size:.8rem;font-weight:600;background:#F8F0DC;color:#8C6314}.none{padding:10px 0;color:var(--ink2)}
-.sec a{color:var(--deep);font-weight:600}
+:root{--bg:#F6F7F5;--surface:#fff;--ink:#14201E;--ink2:#4B5B57;--line:#DCE1DD;--deep:#0E4F54;--soon:#8C6314;--soonBg:#F8F0DC}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.35 "Public Sans",system-ui,-apple-system,sans-serif;padding:env(safe-area-inset-top) 16px calc(14px + env(safe-area-inset-bottom));min-height:100dvh;display:flex;flex-direction:column;gap:12px}
+h1{margin:14px 0 0;line-height:0}h1 img{display:block;height:40px;width:auto}
+button{font:inherit;color:inherit}
+.strip{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:56px;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(20,32,30,.06)}
+.strip b{font-size:1rem}.strip small{display:block;color:var(--ink2);font-size:.85rem}.strip .chev{color:var(--deep);font-weight:700;font-size:1.3rem;flex:none}
+.flag{display:inline-block;padding:1px 10px;border-radius:99px;font-size:.8rem;font-weight:600;background:var(--soonBg);color:var(--soon)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.b{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:84px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;box-shadow:0 1px 2px rgba(20,32,30,.06)}
+.b b{font-size:1.05rem;color:var(--deep)}.b span{font-size:.85rem;color:var(--ink2)}.b:active,.strip:active{background:#EDF0EC}
+@media(min-width:700px){.g{grid-template-columns:repeat(3,1fr)}body{max-width:760px;margin:0 auto}}
+/* pop-up sheets */
+.shade{position:fixed;inset:0;background:rgba(20,32,30,.45);display:none;z-index:20}
+.shade.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-height:78dvh;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:14px 16px calc(16px + env(safe-area-inset-bottom));z-index:21;display:none;box-shadow:0 -6px 24px rgba(20,32,30,.2)}
+.sheet.on{display:block}
+.sheet h2{margin:0 0 6px;font-size:1.1rem}
+.sheet .x{float:right;min-width:48px;min-height:48px;margin:-8px -8px 0 0;border:0;background:none;font-size:1.6rem;color:var(--ink2)}
+.sheet .row{padding:10px 0;border-bottom:1px solid var(--line)}.sheet .row:last-child{border-bottom:0}
+.sheet .row b{display:block}.sheet .row small{color:var(--ink2);font-size:.9rem}
+.sheet a{color:var(--deep);font-weight:600}
+label.t{display:flex;gap:12px;align-items:center;min-height:52px;border-bottom:1px solid var(--line);cursor:pointer}
+label.t:last-of-type{border-bottom:0}
+label.t input{width:26px;height:26px;accent-color:var(--deep);flex:none}
+label.t.done span{text-decoration:line-through;color:var(--ink2)}
+.note{color:var(--ink2);font-size:.85rem;margin-top:6px}
 </style></head><body>
-<h1><img src="logo/logo-horizontal.svg" alt="Lighthouse Pest Control" style="display:block;height:46px;width:auto"></h1>
-<div class="sec" id="today"><h2>Today</h2><div class="box" id="tbox"><div class="none">Checking...</div></div></div><div class="g"><a class="b" href="index.html"><b>Inspection Capture</b><span>Termite inspection on site</span></a><a class="b" href="calendar.html"><b>Job Calendar</b><span>Who is where, when</span></a><a class="b" href="jobbook.html"><b>Job Book</b><span>Repeat work, ring list, leads</span></a><a class="b" href="sds/index.html"><b>SDS Sheets</b><span>Safety data sheets, works offline</span></a><a class="b" href="proposal.html"><b>Proposals</b><span>Termite management proposals</span></a><a class="b" href="records.html"><b>Service Records</b><span>Pesticide use records</span></a></div>
+<h1><img src="logo/logo-horizontal.svg" alt="Lighthouse Pest Control"></h1>
+
+<button class="strip" id="todayBtn" type="button" aria-haspopup="dialog"><span><b id="tline">Today's jobs</b><small id="tsub">Checking...</small></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+
+<div class="g">
+<a class="b" href="index.html"><b>Inspection Capture</b><span>Termite inspection</span></a>
+<a class="b" href="calendar.html"><b>Job Calendar</b><span>Who is where, when</span></a>
+<a class="b" href="jobbook.html"><b>Job Book</b><span>Ring list, repeat work</span></a>
+<a class="b" href="sds/index.html"><b>SDS Sheets</b><span>Safety data sheets</span></a>
+<a class="b" href="proposal.html"><b>Proposals</b><span>Termite proposals</span></a>
+<a class="b" href="records.html"><b>Service Records</b><span>Pesticide records</span></a>
+</div>
+
+<button class="strip" id="eodBtn" type="button" aria-haspopup="dialog"><span><b>End of day check</b><small id="eodsub">4 things to tick</small></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+
+<div class="shade" id="shade"></div>
+<div class="sheet" id="jobsSheet" role="dialog" aria-label="Today's jobs"><button class="x" type="button" data-close aria-label="Close">&times;</button><h2>Today's jobs</h2><div id="tbox"></div></div>
+<div class="sheet" id="eodSheet" role="dialog" aria-label="End of day check"><button class="x" type="button" data-close aria-label="Close">&times;</button><h2>End of day check</h2><div id="eodbox"></div><div class="note">Clears itself each morning.</div></div>
+
 <script src="lpc-config.js?v=2"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
 <script>
+/* Sheets */
+(function(){
+  var shade=document.getElementById("shade"),open=null;
+  function show(id){hide();open=document.getElementById(id);open.classList.add("on");shade.classList.add("on");}
+  function hide(){if(open)open.classList.remove("on");shade.classList.remove("on");open=null;}
+  document.getElementById("todayBtn").onclick=function(){show("jobsSheet");};
+  document.getElementById("eodBtn").onclick=function(){show("eodSheet");};
+  shade.onclick=hide;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-close]"),function(b){b.onclick=hide;});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape")hide();});
+})();
+
+/* End of day ticks: on this phone only, clears each morning */
+(function(){
+  var ITEMS=[["reports","Reports finished in Mira (drafts until you say publish)"],["invoices","Invoices sent for today's jobs"],["reviews","Review asks sent"],["tomorrow","Tomorrow's jobs and addresses checked"]];
+  function day(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  var st={};try{var e=JSON.parse(localStorage.getItem("lpc-home-eod")||"{}");if(e.day===day())st=e.t||{};}catch(x){}
+  var box=document.getElementById("eodbox"),sub=document.getElementById("eodsub");
+  function count(){var n=ITEMS.filter(function(i){return st[i[0]];}).length;sub.textContent=n===ITEMS.length?"All done":(ITEMS.length-n)+" still to tick";}
+  ITEMS.forEach(function(it){
+    var l=document.createElement("label");l.className="t"+(st[it[0]]?" done":"");
+    var c=document.createElement("input");c.type="checkbox";c.checked=!!st[it[0]];
+    var s=document.createElement("span");s.textContent=it[1];
+    c.onchange=function(){st[it[0]]=c.checked;l.classList.toggle("done",c.checked);try{localStorage.setItem("lpc-home-eod",JSON.stringify({day:day(),t:st}));}catch(x){}count();};
+    l.appendChild(c);l.appendChild(s);box.appendChild(l);
+  });
+  count();
+})();
+
 /* Today's jobs, read only. Uses the login Job Calendar already made on this site (same address, same saved session).
    No login here, no data in the page itself: jobs come from the private database after sign-in. Never writes anything. */
 (function(){
-  var box=document.getElementById("tbox");
-  function say(t,link){box.textContent="";var d=document.createElement("div");d.className="none";d.textContent=t;if(link){d.appendChild(document.createTextNode(" "));var a=document.createElement("a");a.href="calendar.html";a.textContent="Open Job Calendar";d.appendChild(a);}box.appendChild(d);}
+  var box=document.getElementById("tbox"),line=document.getElementById("tline"),sub=document.getElementById("tsub");
+  function link(){var d=document.createElement("div");d.className="note";var a=document.createElement("a");a.href="calendar.html";a.textContent="Open Job Calendar";d.appendChild(a);return d;}
+  function say(l,s,more){line.textContent=l;sub.textContent=s;box.textContent="";var d=document.createElement("div");d.className="row";d.textContent=more||s;box.appendChild(d);box.appendChild(link());}
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   function row(j,flag){var r=document.createElement("div");r.className="row";var b=document.createElement("b");
     b.textContent=((j.start_time||"").slice(0,5)+" "+((j.client&&j.client.name)||"")).trim()||"Job";r.appendChild(b);
@@ -36,21 +100,25 @@ h1{font-size:1.4rem;margin:18px 0 16px;line-height:0}.g{display:grid;grid-templa
   async function go(){
     try{
       var cfg=window.LPC_SUPABASE;
-      if(!cfg||!window.supabase){say("Today's jobs need a connection.");return;}
+      if(!cfg||!window.supabase){say("Today's jobs","No connection");return;}
       var sb=window.supabase.createClient(cfg.url,cfg.anonKey);
       var ses=(await sb.auth.getSession()).data.session;
-      if(!ses){say("Sign in once on the calendar and today's jobs show here.",true);return;}
+      if(!ses){say("Today's jobs","Sign in once on the calendar to see them here","Sign in once on the calendar and today's jobs show here.");return;}
       var now=new Date(),t=iso(now),back=new Date(now.getTime()-14*864e5);
       var r=await sb.from("jobs").select("id,job_date,start_time,service_type,address,status,client:clients(name)")
         .gte("job_date",iso(back)).lte("job_date",t).neq("status","cancelled").order("job_date").order("start_time");
-      if(r.error){say("Couldn't load jobs. Open the calendar to check your sign in.",true);return;}
+      if(r.error){say("Today's jobs","Couldn't load. Open the calendar to check your sign in");return;}
       var jobs=r.data||[],today=jobs.filter(function(j){return j.job_date===t;});
       var late=jobs.filter(function(j){return j.job_date<t&&j.status==="booked";});
+      var nextJ=today.filter(function(j){return j.status!=="done";})[0];
+      line.textContent=today.length?(today.length+(today.length===1?" job today":" jobs today")):"No jobs today";
+      sub.textContent=(nextJ?"Next "+(nextJ.start_time||"").slice(0,5)+" "+((nextJ.client&&nextJ.client.name)||""):(today.length?"All done":"Enjoy the quiet"))+(late.length?" · "+late.length+" past, not marked done":"");
       box.textContent="";
-      if(!today.length){var n=document.createElement("div");n.className="none";n.textContent="No jobs booked today.";box.appendChild(n);}
+      if(!today.length){var n=document.createElement("div");n.className="row";n.textContent="No jobs booked today.";box.appendChild(n);}
       today.forEach(function(j){box.appendChild(row(j,j.status==="done"?"Done":""));});
       late.forEach(function(j){box.appendChild(row(j,"Past job, not marked done ("+j.job_date+")"));});
-    }catch(e){say("Couldn't load today's jobs.",true);}
+      box.appendChild(link());
+    }catch(e){say("Today's jobs","Couldn't load");}
   }
   go();
 })();
