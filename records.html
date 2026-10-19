@@ -33,7 +33,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;
-  padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+  padding-bottom:calc(var(--barh,150px) + 16px + env(safe-area-inset-bottom))}   /* --barh = the height of the sticky bottom bar, set by fitBar() */
 h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
 .mono{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -76,6 +76,8 @@ textarea.inp{min-height:96px;resize:vertical}
 select.inp{appearance:none;-webkit-appearance:none}
 .search{margin-top:6px}
 .grid3{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px}
+.grid3>div{min-width:0}
+.grid3 .inp{min-width:0}   /* date and time boxes have a minimum width of their own: without this the Finish box runs off the right edge at 390px */
 .grid3 label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;display:block;margin-bottom:4px}
 .amt{display:flex;gap:8px;align-items:center}
 .amt .inp{flex:1;min-width:0}
@@ -136,7 +138,10 @@ select.inp{appearance:none;-webkit-appearance:none}
 #savebar:empty{display:none}
 .qbar{max-width:880px;margin:0 auto}
 .qrow{display:flex;gap:7px;align-items:center}
-.qrow .chip{min-height:44px;padding:6px 11px;font-size:13px}
+.qrow .chip{min-height:48px;padding:6px 11px;font-size:13px}
+.qlast{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.qlast .chip{min-height:48px;padding:6px 14px;font-size:14px}
+.qlast .small{flex:1;min-width:0;line-height:1.3}
 .qphoto{position:relative;flex:0 0 auto;width:48px;height:48px;border:1px solid var(--line2);border-radius:12px;background:var(--surface2);font-size:21px}
 .qphoto .bd{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;border-radius:10px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;line-height:19px;padding:0 4px}
 .qsave{flex:1;min-width:84px;height:48px;padding:0 10px;font-size:17px}
@@ -151,7 +156,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 .spin{width:19px;height:19px;border:2px solid var(--line2);border-top-color:var(--deep);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-4px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-.boot{display:grid;place-items:center;min-height:60vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+.boot{display:grid;place-items:center;min-height:60vh;min-height:60dvh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
 .fl{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin:10px 0 4px}
 .custcard .inp{margin-bottom:2px}
 .custcard .btns{margin:12px 0 0}
@@ -177,15 +182,39 @@ select.inp{appearance:none;-webkit-appearance:none}
   .rec .thumbs .thumb{width:60px;height:60px}
   .rec .thumbs .thumb button{display:none}
   .rec .thumbs{page-break-inside:avoid}
+  .rec .printlogo{display:block;height:34px;width:auto;margin:0 0 8px}
 }
 .lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
+.printlogo{display:none}
+/* the LPC badge is the Home button: 44px hit area from padding, pulled back with a negative margin so the header does not grow */
+.lpchome{flex:none;align-self:center;display:block;padding:9px;margin:-9px;border-radius:12px;-webkit-tap-highlight-color:transparent}
+.stackedlogo{display:block;height:56px;width:auto;margin:2px auto 12px}
+
+/* "Recent customers" chips, the one-line job summary, compact product rows */
+.recent .chips{margin-top:2px}
+.chip.rchip{min-height:48px}
+.chip.rchip .small{margin-left:4px}
+.svcline{display:flex;align-items:center;gap:10px;min-height:56px;margin-top:14px;padding:6px 8px 6px 14px;border:1px solid var(--line2);
+  background:var(--surface);border-radius:13px;box-shadow:var(--raise)}
+.svcline .t{flex:1;min-width:0;font-weight:700;font-size:15px;line-height:1.3}
+.svcline .mic{min-height:44px;padding:0 16px}
+.sechead .mic{min-height:40px;padding:0 14px;align-self:center}
+.prow{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;padding:6px 12px;margin-bottom:8px;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--raise)}
+.prow .nm{flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .am{flex:0 0 auto;max-width:48%;font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .cv{flex:0 0 auto;color:var(--ink3)}
+.pbtns{display:flex;gap:10px;flex:0 0 auto}
+.pbtns .mic{min-height:40px;padding:0 14px}
+.need{color:var(--over);font-size:13px;font-weight:600;margin:6px 0 0}
+[data-bad],#errs{scroll-margin-top:106px}      /* the header is sticky: land just under it */
 </style>
 </head>
 <body>
 
 <header>
   <div class="wrap">
-    <div class="brand"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><h1>Service records</h1><span class="sub">Lighthouse Pest</span></div>
+    <div class="brand"><a class="lpchome" href="home.html" aria-label="Home"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"></a><h1>Service records</h1><span class="sub">Lighthouse Pest</span></div>
     <div class="tabs">
       <button data-a="tab" data-v="new" id="t-new" aria-current="true">New</button>
       <button data-a="tab" data-v="records" id="t-records">Records</button>
@@ -228,6 +257,8 @@ const S={clients:{},props:{},jobs:{},services:[],chem:null,prefs:{},records:[],i
 let F=null;          // the form being filled in
 let W=null;          // weather state for the form
 let UI={};           // little UI toggles (edit mode, add-product box...)
+let BASE="";         // snapshot of the form the last time it was "clean" (customer just picked, record loaded, or saved)
+let LEAVING=false;   // set once the badge's "Leave without saving?" has been answered yes, so the browser doesn't ask a second time
 
 /* ---------- storage ----------
    Small settings (product lists, amounts, mix rates) live in localStorage.
@@ -267,7 +298,7 @@ const dbPut=r=>dbDo("readwrite",st=>st.put(r));
 const dbDel=id=>dbDo("readwrite",st=>st.delete(id));
 
 function toast(m,bad){ const t=el("div","banner toast "+(bad?"bad":"ok"),m);
-  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"96px",zIndex:99,
+  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"calc(var(--barh,84px) + 12px)",zIndex:99,
     maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
   document.body.appendChild(t); setTimeout(()=>t.remove(),bad?6000:3200); }
 
@@ -322,6 +353,7 @@ function custHTML(){
   if(st==="ready") return '<input class="inp search" id="q" data-f="q" placeholder="Start typing a name or street" autocomplete="off" autocapitalize="off" value="'+esc(F.q)+'">'
     +'<div id="qres"></div>';
   let h='<div class="card custcard">';
+  if(st==="login") h+='<img class="stackedlogo" src="logo/logo-stacked.svg" alt="Lighthouse Pest Control">';
   if(st==="boot") h+='<div class="wxline"><span class="spin"></span> Opening the customer list…</div>'+note;
   else if(st==="login") h+='<b>Log in to find a customer</b><div class="hint">The customer list is behind the Job Book login (the same one as the Job Book and Job Calendar).</div>'+note
     +'<form id="lg-form" action="#" autocomplete="on"><label class="fl" for="lg-email">Your email</label>'
@@ -608,6 +640,12 @@ function newForm(){
     next:{k:"",date:""},notes:"",photos:[],q:"",errors:[]};
 }
 function resetForm(){ F=newForm(); W=newWx(); UI={}; }
+/* Drafts live in memory only. "Unsaved work" = a customer is picked and something in the form has changed since it was
+   picked, loaded or saved (so a form that only has what the calendar or the last job filled in does not count). */
+function snap(){ return JSON.stringify([F.propId,F.services,F.products,F.areas,F.equipment,F.appliedBy,F.next,F.notes,
+  F.photos.map(p=>p.length),F.date,F.start,F.finish,W?W.man:null]); }
+const markClean=()=>{ BASE=snap(); };
+const dirty=()=>!!(F&&F.propId&&!S.justSaved&&snap()!==BASE);
 /* drop the address off a Xero description ("... re 3 Hayter St"), same rule as tools/build_service_lists.py */
 function cutTail(d){ return d.replace(/\s+(re\.?:?|at|for|as per)\s+\d.*$|\s+re\.?:?\s*$/i,"").replace(/[\s.\-–]+$/,"").trim(); }
 /* ---------- job tiles and services ---------- */
@@ -615,6 +653,7 @@ const alias=n=>(S.chem.serviceAlias||{})[n]||n;
 const hiddenSvc=n=>(S.chem.hideServices||[]).indexOf(n)>=0;
 const tileList=()=>S.chem.tiles||[];
 const isTile=n=>tileList().some(t=>t.service===n);
+const tileLabel=n=>(tileList().find(t=>t.service===n)||{}).label||n;
 const moreList=()=>S.services.map(x=>x.s).filter(n=>!isTile(n)&&!hiddenSvc(n));
 const offered=n=>isTile(n)||moreList().indexOf(n)>=0;
 const TRE="Trelona/Nemesis Baiting";
@@ -646,7 +685,31 @@ function sameAsLast(){
 }
 function pickProperty(pid){
   const p=S.props[pid]; if(!p) return;
-  F.propId=pid; F.client=(S.clients[p.c]||{}).n||"(unknown)"; F.address=addressOf(pid);
+  startFor(pid,(S.clients[p.c]||{}).n||"(unknown)",addressOf(pid));
+}
+/* the last 5 customers with a saved record on this device: no network, no extra storage */
+function recentRecs(){
+  const seen={}, out=[];
+  S.records.slice().sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||"")).forEach(r=>{
+    if(!r.propId||seen[r.propId]||out.length>=5) return; seen[r.propId]=1; out.push(r); });
+  return out;
+}
+function recentHTML(){
+  const rs=recentRecs(); if(!rs.length) return "";
+  const cnt={}; rs.forEach(r=>{ cnt[r.client]=(cnt[r.client]||0)+1; });
+  return '<div class="recent"><div class="lbl">Recent customers</div><div class="chips">'+rs.map(r=>{
+    const street=String(r.address||"").split(",")[0];     // two customers with the same name: show the street too
+    return '<button type="button" class="chip rchip" data-a="rpick" data-pid="'+esc(r.propId)+'">'+esc(r.client)
+      +(cnt[r.client]>1&&street?' <span class="small">'+esc(street)+'</span>':'')+'</button>'; }).join("")+'</div></div>';
+}
+/* A recent customer: from the customer list when it has them (same as searching), otherwise exactly what their last
+   saved record says, so it also works with no login and no signal. */
+function pickRecent(pid){
+  if(S.props[pid]){ pickProperty(pid); return; }
+  const r=lastRecord(pid); if(r) startFor(pid,r.client,r.address);
+}
+function startFor(pid,client,address){
+  F.propId=pid; F.client=client; F.address=address;
   F.start=nowHM(); F.date=TODAY; F.finish=""; F.finishTouched=false; F.q="";
   F.services=[];F.products=[];F.areas=[];F.equipment=[]; F.next={k:"",date:""};
   W=newWx(); UI={};
@@ -657,7 +720,7 @@ function pickProperty(pid){
     if(j) (j.s||[]).forEach(x=>{ const n=alias(x.s); if(!offered(n)||F.services.some(y=>y.s===n)) return;
       svcOn(n,n===x.s?cutTail(x.d||""):""); });
   }
-  render(); fetchWx();
+  markClean(); render(); fetchWx();
 }
 function addProduct(id){
   const lib=prodById(id); if(!lib||F.products.some(x=>x.id===id)) return;
@@ -684,9 +747,12 @@ function render(){
   if(S.tab==="records"){ if(S.openId) renderView(); else renderList(); $("#savebar").innerHTML=""; }
   else if(S.justSaved&&S.openId){ renderView(); $("#savebar").innerHTML=""; }
   else renderForm();
-  renderBanner();
+  renderBanner(); fitBar();
   window.scrollTo(0,y);
 }
+/* keep the bottom of the page clear of the sticky bar, whatever height it is this time */
+function fitBar(){ const b=$("#savebar"); document.documentElement.style.setProperty("--barh",((b&&b.offsetHeight)||0)+"px"); }
+window.addEventListener("resize",fitBar);
 const needWx=()=>F.products.some(p=>(S.chem.airTypes||[]).indexOf(p.type)>=0)&&!wxOK(curWeather());
 function autoSummary(){
   const w=curWeather(); let ws;
@@ -696,20 +762,33 @@ function autoSummary(){
   const d=parse(F.date), dt=d.getDate()+" "+AU[d.getMonth()]+(F.start?" "+F.start:"");
   return [ws,F.appliedBy.join(", ")||"no applicator",dt,F.equipment.join(", ")||"no equipment"].join(" · ");
 }
+/* "Same as last: 6 m": the follow-up the last saved record for this customer gave for the same service. It is only an offer:
+   the Next service choice is still forced (nothing is preselected), and the chip sets the same value the buttons set. */
+const NXT_SHORT={"6 months":"6 m","12 months":"12 m","6 weeks":"6 wk","3 months":"3 m","None":"None"};   // "Custom date" is left out: last time's date has passed
+function lastNext(){
+  if(!F.propId||!F.services.length) return null;
+  const names=F.services.map(x=>x.s);
+  const rs=S.records.filter(r=>r.propId===F.propId&&r.id!==F.id&&r.nextService&&Object.prototype.hasOwnProperty.call(NXT_SHORT,r.nextService.label)
+      &&(r.services||[]).some(x=>names.indexOf(alias(x.s))>=0))
+    .sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""));
+  return rs[0]?rs[0].nextService.label:null;
+}
 function barHTML(){
-  const nk=F.next.k, main=nk==="6 months"||nk==="12 months", other=!!nk&&!main;
+  const nk=F.next.k, main=nk==="6 months"||nk==="12 months", other=!!nk&&!main, ln=lastNext();
   let h='<div class="qbar">';
   if(UI.nextOther){
     h+='<div class="qother"><div class="chips">'+["6 weeks","3 months","Custom date","None"].map(k=>chip(k,nk===k,'data-a="nxt" data-v="'+k+'"')).join("")+'</div>'
       +(nk==="Custom date"?'<input class="inp" style="margin-top:6px" type="date" data-f="nextdate" value="'+esc(F.next.date)+'">':'')
       +((nk&&nk!=="None"&&nk!=="Custom date")?'<div class="hint">'+esc(nice(nextDate()))+'</div>':'')+'</div>';
   }
+  if(ln&&!nk) h+='<div class="qlast">'+chip("Same as last: "+NXT_SHORT[ln],false,'data-a="nxt" data-v="'+ln+'"')
+    +'<span class="small">Next service: pick one (None is fine).</span></div>';     // gone once a choice is made, so the bar goes back to its old height
   h+='<div class="qrow"><button class="qphoto" type="button" data-a="photo" aria-label="Add photo">📷'+(F.photos.length?'<span class="bd">'+F.photos.length+'</span>':'')+'</button>'
     +'<input type="file" id="photoIn" accept="image/*" capture="environment" multiple hidden>'
     +chip("6 m",nk==="6 months",'data-a="nxt" data-v="6 months"')+chip("12 m",nk==="12 months",'data-a="nxt" data-v="12 months"')
     +chip(other?nk+" ▾":"Other ▾",other||!!UI.nextOther,'data-a="nextother"')
     +'<button class="btn pri qsave" data-a="save">Save</button></div>'
-    +(nk?'':'<div class="hint" style="margin:4px 0 0">Next service: pick one (None is fine).</div>')+'</div>';
+    +((nk||ln)?'':'<div class="hint" style="margin:4px 0 0">Next service: pick one (None is fine).</div>')+'</div>';
   return h;
 }
 function renderForm(){
@@ -726,14 +805,21 @@ function renderForm(){
     if(mine&&!F.id&&!UI.sameDone) h+='<button class="btn pri same" data-a="sameas">Same as last time <span class="small" style="color:inherit;opacity:.8">('+esc(nice(mine.date))+')</span></button>';
   }else{
     h+=custHTML();
+    if(C.state!=="ready") h+=recentHTML();      // with the search box showing, the chips sit under it (renderQres)
   }
   if(F.propId){
-    /* 2. job tiles */
-    h+=sec("Job","tap all that apply");
+    /* 2. job tiles: once a service is ticked they fold into one line (Change opens them again) */
     const more=moreList(), moreOn=F.services.filter(x=>more.indexOf(x.s)>=0).length;
-    h+='<div class="tilegrid">'+tileList().map(t=>'<button type="button" class="tile" aria-pressed="'+(F.services.some(x=>x.s===t.service)?"true":"false")+'" data-a="svc" data-s="'+esc(t.service)+'">'+esc(t.label)+'</button>').join("")
-      +'<button type="button" class="tile more" aria-pressed="false" data-a="moreopen">More…'+(moreOn?' ('+moreOn+')':'')+'</button></div>';
-    if(UI.more) h+='<div class="chips" style="margin-top:8px">'+more.map(n=>chip(n,F.services.some(x=>x.s===n),'data-a="svc" data-s="'+esc(n)+'"')).join("")+'</div>';
+    if(F.services.length&&!UI.tilesOpen){
+      h+='<div class="svcline"><div class="t">'+esc(F.services.map(x=>tileLabel(x.s)).join(", "))+' <span class="small">('
+        +(F.services.length>1?F.services.length+" ticked":"ticked")+')</span></div><button class="mic" data-a="tilesopen" aria-label="Change the job type">Change</button></div>';
+    }else{
+      h+='<div class="sechead"><h2>Job</h2><span class="n" style="flex:1">tap all that apply</span>'
+        +(UI.tilesOpen&&F.services.length?'<button class="mic" data-a="tilesdone">Done</button>':'')+'</div>';
+      h+='<div class="tilegrid">'+tileList().map(t=>'<button type="button" class="tile" aria-pressed="'+(F.services.some(x=>x.s===t.service)?"true":"false")+'" data-a="svc" data-s="'+esc(t.service)+'">'+esc(t.label)+'</button>').join("")
+        +'<button type="button" class="tile more" aria-pressed="false" data-a="moreopen">More…'+(moreOn?' ('+moreOn+')':'')+'</button></div>';
+      if(UI.more) h+='<div class="chips" style="margin-top:8px">'+more.map(n=>chip(n,F.services.some(x=>x.s===n),'data-a="svc" data-s="'+esc(n)+'"')).join("")+'</div>';
+    }
     /* 3. this job */
     if(F.services.length){
       h+=sec("This job");
@@ -755,18 +841,29 @@ function renderForm(){
       h+='<div class="chips">'+S.chem.areas.map(a=>chip(a,F.areas.indexOf(a)>=0,'data-a="area" data-v="'+esc(a)+'"')).join("")+'</div>';
     }
     /* 4. auto-filled row */
-    const nw=needWx(), open=!!UI.autoOpen||nw;
-    h+='<button class="autorow'+(nw?' warn':'')+'" id="autorow" data-a="autotoggle"><b>'+(nw?'Weather needed':'Auto-filled ✓')+'</b><span class="sum" id="autosum">'+esc(autoSummary())+'</span><span>'+(open?'▴':'▾')+'</span></button>';
-    if(open){
-      h+=sec("Weather","needed for outdoor spraying");
-      h+='<div id="wx">'+wxHTML()+'</div>';
-      h+=sec("Applied by");
-      h+='<div class="chips">'+(S.chem.operator.techs||[]).map(t=>chip(t.name+" ("+t.licence+")",F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>';
+    /* Each card opens on its own. Tapping the row opens all four. Weather opens by itself when a spray needs it, and after a
+       failed Save any card that holds a missing required field (Applied by) is forced open, so nothing required stays hidden. */
+    const nw=needWx(), all=!!UI.autoOpen, fo=UI.force||{}, hasErr=F.errors.length>0;
+    const showWx=all||nw, showBy=all||!!fo.by, showDt=all, showEq=all;
+    h+='<button class="autorow'+(nw?' warn':'')+'" id="autorow" data-a="autotoggle"><b>'+(nw?'Weather needed':'Auto-filled ✓')+'</b><span class="sum" id="autosum">'+esc(autoSummary())+'</span><span>'+(all?'▴':'▾')+'</span></button>';
+    if(showWx){
+      h+='<div id="sec-wx"'+((hasErr&&nw)?' data-bad':'')+'>'+sec("Weather","needed for outdoor spraying");
+      h+='<div id="wx">'+wxHTML()+'</div></div>';
+    }
+    if(showBy){
+      const badBy=hasErr&&!F.appliedBy.length;
+      h+='<div id="sec-by"'+(badBy?' data-bad':'')+'>'+sec("Applied by");
+      h+='<div class="chips">'+(S.chem.operator.techs||[]).map(t=>chip(t.name+" ("+t.licence+")",F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>'
+        +(badBy?'<div class="need">Pick who applied it.</div>':'')+'</div>';
+    }
+    if(showDt){
       h+=sec("Date and times");
       h+='<div class="grid3"><div><label>Date</label><input class="inp" type="date" data-f="date" value="'+esc(F.date)+'"></div>'
         +'<div><label>Start</label><input class="inp" type="time" data-f="start" value="'+esc(F.start)+'"></div>'
         +'<div><label>Finish</label><input class="inp" type="time" data-f="finish" value="'+esc(F.finish)+'"></div></div>'
         +'<div class="hint">Finish is set to the time you tap Save, unless you change it.</div>';
+    }
+    if(showEq){
       h+=sec("Equipment");
       h+='<div class="chips">'+allEquip().map(a=>chip(a,F.equipment.indexOf(a)>=0,'data-a="equip" data-v="'+esc(a)+'"')).join("")
         +chip("+ Add",false,'data-a="equipadd"',"ghost")+'</div>';
@@ -804,12 +901,23 @@ function productsHTML(){
     +'<div class="grid3" style="grid-template-columns:1fr 1fr"><input class="inp" id="np-unit" placeholder="Unit (L of mix, g, cans)">'
     +'<select class="inp" id="np-type"><option value="liquid">Liquid</option><option value="aerosol">Aerosol</option><option value="dust">Dust</option><option value="granule">Granule</option><option value="gel">Gel</option><option value="foam">Foam</option><option value="bait">Bait</option><option value="other">Other</option></select></div>'
     +'<div class="btns" style="margin-bottom:0"><button class="btn pri" data-a="newsave">Save product</button><button class="btn" data-a="newopen">Cancel</button></div></div>';
-  /* cards for the products on this record */
+  /* the products on this record: one line each (name, amount, unit); tap a line for the full editor (active ingredient,
+     APVMA, amount, mix rate, Remove). A product with no amount yet always stays open, because the amount is required. */
   F.products.forEach(p=>{
-    h+='<div class="card"><div class="top"><b>'+esc(p.name)+'</b><button class="mic" data-a="prod" data-id="'+esc(p.id)+'" aria-label="Remove from record">Remove</button></div>'
+    const miss=amtMissing(p), open=miss||(UI.pexp&&UI.pexp[p.id]===true);
+    if(!open){
+      h+='<button type="button" class="prow" data-a="pexp" data-id="'+esc(p.id)+'" aria-expanded="false"><span class="nm">'+esc(p.name)
+        +'</span><span class="am">'+esc(p.amount)+' '+esc(p.unit||"units")+'</span><span class="cv" aria-hidden="true">▾</span></button>';
+      return;
+    }
+    const bad=F.errors.length>0&&miss;
+    h+='<div class="card"'+(bad?' data-bad':'')+'><div class="top"><b>'+esc(p.name)+'</b><span class="pbtns">'
+      +(miss?'':'<button class="mic" data-a="pexp" data-id="'+esc(p.id)+'">Done</button>')
+      +'<button class="mic" data-a="prod" data-id="'+esc(p.id)+'" aria-label="Remove from record">Remove</button></span></div>'
       +((p.active||p.apvma)?'<div class="small">'+esc([p.active,p.apvma?"APVMA "+p.apvma:""].filter(Boolean).join("  |  "))+'</div>':'')
       +'<div class="amt" style="margin-top:8px"><input class="inp" type="number" inputmode="decimal" min="0" step="any" data-f="amt" data-id="'+esc(p.id)+'" placeholder="Amount used" value="'+esc(p.amount)+'"><span class="unit">'+esc(p.unit||"units")+'</span></div>'
       +(p.type==="liquid"?'<div class="mixrow"><input class="inp" data-f="mix" data-id="'+esc(p.id)+'" placeholder="Mix rate, e.g. 50 mL per 10 L" value="'+esc(p.mix)+'"></div>':'')
+      +(bad?'<div class="need">Amount used is needed.</div>':'')
       +'</div>';
   });
   return h;
@@ -822,6 +930,7 @@ function wxHTML(){
   else if(W.status&&/^Getting/.test(W.status)) h+='<div class="wxline"><span class="spin"></span> '+esc(W.status)+'</div>';
   else h+='<div class="wxline small">No weather yet.</div>';
   if(W.status&&!/^Getting/.test(W.status)) h+='<div class="hint">'+esc(W.status)+'</div>';
+  if(F.errors.length&&needWx()&&!(W.status&&/^Getting/.test(W.status))) h+='<div class="need">Pick the wind and the conditions.</div>';   // after a failed Save; lives in #wx so picking the weather clears it
   h+='<div class="lbl">Wind</div><div class="chips">'+["Calm","Light breeze","Moderate","Strong"].map(x=>chip(x,m.wind===x.toLowerCase(),'data-a="wwind" data-v="'+x.toLowerCase()+'"')).join("")+'</div>'
     +'<div class="lbl">Wind from</div><div class="chips">'+["N","NE","E","SE","S","SW","W","NW"].map(x=>chip(x,m.dir===x,'data-a="wdir" data-v="'+x+'"')).join("")+'</div>'
     +'<div class="lbl">Conditions</div><div class="chips">'+["Fine","Overcast","Showers","Rain"].map(x=>chip(x,m.cond===x.toLowerCase(),'data-a="wcond" data-v="'+x.toLowerCase()+'"')).join("")+'</div>'
@@ -835,7 +944,7 @@ function renderWx(){ const e=$("#wx"); if(e) e.innerHTML=wxHTML();
 function renderQres(){
   const box=$("#qres"); if(!box) return;
   const q=F.q.trim().toLowerCase();
-  if(q.length<2){ box.innerHTML='<div class="hint">Type 2 or more letters.</div>'; return; }
+  if(q.length<2){ box.innerHTML=(q.length===0&&recentHTML())||'<div class="hint">Type 2 or more letters.</div>'; return; }
   const words=q.split(/\s+/); const hits=[];
   for(const x of S.index){ if(words.every(w=>x.hay.indexOf(w)>=0)){ hits.push(x); if(hits.length>=25) break; } }
   box.innerHTML=hits.length?hits.map(x=>'<button class="pick" data-a="pick" data-pid="'+esc(x.pid)+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line+(x.sub?", "+x.sub:""))+'</div></button>').join("")
@@ -850,11 +959,12 @@ function renderAres(){
 }
 
 /* ---------- validate and save ---------- */
+const amtMissing=p=>p.amount===""||p.amount==null||isNaN(Number(p.amount));   // the "amount used" rule, same test for the form and the validator
 function problems(){
   const e=[];
   if(!F.propId) e.push("Pick a customer.");
   if(!F.services.length) e.push("Pick at least one service.");
-  F.products.forEach(p=>{ if(p.amount===""||p.amount==null||isNaN(Number(p.amount))) e.push("Amount used for "+p.name+"."); });
+  F.products.forEach(p=>{ if(amtMissing(p)) e.push("Amount used for "+p.name+"."); });
   if(!F.appliedBy.length) e.push("Who applied it.");
   if(!F.next.k) e.push("Next service (pick None if there isn't one).");
   else if(F.next.k==="Custom date"&&!F.next.date) e.push("A date for the next service.");
@@ -865,7 +975,13 @@ function problems(){
 }
 async function save(){
   F.errors=problems();
-  if(F.errors.length){ render(); const e=$("#errs"); if(e) e.scrollIntoView({block:"start"}); toast("Missing: "+F.errors.length+" thing"+(F.errors.length>1?"s":"")+". See the top of the form.",true); return; }
+  if(F.errors.length){
+    /* a missing required field must never sit in a folded-away card: open the card that holds it and go to it */
+    if(!F.appliedBy.length){ UI.force=UI.force||{}; UI.force.by=true; }
+    render();
+    const bad=document.querySelector("[data-bad]"), e=bad||$("#errs");
+    if(e) e.scrollIntoView({block:"start"});
+    toast("Missing: "+F.errors.length+" thing"+(F.errors.length>1?"s":"")+(bad?". The red notes show where.":". See the top of the form."),true); return; }
   const op=S.chem.operator, techs=(op.techs||[]).filter(t=>F.appliedBy.indexOf(t.name)>=0);
   const finish=F.finishTouched&&F.finish?F.finish:(F.id&&F.finish?F.finish:nowHM());
   const rec={id:F.id||uid(),propId:F.propId,jobId:F.jobId||null,client:F.client,address:F.address,date:F.date,start:F.start,finish:finish,
@@ -888,6 +1004,7 @@ async function save(){
     P().lastProducts[sv.s]=mine; P().lastAreas[sv.s]=F.areas.slice(); if(sv.d) P().lastDesc[sv.s]=sv.d; });
   savePrefs();
   S.records=S.records.filter(r=>r.id!==rec.id); S.records.push(rec);
+  markClean();
   toast("Record saved.");
   S.openId=rec.id; S.justSaved=true; render();
 }
@@ -916,7 +1033,7 @@ function recText(r){
 const subjFor=r=>"Service record: "+r.address+", "+nice(r.date);
 function recHTML(r){
   const w=r.weather, kv=(k,v)=>'<div class="kv"><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>';
-  let h='<div class="rec"><h2>Pesticide service record</h2><div class="biz">'+esc(r.business.name)+', '+esc(r.business.address)+'. ABN '+esc(r.business.abn||ABN)+'. Phone '+esc(r.business.phone)+'.</div>';
+  let h='<div class="rec"><img class="printlogo" src="logo/logo-horizontal.svg" alt="Lighthouse Pest Control"><h2>Pesticide service record</h2><div class="biz">'+esc(r.business.name)+', '+esc(r.business.address)+'. ABN '+esc(r.business.abn||ABN)+'. Phone '+esc(r.business.phone)+'.</div>';
   h+=kv("Date",nice(r.date))+kv("Start / finish",(r.start||"")+" to "+(r.finish||""))+kv("Customer",r.client)+kv("Address",r.address);
   h+=kv("Services",r.services.map(x=>x.s+(x.d?": "+x.d:"")).join("\n"));
   h+=kv("Products",r.products.length?r.products.map(prodLine).join("\n"):"None");
@@ -1027,19 +1144,25 @@ document.addEventListener("click",function(e){
   const a=t.dataset.a, d=t.dataset, svOf=s=>F.services.find(x=>x.s===s);
   if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
+  if(a==="rpick"){ pickRecent(d.pid); return; }
+  if(a==="tilesopen"){ UI.tilesOpen=true; render(); return; }
+  if(a==="tilesdone"){ UI.tilesOpen=false; render(); return; }
+  if(a==="pexp"){ UI.pexp=UI.pexp||{}; UI.pexp[d.id]=!(UI.pexp[d.id]===true); render(); return; }
   if(a==="custretry"){ if(C.uid){ C.loading=false; custLoad(); } else custCheck(); return; }
   if(a==="custout"){ custSignOut(); return; }
   if(a==="clearcust"){ resetForm(); render(); return; }
-  if(a==="svc"){ if(F.services.some(x=>x.s===d.s)) svcOff(d.s); else svcOn(d.s); render(); return; }
+  if(a==="svc"){ const had=F.services.length; if(F.services.some(x=>x.s===d.s)) svcOff(d.s); else svcOn(d.s);
+    if(!had&&F.services.length) UI.tilesOpen=false;      // the first tile ticked folds the grid (even if it was opened with Change)
+    prunePexp(); render(); return; }
   if(a==="sameas"){ sameAsLast(); return; }
   if(a==="moreopen"){ UI.more=!UI.more; render(); return; }
   if(a==="dchg"){ UI.dchg=UI.dchg||{}; UI.dchg[d.s]=!UI.dchg[d.s]; render(); return; }
-  if(a==="autotoggle"){ UI.autoOpen=!UI.autoOpen; render(); return; }
+  if(a==="autotoggle"){ UI.autoOpen=!UI.autoOpen; if(!UI.autoOpen) UI.force={}; render(); return; }
   if(a==="notesopen"){ UI.notesOpen=!UI.notesOpen; render(); return; }
   if(a==="nextother"){ UI.nextOther=!UI.nextOther; render(); return; }
   if(a==="desc"){ const sv=svOf(d.s); if(sv){ sv.custom=false; sv.d=(sv.d===d.d)?"":d.d; } render(); return; }
   if(a==="custdesc"){ const sv=svOf(d.s); if(sv){ sv.custom=!sv.custom; if(sv.custom) sv.d=""; } render(); return; }
-  if(a==="prod"){ const i=F.products.findIndex(x=>x.id===d.id); if(i>=0) F.products.splice(i,1); else addProduct(d.id); render(); return; }
+  if(a==="prod"){ const i=F.products.findIndex(x=>x.id===d.id); if(i>=0) F.products.splice(i,1); else addProduct(d.id); prunePexp(); render(); return; }
   if(a==="pedit"){ UI.pedit=!UI.pedit; render(); return; }
   if(a==="prem"){ const p=prodById(d.id); if(p&&confirm("Take "+p.name+" off this service's list for good?")){ listRemove(d.id); render(); } return; }
   if(a==="addopen"){ UI.add=!UI.add; UI.newp=false; UI.aq=""; render(); renderAres(); return; }
@@ -1081,6 +1204,10 @@ document.addEventListener("click",function(e){
 document.addEventListener("submit",function(e){
   if(e.target&&e.target.id==="lg-form"){ e.preventDefault(); custPasswordLogin(); }
 });
+/* a product line you are typing into stays open until you tap Done (it would otherwise fold up on the next redraw) */
+function keepOpen(id){ UI.pexp=UI.pexp||{}; if(UI.pexp[id]===undefined) UI.pexp[id]=true; }
+/* a product taken off the record forgets it was open, so adding it again gives the one-line row, not the open editor */
+function prunePexp(){ if(UI.pexp) Object.keys(UI.pexp).forEach(k=>{ if(!F.products.some(p=>p.id===k)) delete UI.pexp[k]; }); }
 document.addEventListener("input",function(e){
   const t=e.target, f=t.dataset&&t.dataset.f; if(!f) return;
   if(f==="q"){ F.q=t.value; renderQres(); }
@@ -1090,8 +1217,8 @@ document.addEventListener("input",function(e){
     $("#rlist").innerHTML=listHTML(list); }
   else if(f==="aq"){ UI.aq=t.value; renderAres(); }
   else if(f==="cd"){ const sv=F.services.find(x=>x.s===t.dataset.s); if(sv) sv.d=t.value; }
-  else if(f==="amt"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.amount=t.value; }
-  else if(f==="mix"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.mix=t.value; }
+  else if(f==="amt"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.amount=t.value; keepOpen(t.dataset.id); }
+  else if(f==="mix"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.mix=t.value; keepOpen(t.dataset.id); }
   else if(f==="notes"){ F.notes=t.value; }
   else if(f==="date"){ F.date=t.value; }
   else if(f==="start"){ F.start=t.value; }
@@ -1123,8 +1250,27 @@ function loadForEdit(r){
     else W.auto={tempC:w.tempC,windKmh:w.windKmh,windDir:w.windDir,beaufort:w.beaufort,conditions:w.conditions,rain:w.rain};
     if(w.lat!=null) W.loc={lat:w.lat,lon:w.lon};
   }
-  S.tab="new"; S.openId=null; S.justSaved=false; render(); window.scrollTo(0,0);
+  S.tab="new"; S.openId=null; S.justSaved=false; markClean(); render(); window.scrollTo(0,0);
 }
+
+/* ---------- leaving with unsaved work, and the records.html#new link ---------- */
+window.addEventListener("beforeunload",function(e){
+  if(LEAVING||!dirty()) return;
+  e.preventDefault(); e.returnValue=""; return "";
+});
+/* the LPC badge goes Home; if a record is in progress and not saved, ask first */
+document.addEventListener("click",function(e){
+  const a=e.target.closest&&e.target.closest("a.lpchome"); if(!a) return;
+  if(dirty()&&!confirm("Leave without saving?")){ e.preventDefault(); return; }
+  LEAVING=true; setTimeout(()=>{ LEAVING=false; },3000);
+});
+/* records.html#new opens the New tab (it is also the default; this makes the link explicit and works if the hash changes later) */
+function applyHash(){
+  if((location.hash||"").toLowerCase()!=="#new") return false;
+  S.tab="new"; if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); }
+  return true;
+}
+window.addEventListener("hashchange",function(){ if(F&&applyHash()) render(); });
 
 /* ---------- start up ---------- */
 (async function init(){
@@ -1133,7 +1279,7 @@ function loadForEdit(r){
   S.prefs=STORE.read(); P();
   try{ S.records=(await dbAll())||[]; }
   catch(e){ S.records=[]; toast("Couldn't open the saved records on this device ("+(e&&e.message?e.message:"storage error")+"). New records may not save.",true); }
-  resetForm(); const fromCal=fromJob(); render(); if(fromCal) fetchWx();
+  resetForm(); const fromCal=fromJob(); if(fromCal) markClean(); applyHash(); render(); if(fromCal) fetchWx();
   custStart();
   if(pendingCount()) backfill().then(()=>renderBanner());
   window.addEventListener("online",()=>{ if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
