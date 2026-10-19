@@ -39,7 +39,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;
-  padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+  padding-bottom:calc(58px + env(safe-area-inset-bottom))}
 h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
 .mono{font-family:"Spline Sans Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
@@ -48,23 +48,23 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
 /* header */
 header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepInk);
-  padding:12px 0 0;box-shadow:var(--raise)}
+  padding:calc(12px + env(safe-area-inset-top)) 0 0;box-shadow:var(--raise)}   /* the inset keeps the badge and title out from under the iPhone status bar on the Home Screen app */
 .brand{display:flex;align-items:baseline;gap:9px;padding-bottom:10px}
 .brand h1{font-size:19px;color:var(--deepInk);letter-spacing:-.01em}
 .brand .sub{font-size:11px;opacity:.72;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.16);
   border-radius:10px 10px 0 0;overflow:hidden}
-.stat{background:var(--deep);padding:9px 10px 11px;text-align:left}
-.stat b{display:block;font-family:"Spline Sans Mono",monospace;font-size:21px;font-weight:600;
+.stat{background:var(--deep);padding:6px 10px 8px;text-align:left}
+.stat b{display:block;font-family:"Spline Sans Mono",monospace;font-size:20px;font-weight:600;
   line-height:1.1;font-variant-numeric:tabular-nums}
-.stat span{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;opacity:.78;font-weight:600}
+.stat span{display:block;font-size:10.5px;line-height:1.3;text-transform:uppercase;letter-spacing:.07em;opacity:.78;font-weight:600}
 .stat.hot b{color:#FFC9B8}
 
 /* tabs / nav */
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
-  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
   padding-bottom:env(safe-area-inset-bottom)}
-nav.bottom button{padding:9px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;
+nav.bottom button{padding:5px 2px 5px;min-height:48px;justify-content:center;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10.5px;font-weight:600;color:var(--ink3);letter-spacing:.02em}
 nav.bottom button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;
   stroke-linecap:round;stroke-linejoin:round}
@@ -122,11 +122,13 @@ button.sechead{width:100%;text-align:left;cursor:pointer;align-items:center;back
 .sechead .chev{display:inline-block;width:16px;color:var(--ink3);transition:transform .15s}
 button.sechead[aria-expanded="true"] .chev{transform:rotate(90deg)}
 .sechead .ready{color:var(--over);font-weight:700;margin-left:9px}
-.batchbar{display:flex;gap:7px;align-items:center;flex-wrap:wrap;background:var(--surface2);
-  border:1px solid var(--line);border-radius:10px;padding:8px 10px;margin:0 0 10px;font-size:13px;color:var(--ink2)}
-.batchbar .inp{width:68px;padding:7px 8px;text-align:center}
-.batchbar .btn{flex:0 0 auto;min-width:0;padding:8px 14px}
-.batchbar .chip{padding:5px 10px}
+.batchbar{display:flex;gap:4px;align-items:center;flex-wrap:wrap;background:var(--surface2);
+  border:1px solid var(--line);border-radius:10px;padding:5px 8px;margin:0 0 10px;font-size:13px;color:var(--ink2)}
+.batchbar>span{white-space:nowrap;margin-right:2px}
+.batchbar .inp{width:50px;padding:6px 3px;text-align:center}
+.batchbar .btn{flex:0 0 auto;min-width:0;padding:8px 10px;margin-left:auto}
+.batchbar .chip{padding:7px 8px}
+@media(max-width:370px){.batchbar .btn svg{display:none}}
 .iact[disabled]{opacity:.32;cursor:default}
 
 .empty{text-align:center;padding:44px 20px;color:var(--ink3)}
@@ -143,9 +145,9 @@ button.sechead[aria-expanded="true"] .chev{transform:rotate(90deg)}
 /* sheet */
 .sheet{position:fixed;inset:0;z-index:60;background:rgba(10,20,18,.42);display:flex;
   align-items:flex-end;justify-content:center;backdrop-filter:blur(2px)}
-.sheet .panel{background:var(--bg);width:100%;max-width:880px;max-height:92vh;overflow-y:auto;
+.sheet .panel{background:var(--bg);width:100%;max-width:880px;max-height:92vh;max-height:92dvh;overflow-y:auto;
   border-radius:16px 16px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.28)}
-@media(min-width:720px){.sheet{align-items:center}.sheet .panel{border-radius:16px;max-height:86vh}}
+@media(min-width:720px){.sheet{align-items:center}.sheet .panel{border-radius:16px;max-height:86vh;max-height:86dvh}}
 .shhead{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);
   padding:14px 16px 11px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:2}
 .shttl{flex:1;min-width:0}
@@ -153,7 +155,7 @@ button.sechead[aria-expanded="true"] .chev{transform:rotate(90deg)}
 .shhead .sb{font-size:12.5px;color:var(--ink2);margin-top:2px}
 .x{width:32px;height:32px;border-radius:8px;background:var(--surface2);display:grid;place-items:center;flex:0 0 auto}
 .x svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
-.shbody{padding:14px 16px 26px}
+.shbody{padding:14px 16px calc(26px + env(safe-area-inset-bottom))}
 .kv{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
 .kv dt{flex:0 0 96px;color:var(--ink3);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding-top:1px}
 .kv dd{margin:0;flex:1;min-width:0;word-break:break-word}
@@ -228,10 +230,10 @@ a.btn{text-decoration:none}
   border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-4px}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-.boot{display:grid;place-items:center;min-height:70vh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+.boot{display:grid;place-items:center;min-height:70vh;min-height:70dvh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
 
 /* login / status screens (same look as the Job Calendar's) */
-.authwrap{min-height:70vh;display:grid;place-items:center;padding:24px 0}
+.authwrap{min-height:70vh;min-height:70dvh;display:grid;place-items:center;padding:24px 0}
 .authcard{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;box-shadow:var(--raise)}
 .authcard h1{font-size:24px;margin-bottom:4px}
 .authcard h2{font-size:20px;margin-bottom:4px}
@@ -245,13 +247,34 @@ body.locked .stats{display:none}          /* no empty counters on the login scre
 .upbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0}
 .upbox .st{font-size:13px;color:var(--ink2);margin-top:8px;white-space:pre-wrap;word-break:break-word}
 .lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
+/* the badge is the way Home: a 44px tap area around the 26px picture, cancelled out by the negative margin so the header doesn't grow */
+a.lpchome{flex:none;align-self:center;display:block;padding:9px;margin:-9px;border-radius:12px;-webkit-tap-highlight-color:transparent}
+.authlogo{display:block;height:56px;width:auto;margin:0 auto 14px}
+body.nostats .stats{display:none}         /* the three counters belong to the Due tab only */
+/* Due tab: the three notices (not confirmed, reminders, no repeat) fold into one line, tap for the full text */
+button.alertbar{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font:inherit;font-size:13px;font-weight:600;
+  padding:8px 12px;margin-bottom:8px;min-height:40px}
+button.alertbar .tx{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.alertbar .chev{flex:0 0 auto;transition:transform .15s}
+button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
+/* Reviews tab: a compact row, one tap Ask on the right, the rest behind More */
+.row.rv{flex-wrap:wrap}
+.row.rv .rowmain{padding:5px 4px 5px 0}
+.row.rv .rowtext>div{line-height:1.25}
+.row.rv .acts{gap:6px;padding:0 8px 0 4px}
+.row.rv .acts .btn{flex:0 0 auto;min-width:0;height:42px;padding:0 14px}
+.row.rv .acts .btn.more{width:44px;padding:0}
+.row.rv .acts .btn.more svg{stroke-width:3.4}
+.row.rv .rvmore{flex:0 0 100%;display:flex;gap:8px;flex-wrap:wrap;padding:0 12px 10px 16px}
+.row.rv .rvmore[hidden]{display:none}
+.row.rv .rvmore .btn{flex:1;min-width:120px}
 </style>
 </head>
 <body class="locked">
 
 <header>
   <div class="wrap">
-    <div class="brand"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26">
+    <div class="brand"><a class="lpchome" href="home.html" aria-label="Home"><img class="lpcmark" src="logo/lpc-badge.png" alt="" width="26" height="26"></a>
       <h1>Job Book</h1><span class="sub">Lighthouse Pest</span>
     </div>
     <div class="stats">
@@ -338,7 +361,8 @@ const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
 const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
-  ov:{},bookings:{},gone:{},asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[]};
+  ov:{},bookings:{},gone:{},asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[],
+  fopen:{},fseed:false,seeded:false,alertsOpen:false};   // fopen/fseed: sections opened by a tile or chip filter. seeded: the first-time default has been applied. alertsOpen: the folded notices are showing
 
 /* ---------- storage ----------
    Client list and job history come from the database (behind the login) and only change
@@ -411,19 +435,23 @@ function renderOffline(){
   cardScreen("offline","No signal","Can't reach the server. Check your signal and try again.",
     [row(btn("Try again",null,"pri",()=>checkSession()),btn("Log out",null,"",()=>signOut()))]);
 }
+const logoEl=()=>{ const i=el("img","authlogo"); i.src="logo/logo-stacked.svg"; i.alt="Lighthouse Pest Control"; i.width=63; i.height=56; return i; };
 function renderNotMaster(){
-  cardScreen("denied","Job Book","The Job Book is for Mitch only.",[row(btn("Log out",null,"",()=>signOut()))]);
+  const c=cardScreen("denied","Job Book","The Job Book is for Mitch only.",[row(btn("Log out",null,"",()=>signOut()))]);
+  c.insertBefore(logoEl(),c.firstChild);
 }
 function renderNoData(){
   const extra=[];
   if(isLocal) extra.push(uploadPanel());
   extra.push(row(btn("Log out",null,"",()=>signOut())));
-  cardScreen("nodata","Job Book",
+  const c=cardScreen("nodata","Job Book",
     "Your Job Book data isn't uploaded yet. On the Mac, open the Job Book at http://127.0.0.1:8942/jobbook.html and tap Upload from this Mac.",extra);
+  c.insertBefore(logoEl(),c.firstChild);
 }
 function renderLogin(notice,kind){
   let last=""; try{ last=localStorage.getItem(EMAIL_KEY)||localStorage.getItem(CAL_EMAIL_KEY)||""; }catch(e){}
   const w=el("div","authwrap"), c=el("div","authcard"); w.appendChild(c);
+  c.appendChild(logoEl());
   c.appendChild(el("h1",null,"Job Book"));
   c.appendChild(el("p",null,"Log in with your email and password. Your phone can remember them for you."));
   const msg=el("div"); msg.id="lg-msg"; msg.setAttribute("role","alert"); c.appendChild(msg);
@@ -585,7 +613,19 @@ async function loadAll(gen){
     S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
   const mine=STORE.read();
   S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK; S.lead=mine.lead||{};
-  S.ready=true; A.screen="app"; $("#nav").hidden=false; document.body.classList.remove("locked"); render();
+  S.ready=true; A.screen="app"; $("#nav").hidden=false; document.body.classList.remove("locked");
+  applyHashOnce(); render();
+}
+/* Deep links from the Lighthouse Tools home page: jobbook.html#due, #reviews, #clients pick that tab, once, after the login has
+   settled and the data is in (so there is nothing to undo if the login fails). A hash with an "=" in it can carry a login token,
+   so it is left alone. This page uses the hash for nothing else, and never touches history. */
+let HASH_DONE=false;
+function applyHashOnce(){
+  if(HASH_DONE) return; HASH_DONE=true;
+  let h=""; try{ h=String(location.hash||""); }catch(e){ return; }
+  if(!h||h.indexOf("=")>=0) return;
+  const k=h.replace(/^#/,"").toLowerCase();
+  if(k==="due"||k==="reviews"||k==="clients") S.view=k;
 }
 
 /* every write goes through here: updates memory first so the screen is never a lie,
@@ -604,7 +644,7 @@ async function saveOv(pid,patch){
 }
 async function saveBookings(){ return persist(); }
 function toast(m,bad){ const t=el("div","banner "+(bad?"bad":"ok"),m);
-  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"84px",zIndex:99,
+  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"calc(66px + env(safe-area-inset-bottom))",zIndex:99,
     maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
   document.body.appendChild(t); setTimeout(()=>t.remove(),4200); }
 
@@ -917,6 +957,7 @@ function render(){
   if(!S.ready) return;
   const L=lines(), b=dueRows(L,false).reduce((a,r)=>{const k=band(r);a[k]=(a[k]||0)+1;return a;},{});
   $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-soon").textContent=b.soon||0;
+  document.body.classList.toggle("nostats",S.view!=="due"&&S.view!=="todo");     // the counters show on Due only (the markup stays, render() writes to it)
   document.querySelectorAll("#nav button").forEach(x=>
     x.setAttribute("aria-current", String(x.dataset.go===S.view||(S.view==="todo"&&x.dataset.go==="due"))));
   const m=$("#main"); m.innerHTML="";
@@ -1061,11 +1102,11 @@ function actionBtns(l){
 function afterRing(l){
   const c=cOf(l.pid);
   setTimeout(()=>openSheet({title:"Called "+c.n,sub:c.p,build:b=>{
-    b.appendChild(el("div","note","When you're back, log how it went, or just close this."));
     const row=el("div","btns");
     row.appendChild(btn("Record the call",SVG.note,"pri",()=>replaceSheet(recordSpec(l,"call"))));
     row.appendChild(btn("Nothing to log",null,"",()=>closeSheet(true)));
     b.appendChild(row);
+    b.appendChild(el("div","note","When you're back, log how it went, or just close this."));
   }}),700);
 }
 /* Messages/Mail is opening with the message already in it. Log it, ask if it went. */
@@ -1123,53 +1164,79 @@ function section(host,title,n,rows,note,unit){
   if(note) host.appendChild(el("div","note",note));
   rows.forEach(r=>host.appendChild(r));
 }
+/* picking a tile or chip filter: every section it matches opens (once, per pick). Opening and closing under a filter is kept apart
+   from the normal open/closed state, so coming back to Everything shows the sections the way he had left them. */
+function setBand(k){ S.band=k; S.fopen={}; S.fseed=!!k; }
 function viewDue(m,L){
   const unc=unconfirmed(), rem=reminders().filter(x=>x.r.on<=TODAY);
-  if(unc.length){
-    const n=el("div","banner warn");
-    n.appendChild(el("div",null,unc.length+" message"+(unc.length===1?"":"s")+" you opened but haven't confirmed you sent."));
-    const b=el("button","btn"); b.style.marginTop="8px"; b.style.maxWidth="200px";
-    b.innerHTML=ico(SVG.tick)+"<span>Sort them out</span>"; b.onclick=()=>openUnconfirmed();
-    n.appendChild(b); m.appendChild(n);
-  }
-  if(rem.length){
-    const n=el("div","banner ok");
-    n.textContent=rem.length+" reminder"+(rem.length===1?"":"s")+" you set has come around.";
-    n.style.cursor="pointer"; n.onclick=()=>openReminders(); m.appendChild(n);
-  }
   const nTodo=L.filter(l=>band(l)==="todo").length;
-  if(nTodo){
-    const n=el("div","banner warn"); n.style.cursor="pointer";
-    n.textContent=nTodo+" job"+(nTodo===1?" has":"s have")+" no repeat set. Tap to sort them.";
-    n.onclick=()=>{ S.view="todo"; render(); }; m.appendChild(n);
+  /* the three notices (messages not confirmed, reminders, jobs with no repeat) fold into one line. Tap it for the full notices. */
+  if(!(unc.length||rem.length||nTodo)) S.alertsOpen=false;
+  else{
+    const bits=[];
+    if(unc.length) bits.push(unc.length+" not confirmed");
+    if(rem.length) bits.push(rem.length+" reminder"+(rem.length===1?"":"s"));
+    if(nTodo) bits.push(nTodo+" need a repeat");
+    const ab=el("button","banner alertbar "+(unc.length||nTodo?"warn":"ok"));
+    ab.setAttribute("aria-expanded",String(S.alertsOpen));
+    ab.innerHTML='<span class="tx"></span><span class="chev">&#9656;</span>';
+    ab.firstChild.textContent=bits.join(" \u00b7 ");
+    ab.onclick=()=>{ S.alertsOpen=!S.alertsOpen; render(); };
+    m.appendChild(ab);
+    if(S.alertsOpen){
+      if(unc.length){
+        const n=el("div","banner warn");
+        n.appendChild(el("div",null,unc.length+" message"+(unc.length===1?"":"s")+" you opened but haven't confirmed you sent."));
+        const b=el("button","btn"); b.style.marginTop="8px"; b.style.maxWidth="200px";
+        b.innerHTML=ico(SVG.tick)+"<span>Sort them out</span>"; b.onclick=()=>openUnconfirmed();
+        n.appendChild(b); m.appendChild(n);
+      }
+      if(rem.length){
+        const n=el("div","banner ok");
+        n.textContent=rem.length+" reminder"+(rem.length===1?"":"s")+" you set has come around.";
+        n.style.cursor="pointer"; n.onclick=()=>openReminders(); m.appendChild(n);
+      }
+      if(nTodo){
+        const n=el("div","banner warn"); n.style.cursor="pointer";
+        n.textContent=nTodo+" job"+(nTodo===1?" has":"s have")+" no repeat set. Tap to sort them.";
+        n.onclick=()=>{ S.view="todo"; render(); }; m.appendChild(n);
+      }
+    }
   }
   const chips=el("div","chips");
   [["","Everything"],["fresh","Ready to text"],["over","Well overdue"],["soon","Next 30 days"],["ok","Later"]].forEach(([k,lab])=>{
     const c=el("button","chip",lab); c.setAttribute("aria-pressed",String(S.band===k));
-    c.onclick=()=>{S.band=k;render();}; chips.appendChild(c); });
+    c.onclick=()=>{setBand(k);render();}; chips.appendChild(c); });
   const gc=el("button","chip","Lapsed clients too"); gc.setAttribute("aria-pressed",String(S.grp==="all"));
   gc.onclick=()=>{S.grp=S.grp==="all"?"active":"all";render();}; chips.appendChild(gc);
   m.appendChild(chips);
   const rows=dueRows(L,S.grp==="all");
   const one=S.band?[]:oneOffRows(L);
-  let any=false;
+  const secs=[];
   for(const [k,title] of SECTIONS){
     let g=k==="one"?one:rows.filter(r=>r.sec===k&&(!S.band||band(r)===S.band));
     if(!g.length) continue;
-    any=true;
     if(k!=="one") g.sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"));
-    foldSection(m,k,title,g);
+    secs.push([k,title,g]);
   }
+  /* Open by default, so the first people are already on screen: the first section that has anyone in it opens the first time Due is
+     drawn, and only then (every tap redraws the page, so a later draw must never reopen a section he shut). A tile or chip filter opens
+     every section it matches, once per pick. */
+  if(S.band){ if(S.fseed){ S.fopen={}; secs.forEach(x=>{ S.fopen[x[0]]=true; }); S.fseed=false; } }
+  else { S.fseed=false; if(!S.seeded&&secs.length){ S.seeded=true; S.open[secs[0][0]]=true; } }
+  const any=secs.length>0;
+  secs.forEach(([k,title,g])=>foldSection(m,k,title,g));
   if(!any){ const e=el("div","empty"); e.innerHTML="<h3>Nothing waiting</h3><p>Nobody to chase right now.</p>"; m.appendChild(e); }
 }
 /* a section that opens and shuts: name and count on the bar, the people underneath */
 function foldSection(host,key,title,g){
-  const open=!!S.open[key];
+  const O=S.band?S.fopen:S.open;           // under a tile or chip filter the sections have their own open/closed state
+  const open=!!O[key];
   const h=el("button","sechead fold"); h.setAttribute("aria-expanded",String(open));
   const ready=key==="one"?0:g.filter(r=>band(r)==="fresh").length;
   h.innerHTML=`<span class="ttl"><span class="chev">&#9656;</span>${esc(title)}</span>`
     +`<span class="n">${g.length} ${g.length===1?"client":"clients"}${ready?`<b class="ready">${ready} ready</b>`:""}</span>`;
-  h.onclick=()=>{ S.open[key]=!open; render(); };
+  h.onclick=()=>{ O[key]=!open; render(); };
   host.appendChild(h);
   if(!open) return;
   const note=key==="old"?"Years overdue and never followed up. A job on its own, not a daily chase. Most have no phone number."
@@ -1298,10 +1365,11 @@ function openMsg(l,channel,firedWith,preset){
   if(firedWith){
     // the link has already fired - log it and go straight to "did that send?"
     const entry={id:uid(),t:new Date().toISOString(),ch:channel,to,
-                 subject:channel==="email"?EMAIL_SUBJECT:"",
-                 msg:firedWith,svcs:(l.svcs||[l.svc]),st:"drafted"};
+                 subject:channel==="email"?((preset&&preset.subject)||EMAIL_SUBJECT):"",
+                 msg:firedWith,svcs:(l.svcs||[l.svc]),st:"drafted",
+                 kind:preset?preset.kind:undefined};
     logContact(l.pid,entry);
-    openSheet(confirmSpec(l.pid,entry));
+    setTimeout(()=>openSheet(confirmSpec(l.pid,entry)),700);      // same wait as the other text links, so the link gets to fire first
     return;
   }
   openSheet({title:(preset&&preset.title)||((channel==="email"?"Email ":"Text ")+c.n), sub:to, build:b=>{
@@ -1341,15 +1409,7 @@ function confirmSpec(pid,entry){
   const c=cOf(pid);
   const app=entry.ch==="email"?"Mail":"Messages";
   return {title:"Did that send?",sub:c.n+" · "+(entry.ch==="email"?"email":"text"),build:b=>{
-    b.appendChild(el("div","note",app+" should have opened with the message in it. "
-      +"If it didn't, tap their "+(entry.ch==="email"?"address":"number")+" below."));
-    copyFallback(b,"Message",entry.msg,
-      entry.ch==="email"?"Their email":"Their number",entry.to,
-      entry.ch==="email"?mailHref(entry.to,entry.subject||"",entry.msg):smsHref(entry.to,entry.msg),
-      "Tap it to try "+app+" again.");
-    b.appendChild(el("div","note","I can't see inside "+app+", so you have to tell me. "
-      +"Until you do, this sits in the unconfirmed pile and doesn't count as contact."));
-    const q=el("div","quote",entry.msg); b.appendChild(q);
+    /* the answer comes first, so it is on screen without scrolling; the wording and the fallback links sit under it */
     const row=el("div","btns");
     row.appendChild(btn("Yes, I sent it",SVG.tick,"pri",async()=>{
       closeSheet(true); await setLogStatus(pid,entry.id,"sent"); toast("Logged as sent."); }));
@@ -1359,6 +1419,15 @@ function confirmSpec(pid,entry){
       toast("Dropped it."); }));
     b.appendChild(row);
     b.appendChild(btn("Decide later",null,"",()=>closeSheet(true)));
+    b.appendChild(el("div","note",app+" should have opened with the message in it. "
+      +"If it didn't, tap their "+(entry.ch==="email"?"address":"number")+" below."));
+    copyFallback(b,"Message",entry.msg,
+      entry.ch==="email"?"Their email":"Their number",entry.to,
+      entry.ch==="email"?mailHref(entry.to,entry.subject||"",entry.msg):smsHref(entry.to,entry.msg),
+      "Tap it to try "+app+" again.");
+    b.appendChild(el("div","note","I can't see inside "+app+", so you have to tell me. "
+      +"Until you do, this sits in the unconfirmed pile and doesn't count as contact."));
+    const q=el("div","quote",entry.msg); b.appendChild(q);
   }};
 }
 function openUnconfirmed(){ openSheet(unconfirmedSpec()); }
@@ -1510,11 +1579,30 @@ function reviewEmail(pid,link){
 }
 const reviewSkipped=pid=>!!(S.ov[pid]||{}).noReview;
 const lastReviewAsk=pid=>((S.ov[pid]||{}).log||[]).find(e=>e.kind==="review"&&e.st!=="drafted");
+/* The one place a review ask is worded and tagged (kind "review"), so it counts as asked (lastReviewAsk, clientAsked) and is not
+   counted as a rebooking text (batchEligible). null until the review link is saved. */
+function reviewPreset(l,ch){
+  if(!S.reviewLink) return null;
+  return {msg:(ch==="email"?reviewEmail:reviewMsg)(l.pid,S.reviewLink),kind:"review",
+    subject:"Thanks from Lighthouse Pest Control",title:"Ask "+cOf(l.pid).n+" for a review"};
+}
 function askReview(l,ch){
   ch=ch||"text";
-  if(!S.reviewLink) return openSheet(reviewLinkSpec(()=>askReview(l,ch)));
-  openMsg(l,ch,null,{msg:(ch==="email"?reviewEmail:reviewMsg)(l.pid,S.reviewLink),kind:"review",
-    subject:"Thanks from Lighthouse Pest Control",title:"Ask "+cOf(l.pid).n+" for a review"});
+  const pre=reviewPreset(l,ch);
+  if(!pre) return openSheet(reviewLinkSpec(()=>askReview(l,ch)));
+  openMsg(l,ch,null,pre);
+}
+/* The Ask on a Reviews row: one tap. It is a real sms: link, so the tap itself opens Messages with the review text in it, and the
+   click handler then logs it through openMsg exactly as the sheet's Open in Messages does (kind "review", drafted) and brings up
+   "Did that send?". No review link saved yet, or a number that can't take a text: it falls back to askReview, which sorts that out. */
+function reviewAskLink(r,label,cls){
+  const c=cOf(r.pid), pre=reviewPreset({pid:r.pid},"text");     // the wording only needs the property; the job line is looked up at the tap
+  if(!pre||!canText(c)) return btn(label,SVG.star,cls,()=>askReview(myLine(r.pid)));
+  const a=document.createElement("a");
+  a.className="btn"+(cls?" "+cls:""); a.href=smsHref(c.p,pre.msg); a.title="Ask "+c.n+" for a review";
+  a.innerHTML=ico(SVG.star)+"<span>"+esc(label)+"</span>";
+  a.onclick=e=>{ e.stopPropagation(); try{ openMsg(myLine(r.pid),"text",pre.msg,pre); }catch(err){ reportErr(label,err); } };   // no preventDefault: the link must fire
+  return a;
 }
 function reviewLinkSpec(then){
   return {title:"Your Google review link",sub:"one-off setup",build:b=>{
@@ -1852,33 +1940,42 @@ function viewReviews(m){
     all.push({id,c,pid,pids,last,ld:last?last.d:(c.ls||""),asked,skip});
   }
   all.sort((a,b)=>b.ld.localeCompare(a.ld)||a.c.n.localeCompare(b.c.n));
+  /* one compact row: who and where, last job and asked date, and on the right a one-tap Ask (a real sms: link). Ask by email and
+     Not this one sit behind More. Tap the name to open the client. */
   const row=r=>{
-    const p=pOf(r.pid), w=el("div","row "+(r.asked||r.skip?"ok":"soon")), hit=el("button","rowhit");
-    w.style.flexWrap="wrap"; hit.style.flexBasis="100%";
+    const p=pOf(r.pid), w=el("div","row rv "+(r.asked||r.skip?"ok":"soon")), hit=el("button","rowhit");
     hit.appendChild(el("div","stripe"));
     const main=el("div","rowmain"), tx=el("div","rowtext");
     tx.appendChild(el("div","nm",r.c.n));
     tx.appendChild(el("div","pl",p.l||""));
     const what=r.last?[...new Set(r.last.s.map(x=>x.s))].join(", "):(r.c.lt||"");
-    tx.appendChild(el("div","mt",(r.ld?"Last job "+nice(r.ld):"No job date")+(what?" · "+what:"")
-      +(r.asked?" · asked "+nice(r.asked):r.skip?" · not asking":"")));
+    const mt=el("div","mt",(r.ld?"Last job "+nice(r.ld):"No job date")+(r.asked?" \u00b7 asked "+nice(r.asked):r.skip?" \u00b7 not asking":"")
+      +(what?" \u00b7 "+what:""));
+    mt.title=mt.textContent; tx.appendChild(mt);
     main.appendChild(tx); hit.appendChild(main); hit.onclick=()=>openProp(r.pid);
     w.appendChild(hit);
-    const acts=el("div","btns"); acts.style.cssText="padding:0 12px 12px;flex-basis:100%";
+    const acts=el("div","acts"), more=el("div","rvmore"); more.hidden=true;
+    const emailBtn=()=>btn("Ask by email",SVG.mail,"",()=>askReview(myLine(r.pid),"email"));
     if(!r.asked&&!r.skip){
-      acts.appendChild(btn("Ask",SVG.star,"pri",()=>askReview(myLine(r.pid))));
-      if(r.c.e) acts.appendChild(btn("Ask by email",SVG.mail,"",()=>askReview(myLine(r.pid),"email")));
-      acts.appendChild(btn("Not this one",SVG.x,"",async()=>{
+      acts.appendChild(reviewAskLink(r,"Ask","pri"));
+      if(r.c.e) more.appendChild(emailBtn());
+      more.appendChild(btn("Not this one",SVG.x,"",async()=>{
         await saveOv(r.pid,{noReview:true}); toast("Won't ask "+r.c.n+"."); }));
     } else if(r.skip){
       acts.appendChild(btn("Put back",null,"",async()=>{
         for(const p of r.pids) if(reviewSkipped(p)) S.ov[p]=Object.assign({},S.ov[p],{noReview:false});
         persist(); render(); }));
     } else {
-      acts.appendChild(btn("Ask again",SVG.star,"",()=>askReview(myLine(r.pid))));
-      if(r.c.e) acts.appendChild(btn("Ask by email",SVG.mail,"",()=>askReview(myLine(r.pid),"email")));
+      acts.appendChild(reviewAskLink(r,"Ask again",""));
+      if(r.c.e) more.appendChild(emailBtn());
     }
-    w.appendChild(acts);
+    if(more.children.length){
+      const mb=el("button","btn more"); mb.setAttribute("aria-label","More"); mb.title="More"; mb.setAttribute("aria-expanded","false");
+      mb.innerHTML='<svg viewBox="0 0 24 24"><path d="M5 12h.01M12 12h.01M19 12h.01"/></svg>';
+      mb.onclick=e=>{ e.stopPropagation(); more.hidden=!more.hidden; mb.setAttribute("aria-expanded",String(!more.hidden)); };
+      acts.appendChild(mb);
+    }
+    w.appendChild(acts); if(more.children.length) w.appendChild(more);
     return w;
   };
   const draw=()=>{
@@ -2119,8 +2216,8 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-go]"); if(!b) return;
   S.stack.length=0; drawSheet();
   S.view=b.dataset.go;
-  if(b.dataset.band!==undefined) S.band=b.dataset.band;
-  else if(b.dataset.go==="due") S.band="";
+  if(b.dataset.band!==undefined) setBand(b.dataset.band);
+  else if(b.dataset.go==="due") setBand("");
   window.scrollTo(0,0); render();
 });
 window.addEventListener("error",ev=>{ try{ toast("Something glitched: "+(ev.message||"unknown"),true); }catch(_){} });
