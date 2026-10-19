@@ -67,6 +67,16 @@ a{color:var(--deep)}
   padding:calc(6px + env(safe-area-inset-top)) 14px 6px;display:flex;align-items:center;gap:10px;box-shadow:var(--raise)}
 .top h1{font-size:18px;color:var(--deepInk);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top .who{font-size:13px;opacity:.88;white-space:nowrap;max-width:34vw;overflow:hidden;text-overflow:ellipsis}
+/* the LPC badge goes Home: a 44px tap area made from padding, taken back with an equal negative margin so the bar is no taller (the picture stays 26px) */
+.lpchome{flex:none;align-self:center;display:block;padding:9px;margin:-9px;border-radius:12px}
+.lpchome:focus-visible{outline-color:var(--deepInk);outline-offset:-2px}
+/* + Book a job (master): in the top bar, where it can't hide the grid. 48px square tap area, a 38px white disc drawn inside it. */
+.topadd{flex:0 0 auto;position:relative;width:48px;height:48px;margin:-2px 0;display:grid;place-items:center;color:var(--deep)}
+.topadd:before{content:"";position:absolute;left:50%;top:50%;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:var(--deepInk);transition:transform .08s}
+.topadd .ic{position:relative;width:24px;height:24px;stroke-width:2.8}
+.topadd:active:before{transform:scale(.92)}
+.topadd:focus-visible{outline-color:var(--deepInk)}
+html.bar-open .topadd{display:none}      /* the booking bar has its own X, same as the old floating + */
 /* the ⋯ menu */
 .menuwrap{position:relative;flex:0 0 auto}
 .mbtn{position:relative;min-width:44px;min-height:44px;padding:0 10px;border:1px solid rgba(255,255,255,.45);border-radius:10px;color:var(--deepInk);display:inline-flex;align-items:center;justify-content:center}
@@ -333,8 +343,9 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .prow .ptags{display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex:0 0 auto}
 
 /* login / status screens */
-.authwrap{min-height:100vh;display:grid;place-items:center;padding:24px 16px}
+.authwrap{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px 16px}
 .authcard{width:100%;max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 20px;box-shadow:var(--raise)}
+.authlogo{display:block;height:56px;width:auto;margin:0 auto 14px}      /* the stacked logo, centred at the top of the sign-in and status cards */
 .authcard h1{font-size:24px;margin-bottom:4px}
 .authcard p{color:var(--ink2);margin:6px 0 12px}
 .divider{margin:18px 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:700}
@@ -355,6 +366,8 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .shfoot{display:flex;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
 .shfoot .btn{margin:0}
 #sh-contact .btn{min-width:0;padding:11px 6px;gap:5px;font-size:14px}      /* Ring, Text, Email and Maps on one row, even on a phone */
+#sh-paper{margin-top:0}      /* Service record / Termite inspection: straight under Ring, Text, Email and Maps */
+#sh-recs:empty,#sh-toolhint:empty{display:none}
 .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;margin:18px 0 8px}
 .fl{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin:0 0 4px}
 .fld{margin-bottom:10px;position:relative;min-width:0}
@@ -447,6 +460,9 @@ body.isdrag #toast,body.isresize #toast{pointer-events:none;opacity:.35}      /*
 .segb .n{color:inherit;opacity:.85}
 /* who to show (Both | Mitch | ...): in the toolbar, for the week view, and for the day view on a phone */
 .tb .pfilter{flex:1 1 220px;min-width:0;max-width:440px}
+/* on a computer the who buttons sit in the toolbar as they always did; on a phone they are in a small popover under the Who button (see the phone block) */
+.tbwho{display:contents}
+.tbwhobtn{display:none}
 /* toolbar date: on a computer a label and a date box side by side; on a phone (master) one button with the date box laid invisibly over it */
 .dpick{display:contents}
 .dshort{display:none}
@@ -455,15 +471,7 @@ body.isdrag #toast,body.isresize #toast{pointer-events:none;opacity:.35}      /*
 .chiprow>*{flex:0 0 auto}
 @media(hover:hover) and (pointer:fine){.chiprow{scrollbar-width:thin}.chiprow::-webkit-scrollbar{display:block;height:6px}}      /* on a computer the sideways scroll needs a visible bar */
 
-/* floating + button (master): opens the booking bar */
-.fab{position:fixed;right:calc(16px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));z-index:40;width:60px;height:60px;border-radius:50%;
-  background:var(--deep);color:var(--deepInk);display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.34),0 1px 3px rgba(0,0,0,.3)}
-.fab .ic{width:28px;height:28px;stroke-width:2.6}
-.fab:active{transform:scale(.95)}
-body.isdrag .fab,body.isresize .fab{pointer-events:none;opacity:.3}      /* so a card can be dropped on the spot under it */
-body.is-master main{padding-bottom:92px}
-@media(min-width:720px){body.is-master main{padding-bottom:0}}      /* the grid is fitted to the screen, so nothing is below it to scroll to */
-body.is-master #toast{bottom:calc(92px + env(safe-area-inset-bottom))}
+/* (the + that opens the booking bar used to float here; it is in the top bar now, see .topadd, so the grid has the whole screen under it and nothing is below it to scroll to) */
 body.is-master #toast.act{bottom:auto;top:calc(4px + env(safe-area-inset-top));padding-top:4px;padding-bottom:4px}      /* the Undo toast sits over the title bar, never over the grid: the next job to move is often right where it would be */
 html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      /* with the bar open (and the keyboard up), a toast at the bottom would be behind them */
 
@@ -523,7 +531,6 @@ html.bar-edit .bar #f-name-list{max-height:min(200px,max(90px,calc(var(--vvh,100
 .barbtns .btn.pri{flex:1.4 1 0}
 @media(pointer:coarse){.col,.wlh{cursor:pointer}}      /* iOS Safari only sends a tap to the page's click handler for an element that looks tappable */
 html.bar-open .col,html.bar-open .wlh,html.bar-open .tray{cursor:pointer}
-html.bar-open .fab{display:none}      /* the bar has its own X, and the + would sit on top of it */
 html.bar-open body.is-master main{padding-bottom:calc(var(--barh,0px) + 8px)}
 @media(min-width:720px){html.bar-open body.is-master main{padding-bottom:var(--barh,0px)}}      /* the grid is fitted to the screen above the bar, so nothing is below it to scroll to */
 @media(min-width:720px){html.bar-open body.is-master .dcred{bottom:var(--barh,0px)}}      /* Google's credit sits just above the bar */
@@ -554,31 +561,49 @@ body.isdrag .tray.barok,body.isresize .tray.barok{outline:none}
 .qsum .miss{color:var(--soon);font-weight:700}
 @media(max-width:719px){
   .grid{--cw:136px}
-  /* phone toolbar. Technician: [< Today >] [date button] on one row. Master: [< Today >] [Day Week] / [date button] [Both | Mitch | ...] in two.
-     Show cancelled, Services and Log out are in the ⋯ menu in the top bar, and New job is the + button. */
-  .tb{padding:6px 14px 8px;gap:6px 10px}
+  /* phone toolbar: ONE row of 48px buttons. Technician: [< Today >] [date button]. Master: [< Today >] [date button] [Day|Week] [Who], and the Who button opens a small popover with
+     Both | Mitch | ... (a master with one person on the roster has no Who button). Show cancelled, Services and Log out are in the ⋯ menu in the top bar, and New job is the + beside it. */
+  .top{padding-top:calc(2px + env(safe-area-inset-top));padding-bottom:2px;gap:8px}
+  .top h1{font-size:17px}
+  .tb{flex-wrap:nowrap;padding:2px 6px;gap:4px}
+  .tb>*{flex:none}
+  .tb .grp{gap:0}
+  .tb .grp .tbtn{min-width:36px;min-height:48px;padding:0 6px;border-radius:0;margin-left:-1px;font-size:15px}
+  .tb .grp .tbtn:first-child{border-radius:10px 0 0 10px;margin-left:0}
+  .tb .grp .tbtn:last-child{border-radius:0 10px 10px 0}
+  .tb .grp .tbtn[aria-pressed="true"]{position:relative;z-index:1}
   .tb>.grp:first-child{order:1}
-  .tb>.grp[aria-label="View"]{order:2}
-  .tb .dpick{order:3;display:block;position:relative;flex:1 1 130px;min-width:0;height:44px;border:1px solid var(--line2);border-radius:10px;background:var(--surface)}
-  .tb .dpick .dlabel{display:block;font-size:17px;line-height:42px;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb .dpick{order:2;display:block;position:relative;flex:1 1 0;min-width:0;height:48px;border:1px solid var(--line2);border-radius:10px;background:var(--surface)}
+  .tb .dpick .dlabel{display:block;font-size:15px;line-height:46px;padding:0 2px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tb>.grp[aria-label="View"]{order:3}
+  .tb>.tbwho{order:4}
   .tb .dlong{display:none}
   .tb .dshort{display:inline}
   .tb .dpick .tbdate{position:absolute;left:0;top:0;width:100%;height:100%;min-height:0;opacity:0;padding:0;border:none}
+  .tbwho{display:block;position:relative}
+  .tbwhobtn{display:inline-flex;position:relative;min-height:48px;min-width:48px;padding:0 8px;font-size:15px}
+  .tbwhobtn .dot{position:absolute;top:6px;right:5px;width:10px;height:10px;box-shadow:0 0 0 2px var(--surface)}      /* who is picked, if it is one person (a corner dot, so the button is no wider) */
+  .tbwho.open .tbwhobtn{background:var(--surface2)}
+  .tbwho .pfilter{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:35;flex:none;width:min(calc(100vw - 16px),360px);max-width:none;
+    background:var(--surface);border:1px solid var(--line2);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.28);padding:6px}
+  .tbwho.open .pfilter{display:block}
+  .tbwho .pfilter .segb{min-height:48px;font-size:15px;padding:0 6px;gap:5px}
+  .tbwho .pfilter .dot{width:9px;height:9px}
   .tray{padding:4px 8px;gap:5px}
   .tray .traynote{display:none}
+  /* A drop strip with nothing in it (Unassigned, the day's No time yet row, the week's No time row) is a thin line. It still takes a dropped job, the + Add is still in it,
+     and it goes back to full size the moment it holds a job. */
+  .tray.thin{padding:0 8px;gap:6px;min-height:22px}
+  .tray.thin h2{font-size:12.5px;line-height:20px}
+  .tray.thin .n{font-size:11px}
+  .ntrow.thin .gut{font-size:9px;line-height:10px;padding:1px;letter-spacing:-.02em}
+  .ntrow.thin .ntc{padding:0 3px;min-height:22px}
+  .ntrow.thin .ntadd{min-height:20px;margin:1px 0;font-size:11.5px;line-height:1;border-width:1px;border-radius:5px}
+  .wln.thin .gut{font-size:9px;line-height:10px;padding:1px;letter-spacing:-.02em}
+  .wln.thin .wlh{min-height:22px;padding-top:0;padding-bottom:0}
   .gridwrap{--gut:36px}
   .ch{padding:5px 6px;font-size:13px;gap:5px}
   .tot{font-size:11.5px}
-  .is-master .top{padding-top:calc(2px + env(safe-area-inset-top));padding-bottom:2px}
-  .is-master .top h1{font-size:17px}
-  .is-master .tb{padding:4px 8px 6px;gap:6px}
-  .is-master .tb>.grp[aria-label="View"]{margin-left:auto}
-  .is-master .tb .dpick{flex:1 1 auto}
-  .is-master .tb.hasf .dpick{flex:0 1 auto;max-width:48%}
-  .is-master .tb .pfilter{order:4;flex:1 1 0;max-width:none}
-  .is-master .tb .pfilter .segb{padding:0 4px;gap:4px;font-size:14.5px}
-  .is-master .tb .pfilter .segb .n{display:none}
-  .is-master .tb .pfilter .dot{width:9px;height:9px}
   .is-master .dayline{padding:0 8px 6px;gap:6px}
   .wlh .lt{display:none}      /* a person's lane on a phone is too narrow for a name: the colour says who */
   .wdh{padding:2px 3px;min-height:32px}
@@ -589,6 +614,12 @@ body.isdrag .tray.barok,body.isresize .tray.barok{outline:none}
   .wdh .pl{display:flex;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--ink2);white-space:nowrap;line-height:1.25}
   .wdh .pl .dot{width:7px;height:7px}
   .wdh.today .pl{color:var(--ok)}
+}
+@media(max-width:380px){      /* the smaller phones (375 wide and under): a little less padding and type so the date still fits on the one row */
+  .tb .grp .tbtn{padding:0 4px;font-size:14px;min-width:34px}
+  .tb .dpick .dlabel{font-size:13.5px;letter-spacing:-.01em}
+  .tbwhobtn{min-width:42px;padding:0 5px;font-size:14px}
+  .top{gap:6px}
 }
 .lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
 </style>
@@ -707,7 +738,7 @@ const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster
   view:"day",date:todayYmd(),showCancelled:false,jobs:[],byId:{},loaded:false,loadErr:"",range:null,
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
   scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
-  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,noAddonCol:false,menuOpen:false,
+  uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,noAddonCol:false,menuOpen:false,whoOpen:false,
   noPropCols:false,      // the proposal flag columns (10_proposal_flags.sql) aren't in the database: the Barrier / Baiting buttons and the Proposals to do list stay hidden
   noPriceTbl:false,priceNoted:false,priceFailNoted:false,usualFail:false,priceChan:null,      // prices (master only): the 08 tables are missing / that was said once / a price load failed and was said / usual prices didn't load / the realtime channel for the two price tables
 
@@ -977,10 +1008,12 @@ function svcLabel(j,max){
 /* =====================================================================
    SCREENS AND AUTH
    ===================================================================== */
+// the stacked logo, centred at the top of the login card and the "not connected / hang on / no signal / not set up" cards
+const AUTH_LOGO='<img class="authlogo" src="logo/logo-stacked.svg" alt="Lighthouse Pest Control" width="62" height="56">';
 function setApp(html,screen){S.screen=screen;byId("app").innerHTML=html;}
 
 function renderNotConnected(){
-  setApp('<div class="authwrap"><div class="authcard"><h1>Not connected yet</h1>'+
+  setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>Not connected yet</h1>'+
     '<p>This calendar is not linked to its database yet. Ask Mitch to finish the setup.</p></div></div>',"notconnected");
 }
 function renderBoot(msg){
@@ -990,15 +1023,15 @@ function renderFatal(msg,canRetry){
   // No login tools (S.sb is null): Log out can't work, so the only useful button is Reload.
   const btns=!S.sb?'<button class="btn pri" data-act="reload">Reload</button>'
     :(canRetry?'<button class="btn pri" data-act="restart">Try again</button>':'')+'<button class="btn" data-act="signout">Log out</button>';
-  setApp('<div class="authwrap"><div class="authcard"><h1>Hang on</h1><p>'+esc(msg)+'</p>'+
+  setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>Hang on</h1><p>'+esc(msg)+'</p>'+
     '<div class="btns">'+btns+'</div></div></div>',"fatal");
 }
 function renderOffline(){
-  setApp('<div class="authwrap"><div class="authcard"><h1>No signal</h1><p>Can\'t reach the server. Check your signal and try again.</p>'+
+  setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>No signal</h1><p>Can\'t reach the server. Check your signal and try again.</p>'+
     '<div class="btns"><button class="btn pri" data-act="reboot">Try again</button><button class="btn" data-act="signout">Log out</button></div></div></div>',"offline");
 }
 function renderNotSetup(){
-  setApp('<div class="authwrap"><div class="authcard"><h1>Not set up yet</h1>'+
+  setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>Not set up yet</h1>'+
     "<p>You're not set up yet, ask Mitch.</p>"+
     '<div class="btns"><button class="btn" data-act="signout">Log out</button></div></div></div>',"notsetup");
 }
@@ -1018,7 +1051,7 @@ function hashError(){
 }
 function renderLogin(notice,kind){
   let last="";try{last=localStorage.getItem(EMAIL_KEY)||"";}catch(e){}
-  setApp('<div class="authwrap"><div class="authcard"><h1>Job Calendar</h1>'+
+  setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>Job Calendar</h1>'+
     '<p>Log in with your email and password. Your phone can remember them for you.</p><div id="lg-msg" role="alert">'+(notice?'<div class="banner '+(kind||"warn")+'" style="margin:0 0 12px">'+esc(notice)+'</div>':'')+'</div>'+
     '<form id="lg-form" action="#" autocomplete="on">'+
     '<label class="fl" for="lg-email">Your email</label>'+
@@ -1381,9 +1414,11 @@ function menuKey(e){      // arrow keys move between the items, Escape shuts the
 }
 function renderShell(){
   S.menuOpen=false;
-  setApp('<header class="top"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><h1>Job Calendar</h1><span class="who">'+esc(S.me.name)+'</span>'+menuHtml()+'</header>'+
-    '<main><div id="tb"></div><div id="dr"></div><div id="cb"></div></main>'+
-    (S.isMaster?'<button type="button" class="fab" data-act="qadd" aria-label="Book a job">'+IC.plus+'</button>':""),"cal");
+  S.whoOpen=false;
+  // The LPC badge is the Home button (it asks first if a job sheet or the booking bar holds something unsaved, see leaveOk). The + is the same button the floating + was: data-act="qadd" with no staff or day, so the booking bar opens with exactly the same who, day and time.
+  setApp('<header class="top"><a class="lpchome" href="home.html" aria-label="Home"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"></a><h1>Job Calendar</h1><span class="who">'+esc(S.me.name)+'</span>'+
+    (S.isMaster?'<button type="button" class="topadd" data-act="qadd" aria-label="Book a job" title="Book a job">'+IC.plus+'</button>':"")+menuHtml()+'</header>'+
+    '<main><div id="tb"></div><div id="dr"></div><div id="cb"></div></main>',"cal");
   renderToolbar();renderBody();
 }
 function weekLabel(){const ws=weekStart(S.date),we=addDays(ws,5),y1=parseYmd(ws).getFullYear(),y2=parseYmd(we).getFullYear();return dayShort(ws)+(y1!==y2?" "+y1:"")+" to "+dayShort(we)+" "+y2;}
@@ -1412,6 +1447,7 @@ function renderToolbar(){
     const lbl=tb.querySelector(".dlabel");if(lbl)lbl.innerHTML=dlabelHtml(wk);
     updateLive();return;
   }
+  S.whoOpen=false;      // (a rebuilt toolbar has its Who popover shut)
   let h='<div class="tb"><div class="grp">'+
     '<button class="tbtn" data-act="prev" aria-label="Previous '+(wk?"week":"day")+'">'+IC.l+'</button>'+
     '<button class="tbtn" data-act="today">Today</button>'+
@@ -1422,7 +1458,9 @@ function renderToolbar(){
     h+='<div class="grp" role="group" aria-label="View">'+
       '<button class="tbtn" data-act="viewday" aria-pressed="'+(!wk)+'">Day</button>'+
       '<button class="tbtn" data-act="viewweek" aria-pressed="'+wk+'">Week</button></div>'+
-      '<div class="pfilter" id="tbf" hidden></div>';
+      // Who to show (Both | Mitch | ...): in the toolbar on a computer; on a phone the Who button opens it as a small popover (it won't fit on the one row)
+      '<div class="tbwho" id="tbwho" hidden><button type="button" class="tbtn tbwhobtn" id="tbwho-btn" data-act="whomenu" aria-haspopup="true" aria-expanded="false" aria-controls="tbf">Who</button>'+
+      '<div class="pfilter" id="tbf" data-noswipe></div></div>';
   }
   tb.innerHTML=h+'</div>';
   renderFilter();
@@ -1430,14 +1468,33 @@ function renderToolbar(){
 }
 // The "who to show" buttons in the toolbar. Drawn again with every body render (the counts change), and first, because the grid is
 // fitted to the space left under the toolbar.
+// The Who popover (phone): open or shut. Opening it puts the focus on the person now picked; shutting it can hand the focus back to the Who button.
+function whoSet(on,refocus){
+  S.whoOpen=!!on;
+  const w=byId("tbwho"),b=byId("tbwho-btn");
+  if(w)w.classList.toggle("open",S.whoOpen);
+  if(b){
+    b.setAttribute("aria-expanded",S.whoOpen?"true":"false");
+    if(!S.whoOpen&&refocus){try{b.focus({preventScroll:true});}catch(e){}}
+  }
+  if(S.whoOpen){const f=document.querySelector('#tbf [aria-pressed="true"]')||document.querySelector("#tbf .segb");if(f){try{f.focus({preventScroll:true});}catch(e){}}}
+}
+// The Who button says who is being shown (a dot in their colour when it is one person), so the one row still tells you without opening anything
+function whoLabel(act){
+  const b=byId("tbwho-btn");if(!b)return;
+  const solo=phoneSolo(act),s=solo&&S.staffById[solo];
+  b.innerHTML='Who'+(s?'<span class="dot" style="background:'+safeColour(s.colour)+'"></span>':"");
+  b.setAttribute("aria-label","Who to show (now "+(s?s.name:(act.length>2?"All":"Both"))+")");
+}
 function renderFilter(){
   const el=byId("tbf");if(!el)return;
-  const act=activeStaff(),bar=el.parentNode;
-  if(!filterOn(act)){el.innerHTML="";el.hidden=true;if(bar)bar.classList.remove("hasf");return;}
+  const act=activeStaff(),wrap=byId("tbwho"),bar=el.closest?el.closest(".tb"):null;
+  if(!filterOn(act)){el.innerHTML="";if(wrap)wrap.hidden=true;if(S.whoOpen)whoSet(false);if(bar)bar.classList.remove("hasf");return;}
   const r=currentRange(),all=visibleJobs().filter(function(j){return j.job_date>=r.from&&j.job_date<=r.to;});
   const ae=document.activeElement,had=(ae&&el.contains(ae))?ae.getAttribute("data-who"):null;
   el.innerHTML=phoneFilterHtml(act,all,phoneSolo(act));
-  el.hidden=false;if(bar)bar.classList.add("hasf");
+  if(wrap)wrap.hidden=false;if(bar)bar.classList.add("hasf");
+  whoLabel(act);
   if(had){const b=el.querySelector('[data-who="'+had+'"]');if(b){try{b.focus({preventScroll:true});}catch(e){}}}
 }
 function bodyHtml(){
@@ -1479,15 +1536,11 @@ function renderBody(){
    Pixels per minute = the height left on the screen under the top bar, toolbar, Unassigned row and the grid's own header (names, No time yet),
    divided by the hours shown (7am to 5pm unless a job is outside that). Never under PPM_FLOOR: below that the grid scrolls inside its frame
    (the names stay put) instead of squashing the cards. Worked out again on every render, and on a resize or turning the phone. */
-// The + button (master) floats 16px in from the bottom right and is 60px across. From 720px up the page does not scroll, so a grid that runs
-// under it could never be uncovered: end that grid above it. (On a phone the page scrolls on past the grid, see body.is-master main, and the
-// grid needs every pixel it can get, so it stays as it is.)
-const FAB_ROOM=80;
+// (The + button used to float over the bottom right corner, and a grid that ran under it had to end above it. It is in the top bar now, so the grid has the whole screen.)
 // The height the calendar has to fit in: the window, less the booking bar docked at the foot of it (when it is open).
 function viewH(){return window.innerHeight-(S.barH||0);}
 function gapUnderGrid(gw){
   if(isNarrow())return 6;      // the .dayline padding under the grid
-  if(!S.barH&&S.isMaster&&gw&&gw.getBoundingClientRect().right>(document.documentElement.clientWidth||window.innerWidth)-76)return FAB_ROOM;      // (the + is hidden while the bar is open)
   return 14;
 }
 function fitPpm(gw){
@@ -1700,7 +1753,7 @@ function dayHtml(){
     body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW)+'</div>';
   });
   return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+cols.length+'">'+
-    '<div class="gtop"><div class="grow">'+head+'</div><div class="grow ntrow">'+nt+'</div></div>'+
+    '<div class="gtop"><div class="grow">'+head+'</div><div class="grow ntrow'+(ntCount?"":" thin")+'">'+nt+'</div></div>'+
     '<div class="grow gb">'+gutHtml(g,hpx)+body+'</div></div></div>'+
     trayHtml(tray)+'</div>';
 }
@@ -1708,7 +1761,7 @@ function trayHtml(list){
   const timed=list.filter(isTimed).sort(byTime);
   const untimed=list.filter(function(j){return !isTimed(j);}).sort(byTime);
   function tagFor(j){const s=j.staff_id&&S.staffById[j.staff_id];return s?"Was "+s.name+" (not active)":"";}
-  let h='<aside class="tray" data-drop="tray" aria-label="Unassigned jobs"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
+  let h='<aside class="tray'+(list.length?"":" thin")+'" data-drop="tray" aria-label="Unassigned jobs"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
   if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
   h+=timed.map(function(j){return miniHtml(j,tagFor(j));}).join("");
   if(untimed.length)h+='<h3>No start time</h3>'+untimed.map(function(j){return miniHtml(j,tagFor(j),"nt");}).join("");
@@ -1756,13 +1809,13 @@ function weekHtml(){
     strip+='</div>';body+='</div>';
   });
   return '<div class="dayline wkline">'+weekTrayHtml(tray)+'<div class="gridwrap" id="gw"><div class="grid wk" style="--n:'+days.length+'">'+
-    '<div class="gtop"><div class="wrow">'+head+'</div><div class="wrow wln">'+strip+'</div></div>'+
+    '<div class="gtop"><div class="wrow">'+head+'</div><div class="wrow wln'+(onGrid.some(function(j){return !isTimed(j);})?"":" thin")+'">'+strip+'</div></div>'+
     '<div class="wrow gb">'+gutHtml(g,hpx)+body+'</div></div></div></div>';
 }
 // the week's unassigned jobs as one row of chips ("Tue 9:00 Smith"), in day and time order. Drag one onto the grid to give it a person.
 function weekTrayHtml(list){
   const sorted=list.slice().sort(function(a,b){return a.job_date<b.job_date?-1:a.job_date>b.job_date?1:byTime(a,b);});
-  let h='<aside class="tray row" data-drop="tray" aria-label="Unassigned jobs this week"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
+  let h='<aside class="tray row'+(list.length?"":" thin")+'" data-drop="tray" aria-label="Unassigned jobs this week"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
   if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
   h+=sorted.map(function(j){
     const s=tmToMin(j.start_time),dd=parseYmd(j.job_date),was=j.staff_id&&S.staffById[j.staff_id];
@@ -2706,7 +2759,11 @@ function sheetHtml(){
      cf("f-email","Email",'type="email" autocomplete="off" inputmode="email" autocapitalize="none"',I.email)+
      '<div class="btns" id="sh-contact">'+
        '<a class="btn" id="ln-ring">'+IC.phone+' Ring</a><a class="btn" id="ln-text">'+IC.msg+' Text</a>'+
-       '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>';
+       '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>'+
+     // the paperwork buttons sit straight under them (they used to be at the very bottom of the sheet): Service record for a job with a non-inspection service, Termite inspection
+     // for an inspection one, both for a combo. updateLinks shows and hides them (and this row), and the hint and the "done / not done yet" lines go with them.
+     '<div class="btns" id="sh-paper" hidden><a class="btn" id="ln-rec" hidden>Service record</a><a class="btn" id="ln-insp" hidden>Termite inspection</a></div>'+
+     '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
   // client notes: stay with the client, not the job. A strip under the title when there are some, or a "+ Client note" link.
   if(!S.noNotesCol&&(M||SH.clientId)){
     h+='<button type="button" class="linkbtn cnadd" id="cn-add" data-sh="cnadd" hidden>+ Client note</button>'+
@@ -2731,13 +2788,13 @@ function sheetHtml(){
   }
   h+='<div class="fld"><label class="fl" for="f-notes">Notes</label><textarea class="inp" id="f-notes" placeholder="Anything to remember about this job">'+esc(I.notes)+'</textarea></div>';
   // paperwork
-  h+='<div class="lbl">Paperwork</div><div class="btns"><a class="btn" id="ln-rec" hidden>Service record</a><a class="btn" id="ln-insp" hidden>Termite inspection</a></div>'+
+  // (the label is only there while the proposal buttons under it are: updateProps)
+  h+='<div class="lbl" id="sh-paplbl" hidden>Paperwork</div>'+
     // Barrier / Baiting proposal: on an inspection job that is saved. A tap saves straight away (toggleProposal) and lights the job up on the calendar.
     '<div class="btns" id="sh-props" role="group" aria-label="Proposals to do" hidden>'+
       '<button type="button" class="btn pbtn" data-sh="prop" data-k="barrier" aria-pressed="false">Barrier proposal</button>'+
       '<button type="button" class="btn pbtn" data-sh="prop" data-k="baiting" aria-pressed="false">Baiting proposal</button></div>'+
-    '<div class="hint" id="sh-prophint" hidden>Tick one when this job needs a proposal. It lights up on the calendar until you untick it.</div>'+
-    '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
+    '<div class="hint" id="sh-prophint" hidden>Tick one when this job needs a proposal. It lights up on the calendar until you untick it.</div>';
   // More: prices and invoice wording (a worker gets the wording only, never a price), the job total, the client's email, state and postcode, photos, cancel and delete. Shut until opened (remembered on this device).
   // It opens by itself if something in there needs a look (a bad price or email, photos that haven't uploaded, a cancelled job). For the master a price still to fill shows as a badge on the row.
   h+='<button type="button" class="morerow" id="sh-morebtn" data-sh="more" aria-expanded="false" aria-controls="sh-more">'+
@@ -2869,6 +2926,7 @@ function updateLinks(){
   const insp=byId("ln-insp"),rec=byId("ln-rec");
   if(insp)insp.hidden=!hasInsp;
   if(rec)rec.hidden=!hasRec;
+  const pp=byId("sh-paper");if(pp)pp.hidden=!(hasInsp||hasRec);
   updateProps();
   // these two leave this page in the same tab, so they stay switched off while photos are going up (they come back by themselves when it finishes)
   if(id&&!upl){
@@ -4036,6 +4094,7 @@ function updateProps(){
   const insp=SH.svc.some(function(e){return isInspectionType(e.type);});
   const show=!!SH.jobId&&!S.noPropCols&&(insp||pr.b||pr.t);
   box.hidden=!show;if(hint)hint.hidden=!show;
+  const pl=byId("sh-paplbl");if(pl)pl.hidden=!show;
   box.querySelectorAll("[data-k]").forEach(function(b){
     const k=b.getAttribute("data-k"),on=k==="barrier"?pr.b:pr.t;
     b.setAttribute("aria-pressed",on?"true":"false");b.classList.toggle("on",on);
@@ -4993,8 +5052,10 @@ function handleAct(k,el){
   // a button tap must take focus off the toolbar date box first (Safari doesn't always do it), so a half-typed date is applied
   // and the toolbar is allowed to rebuild
   const tbd=byId("tb-date");if(tbd&&S.tbDateFocus){tbd.blur();S.tbDateFocus=false;}
-  if(k==="menu"){if(S.menuOpen)closeMenu(true);else openMenu();return;}
+  if(k==="menu"){if(S.whoOpen)whoSet(false);if(S.menuOpen)closeMenu(true);else openMenu();return;}
+  if(k==="whomenu"){if(S.menuOpen)closeMenu();whoSet(!S.whoOpen,true);return;}
   if(S.menuOpen)closeMenu();      // any other tap on a menu item shuts the menu first
+  if(S.whoOpen)whoSet(false,k==="pwho");      // and so does any other tap on the Who popover (picking someone hands the focus back to the Who button)
   if(k==="signout")signOut();
   else if(k==="togglecanc"){S.showCancelled=!S.showCancelled;savePrefs();const mi=$('#menu [data-act="togglecanc"]');if(mi)mi.setAttribute("aria-checked",S.showCancelled?"true":"false");renderBody();}
   else if(k==="svcpanel")openSvcPanel();
@@ -5015,9 +5076,19 @@ function handleAct(k,el){
   else if(k==="godate"){S.barPrevView=null;S.view="day";savePrefs();gotoDate(el.getAttribute("data-date"));}
   else if(k==="retry"){S.loadErr="";fetchJobs(false);}
 }
+// Leaving this page by the LPC badge (Home). It asks the same questions the Service record and Termite inspection buttons ask before they leave (photos still going up,
+// photos waiting on this device, changes not saved in the job sheet or the booking bar), and asks nothing when nothing would be lost.
+function leaveOk(){
+  if(S.uploads>0&&!confirm("Photos are still uploading. If you leave now, the rest won't be saved. Leave anyway?"))return false;
+  if(S.uploads<=0&&SH&&SH.pendingN>0&&!confirm("Some photos haven't uploaded yet. They stay saved on this device and you can send them the next time you open this job. Leave anyway?"))return false;
+  if(SH&&isDirty()&&!confirm("You have changes that are not saved. Leave without saving?"))return false;
+  return true;
+}
 function onClick(e){
   const t=e.target;if(!t||!t.closest)return;
+  if(t.closest(".lpchome")){if(!leaveOk())e.preventDefault();return;}      // (the badge is a real link to home.html: only a "no" stops it)
   if(S.menuOpen&&!t.closest("#menu,#menu-btn")){closeMenu();return;}      // a tap away from the open menu just shuts it
+  if(S.whoOpen&&!t.closest("#tbwho")){whoSet(false);return;}      // and the same for the Who popover
   if(SV){svcPanelClick(t);return;}
   const sh=t.closest("[data-sh]");
   if(sh&&SH){e.preventDefault();handleSheetAction(sh,e);return;}
@@ -5112,6 +5183,7 @@ function flushDate(){
 function onKey(e){
   if(SV){if(e.key==="Escape"){closeSvcPanel(false);}return;}
   const modal=!!SH&&!SH.bar;      // a full job sheet (the booking bar is not modal: the calendar behind it still works)
+  if(S.whoOpen&&!modal&&e.key==="Escape"){e.preventDefault();whoSet(false,true);return;}
   if(S.menuOpen&&!modal){
     if(e.key==="Escape"){e.preventDefault();closeMenu(true);return;}
     if(e.key==="ArrowDown"||e.key==="ArrowUp"){menuKey(e);return;}
