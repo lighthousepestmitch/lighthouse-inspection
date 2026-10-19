@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SDS">
+<meta name="theme-color" content="#0E4F54">
+<title>SDS</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../logo/icon-32.png">
+<link rel="apple-touch-icon" href="../logo/icon-180.png">
+<style>
+/* Same look as records.html: same variables, header, buttons, cards. No web fonts here (this page
+   has to work with no signal), so the font stacks fall back to Georgia and the phone's own font. */
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --surface2:#EDF0EC; --raise:0 1px 2px rgba(20,32,30,.06),0 4px 14px rgba(20,32,30,.05);
+  --ink:#14201E; --ink2:#4B5B57; --ink3:#7E8D88; --line:#DCE1DD; --line2:#C9D1CC;
+  --deep:#0E4F54; --deepInk:#FFFFFF; --accent:#B4701F; --sos:#B3261E;
+  --over:#A23C29; --overBg:#F8E8E3; --soon:#8C6314; --soonBg:#F8F0DC; --ok:#276B59; --okBg:#E2EFE9;
+  --focus:#0E4F54;
+}
+@media not all{ :root:not([data-theme="light"]){
+  --bg:#0D1513; --surface:#16211F; --surface2:#1E2B28; --raise:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.28);
+  --ink:#E9EEEB; --ink2:#9FB0AB; --ink3:#71837E; --line:#27342F; --line2:#33423D;
+  --deep:#57B3BA; --deepInk:#08201F; --accent:#DDA05B; --sos:#C93A30;
+  --over:#EE9179; --overBg:#2C1A16; --soon:#DCB162; --soonBg:#2B2416; --ok:#74C8A8; --okBg:#14261F;
+  --focus:#57B3BA;
+}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(40px + env(safe-area-inset-bottom))}
+h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:600;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:6px}
+.wrap{max-width:880px;margin:0 auto;padding:0 14px}
+/* keeps the status bar area solid when the page is saved to the home screen */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--deep);z-index:31}
+
+/* header, then the call strip that stays put while you scroll */
+header{background:var(--deep);color:var(--deepInk);padding:calc(12px + env(safe-area-inset-top)) 0 0}
+.brand{display:flex;flex-wrap:nowrap;align-items:center;gap:6px 12px;padding-bottom:10px}
+.brand .ttl{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 9px;min-width:0}   /* on a narrow phone the small "Lighthouse Pest" drops under the title */
+.brand h1{font-size:19px;color:var(--deepInk);letter-spacing:-.01em}
+.brand .sub{font-size:11px;opacity:.72;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+/* the LPC badge is the way Home: 44px to tap, but the padding and the matching negative margin keep the header the same height */
+.lpchome{flex:none;align-self:center;display:block;padding:9px;margin:-9px;border-radius:12px;-webkit-tap-highlight-color:transparent}
+.calls{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--deep);padding:0 0 10px;box-shadow:var(--raise)}
+.callgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.call{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:58px;padding:7px 8px;
+  border-radius:12px;text-decoration:none;text-align:center;line-height:1.15;font-weight:700}
+.call .l{font-size:12px;font-weight:600;letter-spacing:.02em;opacity:.92}
+.call .n{font-size:21px;font-weight:700}
+.call.sos{background:var(--sos);color:#fff}
+.call.pi{background:var(--deepInk);color:var(--deep)}
+
+/* status, search */
+.statcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:18px 0 10px;box-shadow:var(--raise)}
+.statline{display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:14px}
+.statline b{font-weight:700}
+.statline .need{color:var(--over);font-weight:700}
+.spin{width:16px;height:16px;border:2px solid var(--line2);border-top-color:var(--deep);border-radius:50%;animation:sp .8s linear infinite;display:inline-block;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.banner{padding:11px 13px;border-radius:10px;font-size:13px;margin:10px 0 0;border:1px solid}
+.banner.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.inp{width:100%;padding:12px 11px;border-radius:9px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);font:inherit;font-size:16px;min-height:46px}
+.inp::placeholder{color:var(--ink3)}
+.search{margin-top:12px;display:block}
+.small{font-size:12px;color:var(--ink3)}
+.hint{font-size:12px;color:var(--ink3);margin:4px 0 6px}
+
+/* recent products: one tap opens the sheet. A red outline means there is no sheet on file yet, so it jumps to the card instead. */
+.recent{display:flex;align-items:center;gap:10px;margin-top:10px}
+.recent .lbl{flex:none;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.chips{display:flex;gap:8px;flex:1;min-width:0;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;max-width:210px;height:48px;padding:0 15px;border:1px solid var(--line2);background:var(--surface);
+  border-radius:999px;font:inherit;font-size:14px;font-weight:600;line-height:1.2;color:var(--ink);text-decoration:none;text-align:left}
+.chip>span{display:block;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip.none{border-color:var(--over);color:var(--over)}
+
+/* product groups: a bar for each (name and count), shut unless you are searching */
+.grp{margin-top:10px}
+.gh{margin:0;font-size:16px}
+.gbar{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 14px;text-align:left;
+  background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--raise)}
+.gbar .gn{font-family:Newsreader,Georgia,serif;font-weight:600;font-size:16px;flex:1;min-width:0}
+.gbar .gc{flex:none;font-size:13px;font-weight:600;color:var(--ink2);background:var(--surface2);border-radius:999px;padding:1px 10px}
+.gbar::after{content:"+";flex:none;font-size:22px;font-weight:500;color:var(--ink3);line-height:1;width:16px;text-align:center}
+.gbar[aria-expanded="true"]::after{content:"\2212"}
+.gbody{margin-top:8px}
+
+/* product cards: name on the left, Open SDS on the right (about 80px). Tap the name to open the rest. */
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:8px;box-shadow:var(--raise)}
+.card .open{position:absolute;right:12px;top:15px;z-index:1;width:100px;min-width:0;min-height:48px;margin:0;padding:0 8px;font-size:15px;flex:none}
+details.pc>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;justify-content:center;gap:4px;min-height:78px;
+  padding:10px 12px;border-radius:10px;-webkit-tap-highlight-color:transparent}
+details.pc>summary::-webkit-details-marker{display:none}
+.card.hasbtn details.pc>summary{padding-right:124px}
+.pn{font-weight:700;font-size:15.5px;line-height:1.25;overflow-wrap:anywhere}
+.pm{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;color:var(--ink2);line-height:1.3}
+.pm .pa{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm .more{flex:none;margin-left:auto;font-size:12px;font-weight:600;color:var(--ink3);white-space:nowrap}
+.pm .more::after{content:" \25BE"}
+details.pc[open] .pm .more::after{content:" \25B4"}
+.pill{flex:none;font-size:11.5px;font-weight:700;border-radius:999px;padding:1px 8px;border:1px solid;white-space:nowrap}
+.pill.bad{background:var(--overBg);border-color:var(--over);color:var(--over)}
+.pill.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.pbody{padding:10px 12px 12px;border-top:1px solid var(--line)}
+.card .tag{display:inline-block;font-size:11px;font-weight:600;color:var(--ink2);border:1px solid var(--line2);border-radius:999px;padding:1px 8px;margin-bottom:6px;white-space:nowrap}
+.card .pl{font-size:13px;color:var(--ink2)}
+.card .mt{font-size:12.5px;color:var(--ink3);margin-top:1px}
+.flag{display:flex;flex-direction:column;gap:1px;margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid;font-size:13px}
+.flag b{font-size:14px}
+.flag.bad{background:var(--overBg);border-color:var(--over);color:var(--over)}
+.flag.warn{background:var(--soonBg);border-color:var(--soon);color:var(--soon)}
+.until{margin-top:6px}
+.empty{text-align:center;padding:36px 20px;color:var(--ink3)}
+
+/* buttons */
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.btn{flex:1;min-width:112px;min-height:48px;padding:13px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--surface);
+  font-weight:600;font-size:14px;display:flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;color:var(--ink)}
+.btn.pri{background:var(--deep);color:var(--deepInk);border-color:var(--deep)}
+.sv{margin-top:6px}
+.sv.ok{color:var(--ok)}
+
+/* safety facts (sit at the bottom of the open card) */
+.fb{margin:6px 0 0;padding:0 2px}
+.kv{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.kv:last-child{border-bottom:none}
+.kv dt{flex:0 0 100px;color:var(--ink3);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600;padding-top:1px}
+.kv dd{margin:0;flex:1;min-width:0;word-break:break-word;white-space:pre-wrap}
+.kv a{color:var(--deep);font-weight:600}
+.fbh{margin:12px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;padding-bottom:2px;border-bottom:1px solid var(--line)}
+.none{font-size:13.5px;color:var(--ink2);padding:10px 2px 2px}
+
+.boot{display:grid;place-items:center;min-height:60vh;min-height:60dvh;text-align:center;padding:24px;gap:10px;color:var(--ink2)}
+.boot .btn{flex:none;width:100%;max-width:260px}
+
+/* the printed register: hidden on screen, the only thing on the page when printing */
+#reg{display:none}
+@page{size:A4;margin:12mm}
+@media print{
+  body>*:not(#reg){display:none!important}
+  body::before{display:none!important}
+  html,body{background:#fff!important;color:#333!important;padding:0!important;margin:0!important}
+  #reg{display:block;font-family:Arial,Helvetica,sans-serif;color:#333;font-size:9pt;line-height:1.35;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #reg h1{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:18pt;color:#333;margin:0 0 6pt}
+  #reg .rbiz{font-size:9.5pt;padding-bottom:8pt;margin-bottom:10pt;border-bottom:1pt solid #333}
+  #reg .rbiz b{font-weight:700}
+  #reg table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}
+  #reg thead{display:table-header-group}
+  #reg tr{break-inside:avoid;page-break-inside:avoid}
+  #reg th{background:#eee;color:#333;font-weight:700;text-align:left;padding:4pt;border-bottom:1pt solid #ccc;vertical-align:bottom}
+  #reg td{padding:4pt;border-bottom:1pt solid #ccc;vertical-align:top;overflow-wrap:anywhere}
+  #reg td.pn{font-weight:700}
+  #reg .rfoot{margin:12pt 0 0;font-size:8.5pt}
+}
+.lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brand"><a class="lpchome" href="../home.html" aria-label="Home"><img class="lpcmark" src="../logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"></a>
+      <div class="ttl"><h1>Safety data sheets</h1><span class="sub">Lighthouse Pest</span></div>
+    </div>
+  </div>
+</header>
+<div class="calls">
+  <div class="wrap">
+    <div class="callgrid">
+      <a class="call sos" href="tel:000" aria-label="Call Emergency 000"><span class="l">Emergency</span> <span class="n">000</span></a>
+      <a class="call pi" href="tel:131126" aria-label="Call Poisons Info 13 11 26"><span class="l">Poisons Info</span> <span class="n">13 11 26</span></a>
+    </div>
+  </div>
+</div>
+
+<main class="wrap" id="main">
+  <div class="boot" id="boot"><div><span class="spin"></span></div><div>Opening safety data sheets…</div></div>
+  <div id="app" hidden>
+    <input class="inp search" id="q" type="search" placeholder="Search product, active, maker or APVMA"
+      autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search products">
+    <div class="banner warn" id="off" hidden>Offline. Showing the saved copy.</div>
+    <div class="recent" id="recent" hidden><span class="lbl">Recent</span><div class="chips" id="chips"></div></div>
+    <div id="list"></div>
+    <div class="statcard">
+      <div class="statline">
+        <b id="st1"></b>
+        <span class="spin" id="spin" hidden></span>
+        <span class="need" id="st2" hidden></span>
+      </div>
+    </div>
+    <div class="btns"><button class="btn" id="print" type="button">Print register</button></div>
+    <p class="hint" id="upd"></p>
+  </div>
+</main>
+<div id="reg" aria-hidden="true"></div>
+
+<script>
+(function(){
+"use strict";
+const BUILD="2026-10-07s1";   // same cache-buster idea as records.html; bump it when the page or data layout changes
+const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
+  if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
+/* All data goes onto the page with textContent (never innerHTML), so nothing in the JSON can inject markup. */
+const AU=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const mon=d=>AU[d.getMonth()]+" "+d.getFullYear();
+const dmy=d=>d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear();
+const DATA="../jobbook-data/";
+const PDF_CACHE="sds-pdf-v1";
+const PREFS_KEY="lpc-records-prefs";
+const GROUPS=["Sprays and termiticides","Dusts, foams and aerosols","Gels","Termite baits","Rodent baits","Barriers and membranes","Other"];
+
+/* Today, for the 5-year maths. ?today=YYYY-MM-DD overrides it so it can be tested. */
+function todayDate(){
+  try{
+    const q=new URLSearchParams(location.search).get("today");
+    if(q&&/^\d{4}-\d{2}-\d{2}$/.test(q)){
+      const p=q.split("-").map(Number), d=new Date(p[0],p[1]-1,p[2]);
+      if(d.getMonth()===p[1]-1&&d.getDate()===p[2]) return d;
+    }
+  }catch(e){}
+  const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate());
+}
+const TODAY=todayDate();
+
+/* "" and missing both mean blank. Arrays join, true/false read Yes/No. */
+function txt(v){
+  if(v==null) return "";
+  if(Array.isArray(v)) return v.map(txt).filter(Boolean).join(", ");
+  if(v===true) return "Yes";
+  if(v===false) return "No";
+  if(typeof v==="object") return "";
+  return String(v).trim();
+}
+/* issued is YYYY-MM-DD or YYYY-MM (a month alone counts as the 1st) */
+function parseIssued(s){
+  const m=/^(\d{4})-(\d{2})(?:-(\d{2}))?$/.exec(txt(s)); if(!m) return null;
+  const y=+m[1], mo=+m[2], d=m[3]?+m[3]:1, dt=new Date(y,mo-1,d);
+  if(mo<1||mo>12||dt.getMonth()!==mo-1||dt.getDate()!==d) return null;
+  return dt;
+}
+
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;   // "yes" reads better as "Yes"
+
+const S={chem:null,sheets:{},updated:"",items:[],saved:new Set(),svEls:[],open:new Set(),gopen:new Set(),focusDone:false,q:"",
+  fromCache:false,cacheOK:("caches" in window),saving:false,loaded:false,failed:false};
+
+/* ---------- phone-added products (written by records.html on this same origin) ---------- */
+function readCustom(){
+  try{
+    const o=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}")||{};
+    return Array.isArray(o.customProducts)?o.customProducts:[];
+  }catch(e){ return []; }
+}
+
+/* Products used lately, from the same Records prefs (read only, nothing is written). Records keeps the list it used
+   last time for each service; a product that turns up in more services comes first. Empty means no chips at all. */
+function readRecent(){
+  try{
+    const o=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}")||{};
+    const lp=(o.lastProducts&&typeof o.lastProducts==="object"&&!Array.isArray(o.lastProducts))?o.lastProducts:{};
+    const n=Object.create(null), order=[];
+    Object.keys(lp).forEach(function(k){
+      (Array.isArray(lp[k])?lp[k]:[]).forEach(function(v){
+        const id=txt(v); if(!id) return;
+        if(!(id in n)){ n[id]=0; order.push(id); }
+        n[id]++;
+      });
+    });
+    return order.map(function(id,i){ return {id:id,n:n[id],i:i}; }).sort(function(a,b){ return b.n-a.n||a.i-b.i; }).map(function(x){ return x.id; });
+  }catch(e){ return []; }
+}
+
+/* ---------- build the product list ---------- */
+function groupOf(p){
+  const t=txt(p.type).toLowerCase();
+  const eq=(Array.isArray(p.equip)?p.equip:[]).map(x=>txt(x).toLowerCase());
+  if(t==="liquid") return 0;
+  if(t==="dust"||t==="aerosol"||t==="foam") return 1;
+  if(t==="gel") return 2;
+  if(t==="bait"&&eq.indexOf("termite bait stations")>=0) return 3;
+  if(t==="bait"&&eq.indexOf("bait stations (rodent)")>=0) return 4;
+  if(t==="membrane") return 5;
+  return 6;
+}
+function flagFor(file,issued,issuedD){
+  if(!file) return {k:"none",why:"No SDS on file"};
+  if(!issuedD) return {k:"nodate"};
+  const exp=new Date(issuedD.getFullYear()+5,issuedD.getMonth(),issuedD.getDate());
+  if(exp<TODAY) return {k:"old",why:"Sheet is from "+mon(issuedD)+", over 5 years old"};
+  return {k:"ok",until:mon(exp)};
+}
+function buildItems(){
+  const ids=new Set(), out=[];
+  function add(p,mine){
+    if(!p||typeof p!=="object") return;
+    const id=txt(p.id), name=txt(p.name);
+    if(!id||!name||ids.has(id)) return;
+    ids.add(id);
+    const raw=S.sheets[id], sh=(raw&&typeof raw==="object"&&!Array.isArray(raw))?raw:{};
+    const fa=(sh.firstAid&&typeof sh.firstAid==="object")?sh.firstAid:{};
+    const it={id:id,name:name,mine:mine,active:txt(p.active),apvma:txt(p.apvma),
+      group:groupOf(p),
+      file:txt(sh.file),sdsName:txt(sh.sdsName),maker:txt(sh.maker),issued:txt(sh.issued),
+      emergencyPhone:txt(sh.emergencyPhone),hazardous:cap(txt(sh.hazardous)),signalWord:txt(sh.signalWord),
+      dgClass:txt(sh.dgClass),unNumber:txt(sh.unNumber),ppe:txt(sh.ppe),storedAt:txt(sh.storedAt),notes:txt(sh.notes),
+      fa:{swallowed:txt(fa.swallowed),eyes:txt(fa.eyes),skin:txt(fa.skin),inhaled:txt(fa.inhaled)},
+      faText:typeof sh.firstAid==="string"?txt(sh.firstAid):""};
+    it.issuedD=parseIssued(it.issued);
+    it.flag=flagFor(it.file,it.issued,it.issuedD);
+    it.url=it.file?"pdf/"+encodeURIComponent(it.file)+"?v="+encodeURIComponent(it.issued||"0"):"";
+    it.abs=it.url?new URL(it.url,location.href).href:"";
+    it.hay=[it.name,it.active,it.maker,it.apvma,it.sdsName].join(" | ").toLowerCase();
+    out.push(it);
+  }
+  (S.chem.products||[]).forEach(p=>add(p,false));
+  readCustom().forEach(p=>add(p,true));
+  return out;
+}
+const byName=(a,b)=>a.name.localeCompare(b.name,"en-AU",{sensitivity:"base",numeric:true});
+
+/* ---------- screen ---------- */
+function facts(p){
+  const dl=el("dl","fb"); let n=0;
+  const row=(label,v,tel)=>{
+    if(!v) return; n++;
+    const r=el("div","kv"); r.append(el("dt",null,label));
+    const dd=el("dd");
+    if(tel){ const a=el("a",null,v); a.href="tel:"+tel; dd.append(a); } else dd.textContent=v;
+    r.append(dd); dl.append(r);
+  };
+  row("Hazardous",p.hazardous); row("Signal word",p.signalWord); row("DG class",p.dgClass);
+  row("UN number",p.unNumber); row("PPE",p.ppe);
+  const fa=[["Swallowed",p.fa.swallowed],["Eyes",p.fa.eyes],["Skin",p.fa.skin],["Breathed in",p.fa.inhaled]].filter(x=>x[1]);
+  if(fa.length||p.faText){
+    dl.append(el("div","fbh","First aid"));
+    if(p.faText) row("First aid",p.faText);
+    fa.forEach(x=>row(x[0],x[1]));
+  }
+  const digits=p.emergencyPhone.replace(/[^\d+]/g,"");
+  row("Emergency phone",p.emergencyPhone,/\d/.test(digits)?digits:"");
+  row("Stored",p.storedAt); row("Notes",p.notes);
+  return n?dl:null;
+}
+function card(p){
+  const f=p.flag;
+  const c=el("div","card"+(p.url?" hasbtn":"")); c.dataset.id=p.id;
+  if(p.url){
+    const a=el("a","btn pri open","Open SDS"); a.href=p.url; a.setAttribute("aria-label","Open SDS for "+p.name); c.append(a);   // same tab on purpose: iOS home-screen apps lose their cached files in a new tab
+  }
+  /* shut: name, active, a short warning if the sheet is missing or old, and Open SDS. Everything else is inside. */
+  const det=el("details","pc"); det.dataset.id=p.id; if(S.open.has(p.id)) det.open=true;
+  const sum=el("summary"); sum.append(el("span","pn",p.name));
+  const pm=el("span","pm");
+  if(f.k==="none"||f.k==="old") pm.append(el("span","pill bad","Get a current SDS"));
+  else if(f.k==="nodate") pm.append(el("span","pill warn","Check the SDS date"));
+  pm.append(el("span","pa",p.active),el("span","more","Details"));
+  sum.append(pm); det.append(sum);
+
+  const b=el("div","pbody");
+  if(p.mine) b.append(el("div","tag","Added on this phone"));
+  if(p.active) b.append(el("div","pl",p.active));
+  if(p.apvma) b.append(el("div","mt","APVMA "+p.apvma));
+  const sm=[]; if(p.issued) sm.push(p.issuedD?mon(p.issuedD):p.issued); if(p.maker) sm.push(p.maker);
+  if(sm.length) b.append(el("div","mt","SDS: "+sm.join(" · ")));
+  if(f.k==="none"||f.k==="old"){
+    const d=el("div","flag bad"); d.append(el("b",null,"Get a current SDS"),el("span",null,f.why)); b.append(d);
+  }else if(f.k==="nodate"){
+    const d=el("div","flag warn"); d.append(el("b",null,"Check the SDS date"),el("span",null,"No issue date saved yet.")); b.append(d);
+  }else{
+    b.append(el("div","small until","Current until "+f.until));
+  }
+  if(p.url){ const sv=el("div","small sv"); b.append(sv); S.svEls.push({p:p,sv:sv}); }
+  b.append(el("div","fbh","Safety facts"));
+  const dl=facts(p);
+  b.append(dl||el("div","none",p.file?"Not filled in yet. Open the SDS.":"Nothing on file yet. Get a current SDS."));
+  det.append(b); c.append(det);
+  return c;
+}
+/* Recent chips sit above the list and go away while you search. A chip with a sheet opens it in one tap. */
+function renderRecent(searching){
+  const box=$("#recent"), row=$("#chips"); row.textContent="";
+  const byId=new Map(); S.items.forEach(function(p){ byId.set(p.id,p); });
+  const ids=searching?[]:readRecent().filter(function(id){ return byId.has(id); }).slice(0,6);
+  box.hidden=!ids.length;
+  ids.forEach(function(id){
+    const p=byId.get(id); let n;
+    if(p.url){ n=el("a","chip"); n.href=p.url; n.setAttribute("aria-label","Open SDS for "+p.name); }
+    else{
+      n=el("button","chip none"); n.type="button"; n.setAttribute("aria-label",p.name+", no SDS on file. Show it in the list.");
+      n.addEventListener("click",function(){ reveal(p); });
+    }
+    n.append(el("span",null,p.name)); n.title=p.name; row.append(n);
+  });
+}
+/* open the product's group and card, and scroll to it */
+function reveal(p){
+  S.gopen.add(p.group); S.open.add(p.id); renderList();
+  const cs=$("#list").querySelectorAll(".card");
+  for(let i=0;i<cs.length;i++) if(cs[i].dataset.id===p.id){ cs[i].scrollIntoView({block:"center"}); break; }
+}
+function renderList(){
+  const list=$("#list"); list.textContent=""; S.svEls=[];
+  const searching=!!S.q.trim();
+  renderRecent(searching);
+  const toks=S.q.toLowerCase().split(/\s+/).filter(Boolean);
+  const shown=S.items.filter(p=>toks.every(t=>p.hay.indexOf(t)>=0));
+  if(!shown.length){
+    list.append(el("div","empty",searching?"Nothing matches “"+S.q.trim()+"”.":"No products to show."));
+    return;
+  }
+  GROUPS.forEach((g,i)=>{
+    const rows=shown.filter(p=>p.group===i).sort(byName); if(!rows.length) return;
+    const open=searching||S.gopen.has(i);   // groups stay shut unless you are searching (or opened one yourself)
+    const sec=el("section","grp"), h=el("h2","gh"), bar=el("button","gbar");
+    bar.type="button"; bar.setAttribute("aria-expanded",String(open));
+    bar.append(el("span","gn",g),el("span","gc",String(rows.length)));
+    h.append(bar); sec.append(h);
+    const body=el("div","gbody"); body.hidden=!open;
+    rows.forEach(p=>body.append(card(p)));
+    sec.append(body);
+    bar.addEventListener("click",function(){
+      const now=body.hidden;   // hidden now means this tap opens it
+      body.hidden=!now; bar.setAttribute("aria-expanded",String(now));
+      if(!S.q.trim()){ if(now) S.gopen.add(i); else S.gopen.delete(i); }
+    });
+    list.append(sec);
+  });
+  refreshSaved();
+}
+function refreshSaved(){
+  S.svEls.forEach(x=>{
+    if(!S.cacheOK){ x.sv.textContent=""; return; }
+    const ok=S.saved.has(x.p.abs);
+    x.sv.textContent=ok?"✓ Saved on this phone":(S.saving?"Saving to this phone…":"Not saved on this phone yet");
+    x.sv.className="small sv"+(ok?" ok":"");
+  });
+  updateStatus();
+}
+function updateStatus(){
+  const total=S.items.length;
+  const need=S.items.filter(p=>p.flag.k==="none"||p.flag.k==="old").length;
+  const saved=S.items.filter(p=>p.url&&S.saved.has(p.abs)).length;
+  $("#st1").textContent=S.cacheOK?(saved+" of "+total+" SDS saved on this phone"):"This browser can't save SDS to the phone.";
+  $("#spin").hidden=!S.saving;
+  const n=$("#st2"); n.hidden=!need; n.textContent=need+" need a current SDS";
+}
+function updateOffline(){
+  $("#off").hidden=!(S.loaded&&(navigator.onLine===false||S.fromCache));
+}
+
+/* ---------- print register (built once the data is in, hidden on screen) ---------- */
+function setPrinted(){ const n=$("#rprint"); if(n) n.textContent="Printed "+dmy(new Date()); }
+function buildRegister(){
+  const reg=$("#reg"); reg.textContent="";
+  const op=(S.chem&&S.chem.operator)||{};
+  const lic=(Array.isArray(op.techs)&&op.techs[0])?txt(op.techs[0].licence):"";
+  reg.append(el("h1",null,"Hazardous Chemicals Register"));
+  const biz=el("div","rbiz");
+  if(txt(op.business)){ const bd=el("div"); bd.append(el("b",null,txt(op.business))); biz.append(bd); }
+  if(txt(op.address)) biz.append(el("div",null,txt(op.address)));
+  if(txt(op.phone)) biz.append(el("div",null,txt(op.phone)));
+  if(lic) biz.append(el("div",null,"Licence "+lic));
+  const pr=el("div",null,""); pr.id="rprint"; biz.append(pr);
+  reg.append(biz);
+
+  const cols=[["Product",22],["Maker",12],["Active",15],["APVMA",9],["SDS issued",10],["Hazardous",9],["DG class / UN",10],["Stored",13]];
+  const t=el("table"), cg=el("colgroup");
+  cols.forEach(c=>{ const x=el("col"); x.style.width=c[1]+"%"; cg.append(x); });
+  t.append(cg);
+  const hr=el("tr"); cols.forEach(c=>hr.append(el("th",null,c[0])));
+  const th=el("thead"); th.append(hr); t.append(th);
+  const tb=el("tbody");
+  S.items.slice().sort(byName).forEach(p=>{
+    const un=/^\d+$/.test(p.unNumber)?"UN "+p.unNumber:p.unNumber;
+    const issued=!p.file?"No SDS on file":(p.issuedD?mon(p.issuedD):p.issued);
+    const r=el("tr");
+    [p.name,p.maker,p.active,p.apvma,issued,p.hazardous,[p.dgClass,un].filter(Boolean).join(" / "),p.storedAt].forEach((v,i)=>{
+      r.append(el("td",i===0?"pn":null,v));
+    });
+    tb.append(r);
+  });
+  t.append(tb); reg.append(t);
+  reg.append(el("p","rfoot","SDS for every product: lighthousepestmitch.github.io/lighthouse-inspection/sds/"));
+  setPrinted();
+}
+
+/* ---------- save the PDFs on the phone ---------- */
+async function precache(){
+  if(!S.cacheOK||S.saving) return;
+  S.saving=true; refreshSaved();
+  try{
+    if(navigator.storage&&navigator.storage.persist){ try{ navigator.storage.persist().catch(function(){}); }catch(e){} }
+    const cache=await caches.open(PDF_CACHE);
+    const want=new Set(S.items.filter(p=>p.url).map(p=>p.abs));
+    const keys=await cache.keys();
+    S.saved=new Set();
+    for(const r of keys){
+      if(want.has(r.url)) S.saved.add(r.url); else await cache.delete(r);   // an old version of a sheet, or a sheet that's gone
+    }
+    refreshSaved();
+    for(const abs of want){
+      if(S.saved.has(abs)) continue;
+      try{
+        const res=await fetch(abs);
+        if(res.ok&&res.status===200){
+          if(!(await cache.match(abs,{ignoreVary:true}))) await cache.put(abs,res);
+          S.saved.add(abs);
+        }
+      }catch(e){}   // no signal or a bad file: leave it, try again next visit
+      refreshSaved();
+    }
+  }catch(e){
+    S.cacheOK=false;
+  }
+  S.saving=false; refreshSaved();
+}
+
+/* ---------- load ---------- */
+function fail(miss){
+  S.failed=true;
+  const b=$("#boot"); b.hidden=false; $("#app").hidden=true; b.textContent="";
+  const d=el("div"); d.append(el("h2",null,"Couldn't load the safety data sheets"));
+  d.append(el("p",null,navigator.onLine===false
+    ?"You're offline and this phone hasn't saved the list yet. Open this page once with signal and it will keep a copy."
+    :"The "+miss.join(" and the ")+" didn't come down. Check your signal and try again."));
+  const btn=el("button","btn pri","Try again"); btn.type="button"; btn.addEventListener("click",function(){ location.reload(); });
+  d.append(btn); b.append(d);
+}
+async function get(path){
+  try{
+    const r=await fetch(path+"?v="+BUILD); if(!r.ok) return null;
+    return {data:await r.json(),cached:r.headers.get("x-sds-cache")==="1"};
+  }catch(e){ return null; }
+}
+async function load(){
+  const res=await Promise.all([get(DATA+"chemicals.json"),get(DATA+"sds.json")]);
+  const a=res[0], b=res[1], miss=[];
+  if(!a||!a.data||!Array.isArray(a.data.products)) miss.push("product list");
+  if(!b||!b.data||!b.data.sheets||typeof b.data.sheets!=="object") miss.push("SDS list");
+  if(miss.length){ if(!S.loaded) fail(miss); return; }
+  S.chem=a.data; S.sheets=b.data.sheets; S.updated=txt(b.data.updated);
+  S.fromCache=!!(a.cached||b.cached);
+  S.items=buildItems();
+  S.loaded=true; S.failed=false;
+  $("#boot").hidden=true; $("#app").hidden=false;
+  const d=parseIssued(S.updated);
+  $("#upd").textContent=d?"Sheet list updated "+dmy(d)+".":"";
+  buildRegister(); renderList(); updateStatus(); updateOffline();
+  if(!S.focusDone){ S.focusDone=true; focusSearch(); }
+  precache();
+}
+
+$("#q").addEventListener("input",function(e){ S.q=e.target.value; renderList(); });
+/* sds/index.html#search puts the cursor in the search box (home-screen shortcuts, other pages) */
+function focusSearch(){ if(location.hash==="#search"&&!$("#app").hidden){ try{ $("#q").focus(); }catch(e){} } }
+window.addEventListener("hashchange",focusSearch);
+$("#list").addEventListener("toggle",function(e){
+  const d=e.target; if(!d||d.tagName!=="DETAILS"||!d.dataset.id) return;
+  if(d.open) S.open.add(d.dataset.id); else S.open.delete(d.dataset.id);
+},true);
+$("#print").addEventListener("click",function(){ setPrinted(); window.print(); });
+window.addEventListener("beforeprint",setPrinted);
+window.addEventListener("offline",updateOffline);
+window.addEventListener("online",function(){ updateOffline(); if(S.fromCache||S.failed) load(); });
+
+/* The worker's default scope is this folder, so Records, Job Book and Calendar stay out of it.
+   If it can't register, the page still works online. */
+function registerWorker(){
+  try{
+    if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(function(){});
+  }catch(e){}
+}
+if(document.readyState==="complete") registerWorker(); else window.addEventListener("load",registerWorker);
+
+load();
+})();
+</script>
+</body>
+</html>

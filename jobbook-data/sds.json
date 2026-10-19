@@ -1,0 +1,146 @@
+{
+ "note": "SDS details for sds/index.html, keyed by chemicals.json product id. Facts come only from the SDS PDF; blank means the sheet doesn't say. issued is YYYY-MM-DD or YYYY-MM (the date printed on the sheet as issue/revision). See ~/business-context/sds-edit-recipe.md.",
+ "updated": "2026-10-07",
+ "sheets": {
+  "ultrathor": {
+   "file": "ultrathor-x.pdf",
+   "sdsName": "ULTRATHOR X Water-based Termiticide & Insecticide",
+   "maker": "Ensystex Australasia",
+   "issued": "2024-04",
+   "emergencyPhone": "13 35 36 (all hours)",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Nitrile or PVC gloves, glasses or goggles, clothes covering all skin, apron preferred. Respirator not usually needed.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Wash mouth with water and contact a Poisons Information Centre (13 11 26) or a doctor.",
+    "eyes": "Flush eye(s) with lukewarm, gently flowing water for 20 minutes, holding eyelids open. Get medical attention immediately.",
+    "skin": "Wash gently with warm water for 10-20 minutes, removing contaminated clothing under water. Seek medical attention if irritation persists.",
+    "inhaled": "Move to fresh air, keep at rest. If symptoms appear, call Poisons Information Centre or a doctor. Lung fluid can show up 48 hours later."
+   },
+   "storedAt": "",
+   "notes": "Class 9 (PG III), but sheet says not subject to the ADG Code by road or rail in packages up to 500 L (SP AU01). SUSMP S5."
+  },
+  "hg-tmb": {
+   "file": "homeguard-dpc-tmb.pdf",
+   "sdsName": "HOMEGUARD DPC Termite Moisture Barrier",
+   "maker": "FMC Australasia",
+   "issued": "2016-08-01",
+   "emergencyPhone": "1800 033 111",
+   "hazardous": "no",
+   "signalWord": "Warning",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "No special protective clothing required. Wear clothing that minimises skin contact.",
+   "firstAid": {
+    "swallowed": "If poisoning occurs, contact a doctor or the Poisons Information Centre on 13 11 26.",
+    "eyes": "Particulates may scratch or irritate the eye. Remove as for any foreign object. If irritation persists, get medical attention.",
+    "skin": "After handling, and before eating, drinking, smoking or going to the toilet, wash with soap and water.",
+    "inhaled": "If exposed to vapours formed at high temperatures, move to fresh air. If breathing discomfort occurs, get medical attention."
+   },
+   "storedAt": "",
+   "notes": "Sheet is for HomeGuard DPC and does not name the White TMB 2 mm sheet. Aquatic environment: acute hazard Cat 1, long-term Cat 4 (GHS)."
+  },
+  "hg-dpc": {
+   "file": "homeguard-dpc-tmb.pdf",
+   "sdsName": "HOMEGUARD DPC Termite Moisture Barrier",
+   "maker": "FMC Australasia",
+   "issued": "2016-08-01",
+   "emergencyPhone": "1800 033 111",
+   "hazardous": "no",
+   "signalWord": "Warning",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "No special protective clothing required. Wear clothing that minimises skin contact.",
+   "firstAid": {
+    "swallowed": "If poisoning occurs, contact a doctor or the Poisons Information Centre on 13 11 26.",
+    "eyes": "Particulates may scratch or irritate the eye. Remove as for any foreign object. If irritation persists, get medical attention.",
+    "skin": "After handling, and before eating, drinking, smoking or going to the toilet, wash with soap and water.",
+    "inhaled": "If exposed to vapours formed at high temperatures, move to fresh air. If breathing discomfort occurs, get medical attention."
+   },
+   "storedAt": "",
+   "notes": "Aquatic environment: acute hazard Cat 1, long-term Cat 4 (GHS). Sheet says valid for 5 years from issue (passed Aug 2021)."
+  },
+  "hg-cuts": {
+   "file": "homeguard-dpc-tmb.pdf",
+   "sdsName": "HOMEGUARD DPC Termite Moisture Barrier",
+   "maker": "FMC Australasia",
+   "issued": "2016-08-01",
+   "emergencyPhone": "1800 033 111",
+   "hazardous": "no",
+   "signalWord": "Warning",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "No special protective clothing required. Wear clothing that minimises skin contact.",
+   "firstAid": {
+    "swallowed": "If poisoning occurs, contact a doctor or the Poisons Information Centre on 13 11 26.",
+    "eyes": "Particulates may scratch or irritate the eye. Remove as for any foreign object. If irritation persists, get medical attention.",
+    "skin": "After handling, and before eating, drinking, smoking or going to the toilet, wash with soap and water.",
+    "inhaled": "If exposed to vapours formed at high temperatures, move to fresh air. If breathing discomfort occurs, get medical attention."
+   },
+   "storedAt": "",
+   "notes": "Sheet is for HomeGuard DPC (section 13 covers DPC off-cuts) and does not name 'cuts'. Aquatic environment: acute hazard Cat 1, long-term Cat 4 (GHS)."
+  },
+  "hg-blue": {
+   "file": "homeguard-pb-tmb.pdf",
+   "sdsName": "HOMEGUARD PB Termite Moisture Barrier",
+   "maker": "FMC Australasia",
+   "issued": "2020-07-23",
+   "emergencyPhone": "1800 033 111",
+   "hazardous": "no",
+   "signalWord": "Warning",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "No special protective clothing required. Wear clothing that minimises skin contact.",
+   "firstAid": {
+    "swallowed": "If poisoning occurs, contact a doctor or the Poisons Information Centre on 13 11 26.",
+    "eyes": "Particulates may scratch or irritate the eye. Remove as for any foreign object. If irritation persists, get medical attention.",
+    "skin": "After handling, and before eating, drinking, smoking or going to the toilet, wash with soap and water.",
+    "inhaled": "If exposed to vapours formed at high temperatures, move to fresh air. If breathing discomfort occurs, get medical attention."
+   },
+   "storedAt": "",
+   "notes": "Aquatic environment: acute hazard Cat 1, long-term Cat 4 (GHS). Sheet says valid for 5 years, to 23 July 2025 (passed)."
+  },
+  "hg-collar": {
+   "file": "homeguard-flexicollars.pdf",
+   "sdsName": "FLEXI COLLARS Termite Protection Barrier",
+   "maker": "FMC Australasia",
+   "issued": "2020-07-23",
+   "emergencyPhone": "1800 033 111",
+   "hazardous": "no",
+   "signalWord": "",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "No special protective clothing required. Wear clothing that minimises skin contact.",
+   "firstAid": {
+    "swallowed": "If poisoning occurs, contact a doctor or the Poisons Information Centre on 13 11 26.",
+    "eyes": "Particulates may scratch or irritate the eye. Remove as for any foreign object. If irritation persists, get medical attention.",
+    "skin": "After handling, and before eating, drinking, smoking or going to the toilet, wash with soap and water.",
+    "inhaled": "If exposed to vapours formed at high temperatures, move to fresh air. If breathing discomfort occurs, get medical attention."
+   },
+   "storedAt": "",
+   "notes": "Sheet gives no GHS classification or signal word. Says valid for 5 years from issue (passed July 2025)."
+  },
+  "precon10": {
+   "file": "garrards-pc10-adhesive.pdf",
+   "sdsName": "Garrards PC10 Canister Spray Adhesive",
+   "maker": "Garrards Pty Ltd",
+   "issued": "2022-10-26",
+   "emergencyPhone": "1800 951 288 (Chemwatch, 24/7)",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "2.1",
+   "unNumber": "UN3501",
+   "ppe": "Safety glasses or goggles, insulated gloves, overalls, PVC apron, AX filter respirator.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Rinse mouth with water. If vomiting occurs, lean them forward or on their left side. Seek medical advice.",
+    "eyes": "Wash out immediately with running water, keeping eyelids apart. Seek medical attention without delay.",
+    "skin": "Remove contaminated clothing and footwear. Flush skin and hair with running water (and soap if available). See a doctor if irritated.",
+    "inhaled": "Remove from contaminated area, lay down, keep warm and rested. Artificial respiration if not breathing. Doctor or hospital without delay."
+   },
+   "storedAt": "",
+   "notes": "Sheet names it PC10 Canister Spray Adhesive, not Pre-Con 10. Extremely flammable gas under pressure (H220), HAZCHEM 2YE, aquatic chronic Cat 2."
+  }
+ }
+}
