@@ -1,6 +1,6 @@
 {
  "note": "SDS details for sds/index.html, keyed by chemicals.json product id. Facts come only from the SDS PDF; blank means the sheet doesn't say. issued is YYYY-MM-DD or YYYY-MM (the date printed on the sheet as issue/revision). See ~/business-context/sds-edit-recipe.md.",
- "updated": "2026-10-07",
+ "updated": "2026-10-20",
  "sheets": {
   "ultrathor": {
    "file": "ultrathor-x.pdf",
@@ -141,6 +141,486 @@
    },
    "storedAt": "",
    "notes": "Sheet names it PC10 Canister Spray Adhesive, not Pre-Con 10. Extremely flammable gas under pressure (H220), HAZCHEM 2YE, aquatic chronic Cat 2."
+  },
+  "bif-lo": {
+   "file": "bif-lo.pdf",
+   "sdsName": "Bifenthrin 100 Low Odour Termiticide and Insecticide",
+   "maker": "Garrards Pty Ltd",
+   "issued": "2026-06-18",
+   "emergencyPhone": "000 (Emergency Services). Poisons Information Centre 13 11 26.",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Chemical resistant PVC or nitrile gloves, face and eye protection, cotton overalls, washable cotton hat and boots. Use in a well-ventilated area. The hazard section also says wear respiratory protection (P284), but the PPE section only says use in a well-ventilated area.",
+   "firstAid": {
+    "swallowed": "Immediately call a Poisons Information Centre (13 11 26) or a doctor and show them the SDS. Sheet warns the aromatic hydrocarbon can be breathed into the lungs if vomiting is induced and cause lung damage, so vomiting should only be induced under trained medical supervision.",
+    "eyes": "Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do, and keep rinsing. Immediately call a Poisons Information Centre (13 11 26) or a doctor.",
+    "skin": "Wash with plenty of soap and water. Wash contaminated clothing before reuse. If skin irritation or rash occurs, get medical advice.",
+    "inhaled": "Remove to fresh air and keep at rest in a position comfortable for breathing. Immediately call a Poisons Information Centre (13 11 26) or a doctor."
+   },
+   "storedAt": "",
+   "notes": "Poison Schedule S6 (label word POISON; GHS signal word on the sheet is DANGER). May cause cancer (H350, carcinogen cat 1B), harmful if swallowed or inhaled, may irritate airways, very toxic to aquatic life with long lasting effects. Class 9 PG III (Hazchem 2Z), but road and rail exempt under ADG criteria AU01; dangerous goods by sea and air. Combustible liquid (C1). Sheet states no expiry date."
+  },
+  "country-fip": {
+   "file": "country-fip.pdf",
+   "sdsName": "Fipronil 100 Residual Termiticide",
+   "maker": "Garrards Pty Ltd",
+   "issued": "2026-06-11",
+   "emergencyPhone": "000 (Emergency Services). Poisons Information Centre 13 11 26.",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Chemical resistant PVC or nitrile gloves, face and eye protection, cotton overalls, washable cotton hat and boots. Use in a well-ventilated area. The hazard section also says wear respiratory protection (P284), but the PPE section only says use in a well-ventilated area.",
+   "firstAid": {
+    "swallowed": "Immediately call a Poisons Information Centre (13 11 26) or a doctor and show them the SDS. The sheet gives no specific swallowing steps and does not say whether to induce vomiting.",
+    "eyes": "Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do, and keep rinsing. Immediately call a Poisons Information Centre (13 11 26) or a doctor.",
+    "skin": "Wash with plenty of soap and water. Wash contaminated clothing before reuse. If skin irritation or rash occurs, get medical advice.",
+    "inhaled": "Remove to fresh air and keep at rest in a position comfortable for breathing. Immediately call a Poisons Information Centre (13 11 26) or a doctor."
+   },
+   "storedAt": "",
+   "notes": "Poison Schedule S5 (label word CAUTION; GHS signal word on the sheet is DANGER). Harmful if swallowed, in contact with skin or if inhaled. Causes damage to organs through prolonged or repeated exposure (H372). Doctor's note says fipronil can cause nervous system stimulation with possible convulsions. Very toxic to aquatic life. Class 9 PG III (Hazchem 2Z), road and rail exempt under ADG criteria AU01. Sheet states no expiry date."
+  },
+  "aquastar": {
+   "file": "aquastar.pdf",
+   "sdsName": "Aquastar 100SC Termiticide and Insecticide",
+   "maker": "PCT Holdings Pty Ltd",
+   "issued": "2023-08",
+   "emergencyPhone": "+61 1800 951 288 (Chemwatch Emergency Response, 24/7). Poisons Information Centre 13 11 26.",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "6.1",
+   "unNumber": "UN3352",
+   "ppe": "Protective glasses or goggles, impervious gloves (PVC or nitrile), clothes covering all skin, apron preferred. Use in a well-ventilated area. Respirator not usually needed (full face shield and respirator if mists or vapours build up in a big spill clean-up).",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Wash mouth with water and contact a Poisons Information Centre (13 11 26) or call a doctor.",
+    "eyes": "Immediately flush the eye(s) with lukewarm, gently flowing water for 15 minutes or until the product is removed, holding eyelids open. Don't rinse contaminated water into the other eye. Get medical attention immediately.",
+    "skin": "Wash gently and thoroughly with warm water (non-abrasive soap if needed) for 10-20 minutes or until product is removed, taking off contaminated clothing under running water. If irritation persists, repeat flushing and get medical attention.",
+    "inhaled": "No first aid normally needed. If irritation develops, move to fresh air and watch until recovered. If irritation becomes painful or lasts more than about 30 minutes, get medical advice."
+   },
+   "storedAt": "",
+   "notes": "Poison Schedule S6, restricted chemical product (authorised persons only). Class 6.1 toxic, PG III, Hazchem 2X. Toxic if swallowed (H301), may cause allergic skin reaction (H317), suspected of causing cancer (H351), damages the nervous system through repeated exposure (H372). Toxic to bees, very toxic to aquatic life. Sheet says it is valid for 5 years from August 2023."
+  },
+  "biflex": {
+   "file": "biflex.pdf",
+   "sdsName": "BIFLEX AQUAMAX (Bifenthrin 100 g/L SC Termiticide and Insecticide)",
+   "maker": "FMC Australasia Pty Ltd",
+   "issued": "2026-08-21",
+   "emergencyPhone": "1800 033 111 (Ixom: leak, fire, spill or accident emergencies, and transport and 24 h medical information)",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Chemical resistant gloves (barrier laminate, butyl rubber or nitrile rubber), tightly fitting safety goggles, impervious clothing, eye wash bottle with pure water on hand. Suitable respiratory protection and protective suit if exposed to mist, spray or aerosol. Face-shield and protective suit for abnormal processing problems.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Keep the airway clear, give no milk or alcohol, and never give anything by mouth to an unconscious person. Take the victim to hospital immediately. Call a physician if symptoms persist.",
+    "eyes": "Small splashes can cause irreversible tissue damage and blindness. Rinse immediately with plenty of water, keeping the eye wide open, remove contact lenses and protect the unharmed eye. Seek medical advice and keep rinsing during transport to hospital.",
+    "skin": "Rinse well with water and take off contaminated clothes. If skin irritation persists, call a physician.",
+    "inhaled": "If unconscious, place in the recovery position and seek medical advice. If symptoms persist, call a physician."
+   },
+   "storedAt": "",
+   "notes": "Poisons Standard Schedule 6. May cause an allergic skin reaction (H317), serious eye irritation (H319), harmful if swallowed or inhaled, may damage the central nervous system (H371, H373). Very toxic to aquatic life with long lasting effects. Class 9 PG III (Hazchem 3Z), but sheet says not subject to the ADG Code by road or rail in packagings not over 500 kg or L. Sheet is version 1.3, revised 21.08.2026."
+  },
+  "fipforce": {
+   "file": "fipforce.pdf",
+   "sdsName": "FIPFORCE HP Termiticide & Insecticide",
+   "maker": "Sherwood Chemicals Australasia Pty Ltd",
+   "issued": "2026-03-05",
+   "emergencyPhone": "(+61) 08 9219 4683 (hours not stated)",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Nitrile rubber gloves, safety glasses (eye or face protection) and an organic vapour respirator. For spills: respirator with organic vapour absorber, boots and rubber gloves.",
+   "firstAid": {
+    "swallowed": "DO NOT induce vomiting. Get medical attention immediately and take the container, label or leaflet. Nothing by mouth to an unconscious patient unless medical personnel are supervising.",
+    "eyes": "Wash with plenty of water, remove contact lenses if not difficult, and hold eyes wide open so water flows for at least 15 minutes. Get medical attention immediately.",
+    "skin": "Remove contaminated clothing immediately and rinse skin with plenty of water. Get medical attention immediately if irritation persists.",
+    "inhaled": "Move patient to fresh air. If breathing is difficult, give artificial respiration and get medical attention immediately."
+   },
+   "storedAt": "",
+   "notes": "Fipronil 100 g/L. Harmful if swallowed or inhaled (H302, H332), may be harmful in contact with skin, causes serious eye irritation, may damage the central nervous system through prolonged or repeated exposure (H373). Toxic to aquatic life with long lasting effects. Class 9 PG III (Hazchem 3Z). Sheet is version 1.5, effective 5 March 2026."
+  },
+  "fipforce-dust": {
+   "file": "fipforce-dust.pdf",
+   "sdsName": "Fipforce Dust Termiticide & Insecticide (Fipronil 5 g/kg Dustable Powder)",
+   "maker": "Sherwood Chemicals Australasia Pty Ltd",
+   "issued": "2023-02-22",
+   "emergencyPhone": "+61 421 667 972 (all hours)",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Safety glasses and chemical resistant gloves. Hazard section also says wear protective clothing and eye or face protection, and do not breathe dust. No respirator is specified in the PPE section.",
+   "firstAid": {
+    "swallowed": "Rinse mouth. Do NOT induce vomiting (if possible keep head down to maintain an open airway and prevent aspiration). Get medical attention immediately.",
+    "eyes": "Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do, and keep rinsing.",
+    "skin": "Remove and wash contaminated clothing immediately. Wash the affected area thoroughly with soap and water. If the patient feels unwell, get medical advice.",
+    "inhaled": "Remove patient to fresh air and keep comfortable for breathing. Get medical attention immediately."
+   },
+   "storedAt": "",
+   "notes": "SUSMP Schedule 5. Fipronil 0.5 to 0.6% in a dust (also boric acid 2 to 4%, talc 30 to 35%). Harmful in contact with skin or if inhaled (H312, H332), causes skin and serious eye irritation, may be harmful if swallowed, very toxic to aquatic life with long lasting effects. Sheet says not a dangerous good for road or rail in Australia (UN3082 packagings up to 500 kg), but class 9 PG III by sea and air. Sheet is dated 22 Feb 2023."
+  },
+  "trelona": {
+   "file": "trelona.pdf",
+   "sdsName": "Trelona Termite Bait",
+   "maker": "BASF Australia Limited",
+   "issued": "2023-09-08",
+   "emergencyPhone": "1800 803 440 (24 hours, BASF, within Australia)",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3077",
+   "ppe": "Chemical-resistant gloves (nitrile 0.4 mm, chloroprene 0.5 mm or butyl 0.7 mm), safety glasses with side shields. Dust mask (P2/FFP2) if dust is formed. Body protection to suit the job (apron, boots, or a chemical suit for splashes or dust). Closed work clothing recommended.",
+   "firstAid": {
+    "swallowed": "Rinse mouth, then drink 200-300 ml of water.",
+    "eyes": "Wash the eyes for at least 15 minutes under running water, holding the eyelids open.",
+    "skin": "Remove contaminated clothing. Wash thoroughly with soap and water.",
+    "inhaled": "Keep the person calm and move them to fresh air."
+   },
+   "storedAt": "",
+   "notes": "Class 9 (PG III), marked environmentally hazardous (EHSM), UN3077. Sheet says it may ship as non-hazardous in packages of 5 kg net or less under the provisions it lists. Hazards are aquatic only (H400, H410, very toxic to aquatic life). SUSMP: Not Scheduled. Dust can form an explosive mixture with air, so avoid raising dust."
+  },
+  "nemesis": {
+   "file": "nemesis.pdf",
+   "sdsName": "Nemesis Termite Bait",
+   "maker": "PCT Holdings Pty Ltd",
+   "issued": "2024-11",
+   "emergencyPhone": "1800 951 288 (Chemwatch, 24/7). Poisons Information Centre 13 11 26 (all times).",
+   "hazardous": "no",
+   "signalWord": "None",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "Eye protection (glasses or goggles) recommended when using it. Gloves (elbow-length preferred) when skin contact is likely. Clothing of cotton, rubber or PVC. Dust mask if dust is likely to build up. Sheet says no special equipment is usually needed for occasional small quantities.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Wash mouth with water and give some water to drink. If symptoms develop, or if in doubt, contact a Poisons Information Centre (13 11 26) or a doctor.",
+    "eyes": "Quickly and gently brush particles from the eyes, then flush with lukewarm, gently flowing water for 5 minutes or until the product is removed, holding eyelids open. Get medical advice immediately if irritation occurs.",
+    "skin": "Gently brush off excess particles. Irritation is unlikely. If it does occur, flush with lukewarm, gently flowing water for 5 minutes or until the chemical is removed.",
+    "inhaled": "First aid is not generally required. If in doubt, contact a Poisons Information Centre or a doctor."
+   },
+   "storedAt": "",
+   "notes": "Sheet says not hazardous, not a Dangerous Good, SUSMP none allocated. Only hazard statement is H402 (harmful to aquatic life). Highly toxic to aquatic invertebrates, so keep bait out of anywhere it could wash into water. Sheet says this version is valid for 5 years from November 2024. Active is chlorfluazuron (1 g/kg)."
+  },
+  "talon-gt": {
+   "file": "talon-gt.pdf",
+   "sdsName": "TALON GT PRO GRAIN",
+   "maker": "Syngenta Australia Pty Ltd",
+   "issued": "2023-08-02",
+   "emergencyPhone": "13 11 26 (Poisons Information Centre) or 1800 033 111 (Syngenta). Hours not stated.",
+   "hazardous": "no",
+   "signalWord": "None",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "Nitrile rubber gloves (0.5 mm). No special eye protection or respirator normally needed. Dust-proof protective suit as appropriate. Take off and wash contaminated clothing before reuse. Sheet says this PPE advice is for manufacture and packaging, and for commercial use to check the product label.",
+   "firstAid": {
+    "swallowed": "Take the person to hospital immediately. Do NOT induce vomiting.",
+    "eyes": "Rinse immediately with plenty of water, also under the eyelids, for at least 15 minutes. Remove contact lenses. Immediate medical attention is required.",
+    "skin": "Take off all contaminated clothing immediately. Wash off immediately with plenty of water. If skin irritation persists, call a doctor. Wash clothing before reuse.",
+    "inhaled": "Move to fresh air. If breathing is irregular or stopped, give artificial respiration. Keep warm and at rest. Call a doctor or poison control centre immediately."
+   },
+   "storedAt": "",
+   "notes": "Sheet says not a hazardous substance or mixture and not dangerous goods. SUSMP Schedule 6. Contains brodifacoum (0.0025-0.025%), an anticoagulant: poisoning shows as bruising, blood in faeces and urine. Antidote is vitamin K1. The blood clotting test may not change until 12-18 hours after swallowing."
+  },
+  "talon-xt": {
+   "file": "talon-xt.pdf",
+   "sdsName": "Talon XT PRO",
+   "maker": "Syngenta Australia Pty Ltd",
+   "issued": "2026-07-29",
+   "emergencyPhone": "13 11 26 (Poisons Information Centre) or 1800 033 111 (Syngenta). Hours not stated.",
+   "hazardous": "no",
+   "signalWord": "None",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "Nitrile rubber gloves (0.5 mm). No special eye protection or respirator normally needed. Dust-proof protective suit as appropriate. Take off and wash contaminated clothing before reuse. Sheet says this PPE advice is for manufacture and packaging, and for commercial use to check the product label.",
+   "firstAid": {
+    "swallowed": "Take the person to hospital immediately. Do NOT induce vomiting.",
+    "eyes": "Rinse immediately with plenty of water, also under the eyelids, for at least 15 minutes. Remove contact lenses. Immediate medical attention is required.",
+    "skin": "Take off all contaminated clothing immediately. Wash off immediately with plenty of water. If skin irritation persists, call a doctor. Wash clothing before reuse.",
+    "inhaled": "Move to fresh air. If breathing is irregular or stopped, give artificial respiration. Keep warm and at rest. Call a doctor or poison control centre immediately."
+   },
+   "storedAt": "",
+   "notes": "Sheet says not a hazardous substance or mixture and not dangerous goods. SUSMP (Poisons Standard) Schedule 6. Contains brodifacoum (0.0025-0.025%), an anticoagulant: poisoning shows as bruising, blood in faeces and urine. Antidote is vitamin K1. Can form combustible dust clouds in air. Version 3.1, replaces the 2021 issue."
+  },
+  "roban": {
+   "file": "roban.pdf",
+   "sdsName": "ROBAN RODENTICIDE BLOCK (APVMA Approval No - 65339)",
+   "maker": "PelGar International (AUS) Pty Limited",
+   "issued": "",
+   "emergencyPhone": "+61 73 112 1024 (PelGar). Hours not stated.",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "Protective gloves, safety glasses, suitable protective clothing. Suitable respirator if ventilation is not enough. Label advice also says avoid breathing dust, and keep contaminated work clothing out of the home or other non-work areas.",
+   "firstAid": {
+    "swallowed": "Rinse mouth out with water. Do NOT induce vomiting. Never give anything by mouth to an unconscious person. Seek medical advice immediately and show the container or label.",
+    "eyes": "Rinse eyes with eye-rinse liquid or water, keeping eyelids open for at least 10 minutes.",
+    "skin": "Wash skin with plenty of water, then with soap and water. If skin irritation or rash occurs, get medical help.",
+    "inhaled": "Inhalation is unlikely. Get medical advice or attention if you feel unwell."
+   },
+   "storedAt": "",
+   "notes": "Not regulated for transport. Contains difenacoum (under 1%), an anticoagulant. Symptoms can be delayed: nosebleed, bleeding gums, bruising, blood in faeces or urine. Antidote is vitamin K1, given by medical or vet staff only. Hazards: H317 may cause an allergic skin reaction, H402 harmful to aquatic life. No poison schedule is stated."
+  },
+  "fastrac": {
+   "file": "fastrac.pdf",
+   "sdsName": "Fastrac Blox Rodenticide",
+   "maker": "Bell Laboratories, Inc. (USA). Imported by Bell Australia Pty Ltd.",
+   "issued": "2025-03-18",
+   "emergencyPhone": "13 11 26 (NSW Poisons Information Centre). Hours not stated.",
+   "hazardous": "no",
+   "signalWord": "None",
+   "dgClass": "None",
+   "unNumber": "None",
+   "ppe": "Protective gloves. Sheet also says 'wear recommended personal protective equipment' but names nothing else (no eye, clothing or respirator advice).",
+   "firstAid": {
+    "swallowed": "Call a poison centre (13 11 26) or a doctor if you feel unwell.",
+    "eyes": "Rinse eyes with water as a precaution.",
+    "skin": "Wash skin with plenty of water.",
+    "inhaled": "Sheet says first aid for inhalation is 'not applicable'. If you feel unwell, seek medical advice."
+   },
+   "storedAt": "",
+   "notes": "Sheet says not classified under the WHS Regulations, no labelling applicable, not regulated for transport. Active is bromethalin at 0.01%, and the sheet lists the bromethalin itself as Acute Tox 1 oral and inhalation (H300, H330) and Tox 3 dermal (H311). Keep away from children, pets and non-target animals. Treat symptomatically."
+  },
+  "first-strike": {
+   "file": "first-strike.pdf",
+   "sdsName": "Generation FirstStrike Single Feed Rodenticide",
+   "maker": "Liphatech S.A.S (France), Australian contact De Sangosse Australia Pty Ltd",
+   "issued": "2023-06-01",
+   "emergencyPhone": "1800 033 111 (Australian emergency number, hours not stated). Poisons Information Centre 13 11 26",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "None",
+   "unNumber": "",
+   "ppe": "Disposable latex or similar gloves recommended. Sheet says no specific protective clothing, eye protection or respirator is needed if used as recommended. Wash hands straight after handling. Do not eat, drink or smoke while using it.",
+   "firstAid": {
+    "swallowed": "Wash out mouth with plenty of water and get medical advice immediately, showing the container, label or SDS. Do NOT induce vomiting unless the Poisons Information Centre (13 11 26) or a doctor tells you to. Give nothing by mouth to an unconscious person.",
+    "eyes": "Hold eye open and rinse slowly and gently with water for 15-20 minutes. Take out contact lenses after the first 5 minutes, then keep rinsing. Sheet says get medical help immediately for any suspected exposure.",
+    "skin": "Remove contaminated clothing (launder before re-use) and rinse skin immediately with soap and water. Watch for symptoms (see notes) and get medical help, as the sheet says to for any suspected exposure.",
+    "inhaled": "Sheet says the bait is non-dusty, so inhalation is not applicable as a route of exposure."
+   },
+   "storedAt": "",
+   "notes": "Schedule 6 (SUSMP). Anticoagulant bait (difethialone 25 mg/kg), APVMA 66889. Fatal if swallowed, in contact with skin or inhaled (H300, H310, H330). May damage the unborn child (H360D). Damages the blood with repeated exposure (H372). Very toxic to aquatic life (H410). Poisoning symptoms can take several days to show (nosebleed, bleeding gums, bruising, blood in urine). Sheet says the antidote is specific vitamin K1, not K3, and to seek medical help for any suspected exposure and show the SDS. Not classed as dangerous goods for transport. Version 6, update 1 June 2023."
+  },
+  "selontra": {
+   "file": "selontra.pdf",
+   "sdsName": "Selontra Soft Bait Rodenticide",
+   "maker": "BASF Australia Limited",
+   "issued": "2022-01-28",
+   "emergencyPhone": "1800 803 440 (BASF, 24 hours, within Australia)",
+   "hazardous": "no",
+   "signalWord": "",
+   "dgClass": "None",
+   "unNumber": "",
+   "ppe": "Protective gloves are required (e.g. nitrile rubber 0.4 mm, chloroprene 0.5 mm or PVC 0.7 mm), also for protection against rodent-borne diseases. Sheet says respiratory, eye and body protection are not required. Closed work clothing recommended, stored separately. Wash hands and face before breaks and at end of shift. Do not eat, drink or smoke when using it.",
+   "firstAid": {
+    "swallowed": "Rinse mouth and then drink 200-300 ml of water.",
+    "eyes": "Wash affected eyes for at least 15 minutes under running water with eyelids held open.",
+    "skin": "Remove contaminated clothing and wash thoroughly with soap and water.",
+    "inhaled": "Keep the patient calm and move them to fresh air."
+   },
+   "storedAt": "",
+   "notes": "Not classified as hazardous under GHS, no hazard warning label needed, but SUSMP Schedule 7 and APVMA 81767. Soft bait with cholecalciferol 0.075%. Sheet warns it is hazardous to mammals (including pets) and birds, so keep non-target animals away. Do not apply in the open: cover bait points or use bait boxes. Clear away dead or dying rodents straight away to avoid secondary poisoning. Chronic overexposure has been reported to cause hypercalcaemia (high blood calcium) and there is no known specific antidote. Storage life 36 months. Version 3.0, revised 28.01.2022."
+  },
+  "vectobac": {
+   "file": "vectobac.pdf",
+   "sdsName": "VectoBac WG Biological Larvicide",
+   "maker": "Sumitomo Chemical Australia Pty Ltd",
+   "issued": "2021-09-15",
+   "emergencyPhone": "1800 033 111 (Australia), 0800 734 607 (New Zealand). Hours not stated",
+   "hazardous": "no",
+   "signalWord": "",
+   "dgClass": "None",
+   "unNumber": "",
+   "ppe": "Chemical-resistant impervious gloves recommended (AS/NZS 2161), changed often. No specific eye protection in normal use, but wear approved eyewear for large spills if eye contact is possible. No specific respiratory protection, just good ventilation. Use a respirator on large spills if ventilation is poor. Wash hands well after handling, at end of shift and before eating, smoking or using the toilet.",
+   "firstAid": {
+    "swallowed": "Rinse mouth thoroughly with water, then give a few small glasses of water or milk. Stop if the person feels sick, as vomiting may be dangerous. Never give anything by mouth to an unconscious person. Get medical attention. If poisoning occurs call the Poisons Information Centre (13 11 26) or a doctor.",
+    "eyes": "Rinse with water, remove any contact lenses and open eyelids wide apart. Get medical attention if any discomfort continues.",
+    "skin": "Rinse with water. Get medical attention if any discomfort continues.",
+    "inhaled": "Move to fresh air, keep warm and at rest in a position comfortable for breathing. Get medical attention if throat irritation, coughing or any discomfort continues."
+   },
+   "storedAt": "",
+   "notes": "Not classified for physical, health or environmental hazards. Biological larvicide: Bacillus thuringiensis israelensis 30-60%. Can slightly irritate skin and eyes, and dust may irritate nose, throat and airway. Sheet says only trained personnel should use it. Not a dangerous good for road and rail (ADG 7). Revision 4 dated 15/09/2021, supersedes 17/03/2017."
+  },
+  "bioplus": {
+   "file": "bioplus.pdf",
+   "sdsName": "BIOPLUS Multipurpose Biological Cleaner & Deodorizer",
+   "maker": "Calfarme (Singapore) Pte Ltd (Australian distributor Calfarme Australia Pty Ltd)",
+   "issued": "2024-03-01",
+   "emergencyPhone": "+65 6556 4111 (Singapore office, office hours Monday to Friday only)",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "",
+   "unNumber": "",
+   "ppe": "Protective gloves, safety glasses and suitable protective clothing. Precautionary statement also says face protection. Wear suitable respiratory equipment if ventilation is not enough. Make sure the work area is well ventilated. Wash hands after handling. Do not eat, drink or smoke when using it.",
+   "firstAid": {
+    "swallowed": "Call a poison centre or a doctor if you feel unwell.",
+    "eyes": "Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do, and keep rinsing. Call a physician immediately.",
+    "skin": "Wash skin with plenty of water.",
+    "inhaled": "Remove person to fresh air and keep comfortable for breathing."
+   },
+   "storedAt": "",
+   "notes": "Classified as hazardous: serious eye damage Category 1 (H318, causes serious eye damage). Skin contact can cause irritation and the vapour or mist may irritate the airway. Swallowing may irritate the digestive tract. Cleaner and deodoriser, not a pesticide. No SUSMP schedule stated. Version 1.0, date of issue 01/03/2024."
+  },
+  "polesaver": {
+   "file": "polesaver.pdf",
+   "sdsName": "Preschem Polesaver Rods & Bioguard",
+   "maker": "Preschem Pty Ltd",
+   "issued": "2025-03",
+   "emergencyPhone": "03 5974 2792 or 0419 900 452 (hours not stated). Poisons Information Centre 13 11 26",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "None",
+   "unNumber": "",
+   "ppe": "Overalls or similar protective clothing, safety shoes and impervious gloves (nitrile rubber suits intermittent contact). If the rods are crushed and make dust, wear a P2 dust mask (AS 1716) and work in a well-ventilated area. Wash hands before smoking, eating, drinking or using the toilet. Wash contaminated clothing and gear before re-use. Sheet does not list eye protection.",
+   "firstAid": {
+    "swallowed": "Immediately rinse mouth with water and give a glass of water to drink. Do NOT induce vomiting. If vomiting occurs give more water. Never give anything by mouth to an unconscious patient. Seek immediate medical advice (Poisons Information Centre 13 11 26).",
+    "eyes": "Hold eyelids apart and flush eyes continuously with running water until the Poisons Information Centre or a doctor says stop, or for at least 15 minutes. Get to a doctor or hospital.",
+    "skin": "Remove contaminated clothing and flush skin and hair with running water. Get medical help if there is swelling, redness, blistering or irritation.",
+    "inhaled": "Remove the person from exposure (do not become a casualty yourself), loosen clothing, let them take the most comfortable position, keep warm and at rest. Seek medical advice if effects persist."
+   },
+   "storedAt": "",
+   "notes": "Schedule 6 poison (SUSMP). Hazard statements: harmful if swallowed (H302), skin irritation (H315), serious eye irritation (H319), suspected of damaging fertility or the unborn child (H361). Contains disodium octaborate tetrahydrate 30-60% and sodium fluoride 10-30%. Contact with acids gives off toxic gases. Contact with water makes the product deteriorate. Not dangerous goods by road and rail, sea or air. Sheet says it is valid for 5 years from issue. Covers both Polesaver Rods and Bioguard. Issue 018, supersedes Mar 2021."
+  },
+  "greenzone": {
+   "file": "greenzone.pdf",
+   "sdsName": "GREENZONE Termite and Insect Repellent Barrier",
+   "maker": "Green Zone Pty Ltd",
+   "issued": "2024-01-31",
+   "emergencyPhone": "(03) 9555 7876 (company number, hours not stated). Poisons Information Centre 13 11 26",
+   "hazardous": "no",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3077",
+   "ppe": "Sheet says no special protective equipment required, and no specific precautions when handling unopened packs. Wash hands straight after work, shower if needed. Do not eat, drink or smoke when using it. No gloves or glasses are listed.",
+   "firstAid": {
+    "swallowed": "If poisoning occurs, immediately contact a doctor or the Poisons Information Centre (13 11 26) and show them the SDS.",
+    "eyes": "Remove contact lenses if worn and rinse immediately with plenty of water, also under the eyelids, for at least 15 minutes.",
+    "skin": "Wash off with soap and water. If irritation occurs, oils or lotions with vitamin E may be considered. If symptoms persist, call a doctor.",
+    "inhaled": "Move to fresh air. If breathing discomfort occurs, get medical attention."
+   },
+   "storedAt": "",
+   "notes": "Not hazardous under Safe Work Australia criteria, but classed under GHS as very toxic to aquatic life (H400, Warning) with possible long-lasting harm (H413). Foam sheets and strips containing bifenthrin 2 g/kg (a pyrethroid). Not a scheduled poison (SUSMP). APVMA 82746/106642. Section 14 shows UN3077, Class 9, PG III, marine pollutant, but also says packages up to 500 kg or 500 L are not subject to the ADG Code (AU01). Sections 2 and 15 say not a dangerous good. Sheet says bifenthrin may be mutagenic and is a possible human carcinogen. SDS version GZ-V3-JAN2024."
+  },
+  "termidor-foam": {
+   "file": "termidor-foam.pdf",
+   "sdsName": "Termidor Foam Termiticide & Insecticide",
+   "maker": "BASF Australia Limited",
+   "issued": "2023-11-16",
+   "emergencyPhone": "1800 803 440 (24 hours, within Australia); +61 3 8855 6666 outside Australia",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "2.1",
+   "unNumber": "UN1950",
+   "ppe": "Sheet says respirator, gloves, eye protection and body protection are not required. Closed work clothing is recommended. Do not breathe the spray. Wash contaminated clothing before reuse, and wash face and hands with soap and water before eating, drinking or smoking.",
+   "firstAid": {
+    "swallowed": "Rinse mouth, then drink 200-300 ml of water.",
+    "eyes": "Wash eyes for at least 15 minutes under running water with eyelids held open.",
+    "skin": "Remove contaminated clothing. Wash thoroughly with soap and water.",
+    "inhaled": "Keep the patient calm and move to fresh air."
+   },
+   "storedAt": "",
+   "notes": "Extremely flammable aerosol (H222), pressurised can may burst if heated (H229), very toxic to aquatic life with long lasting effects (H410). Class 2.1 (aerosol, fipronil, hydrocarbon propellant), also marked environmentally hazardous. SUSMP Not Scheduled. APVMA 70346. Keep away from heat, sparks and flames. No smoking, do not pierce or burn the can."
+  },
+  "demand-duo": {
+   "file": "demand-duo.pdf",
+   "sdsName": "DEMAND DUO",
+   "maker": "Syngenta Australia Pty Ltd",
+   "issued": "2021-10-12",
+   "emergencyPhone": "13 11 26 (Poisons Information Centre); 1800 033 111 (Syngenta)",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "9",
+   "unNumber": "UN3082",
+   "ppe": "Nitrile rubber gloves (0.5 mm, breakthrough over 480 min). Impervious clothing as appropriate. No special eye protection or respirator normally needed, but use a certified respirator if above the exposure limit. Sheet says these recommendations are for manufacture and packing, and to check the product label for commercial use.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Seek medical advice immediately and show the container or label.",
+    "eyes": "Rinse immediately with plenty of water, also under the eyelids, for at least 15 minutes. Remove contact lenses. Immediate medical attention is required.",
+    "skin": "Take off all contaminated clothing immediately and wash off with plenty of water. If skin irritation persists, call a doctor.",
+    "inhaled": "Move to fresh air, keep warm and at rest. If breathing is irregular or stopped, give artificial respiration. Call a doctor or poison centre immediately."
+   },
+   "storedAt": "",
+   "notes": "Harmful if swallowed (H302) and may cause an allergic skin reaction (H317). SUSMP Schedule 5. Class 9, PG III, Hazchem 3Z, but sheet says not subject to the ADG Code by road or rail in packagings up to 500 kg(L) (SP AU01). APVMA 85595. Skin tingling, itching or numbness can occur and lasts up to 24 hours."
+  },
+  "astro": {
+   "file": "astro.pdf",
+   "sdsName": "Astro Aerosol Residual Insecticide 330g",
+   "maker": "Aaron Laboratories Pty Ltd",
+   "issued": "2023-11-30",
+   "emergencyPhone": "(+614) 1817 9157 or (+614) 0730 0286 (as printed); Poisons Information Centre 13 11 26",
+   "hazardous": "yes",
+   "signalWord": "Danger",
+   "dgClass": "2.1",
+   "unNumber": "UN1950",
+   "ppe": "Sheet says PPE is not required under normal use. When handling bulk quantities, wear protective gloves and safety glasses. Keep the spray nozzle pointed away from you and use only in a well-ventilated area.",
+   "firstAid": {
+    "swallowed": "Swallowing is unlikely (very volatile). If sprayed in the mouth, rinse mouth with plenty of water. If swallowed, do NOT induce vomiting and seek medical attention.",
+    "eyes": "Flush out immediately with running water for at least 15 minutes. If symptoms persist, seek medical attention.",
+    "skin": "Remove contaminated clothing and shoes and wash the skin well with warm soapy water. If irritation persists, contact a doctor.",
+    "inhaled": "Move to fresh air. Propane is an asphyxiant, so if breathing is difficult get immediate medical care. Do not use mouth-to-mouth, use another resuscitation method."
+   },
+   "storedAt": "",
+   "notes": "Sheet says hazardous under WHS Regulations and a Dangerous Good (Class 2.1, Hazchem 2YE, no packing group allocated). Extremely flammable aerosol (H222), may explode if heated (H280), may cause allergic skin reaction (H317), may be fatal if swallowed and enters the airways (H304). Deliberately inhaling the contents can be harmful or fatal. Poisons Schedule: not applicable."
+  },
+  "coopex": {
+   "file": "coopex.pdf",
+   "sdsName": "COOPEX Insecticidal Dusting Powder Industrial Strength",
+   "maker": "2022 Environmental Science AU Pty Ltd",
+   "issued": "2024-11-06",
+   "emergencyPhone": "+61 2 9037 2994",
+   "hazardous": "no",
+   "signalWord": "None",
+   "dgClass": "9",
+   "unNumber": "UN3077",
+   "ppe": "Safety goggles. Nitrile rubber gloves (over 0.4 mm, breakthrough over 480 min). Impervious protective clothing such as gloves, apron and boots to avoid skin contact. Dust respirator (particulate filter) if there is not enough ventilation or exposure is above guidelines. Avoid breathing dust.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Rinse mouth thoroughly with water. Get medical attention if symptoms occur.",
+    "eyes": "Rinse well with water. Get medical attention if irritation develops and persists.",
+    "skin": "Immediately flush skin with soap and plenty of water. Remove contaminated clothing and shoes, and get medical attention. Wash clothing before reuse.",
+    "inhaled": "Remove to fresh air. Get medical attention if symptoms occur."
+   },
+   "storedAt": "",
+   "notes": "Sheet says not a hazardous substance or mixture, no pictogram or signal word. Dust can irritate eyes and skin, and may cause burning or stinging on the face (transitory, up to 24 hours). Contains a pyrethroid (permethrin under 1%), no specific antidote, sheet lists atropine as a contraindication. No poison schedule allocated. Section 14 lists UN3077, Class 9, PG III, Hazchem 2Z."
+  },
+  "waspforce": {
+   "file": "waspforce.pdf",
+   "sdsName": "Wasp Force Insecticide",
+   "maker": "ADAMA Australia Pty Ltd",
+   "issued": "2022-02",
+   "emergencyPhone": "1800 033 111 (24 hours); Poisons Information Centre 13 11 26",
+   "hazardous": "yes",
+   "signalWord": "Warning",
+   "dgClass": "2.2",
+   "unNumber": "UN1950",
+   "ppe": "Eye protection (glasses or goggles) is recommended when using it. For long periods of handling, wear impervious elbow-length gloves and face protection. Usually no respirator needed. Sheet says no special equipment is usually needed for occasional handling of small quantities.",
+   "firstAid": {
+    "swallowed": "Do NOT induce vomiting. Wash mouth with water and give some water to drink. If symptoms develop or in doubt, call a Poisons Information Centre (13 11 26) or a doctor.",
+    "eyes": "Quickly and gently blot material from the eyes. If irritation occurs, flush with lukewarm, gently flowing water for 5 minutes or until the product is removed. Get medical advice if irritation becomes painful or lasts more than a few minutes.",
+    "skin": "Gently blot away excess liquid. Wash gently and thoroughly with water (non-abrasive soap if needed) for 5 minutes or until the chemical is removed.",
+    "inhaled": "First aid is not generally required. If in doubt, contact a Poisons Information Centre or a doctor."
+   },
+   "storedAt": "",
+   "notes": "Hazardous according to SWA criteria and dangerous under the ADG Code: Class 2.2 aerosol, UN1950, Hazchem 2YE, pressurised container may burst if heated (H229). Sheet says it is valid for 5 years from Feb 2022. Spraying continuously on skin or into eyes can cause frostbite, and deliberately inhaling the contents can be harmful or fatal. SUSMP: none allocated."
+  },
+  "seclira": {
+   "file": "seclira.pdf",
+   "sdsName": "Seclira Gel Cockroach Bait",
+   "maker": "BASF Australia Limited",
+   "issued": "2025-03-21",
+   "emergencyPhone": "1800 803 440 (24 hours, within Australia); +61 3 8855 6666 outside Australia",
+   "hazardous": "yes",
+   "signalWord": "",
+   "dgClass": "9",
+   "unNumber": "UN3077",
+   "ppe": "Wear impervious gloves and safety glasses with side shields. Respirator not required. Choose body protection (apron, boots or chemical suit) to suit the job and possible exposure. Closed work clothing recommended. Sheet says the PPE on the product label applies for final-consumer packs.",
+   "firstAid": {
+    "swallowed": "Rinse mouth, then drink 200-300 ml of water.",
+    "eyes": "Wash eyes for at least 15 minutes under running water with eyelids held open.",
+    "skin": "Remove contaminated clothing. Wash thoroughly with soap and water.",
+    "inhaled": "Keep the patient calm and move to fresh air."
+   },
+   "storedAt": "",
+   "notes": "Only classified as toxic to aquatic life (acute Cat 2 H401, chronic Cat 2 H411). Class 9 (environmentally hazardous substance, solid, n.o.s., dinotefuran), PG III, Hazchem 2Z. Sheet says it may ship as non-hazardous in packages of 5 kg or less. SUSMP Not Scheduled. APVMA 83034. Storage stability 60 months. Do not let it get into drains or waterways."
   }
  }
 }
