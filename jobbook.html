@@ -811,7 +811,14 @@ function lines(){
   const newest=new Map();
   out.forEach(l=>{ const f=FAM[l.svc]; if(!coreFam(f)||!l.lastDone) return;
     const k=l.pid+"|"+f; if(!newest.has(k)||l.lastDone>newest.get(k)) newest.set(k,l.lastDone); });
-  return out.filter(l=>{ const f=FAM[l.svc]; return !coreFam(f)||!l.lastDone||l.lastDone>=newest.get(l.pid+"|"+f); });
+  const kept=out.filter(l=>{ const f=FAM[l.svc]; return !coreFam(f)||!l.lastDone||l.lastDone>=newest.get(l.pid+"|"+f); });
+  /* A client he has set under 12 months (his named list, one they confirmed, or changed in the app) runs on ONE timer per address:
+     the last time he was out there (Mitch 2026-10-21, "it's more about the timing, I remember what they each need"). An older termite
+     or pest line from before that visit no longer shows as its own "1y 3m". */
+  const shortLine=l=>l.told&&coreFam(FAM[l.svc])&&!!l.lastDone&&(m=>!!m&&m<12)(monthsOf(l.interval));
+  const lastShort=new Map();
+  kept.forEach(l=>{ if(shortLine(l)){ const o=lastShort.get(l.pid); if(!o||l.lastDone>o) lastShort.set(l.pid,l.lastDone); } });
+  return kept.filter(l=>!shortLine(l)||l.lastDone>=lastShort.get(l.pid));
 }
 const cOf=pid=>S.clients[(S.props[pid]||{}).c]||{n:"(unknown)",e:"",p:"",g:"active",a:["","","",""]};
 const pOf=pid=>S.props[pid]||{l:"",c:""};
