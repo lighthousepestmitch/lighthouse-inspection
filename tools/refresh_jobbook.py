@@ -212,8 +212,9 @@ def private_guard():
     return problems
 
 def main():
-    inv_csv = newest("SalesInvoices_*.csv")
-    con_csv = newest("Contacts*.csv")
+    # optional: refresh_jobbook.py <invoices.csv> [contacts.csv] to add a one-off invoice that isn't in the last export yet
+    inv_csv = sys.argv[1] if len(sys.argv) > 1 else newest("SalesInvoices_*.csv")
+    con_csv = sys.argv[2] if len(sys.argv) > 2 else newest("Contacts*.csv")
     if not inv_csv:
         sys.exit("No SalesInvoices_*.csv in ~/Downloads. In Xero: Invoices -> Search (set a date range\n"
                  "so it's under 500) -> Export.")
