@@ -801,7 +801,9 @@ function lines(){
     if(so.nextDue!==undefined) nextDue=so.nextDue;                       // hand-picked date wins
     else if(so.interval!==undefined) nextDue=lastDone&&monthsOf(interval)?addMonths(lastDone,monthsOf(interval)):null;
     else nextDue=d.nd;
-    out.push({pid:d.p,svc:d.s,lastDone,interval,nextDue,src:d.src,bt:d.bt,manual:so.nextDue!==undefined});
+    // told = Mitch set this interval himself (his named-client list, one the client confirmed, or a change in the app)
+    const told=so.interval!==undefined||/^(your list|client confirmed)/.test(String(d.src||""));
+    out.push({pid:d.p,svc:d.s,lastDone,interval,nextDue,src:d.src,bt:d.bt,manual:so.nextDue!==undefined,told});
   }
   return out;
 }
@@ -995,7 +997,7 @@ const FAM={"General Pest Treatment":"CAS","Cockroach Treatment":"CAS","Cockroach
  "Nemesis Renewal":"NEM","Nemesis New":"NEM","Trelona Baiting":"NEM"};
 const SHORT={CAS:"CAS",TI:"TI",ROD:"Rodents",BAR:"Barrier check"};
 const isBarrierSvc=s=>FAM[s]==="BAR";
-const SECTIONS=[["casti","CAS + TI"],["ti","TI only"],["cas","CAS only"],["rod","Rodent only"],
+const SECTIONS=[["short","Shorter than 12 months"],["casti","CAS + TI"],["ti","TI only"],["cas","CAS only"],["rod","Rodent only"],
  ["mix","Rodent with CAS or TI"],["pre","Pre-construction barriers"],["post","Post-construction barriers"],
  ["bar","Barriers (pre or post not recorded)"],["nem","Nemesis and Trelona"],["oth","Other repeats"],
  ["old","Old, 2+ years overdue"],["one","One-offs"]];
@@ -1019,8 +1021,9 @@ function visits(list){
   const map=new Map();
   list.forEach(l=>{ const f=FAM[l.svc]||"", g=grpOf(f), k=l.pid+"|"+(l.lastDone||"none")+"|"+g;
     if(!map.has(k)) map.set(k,{pid:l.pid,grp:g,lastDone:l.lastDone,nextDue:l.nextDue,interval:l.interval,
-                               manual:l.manual,bt:l.bt,svcs:[],fams:new Set(),lines:[]});
+                               manual:l.manual,bt:l.bt,svcs:[],fams:new Set(),lines:[],short:false});
     const v=map.get(k); v.svcs.push(l.svc); v.fams.add(f); v.lines.push(l);
+    if(g==="CORE"&&l.told){ const m=monthsOf(l.interval); if(m&&m<12) v.short=true; }   // pest, termite or rodent he set under 12 months
     if(l.nextDue&&(!v.nextDue||l.nextDue<v.nextDue)){ v.nextDue=l.nextDue; v.interval=l.interval; v.manual=l.manual; }
     if(l.bt&&!v.bt) v.bt=l.bt; });
   return [...map.values()];
@@ -1028,7 +1031,7 @@ function visits(list){
 function clientRows(list){
   const rows=new Map();
   visits(list).forEach(v=>{
-    const cid=pOf(v.pid).c, sec=v.sec=band(v)==="stale"?"old":secOf(v);
+    const cid=pOf(v.pid).c, sec=v.sec=band(v)==="stale"?"old":v.short?"short":secOf(v);
     const k=cid+"|"+sec+(SPLIT.test(cOf(v.pid).n)?"|"+v.pid:"");
     if(!rows.has(k)) rows.set(k,{cid,sec,vis:[]});
     rows.get(k).vis.push(v); });
@@ -1239,7 +1242,8 @@ function foldSection(host,key,title,g){
   h.onclick=()=>{ O[key]=!open; render(); };
   host.appendChild(h);
   if(!open) return;
-  const note=key==="old"?"Years overdue and never followed up. A job on its own, not a daily chase. Most have no phone number."
+  const note=key==="short"?"Everyone you've set to come back sooner than every 12 months. They live here, not in the sections below."
+    :key==="old"?"Years overdue and never followed up. A job on its own, not a daily chase. Most have no phone number."
     :key==="one"?"Done once, no repeat set. Most recent per client, last 2 years. Texts here are a check-in, not a rebook."
     :key==="bar"?"Barrier jobs where Xero doesn't say if the barrier was before or after the build."
     :null;
