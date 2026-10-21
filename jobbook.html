@@ -805,7 +805,13 @@ function lines(){
     const told=so.interval!==undefined||/^(your list|client confirmed)/.test(String(d.src||""));
     out.push({pid:d.p,svc:d.s,lastDone,interval,nextDue,src:d.src,bt:d.bt,manual:so.nextDue!==undefined,told});
   }
-  return out;
+  /* An old cockroach, ant or spider line is dead once a newer pest visit (any of them) was done at the same address.
+     Same for termite and rodent. Without this an Ant Treatment from last year chases as "1y 3m" after a General Pest this year. */
+  const coreFam=f=>f==="CAS"||f==="TI"||f==="ROD";
+  const newest=new Map();
+  out.forEach(l=>{ const f=FAM[l.svc]; if(!coreFam(f)||!l.lastDone) return;
+    const k=l.pid+"|"+f; if(!newest.has(k)||l.lastDone>newest.get(k)) newest.set(k,l.lastDone); });
+  return out.filter(l=>{ const f=FAM[l.svc]; return !coreFam(f)||!l.lastDone||l.lastDone>=newest.get(l.pid+"|"+f); });
 }
 const cOf=pid=>S.clients[(S.props[pid]||{}).c]||{n:"(unknown)",e:"",p:"",g:"active",a:["","","",""]};
 const pOf=pid=>S.props[pid]||{l:"",c:""};
@@ -1725,9 +1731,13 @@ function openProp(pid,focusSvc){
     b.appendChild(el("div","lbl","Latest job and repeat"));
     const vs=visits(lines().filter(l=>l.pid===pid)).sort((a,z)=>(z.lastDone||"").localeCompare(a.lastDone||""));
     if(!vs.length) b.appendChild(el("div","note","No repeat work recorded at this address."));
-    (spec.showOld?vs:vs.slice(0,1)).forEach(v=>visitCard(b,pid,v));
-    if(!spec.showOld&&vs.length>1)
-      b.appendChild(btn("Show older jobs ("+(vs.length-1)+" more repeat"+(vs.length===2?"":"s")+")",null,"",()=>{ spec.showOld=true; drawSheet(); }));
+    /* The Due list shows the visit that is due soonest, so the sheet opens on that one too (then the newest, if it is a different
+       visit). Otherwise a row can say "1y 3m" for an old termite inspection while the sheet only shows this month's pest visit. */
+    const soonest=vs.slice().sort((a,z)=>(a.nextDue||"9").localeCompare(z.nextDue||"9"))[0];
+    const first=vs.length?[...new Set([soonest,vs[0]])]:[];
+    (spec.showOld?vs:first).forEach(v=>visitCard(b,pid,v));
+    if(!spec.showOld&&vs.length>first.length)
+      b.appendChild(btn("Show other repeats ("+(vs.length-first.length)+" more)",null,"",()=>{ spec.showOld=true; drawSheet(); }));
 
     contactHistory(b,p.c,pid);
 
