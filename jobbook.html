@@ -1043,9 +1043,12 @@ function visits(list){
 }
 function clientRows(list){
   const rows=new Map();
+  /* a client with more than one address gets one row per address, name and street (Mitch 2026-10-21): each address has its own timing */
+  const addrs=new Map();
+  list.forEach(l=>{ const c=pOf(l.pid).c; if(!addrs.has(c)) addrs.set(c,new Set()); addrs.get(c).add(l.pid); });
   visits(list).forEach(v=>{
     const cid=pOf(v.pid).c, sec=v.sec=band(v)==="stale"?"old":v.short?"short":secOf(v);
-    const k=cid+"|"+sec+(SPLIT.test(cOf(v.pid).n)?"|"+v.pid:"");
+    const k=cid+"|"+sec+(SPLIT.test(cOf(v.pid).n)||addrs.get(cid).size>1?"|"+v.pid:"");
     if(!rows.has(k)) rows.set(k,{cid,sec,vis:[]});
     rows.get(k).vis.push(v); });
   return [...rows.values()].map(r=>{
@@ -1160,8 +1163,10 @@ function rowFor(l,extra){
   const hit=el("button","rowhit");
   hit.appendChild(el("div","stripe"));
   const main=el("div","rowmain"), tx=el("div","rowtext");
-  tx.appendChild(el("div","nm",c.n));
-  const bits=[multi?l.sites.length+" sites":(pOf(l.pid).l||"(no address)"),l.oneoff?visitLabel(svcs):jobsLabel(l)];
+  /* the address is the big line and the client sits under it (Mitch 2026-10-21): the timing belongs to the address */
+  const addr=pOf(l.pid).l||"(no address)";
+  tx.appendChild(el("div","nm",multi?c.n:addr));
+  const bits=[multi?l.sites.length+" sites":c.n,l.oneoff?visitLabel(svcs):jobsLabel(l)];
   if(l.lastDone) bits.push("last "+nice(l.lastDone));
   if(l.manual) bits.push("date set by you");
   tx.appendChild(el("div","mt",bits.join(" · ")));
@@ -1251,7 +1256,7 @@ function foldSection(host,key,title,g){
   const h=el("button","sechead fold"); h.setAttribute("aria-expanded",String(open));
   const ready=key==="one"?0:g.filter(r=>band(r)==="fresh").length;
   h.innerHTML=`<span class="ttl"><span class="chev">&#9656;</span>${esc(title)}</span>`
-    +`<span class="n">${g.length} ${g.length===1?"client":"clients"}${ready?`<b class="ready">${ready} ready</b>`:""}</span>`;
+    +`<span class="n">${g.length} ${(new Set(g.map(r=>r.cid||r.pid))).size===g.length?(g.length===1?"client":"clients"):(g.length===1?"address":"addresses")}${ready?`<b class="ready">${ready} ready</b>`:""}</span>`;
   h.onclick=()=>{ O[key]=!open; render(); };
   host.appendChild(h);
   if(!open) return;
@@ -1269,8 +1274,15 @@ function foldSection(host,key,title,g){
    words already in it, so every one still needs your tap to send. */
 function batchEligible(r){
   const c=cOf(r.pid); if(!canText(c)) return false;
-  const cut=Date.now()-30*DAY;
-  return !r.sites.some(pid=>((S.ov[pid]||{}).log||[]).some(e=>(e.ch==="text"||e.ch==="email")&&e.kind!=="review"&&Date.parse(e.t)>cut));
+  const cut=Date.now()-30*DAY, cid=pOf(r.pid).c;
+  // any address of this client counts, not just this row's, since one client can now have several rows
+  const mine=new Set(r.sites); for(const pid in S.props) if(S.props[pid].c===cid) mine.add(pid);
+  return ![...mine].some(pid=>((S.ov[pid]||{}).log||[]).some(e=>(e.ch==="text"||e.ch==="email")&&e.kind!=="review"&&Date.parse(e.t)>cut));
+}
+/* the next N people to text from a section: eligible, and each client only once even if they have several rows */
+function batchQueue(rows,N){
+  const seen=new Set();
+  return rows.filter(r=>batchEligible(r)).filter(r=>{ const c=pOf(r.pid).c; if(seen.has(c)) return false; seen.add(c); return true; }).slice(0,N);
 }
 function batchBar(host,title,rows){
   const bar=el("div","batchbar");
@@ -1281,7 +1293,7 @@ function batchBar(host,title,rows){
   bar.appendChild(n);
   bar.appendChild(btn("Start",SVG.msg,"pri",()=>{
     const N=Math.max(1,Math.min(100,parseInt(n.value,10)||0)); S.batchN=N;
-    const q=rows.filter(batchEligible).slice(0,N);
+    const q=batchQueue(rows,N);
     if(!q.length){ toast("Nobody to text here: no mobile, or already contacted in the last 30 days.",true); return; }
     openSheet(batchSpec(title,q,0,[]));
   }));
