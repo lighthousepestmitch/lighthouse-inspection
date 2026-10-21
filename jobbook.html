@@ -885,8 +885,48 @@ const EMAIL_SUBJECT="A quick check-in from Lighthouse Pest";
 /* soon = coming up (or only just gone past); otherwise it's fairly overdue */
 function repeatBits(l){
   const svcs=plainSvcs(l.svcs||[l.svc]).map(x=>x.replace(/^(an?|the) /,""));
+  const ab=addressBits(l);
+  if(ab) return {soon:ab.soon,what:ab.what,are:"are",period:periodOf(l.interval)};
   const soon=!l.nextDue||days(TODAY,l.nextDue)>=-30;
   return {soon,what:joinNat(svcs),are:svcs.length>1?"are":"is",period:periodOf(l.interval)};
+}
+/* ---- a client with more than one address due: ONE message that names each address (Mitch 2026-10-21) ----
+   Single-address clients keep the plain wording. Up to 3 addresses are named; more than that says "a few of your properties" and you
+   add the list yourself. An address with no usable street is left out of the wording, and if fewer than 2 can be named it falls back
+   to the plain wording. */
+let DUEIDX=null;            // client id -> that client's repeat lines, rebuilt on every render()
+function clientDue(cid){
+  if(!DUEIDX){ DUEIDX=new Map();
+    lines().forEach(x=>{ const c=pOf(x.pid).c; if(!DUEIDX.has(c)) DUEIDX.set(c,[]); DUEIDX.get(c).push(x); }); }
+  return DUEIDX.get(cid)||[];
+}
+function streetOf(pid){
+  const s=String(pOf(pid).l||"").split(",")[0]
+    .replace(/\s+as per\b.*$/i,"").replace(/\bdiscount\b/i,"").replace(/^\s*(sp|strata plan)\s*\d+\s*/i,"")
+    .replace(/\s+/g," ").trim();
+  return s&&!/unknown|^\(/i.test(s)?s:"";
+}
+function addressBits(l){
+  const cid=pOf(l.pid).c, first=(l.svcs&&l.svcs[0])||l.svc, grp=grpOf(FAM[first]);
+  const by=new Map(); by.set(l.pid,(l.svcs||[l.svc]).slice());
+  let earliest=l.nextDue||null;
+  clientDue(cid).forEach(x=>{
+    if(x.pid===l.pid||grpOf(FAM[x.svc])!==grp||!["fresh","over","soon"].includes(band(x))) return;
+    if(!by.has(x.pid)) by.set(x.pid,[]);
+    if(!by.get(x.pid).includes(x.svc)) by.get(x.pid).push(x.svc);
+    if(x.nextDue&&(!earliest||x.nextDue<earliest)) earliest=x.nextDue; });
+  const named=[...by].map(([pid,sv])=>({street:streetOf(pid),sv})).filter(x=>x.street);
+  if(by.size<2||named.length<2) return null;
+  const soon=!earliest||days(TODAY,earliest)>=-30;
+  const strip=a=>plainSvcs(a).map(x=>x.replace(/^(an?|the) /,""));
+  if(named.length>3){
+    const all=[]; named.forEach(x=>strip(x.sv).forEach(t=>{ if(!all.includes(t)) all.push(t); }));
+    return {soon,what:joinNat(all)+" at a few of your properties"};
+  }
+  const groups=new Map();                 // what is due -> the streets it is due at
+  named.forEach(x=>{ const w=joinNat(strip(x.sv)); if(!groups.has(w)) groups.set(w,[]); groups.get(w).push(x.street); });
+  const parts=[...groups].map(([w,st])=>w+" at "+joinNat(st));
+  return {soon,what:parts.length<3?parts.join(", and "):parts.slice(0,-1).join(", ")+", and "+parts[parts.length-1]};
 }
 function periodOf(iv){
   const m=monthsOf(iv);
@@ -970,6 +1010,7 @@ const reminders=()=>{const out=[];
 /* ---------- render ---------- */
 function render(){
   if(!S.ready) return;
+  DUEIDX=null;
   const L=lines(), b=dueRows(L,false).reduce((a,r)=>{const k=band(r);a[k]=(a[k]||0)+1;return a;},{});
   $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-soon").textContent=b.soon||0;
   document.body.classList.toggle("nostats",S.view!=="due"&&S.view!=="todo");     // the counters show on Due only (the markup stays, render() writes to it)
