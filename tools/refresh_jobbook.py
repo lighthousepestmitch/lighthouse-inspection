@@ -252,9 +252,11 @@ def main():
                            "amt":  (r.get("LineAmount") or "").strip()})
 
     added_c = added_p = added_j = 0
+    new_cids = []                                # clients created by this run, listed at the end so Mitch can set their interval
     newdue = []
     for n, v in sorted(bundle.items(), key=lambda kv: kv[1].get("date") or ""):
         if not v.get("date") or n in seen_inv: continue
+        if v.get("status", "").lower() in ("voided", "deleted"): continue      # voided in Xero = the job never happened
         name = v["contact"]
         if not name: continue
         cid = slug(name)
@@ -265,6 +267,7 @@ def main():
                                  src[2] if len(src)>2 else "", src[3] if len(src)>3 else ""],
                             "iv":"","ic":0}
             added_c += 1
+            new_cids.append(cid)
         clients[cid]["ic"] = clients[cid].get("ic",0) + 1
 
         svcs, marker = [], None
@@ -360,14 +363,19 @@ def main():
     ovr = json.load(open(ovr_path)) if os.path.exists(ovr_path) else []
     named = 0
     for rule in ovr:
-        if not isinstance(rule, dict) or "client" not in rule: continue
+        if not isinstance(rule, dict) or not ("client" in rule or "cid" in rule): continue
         fams = set(rule.get("fam") or ["CAS", "TI", "ROD"])
         hit = 0
         for d in due:
             fam = FAMILY.get(d["s"])
             if fam not in fams or not d.get("ld"): continue
-            c = clients.get(props.get(d["p"], {}).get("c"), {})
-            if rule["client"].lower() not in c.get("n", "").lower(): continue
+            cid_ = props.get(d["p"], {}).get("c")
+            c = clients.get(cid_, {})
+            # "cid" is an exact client id (used for new contacts, can't catch a similarly named client);
+            # "client" is a name fragment (the original list)
+            if rule.get("cid"):
+                if rule["cid"] != cid_: continue
+            elif rule["client"].lower() not in c.get("n", "").lower(): continue
             if rule.get("prop") and rule["prop"].lower() not in props[d["p"]].get("l", "").lower(): continue
             d["iv"], d["nd"], d["src"] = rule["iv"], add_months(d["ld"], MONTHS[rule["iv"]]), "your list"
             hit += 1
@@ -478,6 +486,20 @@ def main():
     print(f"  old barriers (2yr+)     {sum(1 for d in od if age(d)>730):5}")
     print(f"  needs an interval       {sum(1 for d in due if not d.get('nd')):5}")
     print(f"\n  files written to {DATA}")
+
+    # ---- new contacts: one line per client created by this run, so Mitch can give each a repeat time
+    if new_cids:
+        print(f"\n  NEW CONTACTS ({len(new_cids)}). Ask Mitch each one's repeat time. Blank = the default shown.")
+        for cid in new_cids:
+            c = clients[cid]
+            pids = [p for p, pr in props.items() if pr.get("c") == cid]
+            where = "; ".join(sorted({props[p]["l"] for p in pids}))[:60]
+            svc = sorted({sv["s"] for p in pids for j in jobs.get(p, []) for sv in j["s"]})
+            reps = sorted({f"{d['s']} {d.get('iv') or '?'}" for d in due if d["p"] in pids})
+            has = ("phone " if re.match(r"^0\d{8,9}$", c.get("p","")) else "NO PHONE ") + ("email" if c.get("e") else "NO EMAIL")
+            print(f"   {cid}\n      {c['n']} | {where or '(address unknown)'} | {has}")
+            print(f"      did: {', '.join(svc) or '-'}")
+            print(f"      repeats: {', '.join(reps) or 'none (one-off)'}")
 
 def finish():
     """Last thing printed, so it is the last thing Mitch reads."""
