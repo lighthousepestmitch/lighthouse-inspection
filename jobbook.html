@@ -1216,7 +1216,11 @@ function rowFor(l,extra){
   hit.appendChild(main);
   hit.onclick=()=>multi&&l.cid?openClient(l.cid):openProp(l.pid,svcs[0]);
   r.appendChild(hit);
-  r.appendChild(actionBtns(l));
+  const acts=actionBtns(l), del=el("button","iact"), dn=multi?c.n:addr;
+  del.innerHTML=ico(SVG.x); del.title="Delete "+dn; del.setAttribute("aria-label","Delete "+dn);
+  del.onclick=e=>{ e.stopPropagation(); openSheet(rowDeleteSpec(l)); };
+  acts.appendChild(del);
+  r.appendChild(acts);
   return r;
 }
 function section(host,title,n,rows,note,unit){
@@ -1866,8 +1870,8 @@ function contactHistory(b,clientId,pid){
 /* Deleting an address (a property manager stops looking after it) hides that address only, in S.gone under
    its property id. Same rules as deleting a client: this device only, survives a refresh, Xero is untouched. */
 function propDeleteSpec(pid){
-  const p=S.props[pid]||{l:"this address"};
-  return {title:"Delete "+(p.l||"this address")+"?",sub:"takes just this address off the Job Book",build:b=>{
+  const p=S.props[pid]||{l:"this address"}, cn=(S.clients[p.c]||{}).n;
+  return {title:"Delete "+(p.l||"this address")+(cn?" ("+cn+")":"")+"?",sub:"takes just this address off the Job Book",build:b=>{
     b.appendChild(el("div","note","It comes off your due list and reminders. The client and their other addresses stay. "
       +"Xero isn't touched, and you can bring it back from the client's page."));
     const row=el("div","btns");
@@ -1879,6 +1883,13 @@ function propDeleteSpec(pid){
     row.appendChild(btn("Cancel",null,"",()=>closeSheet()));
     b.appendChild(row);
   }};
+}
+/* The X on a Due list row (Mitch, 2026-10-22). It hands over to the two deletes above, so Bring back works from the same places:
+   a client with other addresses loses just this address; their only address (or a row that groups several sites) loses the client. */
+function rowDeleteSpec(l){
+  const cid=l.cid||pOf(l.pid).c;
+  const live=Object.keys(S.props).filter(p=>S.props[p].c===cid&&!S.gone[p]);
+  return ((l.sites||[]).length>1||live.length<=1)?deleteSpec(cid):propDeleteSpec(l.pid);
 }
 function restoreProp(pid){
   const was=S.gone[pid]; delete S.gone[pid];
