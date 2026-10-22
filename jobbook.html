@@ -1648,11 +1648,20 @@ function alsoDo(pid){
   const out=ALSO_DO.filter(a=>!a[1].some(k=>had.includes(k))).map(a=>a[0]).slice(0,3);
   return out.length>1?out.slice(0,-1).join(", ")+" and "+out[out.length-1]:out.join("");
 }
+/* Two wordings, both approved by Mitch 2026-10-23: a job from the last 30 days gets his straight-after-the-job text, an older
+   job gets the "a while back" one (no "if anything wasn't right" line). "Recent" is judged on the newest job at that property.
+   No job date on file = the straight-after text, same as before. The email is not split yet. */
+const REVIEW_RECENT_DAYS=30;
 function reviewMsg(pid,link){
-  return `Hey ${firstName(cOf(pid).n,cOf(pid))}, bit awkward asking this \u{1F605} but if you've got a sec, `
-    +`a quick Google review would help me out heaps. It really helps me show up on Google. `
+  const last=(S.jobs[pid]||[]).reduce((m,j)=>j.d&&j.d>m?j.d:m,"");
+  const older=!!last&&days(last,TODAY)>REVIEW_RECENT_DAYS;
+  return `Hey ${firstName(cOf(pid).n,cOf(pid))}, `
+    +(older?`hope you're going well! Bit awkward asking this \u{1F605} but we looked after your place a while back, and if you were happy with it, a quick Google review would help me out heaps. `
+           :`bit awkward asking this \u{1F605} but if you've got a sec, a quick Google review would help me out heaps. `)
+    +`It really helps me show up on Google. `
     +`Totally no stress at all if not\n${link}\n`
-    +`If anything wasn't right, give me a ring on 0432 181 689 and I'll sort it.\nCheers, Mitch\nLighthouse Pest`;
+    +(older?``:`If anything wasn't right, give me a ring on 0432 181 689 and I'll sort it.\n`)
+    +`Cheers, Mitch\nLighthouse Pest`;
 }
 function reviewEmail(pid,link){
   const more=alsoDo(pid);
