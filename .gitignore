@@ -17,3 +17,6 @@ tools/client_names.json
 
 # the prospecting list (public business contacts, but still his private list). Uploaded the same way.
 jobbook-data/leads.json
+
+# the Oct 2026 check-in campaign record (customer names and what they said). Private like the rest.
+jobbook-data/campaign.json
