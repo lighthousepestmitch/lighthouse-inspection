@@ -20,3 +20,6 @@ jobbook-data/leads.json
 
 # the Oct 2026 check-in campaign record (customer names and what they said). Private like the rest.
 jobbook-data/campaign.json
+
+# when each client was last texted or emailed, read off the Mac (customer ids and dates). Private like the rest, uploaded the same way.
+jobbook-data/contacted.json

@@ -315,10 +315,11 @@ const iso=d=>{const z=new Date(d); z.setMinutes(z.getMinutes()-z.getTimezoneOffs
 const TODAY=iso(new Date());
 const parse=s=>{const [y,m,d]=String(s).split("-").map(Number); return new Date(y,m-1,d);};
 const days=(a,b)=>Math.round((parse(b)-parse(a))/DAY);
-const AU=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const nice=s=>{if(!s)return "-";const d=parse(s);return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear();};
+/* dates read dd/mm/yyyy (Mitch 2026-10-23) */
+const dmy=d=>String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();
+const nice=s=>{if(!s)return "-";return dmy(parse(s));};
 const when=t=>{if(!t)return "-";const d=new Date(t);
-  return d.getDate()+" "+AU[d.getMonth()]+" "+d.getFullYear()+", "+
+  return dmy(d)+", "+
     String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");};
 const SVG={phone:'<path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/>',
  msg:'<path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 3.7 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/>',
@@ -361,7 +362,7 @@ const normIv=v=>!v?null:(LEGACY[String(v).toLowerCase()]||LEGACY[v]||v);
 const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null;};
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
-const S={ready:false,clients:{},props:{},jobs:{},due:[],settings:null,sync:null,
+const S={ready:false,clients:{},props:{},jobs:{},due:[],contacted:{},settings:null,sync:null,
   ov:{},bookings:{},gone:{},camp:{},dncBack:{},rcAll:false,rq2:"",asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[],
   fopen:{},fseed:false,seeded:false,alertsOpen:false};   // fopen/fseed: sections opened by a tile or chip filter. seeded: the first-time default has been applied. alertsOpen: the folded notices are showing
 
@@ -389,6 +390,7 @@ const PRIVATE_BASES=["clients","properties","jobs","due","replies"];       // fi
 const PRIVATE_RE=/^(clients|properties|jobs|due|replies)_(\d+)$/;
 const ASKS_NAME="review_asks";
 const CAMPAIGN_NAME="campaign";               // optional: the Oct 2026 check-in campaign record (private, like the client files)
+const CONTACTED_NAME="contacted";             // optional: when each client was last texted or emailed (any way, even outside the Job Book), tools/import_contacted.py
 const LEADS_NAME="leads";                     // optional: the prospecting list (business contacts), private like the rest
 const MANIFEST_NAME="jobbook_manifest";       // written last by every upload: the list of rows that belong together
 const isLocal=location.hostname==="127.0.0.1"||location.hostname==="localhost";   // the Mac, running the page from the repo folder
@@ -494,7 +496,7 @@ async function passwordLogin(){
 /* nothing from the database stays in memory or on screen once the login is gone */
 function wipeData(){
   A.gen++; A.starting=false;
-  S.ready=false; S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={}; S.asked={};
+  S.ready=false; S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={}; S.asked={}; S.contacted={};
   S.ov={}; S.bookings={}; S.gone={}; S.camp={}; S.dncBack={}; S.stack.length=0; drawSheet();
   ["#s-fresh","#s-over","#s-soon"].forEach(id=>{ const n=$(id); if(n) n.textContent="-"; });
 }
@@ -593,11 +595,12 @@ async function loadAll(gen){
   S.sync=sync||{lastSyncedDate:S.settings.seedDataEnds};
   const got=await fetchPrivate();                       // clients, properties, jobs, due, replies, review asks
   if(gen!==A.gen) return;
-  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null, leadsF=null, campF=null;
+  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null, leadsF=null, campF=null, conF=null;
   for(const r of (got.rows||[])){
     if(r.name===ASKS_NAME){ asks=r.data; continue; }
     if(r.name===LEADS_NAME){ leadsF=r.data; continue; }
     if(r.name===CAMPAIGN_NAME){ campF=r.data; continue; }
+    if(r.name===CONTACTED_NAME){ conF=r.data; continue; }
     const m=PRIVATE_RE.exec(r.name); if(m) fam[m[1]].push([+m[2],r.data]);
   }
   if(!fam.clients.length){ renderNoData(); return; }
@@ -605,6 +608,7 @@ async function loadAll(gen){
   S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={};
   S.asked=(asks&&asks.rows)||{};
   S.camp=(campF&&campF.rows&&typeof campF.rows==="object"&&!Array.isArray(campF.rows))?campF.rows:{};
+  S.contacted=(conF&&conF.rows&&typeof conF.rows==="object"&&!Array.isArray(conF.rows))?conF.rows:{};
   S.leads=(leadsF&&Array.isArray(leadsF.rows))?leadsF.rows:[];                           // review texts already sent, pulled off his Mac
   for(const k of PRIVATE_BASES) for(const [,d] of fam[k]){ if(!d) continue;
     if(k==="due") S.due=S.due.concat(d.rows||[]);
@@ -689,6 +693,11 @@ async function localPlan(){
   if(cf!=null){
     if(typeof cf!=="object"||Array.isArray(cf)||!cf.rows||typeof cf.rows!=="object") throw plainErr(CAMPAIGN_NAME+".json doesn't look right. Nothing was uploaded.");
     names.push(CAMPAIGN_NAME);
+  }
+  const kf=await localJson(CONTACTED_NAME);                 // optional: only there once tools/import_contacted.py has been run
+  if(kf!=null){
+    if(typeof kf!=="object"||Array.isArray(kf)||!kf.rows||typeof kf.rows!=="object") throw plainErr(CONTACTED_NAME+".json doesn't look right. Nothing was uploaded.");
+    names.push(CONTACTED_NAME);
   }
   return {names,man};
 }
@@ -1332,6 +1341,7 @@ function foldSection(host,key,title,g){
 function batchEligible(r){
   const c=cOf(r.pid); if(!canText(c)) return false;
   const cut=Date.now()-30*DAY, cid=pOf(r.pid).c;
+  const cd=S.contacted[cid]; if(cd&&parse(cd)>cut) return false;   // texted or emailed from anywhere (Messages, Mail, the dashboard), not just from this page
   // any address of this client counts, not just this row's, since one client can now have several rows
   const mine=new Set(r.sites); for(const pid in S.props) if(S.props[pid].c===cid) mine.add(pid);
   return ![...mine].some(pid=>((S.ov[pid]||{}).log||[]).some(e=>(e.ch==="text"||e.ch==="email")&&e.kind!=="review"&&Date.parse(e.t)>cut));
