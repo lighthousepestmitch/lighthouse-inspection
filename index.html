@@ -20,6 +20,7 @@
     --find:#B4551C; --find-bg:#f7e7d6;
     --todo:#98897a; --todo-bg:#ece5d9;
     --place:#7a4bb8; --place-bg:#ece2fb;
+    --has:var(--timber); --has-bg:var(--timber-soft); /* one highlight colour for anything with photos / answered */
     --shadow:0 1px 2px rgba(20,32,30,.06),0 6px 20px rgba(20,32,30,.05);
     --radius:15px;
   }
@@ -65,8 +66,17 @@
   .jump::-webkit-scrollbar{display:none}
   .jchip{flex:none;font-family:"Spline Sans Mono",monospace;font-size:.72rem;font-weight:600;padding:5px 9px;border-radius:8px;
     border:1px solid var(--edge);background:var(--raised);color:var(--muted);cursor:pointer;white-space:nowrap;position:relative}
-  .jchip.done{color:var(--clear);border-color:var(--clear)}
-  .jchip.find{color:var(--find);border-color:var(--find)}
+  .jchip.has{color:var(--has);border-color:var(--has);background:var(--has-bg)}
+  .jumprow{display:flex;gap:8px;align-items:center;margin-top:10px}
+  .jumprow .jump{margin-top:0;flex:1;min-width:0}
+  .srcpill{flex:none;display:inline-flex;align-items:center;gap:5px;font-family:"Spline Sans Mono",monospace;font-size:.7rem;font-weight:700;
+    padding:5px 9px;border-radius:8px;border:1.5px solid var(--timber);background:var(--timber-soft);color:var(--timber);cursor:pointer}
+  .srcpill:active{transform:scale(.95)}
+  .srcpill svg{width:14px;height:14px;stroke:currentColor;fill:none}
+  /* camera / library icon swap (body.lib = library mode) */
+  .ic-lib{display:none}
+  body.lib .ic-cam{display:none}
+  body.lib .ic-lib{display:inline}
 
   main{padding-top:18px}
 
@@ -86,7 +96,7 @@
     border-radius:10px;padding:8px 10px;display:flex;align-items:center;cursor:pointer}
   .hcam:active{transform:scale(.94)}
   .hcam svg{width:19px;height:19px;stroke:currentColor;fill:none}
-  .hcount{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--find);
+  .hcount{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--has);
     color:#fff;font-size:.64rem;font-weight:700;display:none;align-items:center;justify-content:center;font-family:"Spline Sans Mono",monospace;border:2px solid var(--raised)}
   .hcount.on{display:flex}
   .htog{display:flex;gap:4px;flex:none}
@@ -162,15 +172,12 @@
   .qglabel{font-size:.66rem;font-weight:600;color:var(--ink);text-align:center;line-height:1.15}
   .qgcount{position:absolute;top:-6px;right:-6px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--timber);color:#fff;font-size:.6rem;font-weight:700;display:none;align-items:center;justify-content:center;font-family:"Spline Sans Mono",monospace;border:2px solid var(--raised)}
   .qgcount.on{display:flex}
-  .qgcount.need,.hcount.need{background:var(--find)}
-  .qgbtn.need{border-color:var(--find);background:var(--find-bg)}
+  .qgbtn.has{border-color:var(--has);background:var(--has-bg)}
 
-  /* needs-comment (red) / done (green) states */
-  .needchip{display:none;align-items:center;gap:4px;font-family:"Spline Sans Mono",monospace;font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#fff;background:var(--find);padding:4px 8px;border-radius:20px;flex:none}
-  .block.needs{border-color:var(--find)}
-  .block.needs>.block-h{background:var(--find-bg)}
-  .block.done>.block-h{box-shadow:inset 4px 0 0 var(--clear)}
-  .jchip.need{color:var(--find);border-color:var(--find)}
+  /* one highlight colour: a section with photos / answered, or still needing its note (label only) */
+  .needchip{display:none;align-items:center;gap:4px;font-family:"Spline Sans Mono",monospace;font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--has);background:var(--has-bg);border:1px solid var(--has);padding:3px 7px;border-radius:20px;flex:none}
+  .block.has,.block.needs{border-color:var(--has)}
+  .block.has>.block-h,.block.needs>.block-h{background:var(--has-bg)}
 
   /* yes/no segments + multi-select chips */
   .ynseg{display:flex;gap:8px}
@@ -179,6 +186,7 @@
   .chipset{display:flex;flex-wrap:wrap;gap:7px}
   .mchip{font-size:.82rem;padding:8px 11px;border-radius:9px;border:1.5px solid var(--edge);background:var(--paper);color:var(--ink);cursor:pointer}
   .mchip.on{border-color:var(--clear);background:var(--clear-bg);color:var(--clear);font-weight:600}
+  .mchip.spchip.on{border-color:var(--has);background:var(--has-bg);color:var(--has)}
   .chipsel{display:flex;flex-wrap:wrap;gap:7px}
   .csbtn{font-size:.85rem;padding:9px 13px;border-radius:10px;border:1.5px solid var(--edge);background:var(--paper);color:var(--muted);font-weight:600;cursor:pointer}
   .csbtn:active{transform:scale(.97)}
@@ -189,8 +197,7 @@
   .obslabel{font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:7px}
   .obsnote{width:100%;font-family:inherit;font-size:.92rem;color:var(--ink);background:var(--raised);border:1px solid var(--edge);border-radius:9px;padding:9px 11px;outline:0}
   .obsnote:focus{border-color:var(--timber)}
-  .qgbtn.access{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
-  .qgbtn.access .qglabel{color:var(--timber);font-weight:700}
+  .qgsub{margin-top:14px}
   .qgbtn.compass{border-color:var(--timber);background:var(--timber-soft);color:var(--timber)}
   .qgbtn.compass .qglabel{color:var(--timber);font-weight:700}
   .qgbtn.compass.rec{opacity:.6}
@@ -198,10 +205,6 @@
   .pickrow{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:13px 14px;
     border:1.5px solid var(--edge);border-radius:11px;background:var(--paper);color:var(--ink);font-size:.95rem;font-weight:600;cursor:pointer}
   .pickrow:active{transform:scale(.98)}
-  .pickrow.has{border-color:var(--find);background:var(--find-bg)}
-  .pickrow.inacc{color:var(--muted)}
-  .pickcount{flex:none;min-width:22px;height:22px;padding:0 5px;border-radius:11px;background:var(--find);color:#fff;
-    font-family:"Spline Sans Mono",monospace;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
 
   /* bank chips */
   .banklab{font-size:.72rem;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin:14px 0 7px}
@@ -260,6 +263,59 @@
   .jobdel{width:42px;flex:none;border:1px solid var(--edge);background:var(--raised);border-radius:10px;color:var(--muted);font-size:1.2rem;cursor:pointer}
   .jobdel.armed{background:var(--find);color:#fff;border-color:var(--find);font-size:.76rem;font-weight:700;width:70px}
 .lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;}
+  .thumb img{cursor:zoom-in}
+
+  /* photo viewer (tap a thumbnail) */
+  .lightbox{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.95);display:none;align-items:center;justify-content:center;overflow:hidden}
+  .lightbox.show{display:flex}
+  .lightbox img{max-width:100%;max-height:100%;object-fit:contain;display:block;user-select:none;-webkit-user-select:none}
+  .lightbox.zoomed{display:block;overflow:auto;-webkit-overflow-scrolling:touch}
+  .lightbox.zoomed img{max-width:none;max-height:none;width:250%;height:auto}
+  .lbx,.lbnav{position:fixed;z-index:2;border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:50%;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;line-height:1;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+  .lbx{top:calc(env(safe-area-inset-top) + 12px);right:14px;width:44px;height:44px;font-size:1.7rem}
+  .lbnav{top:50%;transform:translateY(-50%);width:44px;height:56px;border-radius:12px;font-size:2rem}
+  .lbnav.prev{left:10px}.lbnav.next{right:10px}
+  .lbnav[hidden]{display:none}
+  .lbcap{position:fixed;left:0;right:0;bottom:0;z-index:2;text-align:center;color:#fff;font-size:.82rem;font-weight:600;
+    padding:12px 70px calc(env(safe-area-inset-bottom) + 14px);background:linear-gradient(transparent,rgba(0,0,0,.7));pointer-events:none}
+
+  /* review / read-through screen */
+  .review{position:fixed;inset:0;z-index:55;background:var(--paper);overflow:auto;-webkit-overflow-scrolling:touch;display:none}
+  .review.show{display:block}
+  .rvbar{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:1px solid var(--edge);padding:calc(env(safe-area-inset-top) + 10px) 0 10px}
+  .rvbar .wrap{display:flex;align-items:center;gap:10px}
+  .rvbar .rvt{flex:1;font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.05rem;line-height:1.1}
+  .rvbar .rvt small{display:block;font-family:"Public Sans";font-weight:500;font-size:.7rem;color:var(--muted);margin-top:2px}
+  .rvbody{padding-top:16px;padding-bottom:60px}
+  .rvcard{background:var(--raised);border:1px solid var(--edge);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 15px;margin-bottom:14px}
+  .rvcard.has{border-color:var(--has)}
+  .rvhead{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .rvhead .code{font-family:"Spline Sans Mono",monospace;font-weight:600;font-size:.82rem;color:var(--timber);flex:none;min-width:34px}
+  .rvhead .name{flex:1;font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.04rem}
+  .rvh2{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.15rem;margin:0 0 4px}
+  .rvsub{font-size:.8rem;color:var(--muted);margin-bottom:10px}
+  .rvtable{display:grid;grid-template-columns:minmax(110px,34%) 1fr;gap:6px 12px;font-size:.88rem}
+  .rvtable dt{color:var(--muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.02em;padding-top:2px}
+  .rvtable dd{margin:0;word-break:break-word}
+  .rvlab{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);margin:12px 0 4px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .rvraw{font-size:.92rem;white-space:pre-wrap;background:var(--paper);border:1px solid var(--edge-soft);border-radius:10px;padding:9px 11px}
+  .rvraw.empty{color:var(--faint);font-style:italic}
+  .rvq{font-size:.86rem;margin:12px 0 4px}
+  .rvans{display:inline-block;font-family:"Spline Sans Mono",monospace;font-size:.66rem;font-weight:700;text-transform:uppercase;padding:2px 8px;border-radius:12px;margin-left:6px;background:var(--todo-bg);color:var(--muted)}
+  .rvans.yes{background:var(--find-bg);color:var(--find)}
+  .rvans.no{background:var(--clear-bg);color:var(--clear)}
+  .rvfinal{width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);background:var(--paper);border:1.5px solid var(--edge);border-radius:10px;padding:10px 12px;outline:0;min-height:74px;resize:vertical;line-height:1.45}
+  .rvfinal:focus{border-color:var(--timber)}
+  .rvfinal.filled{border-color:var(--has);background:var(--has-bg)}
+  .rvmini{font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--timber);background:var(--timber-soft);color:var(--timber);cursor:pointer;text-transform:none;letter-spacing:0}
+  .rvmini.ghost{background:transparent;border-color:var(--edge);color:var(--muted)}
+  .rvmini:disabled{opacity:.5}
+  .rvtodo{border-color:var(--has)}
+  .rvtodo .pickrow{padding:10px 12px;font-size:.88rem}
+  .rvai{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.8rem;color:var(--muted)}
+  .rvai input{flex:1;min-width:170px;font-family:inherit;font-size:.9rem;border:1px solid var(--edge);border-radius:9px;padding:8px 10px;background:var(--paper);color:var(--ink)}
+  .rvph{margin-top:8px}
 </style>
 </head>
 <body>
@@ -269,7 +325,10 @@
       <div style="display:flex;align-items:center;gap:10px"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><div class="htitle">Inspection Capture<small id="hsub">New regular termite inspection</small></div></div>
       <div class="prog"><span id="pcount">0/14</span><span class="bar"><i id="pbar"></i></span></div>
     </div>
-    <nav class="jump" id="jump"></nav>
+    <div class="jumprow">
+      <button class="srcpill" id="srcpill" type="button" aria-label="Photo source: camera or library"><svg class="ic-cam" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg><svg class="ic-lib" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-8 8"/></svg><span id="srclab">Camera</span></button>
+      <nav class="jump" id="jump"></nav>
+    </div>
   </div>
 </header>
 
@@ -280,8 +339,25 @@
     <div class="footinfo"><span class="savedot"></span><span id="saveinfo">Saved on this device</span></div>
     <button class="btn ghost" id="jobsBtn">Jobs</button>
     <button class="btn ghost" id="newBtn">New</button>
-    <button class="btn primary" id="finishBtn">Finish &amp; Export</button>
+    <button class="btn primary" id="finishBtn">Finish</button>
   </div>
+</div>
+
+<div class="review" id="review">
+  <div class="rvbar"><div class="wrap">
+    <button class="btn ghost" id="rvBack" type="button">&larr; Back</button>
+    <div class="rvt">Read-through<small id="rvsub"></small></div>
+    <button class="btn primary" id="rvSend" type="button">Send to Mitch</button>
+  </div></div>
+  <div class="wrap rvbody" id="rvbody"></div>
+</div>
+
+<div class="lightbox" id="lightbox">
+  <button class="lbx" id="lbClose" type="button" aria-label="Close">&times;</button>
+  <button class="lbnav prev" id="lbPrev" type="button" aria-label="Previous photo">&lsaquo;</button>
+  <img id="lbImg" alt="">
+  <button class="lbnav next" id="lbNext" type="button" aria-label="Next photo">&rsaquo;</button>
+  <div class="lbcap" id="lbCap"></div>
 </div>
 
 <div id="toast"></div>
@@ -292,6 +368,7 @@
 
 <input type="file" id="fileInput" accept="image/*" multiple hidden>
 <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden>
+<input type="file" id="importInput" accept=".json,application/json" hidden>
 
 <script>
 "use strict";
@@ -339,6 +416,13 @@ const COVER = {code:"COVER",title:"Cover shots — front of property",ph:"Option
 // extra capture sections that aren't clear/finding significant items — guided notes I slot into the right Mira fields
 const EXTRAS = [];
 
+// Species buttons on the findings sections (NSW + south-east QLD). STARTER LIST (general knowledge, not from Mitch's files):
+// Mitch to confirm/trim. Edit the arrays below; nothing else needs touching. "Other" opens a free-text box.
+// Left out on purpose: Mastotermes darwiniensis (northern Australia only), Hylotrupes bajulus (not in eastern Australia).
+const TERMITE_SPECIES = ["Coptotermes acinaciformis","Coptotermes frenchi","Coptotermes lacteus","Schedorhinotermes spp.","Heterotermes spp.","Nasutitermes spp.","Microcerotermes spp.","Porotermes adamsoni","Neotermes insularis","Cryptotermes spp.","Not identified","Other"];
+const BORER_SPECIES = ["Lyctus brunneus (powderpost beetle)","Anobium punctatum (furniture beetle)","Calymmaderus incisus (Queensland pine beetle)","Longicorn borer (Cerambycidae)","Auger beetle (Bostrichidae)","Pinhole borer (ambrosia beetle)","Not identified","Other"];
+const SPECIES_BY_CODE = {"8.1":TERMITE_SPECIES,"8.3":TERMITE_SPECIES,"8.8":BORER_SPECIES};
+
 // ---- report type (Regular vs Pre-Purchase) ----
 // Regular = RSA "Regular Visual Timber Pest Inspection Report" (AS3660).
 // Pre-purchase = RSA "Pre-Purchase Timber Pest Inspection Report" (AS4349.3, form v3.3).
@@ -353,6 +437,26 @@ function subFallback(){return isPP()?"New pre-purchase inspection":"New regular 
 // shared mic ("Speak") button — dropped next to every free-text field except client contact fields
 const MIC_SVG='<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>';
 const MIC_BTN='<button class="mic" type="button" data-mic>'+MIC_SVG+'Speak</button>';
+// camera + library icons; CSS (body.lib) shows one and hides the other so every photo button shows the current source
+const ICON_ATTR='viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
+const CAMICON=`<svg class="ic-cam" ${ICON_ATTR}><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg><svg class="ic-lib" ${ICON_ATTR}><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-8 8"/></svg>`;
+// photo source: "camera" jumps straight to the camera, "library" opens the photo picker (iOS then offers Photo Library / Take Photo / Files)
+let PHOTO_SRC="camera";
+try{if(localStorage.getItem("lpc_photo_src")==="library")PHOTO_SRC="library";}catch(e){}
+function applyPhotoSrc(){
+  document.body.classList.toggle("lib",PHOTO_SRC==="library");
+  const l=document.getElementById("srclab");if(l)l.textContent=PHOTO_SRC==="library"?"Library":"Camera";
+}
+function togglePhotoSrc(){
+  PHOTO_SRC=PHOTO_SRC==="library"?"camera":"library";
+  try{localStorage.setItem("lpc_photo_src",PHOTO_SRC);}catch(e){}
+  applyPhotoSrc();
+  toast(PHOTO_SRC==="library"?"Photo buttons now open your photo library":"Photo buttons now open the camera");
+}
+function startPhoto(code){
+  activePhotoCode=code;
+  document.getElementById(PHOTO_SRC==="library"?"fileInput":"cameraInput").click();
+}
 const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","South Australia":"SA","Western Australia":"WA","Tasmania":"TAS","Northern Territory":"NT","Australian Capital Territory":"ACT"};
 
 /* ---------- state ---------- */
@@ -401,6 +505,7 @@ function timeAgo(t){if(!t)return"";const m=Math.round((Date.now()-t)/60000);
 let saveT;
 function scheduleSave(){
   clearTimeout(saveT);
+  refreshHasBlocks();
   document.getElementById("saveinfo").textContent="Saving…";
   saveT=setTimeout(async()=>{
     if(!STATE.id)STATE.id=genId();
@@ -538,8 +643,8 @@ function buildSection(item,isExtra){
     <div class="block-h" data-toggle>
       <span class="code">${isExtra?'':code}</span>
       <span class="name">${escv(itemTitle(item))}</span>
-      ${!item.nophoto&&!hasSub?`<button class="hcam" type="button" data-quickphoto="${code}" aria-label="Take photo">
-        <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>
+      ${!item.nophoto&&!hasSub?`<button class="hcam" type="button" data-quickphoto="${code}" aria-label="Add photo">
+        ${CAMICON}
         <span class="hcount" id="hcount-${code}"></span>
       </button>`:''}
       <span class="needchip">Needs note</span>
@@ -562,7 +667,7 @@ function buildSection(item,isExtra){
         ${item.subQs.map((q,i)=>{const a=(s.subq||{})[i];return `<div class="subq">
           <div class="subq-q">${escv(q)}</div>
           <button class="subqcam" type="button" data-subqphoto="${code}::${i}">
-            <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>Add photo</button>
+            ${CAMICON}Add photo</button>
           <div class="photos subqphotos" id="subqph-${code}-${i}"></div>
           <div class="ynu">
             <button class="ynu-b yes ${a==='yes'?'on':''}" type="button" data-subq="${i}" data-subv="yes">Yes</button>
@@ -585,6 +690,9 @@ function buildSection(item,isExtra){
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 1 1 3.1 2.4c-.6.2-1.1.8-1.1 1.5v.3"/><path d="M12 17.2v.01"/></svg>Undet.</button>
       </div>`:''}
       ${hasSub?'':`<div class="${isFindItem&&!item.always?'findbody':''}">
+        ${SPECIES_BY_CODE[code]?`<div class="field"><label>${code==="8.8"?"Borer type":"Termite species"} — tap all that apply</label>
+          <div class="chipset">${SPECIES_BY_CODE[code].map(sp=>`<button type="button" class="mchip spchip ${(s.species||[]).includes(sp)?'on':''}" data-species="${escv(sp)}">${escv(sp)}</button>`).join("")}</div>
+          <input class="otherline" data-speciesother placeholder="Type the other species" value="${escv(s.speciesOther)}" style="margin-top:8px;display:${(s.species||[]).includes('Other')?'block':'none'}"></div>`:''}
         <div class="field"><label class="notelabel"><span>${item.always?'Note':(isExtra?'Notes':'What did you see? (rough note is fine)')}</span>
           <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
           <textarea data-note placeholder="${escv(item.ph||(item.always?'e.g. 6 months':'Type or speak quick notes — I will polish them into report wording.'))}">${escv(s.note)}</textarea></div>
@@ -602,9 +710,10 @@ function buildSection(item,isExtra){
 const QG_SHORT={"COVER":"Cover","8.1":"Active termites","8.3":"Termite workings","8.4":"Prev mgmt","8.6":"Delig","8.7":"Decay","8.8":"Borers","8.9":"Vent","8.10":"Moisture","8.11":"Bridging","8.12":"Timber","8.13":"Conducive","8.14":"Safety","ACC":"Access","SCOPE":"Scope","GEN":"General"};
 function buildQuickGrid(){
   const s=document.createElement("section");s.className="qgwrap";
-  s.innerHTML=`<div class="qgtitle">Quick photos — tap to shoot any section</div><div class="quickgrid" id="quickgrid"></div>`;
+  s.innerHTML=`<div class="qgtitle">Quick photos — tap to shoot any section</div><div class="quickgrid" id="quickgrid"></div>
+    <div class="qgtitle qgsub">Access &amp; obstructed — tap an area to shoot it</div><div class="quickgrid" id="areagrid"></div>`;
   const g=s.querySelector("#quickgrid");
-  const CAMPATH=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>`;
+  const CAMPATH=CAMICON;
   // Orientation/compass up front with the quick photos - captured standing
   // at the property the same moment as the cover shots, not buried later
   // in Section A. Reuses the same data-compass handler as the field inside
@@ -631,9 +740,14 @@ function buildQuickGrid(){
     b.innerHTML=`${CAMPATH}${code?`<span class="qgcode">${code}</span>`:''}<span class="qglabel">${escv(name)}</span><span class="qgcount" id="qgc-${it.code}"></span>`;
     g.appendChild(b);
   });
-  const ab=document.createElement("button");ab.className="qgbtn access";ab.type="button";ab.dataset.access="1";
-  ab.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/><circle cx="7" cy="7" r="0"/></svg><span class="qglabel">Access &amp; obstructed</span><span class="qgcount" id="qgc-ACCESS"></span>`;
-  g.appendChild(ab);
+  // one tile per obstructed area + inaccessible: one tap = camera for that area (photo goes straight into it)
+  const ag=s.querySelector("#areagrid");
+  OBSAREAS.map(a=>({code:"OBS::"+a,id:"OBS-"+slug(a),name:OBS_SHORT[a]||a}))
+    .concat([{code:"INACC",id:"INACC",name:"Inaccessible"}]).forEach(t=>{
+      const b=document.createElement("button");b.className="qgbtn";b.type="button";b.id="qgb-"+t.id;b.dataset.quickphoto=t.code;
+      b.innerHTML=`${CAMPATH}<span class="qglabel">${escv(t.name)}</span><span class="qgcount" id="qgc-${t.id}"></span>`;
+      ag.appendChild(b);
+    });
   return s;
 }
 
@@ -647,6 +761,7 @@ function chipSel(attr,key,options,val){
 }
 const INSPECTED=["Building interior (of a company or strata title unit)","Building exterior (only the immediate exterior of a company or strata title unit)","Building interior","Building exterior","Roof exterior","Roof space","Subfloor space","Outbuildings","The site","Other"];
 const OBSAREAS=["Building interior","Building exterior","Roof exterior","Roof space","Subfloor space","Outbuildings","The site","Other"];
+const OBS_SHORT={"Building interior":"Interior","Building exterior":"Exterior","Roof exterior":"Roof ext.","Roof space":"Roof space","Subfloor space":"Subfloor","Outbuildings":"Outbuildings","The site":"Site","Other":"Other"};
 function slug(s){return s.replace(/[^a-z0-9]/gi,"_");}
 function obsBlock(a,c){
   const o=(c.obs&&c.obs[a])||{note:"",photos:[]};
@@ -708,7 +823,7 @@ function buildAccessBlock(){
         <div class="field"><label>Obstructions present?</label>${ynSeg("obstructions",c.obstructions)}</div>
       </div>
       <div class="field"><label>Areas obstructed</label>
-        <div class="subqlead" id="obshint">Photograph an area from the <b>Access &amp; obstructed</b> button up top. Each area you shoot appears here to write its finding.</div>
+        <div class="subqlead" id="obshint">Tap an area under <b>Access &amp; obstructed</b> in the quick photos up top. Each area you shoot appears here to write its finding.</div>
         <div class="obswrap">${OBSAREAS.map(a=>obsBlock(a,c)).join("")}</div></div>
       <div class="field"><label>Inaccessible areas?</label>${ynSeg("inaccessible",c.inaccessible)}</div>
       <div class="field"><label class="notelabel"><span>Which areas couldn't be accessed? (if yes)</span>${MIC_BTN}</label>
@@ -830,7 +945,7 @@ function render(){
   main.appendChild(buildAnnexBlock());
   [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
   renderReportPhotos();renderComments();renderAnnex();updateOrientBadge();
-  buildJump();updateProgress();
+  buildJump();updateProgress();refreshHasBlocks();
 }
 
 function renderPhotos(code){
@@ -845,7 +960,12 @@ function renderPhotos(code){
   add.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>Photo`;
   host.appendChild(add);
 }
-const CAM_SVG=`<svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg>Photo`;
+const CAM_SVG=CAMICON+"Photo";
+// quick-photo tile: show its count and the one highlight colour when it has photos
+function setTile(id,n){
+  const c=document.getElementById("qgc-"+id);if(c){c.textContent=n;c.classList.toggle("on",n>0);}
+  const b=document.getElementById("qgb-"+id);if(b)b.classList.toggle("has",n>0);
+}
 function photoBucket(code){
   if(code&&code.indexOf("SUBQ::")===0){const p=code.slice(6).split("::");const s=sec(p[0]);s.subqPhotos=s.subqPhotos||{};s.subqPhotos[+p[1]]=s.subqPhotos[+p[1]]||[];return s.subqPhotos[+p[1]];}
   if(code&&code.indexOf("OBS::")===0){const a=code.slice(5);const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};return o[a].photos;}
@@ -865,8 +985,7 @@ function renderSubqPhotos(code){
     });
     const n=(s.subqPhotos[i]||[]).length;
     host.style.display=n?"grid":"none";
-    const qc=document.getElementById("qgc-SUBQ-"+slug(code)+"-"+i);
-    if(qc){qc.textContent=n;qc.classList.toggle("on",n>0);}
+    setTile("SUBQ-"+slug(code)+"-"+i,n);
   });
 }
 function renderObsArea(a){
@@ -888,7 +1007,20 @@ function renderInacc(){
   const add=document.createElement("button");add.className="addphoto";add.dataset.inaccphoto="1";add.innerHTML=CAM_SVG;host.appendChild(add);
 }
 function syncYn(key){const seg=document.querySelector('[data-ynkey="'+key+'"]');if(!seg)return;const v=STATE.customer[key];seg.querySelectorAll(".yn").forEach(x=>x.classList.toggle("on",x.dataset.yn===v));}
-function updateAccessCount(){let n=0;const o=STATE.customer.obs||{};for(const a in o)n+=((o[a].photos||[]).length);n+=((STATE.customer.inacc&&STATE.customer.inacc.photos.length)||0);const el=document.getElementById("qgc-ACCESS");if(el){el.textContent=n;el.classList.toggle("on",n>0);}}
+function updateAccessCount(){
+  const o=STATE.customer.obs||{};
+  OBSAREAS.forEach(a=>setTile("OBS-"+slug(a),((o[a]&&o[a].photos)||[]).length));
+  setTile("INACC",((STATE.customer.inacc&&STATE.customer.inacc.photos)||[]).length);
+}
+// Access / Comments / Annexures blocks take the same highlight when they hold photos or notes
+function refreshHasBlocks(){
+  const c=STATE.customer||{};
+  const set=(id,on)=>{const b=document.getElementById(id);if(b)b.classList.toggle("has",!!on);};
+  const used=x=>x&&(((x.photos||[]).length)||((x.note||"").trim()));
+  set("b-ACCESS",anyObsContent()||used(c.inacc));
+  set("b-CMT",used(c.cmts));
+  set("b-ANNEX",used(c.annex));
+}
 function renderReportPhotos(){OBSAREAS.forEach(renderObsArea);renderInacc();updateAccessCount();}
 function anyObsContent(){const o=STATE.customer.obs||{};return OBSAREAS.some(a=>{const oo=o[a];return oo&&(((oo.note||"").trim())||((oo.photos||[]).length));});}
 function syncObstructions(){STATE.customer.obstructions=anyObsContent()?"Yes":"No";syncYn("obstructions");}
@@ -907,13 +1039,21 @@ function renderAnnex(){
   const add=document.createElement("button");add.className="addphoto";add.dataset.annexphoto="1";add.innerHTML=CAM_SVG;host.appendChild(add);
 }
 
+// one highlight for a section that has photos, an answer, a species or a note
+function isTouched(code){
+  const s=STATE.sections[code];
+  return photoCount(code)>0||!!(s&&(s.status||(s.note||"").trim()||(s.species&&s.species.length)));
+}
 function buildJump(){
   const j=document.getElementById("jump");j.innerHTML="";
   ITEMS.forEach(it=>{
-    const [pc]=pill(it.code);const need=needsComment(it.code);
-    const a=document.createElement("button");a.className="jchip"+(need?" need":pc==="clear"?" done":pc==="find"?" find":"");
-    a.textContent=it.code;a.onclick=()=>openTo(it.code);j.appendChild(a);
+    const a=document.createElement("button");a.className="jchip"+(isTouched(it.code)?" has":"");
+    a.dataset.code=it.code;a.textContent=it.code;a.onclick=()=>openTo(it.code);j.appendChild(a);
   });
+}
+function refreshChip(code){
+  const c=document.querySelector('#jump [data-code="'+code+'"]');
+  if(c)c.classList.toggle("has",isTouched(code));
 }
 
 function updateProgress(){
@@ -943,12 +1083,12 @@ main.addEventListener("click",e=>{
       scheduleSave();toast(v==="prepurchase"?"Pre-purchase inspection":"Regular inspection");
     }
     return}
+  const lbimg=e.target.closest(".thumb img");
+  if(lbimg){openLightbox(lbimg);return}
   const qp=e.target.closest("[data-quickphoto]");
-  if(qp){activePhotoCode=qp.dataset.quickphoto;document.getElementById("cameraInput").click();return}
+  if(qp){startPhoto(qp.dataset.quickphoto);return}
   const sqp=e.target.closest("[data-subqphoto]");
-  if(sqp){activePhotoCode="SUBQ::"+sqp.dataset.subqphoto;document.getElementById("cameraInput").click();return}
-  const acc=e.target.closest("[data-access]");
-  if(acc){openAccessPicker();return}
+  if(sqp){startPhoto("SUBQ::"+sqp.dataset.subqphoto);return}
   const loc=e.target.closest("[data-locate]");
   if(loc){getLocation(loc);return}
   const comp=e.target.closest("[data-compass]");
@@ -965,6 +1105,16 @@ main.addEventListener("click",e=>{
   const ar=e.target.closest("[data-area]");
   if(ar){const a=ar.dataset.area;const arr=STATE.customer.areas=STATE.customer.areas||[];
     const i=arr.indexOf(a);if(i>=0){arr.splice(i,1);ar.classList.remove("on")}else{arr.push(a);ar.classList.add("on")}scheduleSave();return}
+  const spc=e.target.closest("[data-species]");
+  if(spc){const blk=spc.closest(".block");const code=blk.id.slice(2);const s=sec(code);const v=spc.dataset.species;
+    s.species=s.species||[];const i=s.species.indexOf(v);
+    if(i>=0)s.species.splice(i,1);else s.species.push(v);
+    spc.classList.toggle("on",i<0);
+    if(v==="Other"){const ol=blk.querySelector("[data-speciesother]");
+      if(ol){ol.style.display=i<0?"block":"none";if(i<0)ol.focus();else{ol.value="";s.speciesOther="";}}}
+    // a species picked on an untouched item implies a finding (same as adding a photo)
+    if(i<0&&!s.status)setStatus(code,"find",true);else{updateHeaderCount(code);refreshPill(code);scheduleSave();}
+    return}
   const mic=e.target.closest("[data-mic]");
   if(mic){toggleMic(mic);return}
   const acp=e.target.closest("[data-acpick]");
@@ -993,13 +1143,13 @@ main.addEventListener("click",e=>{
   const ap=e.target.closest("[data-addphoto]");
   if(ap){activePhotoCode=ap.dataset.addphoto;document.getElementById("fileInput").click();return}
   const obp=e.target.closest("[data-obsphoto]");
-  if(obp){activePhotoCode="OBS::"+obp.dataset.obsphoto;document.getElementById("cameraInput").click();return}
+  if(obp){startPhoto("OBS::"+obp.dataset.obsphoto);return}
   const inp=e.target.closest("[data-inaccphoto]");
-  if(inp){activePhotoCode="INACC";document.getElementById("cameraInput").click();return}
+  if(inp){startPhoto("INACC");return}
   const axp=e.target.closest("[data-annexphoto]");
-  if(axp){activePhotoCode="ANNEX";document.getElementById("cameraInput").click();return}
+  if(axp){startPhoto("ANNEX");return}
   const cmp=e.target.closest("[data-cmtphoto]");
-  if(cmp){activePhotoCode="CMT";document.getElementById("cameraInput").click();return}
+  if(cmp){startPhoto("CMT");return}
   const dsq=e.target.closest("[data-delsubq]");
   if(dsq){const p=dsq.dataset.delsubq.split("::");const s=sec(p[0]);
     if(s.subqPhotos&&s.subqPhotos[+p[1]])s.subqPhotos[+p[1]].splice(+p[2],1);
@@ -1026,6 +1176,7 @@ main.addEventListener("input",e=>{
     const pd=document.getElementById("pill-DET");
     if(pd){pd.textContent=STATE.customer.address?"Filled":"To do";pd.className="pill "+(STATE.customer.address?"clear":"todo");}
     scheduleSave();return}
+  if(e.target.matches("[data-speciesother]")){const code=e.target.closest(".block").id.slice(2);sec(code).speciesOther=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;syncObstructions();scheduleSave();return}
   if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-annexnote]")){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};a.note=e.target.value;scheduleSave();return}
@@ -1080,21 +1231,19 @@ function needsComment(code){
 }
 function updateNeed(code){
   const blk=document.getElementById("b-"+code);if(!blk)return;
-  const need=needsComment(code);const s=sec(code);
+  const need=needsComment(code);
   blk.classList.toggle("needs",need);
-  const done=!need&&((s.note||"").trim().length>0)&&(s.photos.length>0||s.status==="find"||s.status==="undet");
-  blk.classList.toggle("done",done);
+  blk.classList.toggle("has",isTouched(code));
   const chip=blk.querySelector(".needchip");if(chip)chip.style.display=need?"inline-flex":"none";
 }
 function photoCount(code){const s=sec(code);let n=(s.photos||[]).length;if(s.subqPhotos)for(const k in s.subqPhotos)n+=(s.subqPhotos[k]||[]).length;return n;}
 function updateHeaderCount(code){
-  const n=photoCount(code),need=needsComment(code);
+  const n=photoCount(code);
   const hc=document.getElementById("hcount-"+code);
-  if(hc){hc.textContent=n;hc.classList.toggle("on",n>0);hc.classList.toggle("need",need);}
-  const qc=document.getElementById("qgc-"+code);
-  if(qc){qc.textContent=n;qc.classList.toggle("on",n>0);qc.classList.toggle("need",need);}
-  const qb=document.getElementById("qgb-"+code);if(qb)qb.classList.toggle("need",need);
+  if(hc){hc.textContent=n;hc.classList.toggle("on",n>0);}
+  setTile(code,n);
   updateNeed(code);
+  refreshChip(code);
 }
 function refreshPill(code){
   const el=document.getElementById("pill-"+code);if(!el)return;
@@ -1303,27 +1452,60 @@ function startSpeech(btn,ta){
 
 /* ---------- toast ---------- */
 let tt;const toastEl=document.getElementById("toast");
-function toast(m){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove("show"),1600)}
+function toast(m,ms){toastEl.textContent=m;toastEl.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>toastEl.classList.remove("show"),ms||1600)}
 
 /* ---------- modal ---------- */
 const modal=document.getElementById("modal"),sheet=document.getElementById("sheet");
 function closeModal(){modal.classList.remove("show")}
-function obsCount(a){return ((STATE.customer.obs&&STATE.customer.obs[a]&&STATE.customer.obs[a].photos.length)||0);}
-function openAccessPicker(){
-  const rows=OBSAREAS.map(a=>{const n=obsCount(a);return `<button class="pickrow${n?' has':''}" data-pick="OBS::${escv(a)}"><span>${escv(a)}</span>${n?`<span class="pickcount">${n}</span>`:''}</button>`;}).join("");
-  const inn=((STATE.customer.inacc&&STATE.customer.inacc.photos.length)||0);
-  sheet.innerHTML=`<h3>Access &amp; obstruction photos</h3>
-    <p style="font-size:.85rem">Tap an area to shoot a photo straight into it. Any area with photos is treated as <b>obstructed</b> — comment on it lower down in Accessibility.</p>
-    <div class="pickwrap">${rows}
-      <button class="pickrow inacc${inn?' has':''}" data-pick="INACC"><span>Inaccessible areas</span>${inn?`<span class="pickcount">${inn}</span>`:''}</button></div>
-    <div class="acts"><button class="btn ghost" id="mCancel">Close</button></div>`;
-  modal.classList.add("show");
-  document.getElementById("mCancel").onclick=closeModal;
-  sheet.querySelectorAll("[data-pick]").forEach(btn=>{
-    btn.onclick=()=>{activePhotoCode=btn.dataset.pick;document.getElementById("cameraInput").click();closeModal();};
-  });
-}
 modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
+
+/* ---------- photo viewer: tap any thumbnail to see it big (swipe / arrows between the photos in that group) ---------- */
+const lb=document.getElementById("lightbox"),lbImg=document.getElementById("lbImg"),lbCap=document.getElementById("lbCap");
+let lbList=[],lbIdx=0,lbTx=null,lbTap=0;
+function lbCaption(img){
+  const host=img.closest(".photos");
+  const blk=img.closest(".block,.rvcard");
+  const nm=blk&&blk.querySelector(".name,.rvname");
+  const row=img.closest(".obsrow");const rl=row&&row.querySelector(".obslabel");
+  const sq=img.closest(".subq");const q=sq&&sq.querySelector(".subq-q");
+  return [nm&&nm.textContent.trim(),rl&&rl.textContent.trim(),q&&q.textContent.trim().slice(0,70)].filter(Boolean).join(" · ");
+}
+function openLightbox(img){
+  const host=img.closest(".photos");
+  lbList=host?[...host.querySelectorAll(".thumb img")]:[img];
+  lbIdx=Math.max(0,lbList.indexOf(img));
+  lb.classList.remove("zoomed");lb.dataset.cap=lbCaption(img);
+  lb.classList.add("show");showLb();
+}
+function showLb(){
+  lb.classList.remove("zoomed");
+  lbImg.src=lbList[lbIdx].src;
+  const n=lbList.length;
+  lbCap.textContent=(lb.dataset.cap?lb.dataset.cap+"   ":"")+(n>1?(lbIdx+1)+" / "+n:"");
+  document.getElementById("lbPrev").hidden=n<2;document.getElementById("lbNext").hidden=n<2;
+}
+function lbStep(d){if(lbList.length<2)return;lbIdx=(lbIdx+d+lbList.length)%lbList.length;showLb();}
+function closeLightbox(){lb.classList.remove("show","zoomed");lbImg.removeAttribute("src");}
+document.getElementById("lbClose").onclick=closeLightbox;
+document.getElementById("lbPrev").onclick=e=>{e.stopPropagation();lbStep(-1)};
+document.getElementById("lbNext").onclick=e=>{e.stopPropagation();lbStep(1)};
+lb.addEventListener("click",e=>{
+  if(e.target===lbImg){ // double-tap toggles zoom
+    const now=Date.now();if(now-lbTap<320){lb.classList.toggle("zoomed");lbTap=0;}else lbTap=now;return;}
+  if(e.target===lb&&!lb.classList.contains("zoomed"))closeLightbox();
+});
+lb.addEventListener("touchstart",e=>{lbTx=(e.touches.length===1&&!lb.classList.contains("zoomed"))?e.touches[0].clientX:null;},{passive:true});
+lb.addEventListener("touchend",e=>{
+  if(lbTx==null)return;const dx=e.changedTouches[0].clientX-lbTx;lbTx=null;
+  if(Math.abs(dx)>60)lbStep(dx<0?1:-1);
+},{passive:true});
+document.addEventListener("keydown",e=>{
+  if(!lb.classList.contains("show"))return;
+  if(e.key==="Escape")closeLightbox();
+  else if(e.key==="ArrowRight")lbStep(1);
+  else if(e.key==="ArrowLeft")lbStep(-1);
+});
+document.getElementById("srcpill").addEventListener("click",togglePhotoSrc);
 
 /* ---------- jobs (multi-inspection) ---------- */
 async function openNewJob(){
@@ -1369,9 +1551,10 @@ async function openJobs(){
   sheet.innerHTML=`<h3>Your jobs</h3>
     <p style="font-size:.85rem">Tap a job to open it. Everything's saved on this phone — remember to Export each one so there's a backup off the device.</p>
     <div class="joblist">${rows}</div>
-    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn primary" id="mNewJob">Start new job</button></div>`;
+    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mImport">Import packet</button><button class="btn primary" id="mNewJob">Start new job</button></div>`;
   modal.classList.add("show");
   document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mImport").onclick=()=>document.getElementById("importInput").click();
   document.getElementById("mNewJob").onclick=openNewJob;
   sheet.querySelectorAll("[data-openjob]").forEach(b=>b.onclick=()=>switchJob(b.dataset.openjob).then(closeModal));
   sheet.querySelectorAll("[data-deljob]").forEach(b=>b.onclick=(ev)=>{
@@ -1396,18 +1579,23 @@ async function buildPacket(){
   if(pp)cust.scope=cust.scope||PP_SCOPE;
   const out={meta:{app:"LPC Inspection Capture",
       type:pp?"RSA Pre-Purchase Timber Pest Inspection":"RSA Regular Visual Timber Pest Inspection",
-      reportType:pp?"prepurchase":"regular",version:1},
+      reportType:pp?"prepurchase":"regular",version:2,jobId:STATE.id,reviewedAt:STATE.reviewedAt||null},
     customer:cust,sections:[]};
   const list=[COVER].concat(ITEMS,EXTRAS);
   for(const it of list){
     const s=STATE.sections[it.code];if(!s)continue;
     const photos=(s.photos||[]).filter(Boolean);
-    if(s.status||s.note||photos.length||s.subq||s.subqPhotos||s.subqNotes){
+    const species=(s.species||[]).filter(Boolean);
+    if(s.status||s.note||photos.length||s.subq||s.subqPhotos||s.subqNotes||species.length){
       const rec={code:it.code,title:itemTitle(it),status:s.status||(ITEMS.some(x=>x.code===it.code)?"clear":"note"),note:s.note||"",tone:(s.tone&&s.tone!=="Use report tone")?s.tone:"",photos};
+      if(species.length){rec.species=species;if(species.includes("Other")&&(s.speciesOther||"").trim())rec.speciesOther=s.speciesOther.trim();}
       if(it.subQs)rec.subq=it.subQs.map((q,i)=>({q,a:(s.subq&&s.subq[i])||null,note:(s.subqNotes&&s.subqNotes[i])||"",photos:((s.subqPhotos&&s.subqPhotos[i])||[]).filter(Boolean)}));
       out.sections.push(rec);
     }
   }
+  // approved report wording (keyed by field). Present only when someone wrote or polished some; Mira build uses it as is.
+  const fw=cleanFinal();
+  if(Object.keys(fw).length){out.final=fw;out.meta.wordingFinal=true;}
   return out;
 }
 
@@ -1444,7 +1632,7 @@ function showIncomplete(miss,proceed){
   modal.classList.add("show");
   document.getElementById("mCancel").onclick=closeModal;
   document.getElementById("mAnyway").onclick=()=>{closeModal();proceed();};
-  sheet.querySelectorAll("[data-missgo]").forEach(btn=>btn.onclick=()=>{closeModal();openTo(btn.dataset.missgo);});
+  sheet.querySelectorAll("[data-missgo]").forEach(btn=>btn.onclick=()=>{closeModal();closeReview();openTo(btn.dataset.missgo);});
 }
 async function doExport(){
   const addr=(STATE.customer.address||"inspection").replace(/[^\w]+/g,"_").slice(0,40);
@@ -1491,10 +1679,247 @@ async function doExport(){
     }
   };
 }
-document.getElementById("finishBtn").addEventListener("click",()=>{
+/* ---------- read-through (Review): Finish opens it; report wording boxes; AI Polish; Import ---------- */
+const review=document.getElementById("review"),rvbody=document.getElementById("rvbody");
+const rvRaw={},rvPrev={};   // rvRaw[key]={raw,ctx} rebuilt each time Review opens; rvPrev = undo for Polish
+// STATE.final[key] = the wording that goes in the Mira report. Keys: sec:<code>, sub:8.11:<i>, obs:<area>, inacc, addcomments, cmt, annex.
+// Empty / missing means "use the captured note" (Claude polishes it when building Mira, as before).
+function fin(){return STATE.final||(STATE.final={});}
+function cleanFinal(){const o={},f=STATE.final||{};Object.keys(f).forEach(k=>{const v=(f[k]||"").trim();if(v)o[k]=v;});return o;}
+function rvTa(k){return [...rvbody.querySelectorAll("[data-fkey]")].find(t=>t.dataset.fkey===k);}
+function setFinal(k,v){
+  if((v||"").trim())fin()[k]=v;else delete fin()[k];
+  const ta=rvTa(k);if(ta)ta.classList.toggle("filled",!!(v||"").trim());
+  scheduleSave();
+}
+function vtxt(v){return (v==null?"":String(v)).trim();}
+function rvRow(l,v){return `<dt>${escv(l)}</dt><dd>${vtxt(v)?escv(v):'<span style="color:var(--faint)">—</span>'}</dd>`;}
+function pickOther(c,k){return c[k]==="Other"?("Other"+(c[k+"Other"]?": "+c[k+"Other"]:"")):c[k];}
+function rvPhotos(arr){arr=(arr||[]).filter(Boolean);return arr.length?`<div class="photos rvph">${arr.map(u=>`<div class="thumb"><img src="${u}" alt=""></div>`).join("")}</div>`:"";}
+function rvTone(s){return (s&&s.tone&&s.tone!=="Use report tone")?s.tone:(STATE.customer.tone||"Measured (standard)");}
+function rvWord(key,raw,ctx){
+  raw=raw||"";rvRaw[key]={raw,ctx:ctx||{}};
+  const f=fin()[key]||"";
+  const ai=aiReady()?`<button class="rvmini" type="button" data-polish="${escv(key)}">Polish</button><button class="rvmini ghost" type="button" data-undo="${escv(key)}" ${rvPrev[key]!=null?'':'hidden'}>Undo</button>`:"";
+  return `<div class="rvlab"><span>What was captured</span></div>
+    <div class="rvraw${vtxt(raw)?'':' empty'}">${vtxt(raw)?escv(raw):"Nothing written"}</div>
+    <div class="rvlab"><span>Report wording</span><span style="display:flex;gap:6px">${ai}<button class="rvmini ghost" type="button" data-usenote="${escv(key)}">Use my note</button></span></div>
+    <textarea class="rvfinal${f?' filled':''}" data-fkey="${escv(key)}" placeholder="Leave empty to use the captured note. Or write the report wording here.">${escv(f)}</textarea>`;
+}
+function rvSection(it){
+  const code=it.code,s=STATE.sections[code]||{},title=itemTitle(it);
+  const [pc,pl]=pill(code);const bank=BANK[code]||[];
+  const stTxt=s.status==="find"?"Finding":s.status==="undet"?"Undetermined":s.status==="clear"?"Clear":"";
+  const sp=(s.species||[]).map(x=>x==="Other"&&s.speciesOther?"Other: "+s.speciesOther:x);
+  let h=`<div class="rvcard${isTouched(code)?' has':''}" id="rv-${escv(code)}"><div class="rvhead"><span class="code">${escv(code)}</span><span class="name">${escv(title)}</span><span class="pill ${pc}">${pl}</span></div>`;
+  if(sp.length)h+=`<div class="rvlab"><span>${code==="8.8"?"Borer type":"Termite species"}</span></div><div style="font-size:.92rem">${sp.map(escv).join(" · ")}</div>`;
+  if(it.subQs){
+    const ans=s.subq||{},notes=s.subqNotes||{},ph=s.subqPhotos||{};
+    it.subQs.forEach((q,i)=>{const a=ans[i];const al=a==="yes"?"Yes":a==="no"?"No":a==="undet"?"Undetermined":"Not answered";
+      h+=`<div class="rvq">${escv(q)} <span class="rvans ${a==='yes'||a==='undet'?'yes':a==='no'?'no':''}">${al}</span></div>`;
+      if(a==="yes"||a==="undet"||vtxt(notes[i])||(ph[i]||[]).length){
+        h+=rvWord("sub:"+code+":"+i,notes[i],{label:title+": "+q,code,title,status:a==="yes"?"Finding":"Undetermined",tone:rvTone(s),bank})+rvPhotos(ph[i]);}
+    });
+  }else if(it.always||s.status==="find"||s.status==="undet"||vtxt(s.note)||(s.photos||[]).length){
+    h+=rvWord("sec:"+code,s.note,{label:title,code,title,status:stTxt||"Noted",species:sp,tone:rvTone(s),bank})+rvPhotos(s.photos);
+  }else{
+    h+=`<div class="rvsub" style="margin:6px 0 0">${s.status==="clear"?"Clear. Nothing to report.":"Not answered yet."}</div>`;
+  }
+  return h+`</div>`;
+}
+function rvStmp(){
+  const st=STATE.customer.stmp||{};const yn=v=>v==="yes"?"Yes":v==="no"?"No":"Not answered";
+  let rows=rvRow("Proposal previously issued",yn(st.issued));
+  if(st.issued==="yes")rows+=rvRow("Updated proposal required",yn(st.updated));
+  if(st.issued==="no")rows+=rvRow("Recommendation",st.rec);
+  return `<div class="rvcard has" id="rv-8.2"><div class="rvhead"><span class="code">8.2</span><span class="name">Subterranean termite management proposal</span></div><dl class="rvtable">${rows}</dl></div>`;
+}
+function rvAccess(){
+  const c=STATE.customer,o=c.obs||{},inacc=c.inacc||{};
+  let h=`<div class="rvcard${(anyObsContent()||vtxt(inacc.note)||(inacc.photos||[]).length)?' has':''}" id="rv-ACCESS"><div class="rvhead"><span class="code">6</span><span class="name">Accessibility &amp; obstructions</span></div>
+    <dl class="rvtable">${rvRow("Areas inspected",(c.areas||[]).join(", "))}${rvRow("Strata / company title",c.strata)}${rvRow("Obstructions present",c.obstructions)}${rvRow("Inaccessible areas",c.inaccessible)}${rvRow("Undetected timber pest risk",c.risk)}</dl>`;
+  OBSAREAS.forEach(a=>{const oo=o[a];
+    if(oo&&(vtxt(oo.note)||(oo.photos||[]).length))
+      h+=`<div class="subhead">${escv(a)} (obstructed)</div>`+rvWord("obs:"+a,oo.note,{label:"Obstructed area: "+a,status:"Obstructed",tone:rvTone()})+rvPhotos(oo.photos);});
+  if(vtxt(inacc.note)||(inacc.photos||[]).length)
+    h+=`<div class="subhead">Inaccessible areas</div>`+rvWord("inacc",inacc.note,{label:"Areas that could not be accessed",status:"Inaccessible",tone:rvTone()})+rvPhotos(inacc.photos);
+  if(vtxt(c.addcomments)||fin().addcomments)
+    h+=`<div class="subhead">Additional comments</div>`+rvWord("addcomments",c.addcomments,{label:"Additional comments (Accessibility section)",status:"Comment",tone:rvTone()});
+  return h+`</div>`;
+}
+function rvExtra(id,code,name,key,raw,photos,label){
+  if(!(vtxt(raw)||(photos||[]).length||fin()[key]))return"";
+  return `<div class="rvcard has" id="rv-${id}"><div class="rvhead"><span class="code">${code}</span><span class="name">${name}</span></div>`+rvWord(key,raw,{label,status:"Comment",tone:rvTone()})+rvPhotos(photos)+`</div>`;
+}
+function aiRow(){
+  if(aiReady())return `<div class="rvcard"><div class="rvhead"><span class="name">AI wording help</span></div>
+    <div class="rvai"><span>Key saved on this device.</span><button class="rvmini" type="button" data-polishall>Polish all</button><button class="rvmini ghost" type="button" data-aikeyremove>Remove key</button></div>
+    <div class="rvsub" style="margin:8px 0 0">Sends only the note text and the section name. Never names, addresses or photos. Nothing is replaced without you reading it.</div></div>`;
+  return `<div class="rvcard"><div class="rvhead"><span class="name">AI wording help (optional)</span></div>
+    <div class="rvai"><input type="password" id="aiKeyIn" placeholder="Paste Anthropic API key" autocomplete="off"><button class="rvmini" type="button" data-aikeysave>Save key</button></div>
+    <div class="rvsub" style="margin:8px 0 0">The key stays on this device only and is never put in the packet. Without one, type the wording yourself or have Claude polish the packet in chat.</div></div>`;
+}
+function buildReview(){
+  Object.keys(rvRaw).forEach(k=>delete rvRaw[k]);
+  const c=STATE.customer,pp=isPP(),miss=validateComplete();
+  let h=aiRow();
+  h+=miss.length
+    ?`<div class="rvcard rvtodo"><div class="rvh2">Still to do (${miss.length})</div><div class="rvsub">Tap one to go back and fix it.</div><div class="pickwrap" style="max-height:none;margin:0">${miss.map(m=>`<button class="pickrow" type="button" data-missgo="${escv(m.go)}"><span>${escv(m.t)}</span></button>`).join("")}</div></div>`
+    :`<div class="rvcard has"><div class="rvh2">Everything is filled in</div><div class="rvsub" style="margin:0">Read it through, tidy any wording, then tap Send.</div></div>`;
+  h+=`<div class="rvcard"><div class="rvh2">${pp?"Pre-purchase timber pest inspection":"Regular timber pest inspection"}</div>
+    <div class="rvsub">${escv([c.streetno,c.address].filter(Boolean).join(" ")||"(no address yet)")}${c.suburb?", "+escv(c.suburb):""}</div>
+    <dl class="rvtable">${rvRow("Client",c.client)}${rvRow("Phone",c.phone)}${rvRow("Email",c.email)}${rvRow("Suburb / state / postcode",[c.suburb,c.state,c.postcode].filter(Boolean).join(" "))}${rvRow("Report date",c.date)}${rvRow("Building type",pickOther(c,"btype"))}${rvRow("Storeys",pickOther(c,"storeys"))}${rvRow("Floor",pickOther(c,"floor"))}${rvRow("Walls",pickOther(c,"wall"))}${rvRow("Roof",pickOther(c,"roof"))}${rvRow("Other timber elements",c.othertimber)}${rvRow("Occupancy",pickOther(c,"occupancy"))}${rvRow("Orientation",c.orientation)}${rvRow("Scope",c.scope||(pp?PP_SCOPE:""))}${rvRow("Additional tests",[c.addtests,c.addtestsnote].filter(Boolean).join(" · "))}</dl></div>`;
+  const cv=STATE.sections.COVER||{};
+  if((cv.photos||[]).length||vtxt(cv.note))h+=`<div class="rvcard has"><div class="rvhead"><span class="name">Cover shots</span></div>${vtxt(cv.note)?`<div class="rvraw">${escv(cv.note)}</div>`:""}${rvPhotos(cv.photos)}</div>`;
+  ITEMS.forEach(it=>{h+=rvSection(it);if(it.code==="8.1")h+=rvStmp();});
+  h+=rvAccess();
+  h+=`<div class="rvcard"><div class="rvhead"><span class="code">8</span><span class="name">Conclusion</span></div><dl class="rvtable">${rvRow("Treatment of pest attack required",c.treatment)}${rvRow("Remove conducive conditions",c.conducive)}${rvRow("Next inspection recommended in",c.nextinsp)}</dl></div>`;
+  const cm=c.cmts||{},ax=c.annex||{};
+  h+=rvExtra("CMT","10","Comments","cmt",cm.note,cm.photos,"Comments for the report");
+  h+=rvExtra("ANNEX","11","Annexures","annex",ax.note,ax.photos,"What is being annexed");
+  return h;
+}
+function openReview(){
+  rvbody.innerHTML=buildReview();
+  document.getElementById("rvsub").textContent=[STATE.customer.streetno,STATE.customer.address].filter(Boolean).join(" ")||subFallback();
+  review.classList.add("show");document.body.style.overflow="hidden";
+}
+function closeReview(){review.classList.remove("show");document.body.style.overflow="";}
+document.getElementById("finishBtn").addEventListener("click",openReview);
+document.getElementById("rvBack").addEventListener("click",closeReview);
+document.getElementById("rvSend").addEventListener("click",()=>{
+  STATE.reviewedAt=Date.now();scheduleSave();
   const miss=validateComplete();
   if(miss.length){showIncomplete(miss,doExport);return;}
   doExport();
+});
+review.addEventListener("input",e=>{
+  const k=e.target.dataset&&e.target.dataset.fkey;
+  if(k!==undefined){setFinal(k,e.target.value);}
+});
+review.addEventListener("click",async e=>{
+  const img=e.target.closest(".thumb img");if(img){openLightbox(img);return}
+  const go=e.target.closest("[data-missgo]");if(go){closeReview();openTo(go.dataset.missgo);return}
+  const un=e.target.closest("[data-usenote]");
+  if(un){const k=un.dataset.usenote;const ta=rvTa(k);const r=rvRaw[k];if(ta&&r){ta.value=r.raw;setFinal(k,r.raw);toast("Captured note copied in")}return}
+  const pol=e.target.closest("[data-polish]");
+  if(pol){pol.disabled=true;pol.textContent="…";await aiPolish(pol.dataset.polish);pol.disabled=false;pol.textContent="Polish";return}
+  const und=e.target.closest("[data-undo]");
+  if(und){const k=und.dataset.undo;const ta=rvTa(k);if(ta&&rvPrev[k]!=null){ta.value=rvPrev[k];setFinal(k,rvPrev[k]);delete rvPrev[k];und.hidden=true;}return}
+  if(e.target.closest("[data-polishall]")){aiPolishAll();return}
+  if(e.target.closest("[data-aikeysave]")){
+    const v=(document.getElementById("aiKeyIn").value||"").trim();
+    if(!v){toast("Paste the key first");return}
+    try{localStorage.setItem("lpc_ai_key",v);}catch(err){toast("Couldn't save the key on this device");return}
+    const st=rvbody.parentElement.scrollTop;openReview();review.scrollTop=st;toast("Key saved. Polish buttons are on");return}
+  if(e.target.closest("[data-aikeyremove]")){
+    try{localStorage.removeItem("lpc_ai_key");}catch(err){}
+    const st=review.scrollTop;openReview();review.scrollTop=st;toast("Key removed");return}
+});
+
+/* ---------- AI Polish (optional; needs the user's own Anthropic API key, kept on this device only) ----------
+   Calls the Messages API straight from the browser with plain fetch: no third-party script on a page that holds a key.
+   Sends ONLY the note text + section name/status/species/tone + that section's house wording lines. Never client details or photos. */
+function aiKey(){try{return localStorage.getItem("lpc_ai_key")||"";}catch(e){return "";}}
+function aiReady(){return !!aiKey();}
+const AI_SYSTEM=`You rewrite a timber pest inspector's rough field notes into wording for a visual timber pest inspection report (Australian, AS 3660 / AS 4349.3 style) for a pest control business on the NSW Northern Rivers.
+Rules:
+- Australian English. Never use em dashes or en dashes; use full stops, commas or brackets.
+- Plain, direct, professional and measured. No scare wording, no sales language, no jargon a tradie wouldn't say.
+- Use only what is in the inspector's note and the details given. Never add or guess a finding, location, measurement, date, species, cause or recommendation that is not there.
+- Fix obvious speech-to-text slips only when the meaning is clear from the note and the section. If a word or phrase is unclear, keep the inspector's words and put [CHECK: what is unclear] straight after it.
+- Keep any [SQUARE BRACKET] placeholders exactly as written.
+- Follow the tone instruction given. The house wording lines are examples of the style, not text to copy in.
+- Output only the report wording as one short paragraph (or a few short sentences). No heading, no quotation marks, no commentary.`;
+async function aiPolish(key,quiet){
+  const r=rvRaw[key];
+  if(!r||!vtxt(r.raw)){if(!quiet)toast("Nothing captured to polish");return false;}
+  const k=aiKey();if(!k){toast("Paste an API key first");return false;}
+  const x=r.ctx||{};
+  const msg=[`Section: ${x.label||key}`,x.status?`Status: ${x.status}`:"",(x.species&&x.species.length)?`Species selected by the inspector: ${x.species.join(", ")}`:"",`Report type: ${isPP()?"Pre-purchase (AS 4349.3)":"Regular (AS 3660)"}`,`Tone: ${x.tone||"Measured (standard)"}`,
+    (x.bank&&x.bank.length)?"House wording examples for this section:\n"+x.bank.map(l=>"- "+l).join("\n"):"","Inspector's rough note:\n\"\"\"\n"+r.raw.trim()+"\n\"\"\""].filter(Boolean).join("\n");
+  let res;
+  try{
+    res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
+      headers:{"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-beta":"server-side-fallback-2026-07-01","anthropic-dangerous-direct-browser-access":"true"},
+      body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:2000,fallbacks:"default",output_config:{effort:"low"},system:AI_SYSTEM,messages:[{role:"user",content:msg}]})});
+  }catch(e){toast("Couldn't reach the AI. No signal?",3200);return false;}
+  let data=null;try{data=await res.json();}catch(e){}
+  if(!res.ok){
+    if(res.status===401)toast("The key was rejected. Remove it and paste it again",3600);
+    else if(res.status===429)toast("The AI is busy or over its limit. Try again soon",3200);
+    else toast("AI error: "+((data&&data.error&&data.error.message)||res.status),4200);
+    return false;}
+  if(data.stop_reason==="refusal"){toast("The AI declined this one. Write it by hand",3200);return false;}
+  if(data.stop_reason==="max_tokens"){toast("The AI ran out of room. Try again",3200);return false;}
+  const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
+  if(!text){toast("The AI sent nothing back",3000);return false;}
+  const ta=rvTa(key);if(!ta)return false;
+  rvPrev[key]=ta.value;ta.value=text;setFinal(key,text);
+  const ub=[...rvbody.querySelectorAll("[data-undo]")].find(b=>b.dataset.undo===key);if(ub)ub.hidden=false;
+  return true;
+}
+async function aiPolishAll(){
+  const keys=Object.keys(rvRaw).filter(k=>vtxt(rvRaw[k].raw)&&!vtxt(fin()[k]));
+  if(!keys.length){toast("Nothing left to polish. Boxes you've filled are skipped");return}
+  if(!confirm("Polish "+keys.length+" section"+(keys.length>1?"s":"")+" with AI? Boxes that already have wording are skipped, and you can Undo each one."))return;
+  let ok=0;
+  for(let i=0;i<keys.length;i++){toast("Polishing "+(i+1)+" of "+keys.length+"…",60000);
+    if(await aiPolish(keys[i],true))ok++;else break;}
+  toast(ok+" of "+keys.length+" polished. Read each one before you send",3200);
+}
+
+/* ---------- import a packet (the partner to Finish & Export): open a job someone else exported, or a polished copy ---------- */
+function stateFromPacket(p){
+  const cust=Object.assign({},p.customer);
+  const no=vtxt(cust.streetno),addr=vtxt(cust.address);
+  if(no&&addr.indexOf(no+" ")===0)cust.address=addr.slice(no.length+1).trim();   // buildPacket folds the number into address; unfold it
+  if(!cust.rtype)cust.rtype=p.meta.reportType==="prepurchase"?"prepurchase":"regular";
+  const secs={};
+  (p.sections||[]).forEach(r=>{
+    if(!r||!r.code)return;
+    const s={status:(r.status==="note"||!r.status)?null:r.status,note:r.note||"",photos:(r.photos||[]).filter(Boolean)};
+    if(r.tone)s.tone=r.tone;
+    if(r.species&&r.species.length){s.species=r.species.slice();if(r.speciesOther)s.speciesOther=r.speciesOther;}
+    if(r.subq){s.subq={};s.subqNotes={};s.subqPhotos={};
+      r.subq.forEach((q,i)=>{if(q.a)s.subq[i]=q.a;if(q.note)s.subqNotes[i]=q.note;s.subqPhotos[i]=(q.photos||[]).filter(Boolean);});}
+    secs[r.code]=s;
+  });
+  const st={customer:cust,sections:secs,final:Object.assign({},p.final||{})};
+  if(p.meta.reviewedAt)st.reviewedAt=p.meta.reviewedAt;
+  return st;
+}
+async function loadImported(st){
+  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  STATE=st;if(!STATE.customer.date)STATE.customer.date=todayStr();
+  await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
+  closeModal();render();window.scrollTo(0,0);
+  document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
+  toast("Imported "+(STATE.customer.address||"job"));
+  openReview();
+}
+async function importPacket(p){
+  if(!p||!p.meta||p.meta.app!=="LPC Inspection Capture"||!p.customer||!Array.isArray(p.sections)){toast("That isn't an Inspection Capture packet",2800);return}
+  const st=stateFromPacket(p);
+  const jid=p.meta.jobId;
+  const list=await loadJobsIndex();
+  if(jid&&list.some(j=>j.id===jid)){
+    sheet.innerHTML=`<h3>Already on this device</h3>
+      <p style="font-size:.85rem">${escv(st.customer.address||"This job")} is already here. Replace it with the file's version, or keep both?</p>
+      <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn ghost" id="mBoth">Keep both</button><button class="btn primary" id="mRepl">Replace</button></div>`;
+    modal.classList.add("show");
+    document.getElementById("mCancel").onclick=closeModal;
+    document.getElementById("mBoth").onclick=()=>{st.id=genId();loadImported(st);};
+    document.getElementById("mRepl").onclick=()=>{st.id=jid;loadImported(st);};
+    return;
+  }
+  st.id=jid&&!list.some(j=>j.id===jid)?jid:genId();
+  loadImported(st);
+}
+document.getElementById("importInput").addEventListener("change",async e=>{
+  const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  let p;try{p=JSON.parse(await f.text());}catch(err){toast("Couldn't read that file. Is it the .json packet?",3000);return}
+  importPacket(p);
 });
 
 /* ---------- boot ---------- */
@@ -1520,6 +1945,7 @@ document.getElementById("finishBtn").addEventListener("click",()=>{
   if(!STATE.customer.date)STATE.customer.date=todayStr();
   if(db){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
   if(STATE.customer.address)document.getElementById("hsub").textContent=STATE.customer.address;
+  applyPhotoSrc();
   render();
 })();
 </script>
