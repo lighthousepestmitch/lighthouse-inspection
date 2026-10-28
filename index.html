@@ -19,6 +19,7 @@
     --clear:#276B59; --clear-bg:#E2EFE9;
     --find:#B4551C; --find-bg:#f7e7d6;
     --todo:#98897a; --todo-bg:#ece5d9;
+    --na:#56606a; --na-bg:#e6e9ec;
     --place:#7a4bb8; --place-bg:#ece2fb;
     --has:var(--timber); --has-bg:var(--timber-soft); /* one highlight colour for anything with photos / answered */
     --shadow:0 1px 2px rgba(20,32,30,.06),0 6px 20px rgba(20,32,30,.05);
@@ -92,6 +93,7 @@
   .pill.clear{background:var(--clear-bg);color:var(--clear)}
   .pill.find{background:var(--find-bg);color:var(--find)}
   .pill.undet{background:var(--todo-bg);color:var(--muted)}
+  .pill.na{background:var(--na-bg);color:var(--na)}
   .hcam{flex:none;position:relative;border:1px solid var(--edge);background:var(--paper);color:var(--timber);
     border-radius:10px;padding:8px 10px;display:flex;align-items:center;cursor:pointer}
   .hcam:active{transform:scale(.94)}
@@ -107,6 +109,18 @@
   .ht.clear.on{background:var(--clear-bg);border-color:var(--clear);color:var(--clear)}
   .ht.find.on{background:var(--find-bg);border-color:var(--find);color:var(--find)}
   .ht.undet.on{background:var(--todo-bg);border-color:var(--faint);color:var(--muted)}
+  .ht.na{font-family:"Spline Sans Mono",monospace;font-size:.56rem;font-weight:700;letter-spacing:-.03em;padding:0}
+  .ht.na.on{background:var(--na-bg);border-color:var(--na);color:var(--na)}
+  @media (max-width:420px){
+    .block-h{padding:13px 10px;gap:5px}
+    .block-h .code{min-width:26px;font-size:.76rem}
+    .block-h .name{font-size:.94rem;min-width:0;overflow-wrap:anywhere}
+    .htog{gap:3px}.ht{width:28px;height:28px;border-radius:8px}.ht svg{width:15px;height:15px}
+    .hcam{padding:6px 6px}.hcam svg{width:17px;height:17px}
+    .block-h .needchip{font-size:0;width:18px;height:18px;padding:0;justify-content:center;border-radius:50%;gap:0}
+    .block-h .needchip::before{content:"!";font-size:.72rem;font-weight:700;line-height:1}
+  }
+  @media (max-width:380px){.block-h .name{font-size:.88rem}.block-h{padding-left:9px;padding-right:8px}.block-h .code{min-width:24px}}
   .chev{flex:none;width:16px;height:16px;stroke:var(--faint);fill:none;transition:transform .2s}
   .block.open .chev{transform:rotate(90deg)}
   .block-b{display:none;padding:0 15px 16px;border-top:1px solid var(--edge-soft)}
@@ -130,6 +144,7 @@
   .seg button.on.clear{border-color:var(--clear);background:var(--clear-bg);color:var(--clear)}
   .seg button.on.find{border-color:var(--find);background:var(--find-bg);color:var(--find)}
   .seg button.on.undet{border-color:var(--faint);background:var(--todo-bg);color:var(--muted)}
+  .seg button.on.na{border-color:var(--na);background:var(--na-bg);color:var(--na)}
   .seg{gap:6px}
   .seg button{padding:10px 6px;font-size:.86rem;gap:5px}
 
@@ -150,6 +165,19 @@
   .ynu-b.on.yes{border-color:var(--find);background:var(--find-bg);color:var(--find)}
   .ynu-b.on.no{border-color:var(--clear);background:var(--clear-bg);color:var(--clear)}
   .ynu-b.on.undet{border-color:var(--faint);background:var(--todo-bg);color:var(--muted)}
+  .ynu-b.on.na{border-color:var(--na);background:var(--na-bg);color:var(--na)}
+  .ynu{flex-wrap:wrap}.ynu-b{min-width:calc(50% - 3px)}
+  /* N/A suggestion (8.9 on a slab with no subfloor) */
+  .ht.na.suggest,.seg button.na.suggest{outline:2px dashed var(--na);outline-offset:1px}
+  .nahint{margin-top:12px;padding:9px 11px;border-radius:10px;background:var(--na-bg);color:var(--na);font-size:.8rem;font-weight:600;line-height:1.35}
+  /* add-from-library bar (top) */
+  .liblink{margin-top:12px;width:100%;display:flex;align-items:center;gap:8px;padding:11px 12px;border-radius:11px;border:1.5px solid var(--timber);background:var(--timber-soft);color:var(--timber);font-weight:700;font-size:.88rem;cursor:pointer;text-align:left}
+  .liblink svg{width:18px;height:18px;stroke:currentColor;fill:none;flex:none}
+  .liblink .lc{margin-left:auto;transition:transform .2s}
+  .liblink.open .lc{transform:rotate(90deg)}
+  .libwrap{margin-top:12px}
+  .libtile .ic-cam{display:none !important}
+  .libtile .ic-lib,.liblink .ic-lib{display:inline !important}
 
   /* mic */
   .notelabel{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -453,9 +481,9 @@ function togglePhotoSrc(){
   applyPhotoSrc();
   toast(PHOTO_SRC==="library"?"Photo buttons now open your photo library":"Photo buttons now open the camera");
 }
-function startPhoto(code){
+function startPhoto(code,src){
   activePhotoCode=code;
-  document.getElementById(PHOTO_SRC==="library"?"fileInput":"cameraInput").click();
+  document.getElementById((src||PHOTO_SRC)==="library"?"fileInput":"cameraInput").click();
 }
 const STATE_ABBR={"New South Wales":"NSW","Victoria":"VIC","Queensland":"QLD","South Australia":"SA","Western Australia":"WA","Tasmania":"TAS","Northern Territory":"NT","Australian Capital Territory":"ACT"};
 
@@ -502,10 +530,21 @@ async function upsertJobMeta(){
 function timeAgo(t){if(!t)return"";const m=Math.round((Date.now()-t)/60000);
   if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago";}
 
+function refreshNaSuggest(){
+  const c=STATE.customer||{};
+  const slab=c.floor==="Slab-on-ground"||c.floor==="Slab floor (infill)";
+  const noSub=!(c.areas||[]).includes("Subfloor space");
+  const s9=STATE.sections&&STATE.sections["8.9"];
+  const on=slab&&noSub&&!(s9&&s9.status);
+  const blk=document.getElementById("b-8.9");if(!blk)return;
+  blk.querySelectorAll(".na").forEach(b=>b.classList.toggle("suggest",on));
+  const h=blk.querySelector(".nahint");if(h)h.style.display=on?"block":"none";
+}
 let saveT;
 function scheduleSave(){
   clearTimeout(saveT);
   refreshHasBlocks();
+  try{refreshNaSuggest();}catch(e){}
   document.getElementById("saveinfo").textContent="Saving…";
   saveT=setTimeout(async()=>{
     if(!STATE.id)STATE.id=genId();
@@ -561,6 +600,7 @@ function pill(code){
   if(it&&it.always) return s&&s.note?["clear","Noted"]:["todo","To do"];
   if(!s||!s.status) return ["todo","To do"];
   if(s.status==="clear") return ["clear","Clear"];
+  if(s.status==="na") return ["na","N/A"];
   if(s.status==="undet") return ["undet","Undet."];
   return ["find","Finding"];
 }
@@ -651,6 +691,7 @@ function buildSection(item,isExtra){
       ${isFindItem&&!item.always&&!hasSub?`<div class="htog">
         <button class="ht clear ${s.status==='clear'?'on':''}" type="button" data-hstatus="clear" aria-label="Clear">
           <svg viewBox="0 0 24 24" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
+        <button class="ht na ${s.status==='na'?'on':''}" type="button" data-hstatus="na" aria-label="Not applicable">N/A</button>
         <button class="ht find ${s.status==='find'?'on':''}" type="button" data-hstatus="find" aria-label="Finding">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg></button>
         <button class="ht undet ${s.status==='undet'?'on':''}" type="button" data-hstatus="undet" aria-label="Undetermined">
@@ -673,6 +714,7 @@ function buildSection(item,isExtra){
             <button class="ynu-b yes ${a==='yes'?'on':''}" type="button" data-subq="${i}" data-subv="yes">Yes</button>
             <button class="ynu-b no ${a==='no'?'on':''}" type="button" data-subq="${i}" data-subv="no">No</button>
             <button class="ynu-b undet ${a==='undet'?'on':''}" type="button" data-subq="${i}" data-subv="undet">Undetermined</button>
+            <button class="ynu-b na ${a==='na'?'on':''}" type="button" data-subq="${i}" data-subv="na">N/A</button>
           </div>
           <div class="field subqfind" id="subqfind-${code}-${i}" style="display:${(a==='yes'||a==='undet')?'block':'none'}">
             <label class="notelabel"><span>Findings — what did you see?</span>
@@ -680,10 +722,12 @@ function buildSection(item,isExtra){
             <textarea data-subqnote="${i}" placeholder="Type or speak what you found — I'll polish it for the report.">${escv((s.subqNotes&&s.subqNotes[i])||'')}</textarea>
           </div></div>`}).join("")}
       </div>`:''}
+      ${code==="8.9"?`<div class="nahint" style="display:none">Slab floor and no subfloor ticked in Accessibility. Tap N/A if there is no subfloor to ventilate.</div>`:''}
       ${isFindItem&&!item.always&&!hasSub?`
       <div class="seg">
         <button class="clear ${s.status==='clear'?'on':''}" data-status="clear">
           <svg viewBox="0 0 24 24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Clear</button>
+        <button class="na ${s.status==='na'?'on':''}" data-status="na">N/A</button>
         <button class="find ${s.status==='find'?'on':''}" data-status="find">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>Finding</button>
         <button class="undet ${s.status==='undet'?'on':''}" data-status="undet">
@@ -711,7 +755,11 @@ const QG_SHORT={"COVER":"Cover","8.1":"Active termites","8.3":"Termite workings"
 function buildQuickGrid(){
   const s=document.createElement("section");s.className="qgwrap";
   s.innerHTML=`<div class="qgtitle">Quick photos — tap to shoot any section</div><div class="quickgrid" id="quickgrid"></div>
-    <div class="qgtitle qgsub">Access &amp; obstructed — tap an area to shoot it</div><div class="quickgrid" id="areagrid"></div>`;
+    <div class="qgtitle qgsub">Access &amp; obstructed — tap an area to shoot it</div><div class="quickgrid" id="areagrid"></div>
+    <button class="liblink" id="libbar" type="button" data-libtoggle aria-expanded="false">${LIBONLY}Add from library<svg class="lc" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg></button>
+    <div class="libwrap" id="libwrap" hidden>
+      <div class="qgtitle">Photos from your library — tap a section, pick one or more</div><div class="quickgrid" id="libgrid"></div>
+      <div class="qgtitle qgsub">Access &amp; obstructed</div><div class="quickgrid" id="libareagrid"></div></div>`;
   const g=s.querySelector("#quickgrid");
   const CAMPATH=CAMICON;
   // Orientation/compass up front with the quick photos - captured standing
@@ -748,6 +796,13 @@ function buildQuickGrid(){
       b.innerHTML=`${CAMPATH}<span class="qglabel">${escv(t.name)}</span><span class="qgcount" id="qgc-${t.id}"></span>`;
       ag.appendChild(b);
     });
+  // same tiles again, but every one opens the photo library whatever the Camera/Library pill says
+  const cloneTiles=(from,to)=>from.querySelectorAll(".qgbtn[data-quickphoto]").forEach(t=>{
+    const c=t.cloneNode(true);c.id=t.id.replace("qgb-","lgb-");c.classList.add("libtile");
+    c.dataset.libphoto=t.dataset.quickphoto;delete c.dataset.quickphoto;
+    const n=c.querySelector(".qgcount");if(n)n.id=n.id.replace("qgc-","lgc-");
+    to.appendChild(c);});
+  cloneTiles(g,s.querySelector("#libgrid"));cloneTiles(ag,s.querySelector("#libareagrid"));
   return s;
 }
 
@@ -946,6 +1001,7 @@ function render(){
   [COVER].concat(ITEMS,EXTRAS).forEach(it=>{renderPhotos(it.code);if(it.subQs)renderSubqPhotos(it.code);updateHeaderCount(it.code)});
   renderReportPhotos();renderComments();renderAnnex();updateOrientBadge();
   buildJump();updateProgress();refreshHasBlocks();
+  try{refreshNaSuggest();}catch(e){}
 }
 
 function renderPhotos(code){
@@ -961,10 +1017,13 @@ function renderPhotos(code){
   host.appendChild(add);
 }
 const CAM_SVG=CAMICON+"Photo";
+const LIBONLY=CAMICON.replace(/<svg class="ic-cam"[\s\S]*?<\/svg>/,"").replace("ic-lib","ic-lib libon");
 // quick-photo tile: show its count and the one highlight colour when it has photos
 function setTile(id,n){
   const c=document.getElementById("qgc-"+id);if(c){c.textContent=n;c.classList.toggle("on",n>0);}
   const b=document.getElementById("qgb-"+id);if(b)b.classList.toggle("has",n>0);
+  const lc=document.getElementById("lgc-"+id);if(lc){lc.textContent=n;lc.classList.toggle("on",n>0);}
+  const lb=document.getElementById("lgb-"+id);if(lb)lb.classList.toggle("has",n>0);
 }
 function photoBucket(code){
   if(code&&code.indexOf("SUBQ::")===0){const p=code.slice(6).split("::");const s=sec(p[0]);s.subqPhotos=s.subqPhotos||{};s.subqPhotos[+p[1]]=s.subqPhotos[+p[1]]||[];return s.subqPhotos[+p[1]];}
@@ -1085,6 +1144,10 @@ main.addEventListener("click",e=>{
     return}
   const lbimg=e.target.closest(".thumb img");
   if(lbimg){openLightbox(lbimg);return}
+  const lt=e.target.closest("[data-libtoggle]");
+  if(lt){const w=document.getElementById("libwrap");const open=w.hidden;w.hidden=!open;lt.setAttribute("aria-expanded",open?"true":"false");lt.classList.toggle("open",open);return}
+  const lp=e.target.closest("[data-libphoto]");
+  if(lp){startPhoto(lp.dataset.libphoto,"library");return}
   const qp=e.target.closest("[data-quickphoto]");
   if(qp){startPhoto(qp.dataset.quickphoto);return}
   const sqp=e.target.closest("[data-subqphoto]");
@@ -1200,7 +1263,7 @@ function subStatus(code){
   const ans=sec(code).subq||{};const vals=it.subQs.map((q,i)=>ans[i]).filter(Boolean);
   if(vals.includes("yes"))return "find";
   if(vals.includes("undet"))return "undet";
-  if(vals.length===it.subQs.length)return "clear";
+  if(vals.length===it.subQs.length)return vals.every(v=>v==="na")?"na":"clear";
   return null;
 }
 function toggleSubqFind(code,idx,val){
@@ -1613,6 +1676,8 @@ function validateComplete(){
     if(!(s&&s.status)){miss.push({t:it.code+" "+it.title+" — not answered",go:it.code});return;}
     if((s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
   });
+  if(!c.addtests)miss.push({t:"Scope — were additional tests carried out?",go:"SCOPE"});
+  if(!c.inaccessible)miss.push({t:"Accessibility — any inaccessible areas?",go:"ACCESS"});
   const stp=c.stmp||{};
   if(!stp.issued)miss.push({t:"8.2 Subterranean termite management proposal — not answered",go:"8.2"});
   else if(stp.issued==="yes"&&!stp.updated)miss.push({t:"8.2 — is an updated proposal required?",go:"8.2"});
@@ -1709,21 +1774,21 @@ function rvWord(key,raw,ctx){
 function rvSection(it){
   const code=it.code,s=STATE.sections[code]||{},title=itemTitle(it);
   const [pc,pl]=pill(code);const bank=BANK[code]||[];
-  const stTxt=s.status==="find"?"Finding":s.status==="undet"?"Undetermined":s.status==="clear"?"Clear":"";
+  const stTxt=s.status==="find"?"Finding":s.status==="undet"?"Undetermined":s.status==="clear"?"Clear":s.status==="na"?"Not applicable":"";
   const sp=(s.species||[]).map(x=>x==="Other"&&s.speciesOther?"Other: "+s.speciesOther:x);
   let h=`<div class="rvcard${isTouched(code)?' has':''}" id="rv-${escv(code)}"><div class="rvhead"><span class="code">${escv(code)}</span><span class="name">${escv(title)}</span><span class="pill ${pc}">${pl}</span></div>`;
   if(sp.length)h+=`<div class="rvlab"><span>${code==="8.8"?"Borer type":"Termite species"}</span></div><div style="font-size:.92rem">${sp.map(escv).join(" · ")}</div>`;
   if(it.subQs){
     const ans=s.subq||{},notes=s.subqNotes||{},ph=s.subqPhotos||{};
-    it.subQs.forEach((q,i)=>{const a=ans[i];const al=a==="yes"?"Yes":a==="no"?"No":a==="undet"?"Undetermined":"Not answered";
+    it.subQs.forEach((q,i)=>{const a=ans[i];const al=a==="yes"?"Yes":a==="no"?"No":a==="undet"?"Undetermined":a==="na"?"N/A":"Not answered";
       h+=`<div class="rvq">${escv(q)} <span class="rvans ${a==='yes'||a==='undet'?'yes':a==='no'?'no':''}">${al}</span></div>`;
       if(a==="yes"||a==="undet"||vtxt(notes[i])||(ph[i]||[]).length){
-        h+=rvWord("sub:"+code+":"+i,notes[i],{label:title+": "+q,code,title,status:a==="yes"?"Finding":"Undetermined",tone:rvTone(s),bank})+rvPhotos(ph[i]);}
+        h+=rvWord("sub:"+code+":"+i,notes[i],{label:title+": "+q,code,title,status:a==="yes"?"Finding":a==="na"?"Not applicable":"Undetermined",tone:rvTone(s),bank})+rvPhotos(ph[i]);}
     });
   }else if(it.always||s.status==="find"||s.status==="undet"||vtxt(s.note)||(s.photos||[]).length){
     h+=rvWord("sec:"+code,s.note,{label:title,code,title,status:stTxt||"Noted",species:sp,tone:rvTone(s),bank})+rvPhotos(s.photos);
   }else{
-    h+=`<div class="rvsub" style="margin:6px 0 0">${s.status==="clear"?"Clear. Nothing to report.":"Not answered yet."}</div>`;
+    h+=`<div class="rvsub" style="margin:6px 0 0">${s.status==="clear"?"Clear. Nothing to report.":s.status==="na"?"Not applicable.":"Not answered yet."}</div>`;
   }
   return h+`</div>`;
 }
