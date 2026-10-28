@@ -223,6 +223,9 @@ def main():
 
     settings = load("settings") or {}
     manifest = settings.get("manifest", {})
+    # invoices Mitch has said to leave out of the Job Book (construction jobs): tools/skip_invoices.json, {"INV-1234": "why"}
+    skip_path = os.path.join(HERE_TOOLS, "skip_invoices.json")
+    SKIP_INV = set(json.load(open(skip_path))) if os.path.exists(skip_path) else set()
 
     clients, props, jobs, due = {}, {}, defaultdict(list), []
     for i in range(manifest.get("clients",0)):  clients.update((load(f"clients_{i}")  or {}).get("rows",{}))
@@ -256,7 +259,7 @@ def main():
     new_cids = []                                # clients created by this run, listed at the end so Mitch can set their interval
     newdue = []
     for n, v in sorted(bundle.items(), key=lambda kv: kv[1].get("date") or ""):
-        if not v.get("date") or n in seen_inv: continue
+        if not v.get("date") or n in seen_inv or n in SKIP_INV: continue
         if v.get("status", "").lower() in ("voided", "deleted"): continue      # voided in Xero = the job never happened
         name = v["contact"]
         if not name: continue
