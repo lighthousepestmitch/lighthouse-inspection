@@ -301,6 +301,26 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .wday.today{background:rgba(39,107,89,.05)}
 .wday .col{flex:1 1 0;min-width:0;border-left:none}
 .wday .col+.col{border-left:1px dotted var(--line2)}
+/* the weekly plan lane (Mitch's template: field work, admin, gym...): read only, never part of a person's jobs. The "Maybe" note is one line of words per day. */
+.pcol{position:relative;border-left:1px solid var(--line);cursor:default;background-color:rgba(125,138,153,.06);
+  background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--hr)}
+.wday .pcol{flex:.62 1 0;min-width:0;border-left:1px dotted var(--line2)}
+.pb{position:absolute;left:1px;right:1px;box-sizing:border-box;border-left:3px solid var(--pc,#8d99a6);background:rgba(125,138,153,.16);border-radius:3px;padding:1px 3px;font-size:10px;line-height:1.15;color:var(--ink2);overflow:hidden;pointer-events:none}
+.pb span{display:block;overflow:hidden;text-overflow:ellipsis}
+.wlh.pgap{flex:.62 1 0;cursor:default;border-top-color:var(--line2)}
+.wnr .gut,.dnrow .gut{background:var(--surface2);color:var(--ink2);font-size:10.5px;line-height:1.1;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
+.wnc{border-left:1px solid var(--line);min-width:0;background:var(--surface2);display:flex}
+.mnote{display:block;flex:1;width:100%;text-align:left;font:inherit;font-size:11px;line-height:1.25;padding:3px 5px;border:0;background:transparent;color:var(--ink2);cursor:pointer;min-height:22px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;white-space:pre-line;overflow-wrap:anywhere}
+.mnote:hover{background:var(--surface)}
+.mnote .mplus{opacity:.55}
+.mnote.has{color:var(--ink);font-weight:600}
+.dnov{position:fixed;inset:0;background:rgba(0,0,0,.38);z-index:80;display:flex;align-items:center;justify-content:center;padding:16px}
+.dnbox{background:var(--surface);color:var(--ink);border-radius:12px;padding:14px;width:min(440px,100%);box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.dnh{font-weight:700;font-size:15px}
+.dnsub{font-size:12.5px;color:var(--ink2);margin:2px 0 8px}
+.dnbox textarea{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:8px;border:1px solid var(--line2);border-radius:8px;background:var(--surface);color:var(--ink);resize:vertical}
+.dnr{display:flex;align-items:center;gap:8px;margin-top:8px}
+.dnr .hint{flex:1;font-size:12px;color:var(--ink2)}
 
 /* tech list */
 .wrap{max-width:720px;margin:0 auto;padding:0 14px 40px}
@@ -1256,6 +1276,7 @@ function stopApp(){
   if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
   S.noPriceTbl=false;S.priceNoted=false;S.priceFailNoted=false;S.usualFail=false;S.noPropCols=false;      // the next person to log in finds out for themselves
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
+  S.plan=null;S.notes=null;S.noPlanTbl=false;S.noNotesTbl=false;closeDayNote();
   D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
   driveWipe();      // the saved drive times have client addresses in them: they don't stay on the device after a log out (this runs for a log out, a login that ran out, and a different person logging in)
   document.body.classList.remove("is-master");
@@ -1286,7 +1307,7 @@ async function fetchJobs(silent){
     if(r.error)throw r.error;
     const rows=r.data||[];
     // Master only: the prices of these jobs (and, on a refresh, the usual prices) come from their own tables and are merged into the jobs in memory. A worker never asks.
-    if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null]);if(seq!==S.fetchSeq)return;}
+    if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null,loadPlanNotes(range)]);if(seq!==S.fetchSeq)return;}
     setJobs(rows);S.range=range;S.loaded=true;S.loadErr="";
     checkPropCols(rows);syncSheetProps();
     renderBody();
@@ -1700,6 +1721,94 @@ function laneCardsHtml(list,g,laneW){
   }).join("");
 }
 
+/* ---------- the weekly plan lane and the "Maybe" notes (master only) ----------
+   plan_blocks (14_calendar_plan_and_notes.sql) is Mitch's weekly template: field work, admin, gym, calls. It is drawn as its own read-only lane on every day,
+   separate from the people's lanes, so he can see at a glance what the day already holds when he books. day_notes holds one note per day for jobs that
+   MIGHT happen, in words instead of squeezed in as a time. Both are private to the master (the tables only answer to him) and neither is needed for the
+   calendar to work: until the 14 update is run the lane and the notes just don't show. */
+function planFor(d){
+  if(!S.isMaster||!S.plan||!S.plan.length)return [];
+  const wd=parseYmd(d).getDay()||7,out=[];
+  S.plan.forEach(function(b){
+    if(+b.weekday!==wd)return;
+    const n=+b.every_weeks||1;
+    if(n>1){
+      if(!b.anchor_date)return;
+      const days=Math.round((parseYmd(d)-parseYmd(String(b.anchor_date).slice(0,10)))/86400000);
+      if(days%7!==0||(((days/7)%n)+n)%n!==0)return;      // not a week it falls on
+    }
+    out.push(b);
+  });
+  return out;
+}
+function showPlan(){return !!(S.isMaster&&S.plan&&S.plan.length&&!isNarrow());}
+function showMaybe(){return !!(S.isMaster&&S.notes);}
+function planColHtml(d,g){
+  const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm;
+  const items=planFor(d).map(function(b){
+    const s=tmToMin(b.start_time),e=tmToMin(b.end_time);
+    if(s==null||e==null||e<=g.gs||s>=g.ge)return "";      // outside the hours shown
+    const cs=Math.max(s,g.gs),ce=Math.min(e,g.ge),h=Math.max((ce-cs)*g.ppm-2,10);
+    return '<div class="pb" style="top:'+((cs-g.gs)*g.ppm)+'px;height:'+h+'px;--pc:'+safeColour(b.colour)+'" title="'+esc(hm(s)+" to "+hm(e)+" "+(b.title||""))+'"><span>'+esc(b.title||"")+'</span></div>';
+  }).join("");
+  return '<div class="pcol" data-plan="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px" aria-label="Weekly plan">'+nowLineHtml(d,g)+items+'</div>';
+}
+function maybeHtml(d){
+  const t=(S.notes&&S.notes[d])||"";
+  return '<button type="button" class="mnote'+(t?" has":"")+'" data-act="dnote" data-date="'+esc(d)+'" title="'+esc(t||"Jobs that might happen this day")+'">'+(t?esc(t):'<span class="mplus">+ maybe</span>')+'</button>';
+}
+async function loadPlanNotes(range){
+  if(!S.isMaster)return;
+  if(!S.noPlanTbl){
+    try{
+      const r=await S.sb.from("plan_blocks").select("id,weekday,start_time,end_time,title,every_weeks,anchor_date,colour").eq("active",true).order("start_time",{ascending:true});
+      if(r.error){if(missingTable(r.error,"plan_blocks")){S.noPlanTbl=true;S.plan=[];}else throw r.error;}
+      else S.plan=r.data||[];
+    }catch(e){console.warn("The weekly plan didn't load.",e);}
+  }
+  if(!S.noNotesTbl){
+    try{
+      const r=await S.sb.from("day_notes").select("note_date,body").gte("note_date",range.from).lte("note_date",range.to);
+      if(r.error){if(missingTable(r.error,"day_notes")){S.noNotesTbl=true;S.notes=null;}else throw r.error;}
+      else{const m={};(r.data||[]).forEach(function(x){if(x.body)m[String(x.note_date).slice(0,10)]=x.body;});S.notes=m;}
+    }catch(e){console.warn("The day notes didn't load.",e);}
+  }
+}
+function closeDayNote(){const o=byId("dnov");if(o&&o.parentNode)o.parentNode.removeChild(o);}
+function openDayNote(d){
+  if(!S.isMaster||!S.notes||!d)return;
+  closeDayNote();
+  const ov=document.createElement("div");ov.id="dnov";ov.className="dnov";
+  ov.innerHTML='<div class="dnbox" role="dialog" aria-label="Maybe jobs"><div class="dnh">'+esc(niceDate(d))+'</div>'+
+    '<div class="dnsub">Jobs that might happen this day. Words, not times.</div>'+
+    '<textarea id="dn-t" rows="5" maxlength="1000" aria-label="Maybe jobs" placeholder="e.g. Maybe Soady inspection, Kayti rodents if she says yes"></textarea>'+
+    '<div class="dnr"><span class="hint" id="dn-s" role="status"></span><button type="button" class="btn" id="dn-x">Cancel</button><button type="button" class="btn ok" id="dn-ok">Save</button></div></div>';
+  document.body.appendChild(ov);
+  const ta=byId("dn-t");ta.value=S.notes[d]||"";
+  let busy=false;
+  async function save(){
+    if(busy)return;busy=true;byId("dn-ok").disabled=true;byId("dn-s").textContent="Saving...";
+    const text=ta.value.trim();
+    try{
+      const r=text?await S.sb.from("day_notes").upsert({note_date:d,body:text},{onConflict:"note_date"}).select("note_date")
+                  :await S.sb.from("day_notes").delete().eq("note_date",d).select("note_date");
+      if(r.error)throw r.error;
+      if(text)S.notes[d]=text;else delete S.notes[d];
+      closeDayNote();renderBody();
+    }catch(e){
+      busy=false;const ok=byId("dn-ok");if(ok)ok.disabled=false;
+      const st=byId("dn-s");if(st)st.textContent=missingTable(e,"day_notes")?"Notes need the 14 database update.":friendly(e);
+    }
+  }
+  byId("dn-ok").onclick=save;byId("dn-x").onclick=closeDayNote;
+  ov.addEventListener("mousedown",function(e){if(e.target===ov)closeDayNote();});
+  ta.addEventListener("keydown",function(e){
+    if(e.key==="Escape"){e.preventDefault();closeDayNote();}
+    else if(e.key==="Enter"&&(e.metaKey||e.ctrlKey)){e.preventDefault();save();}
+  });
+  try{ta.focus();}catch(e){}
+}
+
 /* ---------- day view ---------- */
 function lanes(list){
   list.sort(function(a,b){return a.s-b.s||a.e-b.e;});
@@ -1742,6 +1851,7 @@ function dayHtml(){
   const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm;
   const colW=Math.max(isNarrow()?136:150,gridWidth()/Math.max(1,cols.length)),short=colW<200;
   const ntCount=onGrid.filter(function(j){return !isTimed(j);}).length;
+  const plan=showPlan(),maybe=showMaybe();
   let head='<div class="gut">Staff</div>',body="";
   let nt='<div class="gut" title="Jobs with a person but no start time. Drag one onto a time to set it.">No time yet'+(ntCount?'<span class="ntn">'+ntCount+'</span>':"")+'</div>';
   cols.forEach(function(c){
@@ -1752,8 +1862,13 @@ function dayHtml(){
       (noTime.length?noTime.map(function(j){return chipHtml(j,"","",fitChars(colW-12));}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">+ Add</button>')+'</div>';
     body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW)+'</div>';
   });
-  return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+cols.length+'">'+
-    '<div class="gtop"><div class="grow">'+head+'</div><div class="grow ntrow'+(ntCount?"":" thin")+'">'+nt+'</div></div>'+
+  if(plan){      // the weekly plan: its own lane at the right, nothing to do with anyone's jobs
+    head+='<div class="ch" title="Your weekly plan (read only)"><span class="dot" style="background:#8d99a6"></span><span class="nm">Plan</span></div>';
+    nt+='<div class="ntc"></div>';
+    body+=planColHtml(S.date,g);
+  }
+  return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+(cols.length+(plan?1:0))+'">'+
+    '<div class="gtop"><div class="grow">'+head+'</div>'+(maybe?'<div class="grow dnrow"><div class="gut" title="Jobs that might happen this day. Tap to add a note.">Maybe</div><div class="wnc" style="grid-column:2/-1">'+maybeHtml(S.date)+'</div></div>':"")+'<div class="grow ntrow'+(ntCount?"":" thin")+'">'+nt+'</div></div>'+
     '<div class="grow gb">'+gutHtml(g,hpx)+body+'</div></div></div>'+
     trayHtml(tray)+'</div>';
 }
@@ -1785,7 +1900,8 @@ function weekHtml(){
   const tray=jobs.filter(function(j){return !(j.staff_id&&ids[j.staff_id]);});
   const g=gridSpan(onGrid);g.ppm=S.ppm;S.grid=g;
   const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm,today=todayYmd();
-  const dayW=gridWidth()/days.length,laneW=dayW/Math.max(1,people.length),many=people.length>1;
+  const plan=showPlan(),maybe=showMaybe();
+  const dayW=gridWidth()/days.length,laneW=dayW/Math.max(1,people.length+(plan?0.62:0)),many=people.length>1;
   let head='<div class="gut"></div>',strip='<div class="gut" title="Jobs with a person but no start time. Drag one onto a time to set it.">No time</div>',body="";
   days.forEach(function(d){
     const dd=parseYmd(d),mine=onGrid.filter(function(j){return j.job_date===d;});
@@ -1806,10 +1922,13 @@ function weekHtml(){
         lane.filter(function(j){return !isTimed(j);}).sort(byTime).map(function(j){return chipHtml(j,"",laneW<90?mainTight(j,laneW<44):"",fitChars(laneW-10));}).join("")+'</div>';
       body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(d,g)+laneCardsHtml(lane,g,laneW)+'</div>';
     });
+    if(plan){strip+='<div class="wlh pgap" title="Your weekly plan (read only)"><div class="lt">Plan</div></div>';body+=planColHtml(d,g);}
     strip+='</div>';body+='</div>';
   });
+  let mrow="";
+  if(maybe)mrow='<div class="wrow wnr"><div class="gut" title="Jobs that might happen: tap a day to add a note">Maybe</div>'+days.map(function(d){return '<div class="wnc">'+maybeHtml(d)+'</div>';}).join("")+'</div>';
   return '<div class="dayline wkline">'+weekTrayHtml(tray)+'<div class="gridwrap" id="gw"><div class="grid wk" style="--n:'+days.length+'">'+
-    '<div class="gtop"><div class="wrow">'+head+'</div><div class="wrow wln'+(onGrid.some(function(j){return !isTimed(j);})?"":" thin")+'">'+strip+'</div></div>'+
+    '<div class="gtop"><div class="wrow">'+head+'</div>'+mrow+'<div class="wrow wln'+(onGrid.some(function(j){return !isTimed(j);})?"":" thin")+'">'+strip+'</div></div>'+
     '<div class="wrow gb">'+gutHtml(g,hpx)+body+'</div></div></div></div>';
 }
 // the week's unassigned jobs as one row of chips ("Tue 9:00 Smith"), in day and time order. Drag one onto the grid to give it a person.
@@ -5073,6 +5192,7 @@ function handleAct(k,el){
   else if(k==="viewweek"){S.barPrevView=null;setView("week");}
   else if(k==="qadd"){if(Date.now()<S.noClickUntil)return;openQuick(el.hasAttribute("data-staff")?{staff:el.getAttribute("data-staff"),date:el.getAttribute("data-date")||S.date,time:""}:{});}      // not the click that ends a drag onto an empty strip
   else if(k==="pwho")setPhoneWho(el.getAttribute("data-who"));
+  else if(k==="dnote")openDayNote(el.getAttribute("data-date"));
   else if(k==="godate"){S.barPrevView=null;S.view="day";savePrefs();gotoDate(el.getAttribute("data-date"));}
   else if(k==="retry"){S.loadErr="";fetchJobs(false);}
 }
