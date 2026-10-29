@@ -2877,7 +2877,8 @@ function sheetHtml(){
     '<input class="inp" id="f-addr" type="text" autocomplete="off" value="'+esc(I.address)+'" placeholder="'+(M?"Start typing the address. It finds it, or a client's site.":"Where the job is. Start typing and it finds it.")+'">'+
     '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
     '<div class="hint" id="f-addr-hint" role="status"></div>'+
-    '<div class="sites" id="f-addr-sites" hidden></div>';
+    '<div class="sites" id="f-addr-sites" hidden></div>'+
+    '<div class="sites" id="f-addr-offer" hidden></div>';
   // a worker sees the services Mitch ticked straight under the address, as a plain list (no ticking: Mitch decides the job)
   if(!M)h+='<div class="fld"><div class="fl" id="sv-lbl">The job</div><div id="sv-list" role="list" aria-labelledby="sv-lbl"></div></div>';
   // 2. the client: name, phone, email (Ring, Text, Email and Maps are under them). The client's own street, suburb, state and postcode are in the More row.
@@ -3200,6 +3201,7 @@ function showNameList(list,match){
 }
 // prefer = the site address the search matched on, so that site is the one filled in
 function applyClient(c,blankOnly,prefer){
+  SH.offerAddr=!blankOnly;hideAddrOffer();      // picked by hand (not the save-time match): if the job already has an address, offer this client's instead (see offerClientAddr)
   SH.clientId=c.id;SH.client=Object.assign({},c);
   SH.unlinked=null;SH.renameTo=null;       // picking a client settles who this job is for
   // A client picked from the list: their saved notes (if any) show in the strip. The existing client picked at Save (blankOnly) keeps a note that was just typed
@@ -3229,7 +3231,7 @@ function unlinkClient(){
   if(!SH.addrTouched&&cur&&(cur===oldAddr||cur===SH.addrAuto)){vals["f-addr"]=val("f-addr");setVal("f-addr","");SH.addrAuto="";}
   SH.unlinked=SH.client?{client:Object.assign({},SH.client),vals:vals}:null;
   SH.renameTo=null;
-  SH.clientId=null;SH.client=null;
+  SH.clientId=null;SH.client=null;SH.offerAddr=false;hideAddrOffer();
   SH.sites=[];SH.sitesFor=null;SH.sitesOk=false;SH.sitesSeq++;SH.preferAddr="";renderSites();
   updateLinks();
 }
@@ -3320,16 +3322,38 @@ async function loadSites(sh,clientId){
 }
 // the job address box counts as empty if it is blank, or was only ever filled in by this page (an earlier client's site)
 function addrBoxEmpty(){return !trim(val("f-addr"))||!SH.addrTouched;}
-function applySitePrefill(sh){
-  if(SH!==sh||!addrBoxEmpty())return;
-  if(sh.quick&&sh.busy){sh.prefillHeld=true;return;}      // the bar is saving: the box is free for the next booking, so this client's site must not land in it (saveSheet runs this again if the save fails)
-  const list=sh.sites;
+// the address this client would fill the job address box with: the site the search matched on, else their first site, else their own address
+function clientAddrLine(sh){
+  const list=sh.sites||[];
   let line="";
   if(list.length){
     let pick=list[0];
     if(sh.preferAddr){const k=normAddr(sh.preferAddr);pick=list.filter(function(x){return normAddr(x.address)===k||normAddr(siteLine(x))===k;})[0]||pick;}
     line=siteLine(pick);
   }else if(sh.client){line=composeAddr(sh.client.street,sh.client.suburb,sh.client.state,sh.client.postcode);}     // no street on file: their suburb, as before
+  return line;
+}
+// The job already has an address (saved, or typed here), so a different client being picked does not overwrite it: the work site is often not where the client lives.
+// Instead their address is offered in one tap under the box. Only after a client was picked by hand on this sheet (SH.offerAddr), never just from opening a job.
+function hideAddrOffer(){const el=byId("f-addr-offer");if(el){el.hidden=true;el.innerHTML="";}if(SH)SH.offerLine="";}
+function offerClientAddr(sh){
+  const el=byId("f-addr-offer");if(!el||SH!==sh)return;
+  const line=(sh.offerAddr&&sh.client)?clientAddrLine(sh):"";
+  if(!line||!hasStreetNumber(line)||normAddr(val("f-addr"))===normAddr(line)){hideAddrOffer();return;}
+  sh.offerLine=line;
+  el.innerHTML='<span class="sitelbl">Use '+esc(trim(sh.client.name)||"their")+'\'s address?</span><button type="button" class="chip" data-sh="useclientaddr">'+esc(line)+'</button>';
+  el.hidden=false;
+}
+function useClientAddr(){
+  const line=SH&&SH.offerLine;if(!line)return;
+  setVal("f-addr",line);SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;
+  hideAddrOffer();hideAddrList();updateLinks();renderSites();
+}
+function applySitePrefill(sh){
+  if(SH!==sh)return;
+  if(!addrBoxEmpty()){offerClientAddr(sh);return;}
+  if(sh.quick&&sh.busy){sh.prefillHeld=true;return;}      // the bar is saving: the box is free for the next booking, so this client's site must not land in it (saveSheet runs this again if the save fails)
+  const line=clientAddrLine(sh);
   if(!line){
     // nothing to fill in for this client: an earlier client's site that was only auto-filled doesn't stay in the box (not if their sites failed to load: then we don't know)
     if(sh.sitesOk&&trim(val("f-addr"))&&!sh.addrTouched){
@@ -3463,7 +3487,7 @@ function onAddrInput(){
   // A quick save is running (the cursor is already in the box for the next booking): this typing is for the next one. quickReset keeps it when the save is done
   // (addrTyped says it was typed: text the page itself puts in the box during a save is not for the next one).
   if(SH.quick&&SH.busy){SH.addrTyped=true;return;}
-  SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;
+  SH.addrTouched=true;SH.addrAuto="";SH.addrPick=null;SH.pickSeq++;hideAddrOffer();
   // The booking bar has no street, suburb ... boxes to see or fix for a NEW client. They only ever hold the lookup pick for this address, so they go as soon as the text is changed
   // (otherwise a cleared or corrected address comes back from them on save).
   if(SH.quick&&!SH.clientId)["f-street","f-suburb","f-state","f-postcode"].forEach(function(id){setVal(id,"");});
@@ -5159,6 +5183,7 @@ function handleSheetAction(a,e){
   }
   else if(k==="pickaddr"){pickAddr(+a.getAttribute("data-i"));}
   else if(k==="picksite"){pickSite(+a.getAttribute("data-i"));}
+  else if(k==="useclientaddr"){useClientAddr();}
   else if(k==="svcmore"){
     SH.svcMore=!SH.svcMore;renderSvcList();
     const b=$('#sv-list [data-sh="svcmore"]');if(b){try{b.focus({preventScroll:true});}catch(x){}}
