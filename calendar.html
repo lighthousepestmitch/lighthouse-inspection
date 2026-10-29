@@ -1861,6 +1861,11 @@ function dayHtml(){
   const plan=showPlan(),maybe=showMaybe();
   let head='<div class="gut">Staff</div>',body="";
   let nt='<div class="gut" title="Jobs with a person but no start time. Drag one onto a time to set it.">No time yet'+(ntCount?'<span class="ntn">'+ntCount+'</span>':"")+'</div>';
+  if(plan){      // the weekly plan: its own lane at the left (Mitch, 2026-10-30), nothing to do with anyone's jobs
+    head+='<div class="ch" title="Your weekly plan (read only)"><span class="dot" style="background:#8d99a6"></span><span class="nm">Plan</span></div>';
+    nt+='<div class="ntc"></div>';
+    body+=planColHtml(S.date,g);
+  }
   cols.forEach(function(c){
     const mine=onGrid.filter(function(j){return j.staff_id===c.id;});
     head+='<div class="ch"><span class="dot" style="background:'+safeColour(c.colour)+'"></span><span class="nm">'+esc(c.name)+'</span>'+totHtml(mine,short,c.name)+'</div>';
@@ -1869,11 +1874,6 @@ function dayHtml(){
       (noTime.length?noTime.map(function(j){return chipHtml(j,"","",fitChars(colW-12));}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">+ Add</button>')+'</div>';
     body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW)+'</div>';
   });
-  if(plan){      // the weekly plan: its own lane at the right, nothing to do with anyone's jobs
-    head+='<div class="ch" title="Your weekly plan (read only)"><span class="dot" style="background:#8d99a6"></span><span class="nm">Plan</span></div>';
-    nt+='<div class="ntc"></div>';
-    body+=planColHtml(S.date,g);
-  }
   return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+(cols.length+(plan?1:0))+'">'+
     '<div class="gtop"><div class="grow">'+head+'</div>'+(maybe?'<div class="grow dnrow"><div class="gut" title="Jobs that might happen this day. Tap to add a note.">Maybe</div><div class="wnc" style="grid-column:2/-1">'+maybeHtml(S.date)+'</div></div>':"")+'<div class="grow ntrow'+(ntCount?"":" thin")+'">'+nt+'</div></div>'+
     '<div class="grow gb">'+gutHtml(g,hpx)+body+'</div></div></div>'+
@@ -1921,6 +1921,7 @@ function weekHtml(){
     head+='<button type="button" class="wdh'+(d===today?" today":"")+(pt?" hasp":"")+'" data-act="godate" data-date="'+esc(d)+'" aria-label="Open '+esc(niceDate(d))+'">'+
       '<b>'+DOW[dd.getDay()]+" "+dd.getDate()+'</b>'+totHtml(mine,dayW<80?2:dayW<150?1:0,"")+(pt?'<span class="ptot">'+pt+'</span>':"")+'</button>';
     strip+='<div class="wdl">';body+='<div class="wday'+(d===today?" today":"")+'">';
+    if(plan){strip+='<div class="wlh pgap" title="Your weekly plan (read only)"><div class="lt">Plan</div></div>';body+=planColHtml(d,g);}      // the plan lane sits at the left of each day (Mitch, 2026-10-30)
     people.forEach(function(c){
       const lane=mine.filter(function(j){return j.staff_id===c.id;}),col=safeColour(c.colour);
       const t=dayTot(lane);
@@ -1929,7 +1930,6 @@ function weekHtml(){
         lane.filter(function(j){return !isTimed(j);}).sort(byTime).map(function(j){return chipHtml(j,"",laneW<90?mainTight(j,laneW<44):"",fitChars(laneW-10));}).join("")+'</div>';
       body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(d,g)+laneCardsHtml(lane,g,laneW)+'</div>';
     });
-    if(plan){strip+='<div class="wlh pgap" title="Your weekly plan (read only)"><div class="lt">Plan</div></div>';body+=planColHtml(d,g);}
     strip+='</div>';body+='</div>';
   });
   let mrow="";
