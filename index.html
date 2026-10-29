@@ -2591,6 +2591,7 @@ async function fillSyncBox(){
     catch(e){const el=document.getElementById("teamlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
   }
 }
+const JOB_COLS="id,job_date,start_time,service_type,services,address,status,staff_id,client:clients(id,name,phone,email,street,suburb,state,postcode)";
 function isoToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function titleCase(s){return String(s||"").toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());}
 // a calendar job's address is one line ("37 Beech Lane Wilsons Creek"): peel off the number and, when the client record knows it, the suburb
@@ -2609,7 +2610,7 @@ async function openTodayJobs(){
   document.getElementById("mCancel").onclick=closeModal;
   try{
     const sb=await sbClient();
-    const r=await sb.from("jobs").select("id,job_date,start_time,service_type,address,status,staff_id,client:clients(id,name,phone,email,street,suburb,state,postcode)")
+    const r=await sb.from("jobs").select(JOB_COLS)
       .eq("job_date",isoToday()).neq("status","cancelled").order("start_time",{ascending:true,nullsFirst:false});
     if(r.error)throw r.error;
     TJ=r.data||[];
@@ -2618,12 +2619,16 @@ async function openTodayJobs(){
   }catch(e){const el=document.getElementById("tjlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
 }
 async function startFromJob(j){
-  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  // an empty job on the screen is reused, so no blank job gets left behind in the list
+  const blank=!(STATE.customer&&(STATE.customer.address||STATE.customer.client))&&!Object.keys(STATE.sections||{}).length;
+  if(STATE.id&&!blank){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  const keepId=blank&&STATE.id?STATE.id:genId();
   const cl=j.client||{},a=splitJobAddress(j.address,cl),c=newJobCustomer();
   Object.assign(c,{client:cl.name||"",phone:cl.phone||"",email:cl.email||"",streetno:a.streetno,address:a.address,suburb:a.suburb,state:a.state,postcode:a.postcode,calJobId:j.id});
-  if(/pre[\s-]*purchase/i.test(j.service_type||"")){c.rtype="prepurchase";c.scope=PP_SCOPE;}
+  const svcText=[j.service_type].concat((j.services||[]).map(x=>x&&x.type)).join(" ");
+  if(/pre[\s-]*purchase/i.test(svcText)){c.rtype="prepurchase";c.scope=PP_SCOPE;}
   if(!c.inspector&&ME){if(/^mitch/i.test(ME.name))c.inspector="Mitch";else if(/^andrew/i.test(ME.name))c.inspector="Andrew";else{c.inspector="Other";c.inspectorOther=ME.name;}}
-  STATE={id:genId(),customer:c,sections:{}};
+  STATE={id:keepId,customer:c,sections:{}};
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
   document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
@@ -2695,6 +2700,27 @@ sheet.addEventListener("click",async e=>{
   if(b.dataset.tj!==undefined){const j=TJ[+b.dataset.tj];if(j)startFromJob(j);}
 });
 
+/* ---------- opened from the Job Calendar's "Termite inspection" button: index.html?job=<id>&client=<name>&addr=<address> ---------- */
+async function handleLaunchParams(){
+  let q;try{q=new URLSearchParams(location.search);}catch(e){return}
+  const jid=q.get("job");if(!jid)return;
+  const client=q.get("client")||"",addr=q.get("addr")||"";
+  try{history.replaceState(null,"",location.pathname);}catch(e){}   // so a refresh doesn't start it a second time
+  // 1. already started on this device? open that one
+  const list=await loadJobsIndex();
+  for(const m of list){const st=await dbGet("job::"+m.id);
+    if(st&&st.customer&&st.customer.calJobId===jid){await switchJob(m.id);toast("Opened your inspection for "+(st.customer.client||st.customer.address||"this job"),2600);return}}
+  // 2. signed in (the calendar login is shared): fetch the full job, client details and all
+  if(sbCfg()){
+    if(!ME&&sbHasSession()){try{await sbMe();}catch(e){}}
+    if(ME){try{const sb=await sbClient();const r=await sb.from("jobs").select(JOB_COLS).eq("id",jid).maybeSingle();
+      if(r&&r.data){await startFromJob(r.data);return}}catch(e){}}
+  }
+  // 3. not signed in or no signal: use what the calendar put in the link (name and address)
+  await startFromJob({id:jid,address:addr,client:{name:client}});
+  toast("Started. Sign in (Jobs) to fill the phone and email too",3600);
+}
+
 /* ---------- boot ---------- */
 (async function(){
   try{ await openDB(); }catch(e){ db=null; }
@@ -2721,6 +2747,7 @@ sheet.addEventListener("click",async e=>{
   applyPhotoSrc();
   render();
   try{syncBoot();}catch(e){}
+  try{await handleLaunchParams();}catch(e){}
 })();
 </script>
 
