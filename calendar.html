@@ -2881,7 +2881,8 @@ function sheetHtml(){
     '<div class="shhead"><div class="shttl"><h2 id="sh-title">'+esc(sheetTitle())+'</h2><div class="sb" id="sh-sub">'+esc(sheetSub())+'</div></div>'+
     '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
     '<div class="cnstrip" id="cn-strip" role="note" hidden></div>'+      // the client's notes (dog, gate code ...), under the title where they can't be missed
-    '<div class="shbody"><div id="sh-msg" role="alert"></div>';
+    '<div class="shbody"><div id="sh-msg" role="alert"></div>'+
+    '<div class="btns" id="sh-start" hidden><a class="btn pri" id="ln-start">Start inspection report</a></div>';
   // 1. the job address comes first: the Google lookup, and (master) the sites of clients already on file. Picking a client's site fills the client in too.
   h+='<div class="lbl">Job address</div>'+
     '<div class="fld"><label class="fl vh" for="f-addr">Job address</label>'+
@@ -2910,7 +2911,7 @@ function sheetHtml(){
        '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>'+
      // the paperwork buttons sit straight under them (they used to be at the very bottom of the sheet): Service record for a job with a non-inspection service, Termite inspection
      // for an inspection one, both for a combo. updateLinks shows and hides them (and this row), and the hint and the "done / not done yet" lines go with them.
-     '<div class="btns" id="sh-paper" hidden><a class="btn" id="ln-rec" hidden>Service record</a><a class="btn" id="ln-insp" hidden>Termite inspection</a></div>'+
+     '<div class="btns" id="sh-paper" hidden><a class="btn" id="ln-rec" hidden>Service record</a></div>'+
      '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
   // client notes: stay with the client, not the job. A strip under the title when there are some, or a "+ Client note" link.
   if(!S.noNotesCol&&(M||SH.clientId)){
@@ -3071,16 +3072,16 @@ function updateLinks(){
   const types=f.services.map(function(x){return x.type;});
   const recTypes=types.filter(function(t){return !isInspectionType(t);});
   const hasInsp=types.some(isInspectionType),hasRec=recTypes.length>0;
-  const insp=byId("ln-insp"),rec=byId("ln-rec");
-  if(insp)insp.hidden=!hasInsp;
+  const rec=byId("ln-rec"),stw=byId("sh-start");
+  if(stw)stw.hidden=!hasInsp;
   if(rec)rec.hidden=!hasRec;
-  const pp=byId("sh-paper");if(pp)pp.hidden=!(hasInsp||hasRec);
+  const pp=byId("sh-paper");if(pp)pp.hidden=!hasRec;
   updateProps();
   // these two leave this page in the same tab, so they stay switched off while photos are going up (they come back by themselves when it finishes)
   if(id&&!upl){
     setLink("ln-rec",hasRec?"records.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr)+"&service="+e(recTypes.join(" + ")):"");
-    setLink("ln-insp",hasInsp?"index.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr):"");
-  }else{setLink("ln-rec","");setLink("ln-insp","");}
+    setLink("ln-start",hasInsp?"index.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr):"");
+  }else{setLink("ln-rec","");setLink("ln-start","");}
   const hints=[];
   if(!types.length)hints.push("Tick a service to get the record buttons.");
   if(!id)hints.push(types.length?"Save the job first, then these open with the details filled in.":"Then save the job and they open with the details filled in.");
@@ -5268,7 +5269,7 @@ function onClick(e){
   if(SH&&!SH.bar){
     if(t.id==="sh-back"&&SH.back){closeSheet(false);}
     // Service record and Termite inspection open in this same tab. (Maps opens in its own tab, so the sheet and the day are never lost to it.)
-    const lk=t.closest("#ln-rec,#ln-insp");
+    const lk=t.closest("#ln-rec,#ln-start");
     if(lk){
       if(S.uploads>0&&!confirm("Photos are still uploading. If you leave now, the rest won't be saved. Leave anyway?")){e.preventDefault();return;}
       if(S.uploads<=0&&SH.pendingN>0&&!confirm("Some photos haven't uploaded yet. They stay saved on this device and you can send them the next time you open this job. Leave anyway?")){e.preventDefault();return;}
