@@ -998,7 +998,6 @@ const TEST_OPTS=[
   {k:"Moisture meter",s:"Moisture readings were taken using a Tramex Encounter Plus moisture meter."},
   {k:"Thermal camera",s:"A FLIR thermal imaging camera was used."},
   {k:"Borescope",s:"A NEXTGEN Pest Scope 6mm dual lens borescope was used."},
-  {k:"Termatrac",s:"Termatrac was used to check for termite activity."},
   {k:"iTracker",s:"An iTracker was used to check for termite activity."},
   {k:"Tapping / sounding",s:"Tapping (sounding) of timbers was carried out."}];
 function testsSentence(c){return (c.testsUsed||[]).map(k=>(TEST_OPTS.find(o=>o.k===k)||{}).s).filter(Boolean).join(" ");}
