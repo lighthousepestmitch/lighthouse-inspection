@@ -242,6 +242,42 @@
   .bchip:active{transform:scale(.98)}
   .bchip .ph{background:var(--place-bg);color:var(--place);border-radius:4px;padding:0 3px;font-family:"Spline Sans Mono",monospace;font-size:.85em}
 
+  /* Findings + Species pop-up sheets (tap a line, tap another) */
+  .fbtn{font-size:.85rem;font-weight:700;padding:9px 14px;border-radius:10px;border:1.5px solid var(--timber);background:var(--timber-soft);color:var(--timber);cursor:pointer}
+  .fbtn:active{transform:scale(.97)}
+  .findrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .sptags{display:flex;flex-wrap:wrap;gap:6px}
+  .sptag{font-size:.78rem;font-weight:600;padding:4px 9px;border-radius:8px;background:var(--has-bg);color:var(--has)}
+  .sheet.tall{max-width:560px;max-height:88vh;display:flex;flex-direction:column;padding:18px}
+  .sheet.tall .fscroll{overflow:auto;flex:1 1 auto;min-height:0;margin:0 -4px 12px;padding:0 4px;-webkit-overflow-scrolling:touch}
+  .sheet .fsub{margin:0 0 12px;font-size:.85rem}
+  .flab{font-size:.72rem;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 7px}
+  .flines{display:flex;flex-direction:column;gap:8px}
+  .frow{display:flex;align-items:flex-start;gap:11px;text-align:left;width:100%;padding:12px 13px;border:1.5px solid var(--edge);border-radius:11px;background:var(--paper);color:var(--ink);font-size:.92rem;line-height:1.35;cursor:pointer}
+  .frow:active{transform:scale(.99)}
+  .frow.on{border-color:var(--timber);background:var(--timber-soft)}
+  .ftick{flex:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--edge);background:var(--raised);margin-top:1px;position:relative}
+  .frow.on .ftick{background:var(--timber);border-color:var(--timber)}
+  .frow.on .ftick:after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+  .frow .ph{background:var(--place-bg);color:var(--place);border-radius:4px;padding:0 3px;font-family:"Spline Sans Mono",monospace;font-size:.85em}
+  .mchip.floc.on{border-color:var(--timber);background:var(--timber-soft);color:var(--timber);font-weight:600}
+  .fairow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:0 0 12px}
+  .fkey{display:flex;gap:8px;margin:0 0 12px}
+  .fkey[hidden]{display:none}
+  .fkey input{flex:1;min-width:0;font-family:inherit;font-size:.9rem;border:1px solid var(--edge);border-radius:9px;padding:9px 10px;background:var(--paper);color:var(--ink)}
+  .fnote{font-size:.76rem;color:var(--muted)}
+  .sheet.tall .acts{flex:none}
+  /* "rest are clear" shortcut */
+  .restclear{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin:14px 0 4px;padding:13px;border-radius:12px;border:1.5px dashed var(--clear);background:var(--clear-bg);color:var(--clear);font-weight:700;font-size:.92rem;cursor:pointer}
+  .restclear:active{transform:scale(.99)}
+  /* additional tests / moisture meter card: always open, stands out */
+  .testscard{border-left:4px solid var(--timber)}
+  .testscard>.block-h{cursor:default}
+  .testscard .chev{display:none}
+  .mchip.tchip.on{border-color:var(--timber);background:var(--timber-soft);color:var(--timber);font-weight:600}
+  /* suggested answer (Conclusion), same idea as the 8.9 N/A hint */
+  .yn.suggest:not(.on),.csbtn.suggest:not(.on){outline:2px dashed var(--timber);outline-offset:1px}
+
   /* photos */
   .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:9px;margin-top:14px}
   .thumb{position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;background:var(--sunk);border:1px solid var(--edge)}
@@ -425,9 +461,9 @@ const ITEMS = [
   {code:"8.6",title:"Chemical delignification"},
   {code:"8.7",title:"Fungal decay"},
   {code:"8.8",title:"Wood borers"},
-  {code:"8.9",title:"Subfloor ventilation",ppTitle:"Lack of adequate subfloor ventilation"},
+  {code:"8.9",title:"Subfloor ventilation",ppTitle:"Lack of adequate subfloor ventilation",naOk:true},
   {code:"8.10",title:"Excessive moisture"},
-  {code:"8.11",title:"Bridging / breaching",
+  {code:"8.11",title:"Bridging / breaching",subNa:[1],
    subShort:["Bridge · ground level","Bridge · slab edge","Bridge · concealed","Bridge · breach/bridge"],
    subQs:[
     "Was the finished ground or paving level above the adjacent internal floor level or damp-proof-course or obstructing any weephole or vent face on external walls?",
@@ -447,9 +483,104 @@ const EXTRAS = [];
 // Species buttons on the findings sections (NSW + south-east QLD). STARTER LIST (general knowledge, not from Mitch's files):
 // Mitch to confirm/trim. Edit the arrays below; nothing else needs touching. "Other" opens a free-text box.
 // Left out on purpose: Mastotermes darwiniensis (northern Australia only), Hylotrupes bajulus (not in eastern Australia).
-const TERMITE_SPECIES = ["Coptotermes acinaciformis","Coptotermes frenchi","Coptotermes lacteus","Schedorhinotermes spp.","Heterotermes spp.","Nasutitermes spp.","Microcerotermes spp.","Porotermes adamsoni","Neotermes insularis","Cryptotermes spp.","Not identified","Other"];
-const BORER_SPECIES = ["Lyctus brunneus (powderpost beetle)","Anobium punctatum (furniture beetle)","Calymmaderus incisus (Queensland pine beetle)","Longicorn borer (Cerambycidae)","Auger beetle (Bostrichidae)","Pinhole borer (ambrosia beetle)","Not identified","Other"];
+// Trimmed 2026-10-30 (was 12 and 8). Dropped: C. lacteus, Heterotermes, Microcerotermes, Porotermes adamsoni, Neotermes insularis; Calymmaderus, auger beetle, pinhole borer.
+const TERMITE_SPECIES = ["Coptotermes acinaciformis","Coptotermes frenchi","Nasutitermes spp.","Schedorhinotermes spp.","Cryptotermes spp. (drywood)","Not identified","Other"];
+const BORER_SPECIES = ["Lyctus brunneus (powderpost beetle)","Anobium punctatum (furniture beetle)","Longicorn borer (Cerambycidae)","Not identified","Other"];
 const SPECIES_BY_CODE = {"8.1":TERMITE_SPECIES,"8.3":TERMITE_SPECIES,"8.8":BORER_SPECIES};
+
+/* ---------- Findings sheets: ready-made lines Mitch taps into a note ----------
+   Sources: the Termite Comment Bank (termite-comments-library.html) + wording counted from 68 of Mitch's finished 2025 reports, trimmed by Mitch 2026-10-30.
+   {STD} becomes AS 3660 (Regular) or AS 4349.3 (Pre-purchase). [SQUARE BRACKETS] are gaps he fills in. 8.3 and 8.6 have none on purpose.
+   locs = one tap per place; the sheet joins the ticked ones into one sentence (lead + list + tail). sub = lines per 8.11 question. */
+const FIND = {
+  "8.1":{lines:[
+    "Live termites consistent with subterranean termites (likely Coptotermes spp.) were observed to [LOCATION], with [shelter tubes / mudding] present. Further investigation and treatment are recommended.",
+    "Live termites were observed to [LOCATION] and were treated with a [dust / foam] application at the time of inspection. Follow-up is recommended to confirm the result.",
+    "A termite nest (species not confirmed, appears consistent with Coptotermes spp.) was noted in a tree adjacent to the dwelling.",
+    "Termite activity consistent with Nasutitermes spp. was noted at [LOCATION], with a nest also located in [a nearby tree]."]},
+  "8.4":{lines:[
+    "Evidence of a termite baiting system was noted.",
+    "A termite baiting system is installed and is currently serviced and maintained by our firm as part of an ongoing program.",
+    "A termite baiting system was noted; it does not appear to have been maintained recently. Regular servicing is recommended to keep it effective.",
+    "Drill holes were noted that may be evidence of a previous termite treatment.",
+    "Trenching to areas of the subfloor may be a sign of a previous termite treatment.",
+    "A durable notice was found indicating that a [pre-construction / post-construction] [physical / chemical] termite barrier has been installed. The notice was in [illegible / poor / fair / good] condition. Our firm cannot comment on the integrity of the barrier, so we recommend obtaining all details and certification for it.",
+    "No durable notice was found. We recommend contacting [the vendor / the Body Corporate / the Strata Manager] for details of any previous termite inspections or treatments.",
+    "A durable notice within the meter box indicates a [chemical treated zone / physical barrier] was installed [at construction / by another firm] on [DATE]. Given its age, the original treatment may no longer be fully effective, and renewal is worth considering.",
+    "A chemical barrier was previously installed by Lighthouse Pest Control on [DATE]. As it has passed its expected service life, re-treatment is recommended.",
+    "The durable notice within the meter box was illegible, so the system type and installation details could not be confirmed."]},
+  "8.5":{lines:[
+    "The next inspection to help detect termite attack is recommended in [6 / 12] months.",
+    "Given the conditions noted, a shorter inspection interval of 6 months is recommended."]},
+  "8.7":{locs:{label:"Where was the decay? Tap each place",lead:"Decay was noted to",tail:".",items:["veranda timbers","fascias","subfloor timbers","areas of cladding","bases of posts","exterior stairs","hand rails","exterior trim timbers","fences","subfloor infills","pergola timbers","internal door jambs","piers","ends of bearers"]},
+    lines:[
+    "General decay was noted to all exposed timbers.",
+    "Deteriorated timbers can hold moisture, so repair or replacement as part of general maintenance is recommended.",
+    "Decay was noted to a number of timber elements around the property, including [LOCATION]. Assessment and repair by a qualified building professional is recommended."]},
+  "8.8":{lines:[
+    "Timber damage consistent with longicorn (longhorn) borer activity was noted to [LOCATION], including surface tunnelling of the outer fibres.",
+    "Evidence of borer activity was noted to [floorboards throughout the dwelling], consistent with timber pest damage."]},
+  "8.9":{lines:[
+    "Subfloor ventilation appeared limited to sections of the property, which can contribute to higher moisture levels over time. Improving ventilation, or adding a mechanical system where practical, is recommended.",
+    "Subfloor ventilation appeared inadequate at the time of inspection. A mechanical ventilation system has [been / not been] installed.",
+    "Subfloor ventilation could not be fully assessed due to restricted access at the time of inspection."]},
+  "8.10":{lines:[
+    "The hot water system is discharging onto the ground by the exterior wall. Diverting the overflow into a drain is recommended, as moist soil near the building suits timber pests.",
+    "The air conditioning unit and hot water system are discharging onto the ground by the exterior walls. Diverting both into a drain is recommended, as moist soil near the building suits timber pests.",
+    "The air conditioning unit is discharging onto the ground by the exterior wall. Diverting the condensate into a drain is recommended, as moist soil near the building suits timber pests.",
+    "The hot water system is discharging onto the ground in the subfloor. Diverting the overflow into a drain is recommended, as moist soil suits timber pests.",
+    "Evidence of water movement through the subfloor was noted. Improving subfloor drainage is recommended.",
+    "Elevated moisture was recorded in the subfloor soil, which can create conditions that suit termite activity and timber decay. Improving drainage and ventilation, and attending to any plumbing leaks, is recommended.",
+    "Elevated subfloor moisture was recorded. Given the low-lying nature of the site this is fairly typical for the area and may be difficult to fully resolve; maintaining good drainage and ventilation where practical is recommended.",
+    "The water tank overflow pipe is discharging onto the ground by the exterior wall. Diverting it into a drain is recommended."]},
+  "8.11":{sub:[
+    [ "Weep holes were covered in areas by [exterior cement render / ground levels / garden levels / the veranda / paths]. This may allow moisture and concealed termite entry, so exposing the weep holes is recommended.",
+      "External ground levels were high against sections of the [garage / building] walls, which can reduce the inspection zone. Lowering these where practical is recommended.",
+      "Ideally, ground levels are kept at least 75 mm below the termite control joint to keep the inspection zone clear, in line with Australian Standards."],
+    [ "Slab edges are covered in areas by [paths / patio / garden / paving], which limits the slab edge inspection zone."],
+    [ "Render extends to ground level with no visible termite control joint in areas, which can reduce the inspection zone and allow concealed entry. Keeping a clear inspection zone in line with AS 3660.2 is recommended.",
+      "Slab construction details could not be confirmed at the time of inspection. [High ground levels / a covered slab edge] were noted, which can limit inspection in these areas."],
+    [ "Render down to ground level with no termite control joint may allow concealed termite entry.",
+      "High ground levels against the building may allow concealed termite entry.",
+      "Ant capping was inadequate in sections of the subfloor, which can allow concealed entry. Attention to these areas where practical is recommended.",
+      "This can allow concealed termite access."]]},
+  "8.12":{locs:{label:"Which timbers are in ground contact? Tap each one",lead:"Timber in ground contact was noted at",tail:", which can allow concealed termite access.",items:["exterior stairs","subfloor infills","posts","posts where the stirrups are not exposed","piers","veranda timbers","ground floor door jambs","retaining wall","shed timbers"]},
+    lines:[
+    "Some timber posts are in ground contact where the metal stirrups are not fully exposed, which can allow concealed entry.",
+    "Stored timber / firewood was noted [near the building / in the subfloor], which can attract termites; storing it clear of the structure is recommended.",
+    "Concrete has been poured against [timber posts / cladding] in areas, covering the stirrup junction. This can allow concealed entry and limit inspection."]},
+  "8.13":{lines:[
+    "Stored timbers were noted in the subfloor, which can attract termites; removing them is recommended.",
+    "Foliage was noted growing against the building in areas, which can limit inspection; trimming it back is recommended.",
+    "Damaged or corroded guttering was noted, which creates damp areas that can attract termites. Repair is recommended.",
+    "There is no guttering to the [studio / building], which can create damp areas that attract termites.",
+    "A [disconnected / damaged] downpipe was noted, allowing dampness near the building. Reconnecting and directing water away from the structure is recommended.",
+    "Ant capping was missing or corroded in sections of the subfloor, which can allow concealed entry and limit inspection. Attention to these areas where practical is recommended.",
+    "A [tree stump / tree roots] was noted [in the subfloor / near the building]. As decaying timber can attract termites, removal where practical is recommended.",
+    "Some cracks or joints were noted in the slab, which can allow concealed entry.",
+    "Large trees are close to the building. Their roots and associated moisture can create pathways and attract termites to the area; ongoing monitoring is recommended.",
+    "This can allow concealed termite access."]},
+  "8.14":{lines:[
+    "[Element / location] may present a safety concern; assessment by a suitably qualified professional is recommended.",
+    "Internal areas were quite cluttered with stored items, which limited safe access and the completeness of the inspection in those areas."]}
+};
+// Accessibility: areas that could not be accessed, and obstructed areas (each area only offers its own lines)
+const FIND_INACC = [
+  "Roof void of raked ceiling or skillion roof areas.",
+  "Roof void due to raked ceiling construction.",
+  "Roof void due to skillion roof construction.",
+  "Roof void access blocked by air conditioning ducting and insulation.",
+  "Areas of subfloor due to the crawl space or access hatch being below the minimum required by {STD}.",
+  "Subfloor to veranda due to the crawl space or access hatch being below the minimum required by {STD}.",
+  "We recommend access and inspection of inaccessible areas."];
+const FIND_OBS = {
+  "Building interior":["Interior due to floor coverings, furnishings and stored goods.","Interior due to floor coverings."],
+  "Roof space":["Accessible roof void due to sarking and/or insulation material.","Roof void access restricted by furnishings and stored items."],
+  "Subfloor space":["Areas of subfloor due to the crawl space or access hatch being below the minimum required by {STD}."],
+  "Building exterior":["Exterior due to stored items.","Exterior due to foliage."]};
+function hasFindings(code){const f=FIND[code];return !!(f&&((f.lines||[]).length||f.locs));}
+function stdName(){return isPP()?"AS 4349.3":"AS 3660";}
+function fx(s){return String(s).replace(/\{STD\}/g,stdName());}
 
 // ---- report type (Regular vs Pre-Purchase) ----
 // Regular = RSA "Regular Visual Timber Pest Inspection Report" (AS3660).
@@ -517,8 +648,12 @@ function jobMeta(state){
   const c=state.customer||{};
   if(c.obs)Object.keys(c.obs).forEach(a=>photos+=(((c.obs[a]||{}).photos)||[]).length);
   if(c.inacc)photos+=((c.inacc.photos)||[]).length;
-  return {id:state.id,address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),rtype:c.rtype||"regular",updated:Date.now(),find,photos};
+  const insp=c.inspector==="Other"?(c.inspectorOther||"").trim():(c.inspector||"");
+  return {id:state.id,address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),rtype:c.rtype||"regular",inspector:insp,updated:Date.now(),find,photos};
 }
+// the last inspector picked on this device is the starting answer for the next new job
+function savedInspector(){try{return localStorage.getItem("lpc_inspector")||"";}catch(e){return "";}}
+function newJobCustomer(){const c={date:todayStr()};const i=savedInspector();if(i)c.inspector=i;return c;}
 async function loadJobsIndex(){return (db?await dbGet("jobs"):null)||[];}
 async function saveJobsIndex(list){await dbSet("jobs",list);}
 async function upsertJobMeta(){
@@ -530,12 +665,14 @@ async function upsertJobMeta(){
 function timeAgo(t){if(!t)return"";const m=Math.round((Date.now()-t)/60000);
   if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago";}
 
-function refreshNaSuggest(){
+function slabNoSub(){
   const c=STATE.customer||{};
   const slab=c.floor==="Slab-on-ground"||c.floor==="Slab floor (infill)";
-  const noSub=!(c.areas||[]).includes("Subfloor space");
+  return slab&&!(c.areas||[]).includes("Subfloor space");
+}
+function refreshNaSuggest(){
   const s9=STATE.sections&&STATE.sections["8.9"];
-  const on=slab&&noSub&&!(s9&&s9.status);
+  const on=slabNoSub()&&!(s9&&s9.status);
   const blk=document.getElementById("b-8.9");if(!blk)return;
   blk.querySelectorAll(".na").forEach(b=>b.classList.toggle("suggest",on));
   const h=blk.querySelector(".nahint");if(h)h.style.display=on?"block":"none";
@@ -545,6 +682,7 @@ function scheduleSave(){
   clearTimeout(saveT);
   refreshHasBlocks();
   try{refreshNaSuggest();}catch(e){}
+  try{refreshConcSuggest();}catch(e){}
   document.getElementById("saveinfo").textContent="Saving…";
   saveT=setTimeout(async()=>{
     if(!STATE.id)STATE.id=genId();
@@ -664,11 +802,16 @@ function buildDetails(){
       <div class="field"><label>Occupancy status</label>
         <select data-c="occupancy">${opts(["","Occupied and fully furnished","Occupied and partly furnished","Occupied and unfurnished","Unoccupied but fully furnished","Unoccupied but partly furnished","Unoccupied and unfurnished","Other"],c.occupancy)}</select>
         <input class="otherline" data-c="occupancyOther" placeholder="Type the other occupancy status" value="${escv(c.occupancyOther)}" style="margin-top:8px;display:${c.occupancy==='Other'?'block':'none'}"></div>
+      <div class="field"><label>Inspector</label>
+        <select data-c="inspector">${opts(["","Mitch","Andrew","Other"],c.inspector)}</select>
+        <input class="otherline" data-c="inspectorOther" placeholder="Inspector's name" value="${escv(c.inspectorOther)}" style="margin-top:8px;display:${c.inspector==='Other'?'block':'none'}"></div>
       <!-- Orientation/Compass moved up to the Cover shots section, right where the front-of-property photos are taken -->
     </div>`;
   return b;
 }
 
+function spLabel(s){return (s.species||[]).map(x=>x==="Other"&&s.speciesOther?"Other: "+s.speciesOther:x);}
+function spTagsHtml(s){return spLabel(s).map(x=>`<span class="sptag">${escv(x)}</span>`).join("");}
 function buildSection(item,isExtra){
   const code=item.code;const s=sec(code);
   const [pc,pl]=isExtra?[ (s.note||s.photos.length?'clear':'todo'), (s.note||s.photos.length?'Noted':'To do')]:pill(code);
@@ -677,7 +820,6 @@ function buildSection(item,isExtra){
   b.id="b-"+code;
   const isFindItem=!isExtra;
   const hasSub=!!item.subQs;
-  const bankLines=BANK[code]||[];
 
   b.innerHTML=`
     <div class="block-h" data-toggle>
@@ -691,7 +833,7 @@ function buildSection(item,isExtra){
       ${isFindItem&&!item.always&&!hasSub?`<div class="htog">
         <button class="ht clear ${s.status==='clear'?'on':''}" type="button" data-hstatus="clear" aria-label="Clear">
           <svg viewBox="0 0 24 24" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button>
-        <button class="ht na ${s.status==='na'?'on':''}" type="button" data-hstatus="na" aria-label="Not applicable">N/A</button>
+        ${(item.naOk||s.status==='na')?`<button class="ht na ${s.status==='na'?'on':''}" type="button" data-hstatus="na" aria-label="Not applicable">N/A</button>`:''}
         <button class="ht find ${s.status==='find'?'on':''}" type="button" data-hstatus="find" aria-label="Finding">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg></button>
         <button class="ht undet ${s.status==='undet'?'on':''}" type="button" data-hstatus="undet" aria-label="Undetermined">
@@ -714,12 +856,13 @@ function buildSection(item,isExtra){
             <button class="ynu-b yes ${a==='yes'?'on':''}" type="button" data-subq="${i}" data-subv="yes">Yes</button>
             <button class="ynu-b no ${a==='no'?'on':''}" type="button" data-subq="${i}" data-subv="no">No</button>
             <button class="ynu-b undet ${a==='undet'?'on':''}" type="button" data-subq="${i}" data-subv="undet">Undetermined</button>
-            <button class="ynu-b na ${a==='na'?'on':''}" type="button" data-subq="${i}" data-subv="na">N/A</button>
+            ${((item.subNa||[]).includes(i)||a==='na')?`<button class="ynu-b na ${a==='na'?'on':''}" type="button" data-subq="${i}" data-subv="na">N/A</button>`:''}
           </div>
           <div class="field subqfind" id="subqfind-${code}-${i}" style="display:${(a==='yes'||a==='undet')?'block':'none'}">
             <label class="notelabel"><span>Findings — what did you see?</span>
               <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
             <textarea data-subqnote="${i}" placeholder="Type or speak what you found — I'll polish it for the report.">${escv((s.subqNotes&&s.subqNotes[i])||'')}</textarea>
+            ${(((FIND[code]||{}).sub||[])[i]||[]).length?`<div class="findrow"><button class="fbtn" type="button" data-findings="sub" data-idx="${i}">Findings</button></div>`:''}
           </div></div>`}).join("")}
       </div>`:''}
       ${code==="8.9"?`<div class="nahint" style="display:none">Slab floor and no subfloor ticked in Accessibility. Tap N/A if there is no subfloor to ventilate.</div>`:''}
@@ -727,23 +870,18 @@ function buildSection(item,isExtra){
       <div class="seg">
         <button class="clear ${s.status==='clear'?'on':''}" data-status="clear">
           <svg viewBox="0 0 24 24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Clear</button>
-        <button class="na ${s.status==='na'?'on':''}" data-status="na">N/A</button>
+        ${(item.naOk||s.status==='na')?`<button class="na ${s.status==='na'?'on':''}" data-status="na">N/A</button>`:''}
         <button class="find ${s.status==='find'?'on':''}" data-status="find">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/></svg>Finding</button>
         <button class="undet ${s.status==='undet'?'on':''}" data-status="undet">
           <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.5a2.4 2.4 0 1 1 3.1 2.4c-.6.2-1.1.8-1.1 1.5v.3"/><path d="M12 17.2v.01"/></svg>Undet.</button>
       </div>`:''}
       ${hasSub?'':`<div class="${isFindItem&&!item.always?'findbody':''}">
-        ${SPECIES_BY_CODE[code]?`<div class="field"><label>${code==="8.8"?"Borer type":"Termite species"} — tap all that apply</label>
-          <div class="chipset">${SPECIES_BY_CODE[code].map(sp=>`<button type="button" class="mchip spchip ${(s.species||[]).includes(sp)?'on':''}" data-species="${escv(sp)}">${escv(sp)}</button>`).join("")}</div>
-          <input class="otherline" data-speciesother placeholder="Type the other species" value="${escv(s.speciesOther)}" style="margin-top:8px;display:${(s.species||[]).includes('Other')?'block':'none'}"></div>`:''}
+        ${SPECIES_BY_CODE[code]?`<div class="findrow" style="margin:0 0 12px"><button class="fbtn" type="button" data-speciesbtn>${code==="8.8"?"Borer type":"Species"}</button><span class="sptags" id="sptags-${code}">${spTagsHtml(s)}</span></div>`:''}
         <div class="field"><label class="notelabel"><span>${item.always?'Note':(isExtra?'Notes':'What did you see? (rough note is fine)')}</span>
           <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
           <textarea data-note placeholder="${escv(item.ph||(item.always?'e.g. 6 months':'Type or speak quick notes — I will polish them into report wording.'))}">${escv(s.note)}</textarea></div>
-        ${isFindItem&&!item.always?`<div class="field"><label>Tone for this comment (optional)</label>
-          ${chipSel("secchip","tone",["Use report tone","Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],s.tone||"Use report tone")}</div>`:''}
-        ${bankLines.length?`<div class="banklab">Quick add from bank</div>
-          <div class="bankchips">${bankLines.map((l,i)=>`<button class="bchip" data-bank="${i}">${phHtml(l)}</button>`).join("")}</div>`:''}
+        ${hasFindings(code)?`<div class="findrow"><button class="fbtn" type="button" data-findings="sec">Findings</button></div>`:''}
         ${!item.nophoto?`<div class="banklab">Photos</div>
         <div class="photos" id="ph-${code}"></div>`:''}
       </div>`}
@@ -824,6 +962,7 @@ function obsBlock(a,c){
   return `<div class="obsrow" id="obsrow-${slug(a)}" style="display:${has?'block':'none'}">
     <label class="notelabel"><span class="obslabel">${escv(a)}</span>${MIC_BTN}</label>
     <input class="obsnote" data-obsnote="${escv(a)}" placeholder="Finding for this obstructed area" value="${escv(o.note)}">
+    ${(FIND_OBS[a]||[]).length?`<div class="findrow"><button class="fbtn" type="button" data-findings="obs" data-farea="${escv(a)}">Findings</button></div>`:''}
     <div class="photos" id="obsph-${slug(a)}"></div></div>`;
 }
 function buildTypeBlock(){
@@ -833,7 +972,9 @@ function buildTypeBlock(){
     <div class="ynseg" data-rtypeseg>
       <button type="button" class="yn ${!pp?'on':''}" data-rtype="regular">Regular termite inspection</button>
       <button type="button" class="yn ${pp?'on':''}" data-rtype="prepurchase">Pre-purchase (AS4349.3)</button>
-    </div>`;
+    </div>
+    <div class="qgtitle" style="margin-top:14px">Comment tone — how the wording gets finalised</div>
+    ${chipSel("chipkey","tone",["Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],STATE.customer.tone||"Measured (standard)")}`;
   return s;
 }
 function buildScopeBlock(){
@@ -849,18 +990,53 @@ function buildScopeBlock(){
         <select data-c="scope">${opts(["Option 1: Standard Timber Pest Inspection","Option 2: Special-Purpose Inspection","Option 3: + Subterranean Termite Management Proposal"],c.scope||"Option 1: Standard Timber Pest Inspection")}</select></div>`;
   b.innerHTML=`
     <div class="block-h" data-toggle>
-      <span class="code">${pp?'2-4':'3-4'}</span><span class="name">Scope${pp?', conditions':''} &amp; additional tests</span>
+      <span class="code">${pp?'2-3':'3'}</span><span class="name">Scope${pp?' &amp; conditions':' of work'}</span>
       <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
     </div>
     <div class="block-b">
       ${scopeField}
-      <div class="field"><label>Additional tests carried out?</label>${ynSeg("addtests",c.addtests)}</div>
-      <div class="field"><label class="notelabel"><span>Additional tests — details (if yes)</span>${MIC_BTN}</label>
-        <input data-c="addtestsnote" placeholder="e.g. moisture meter, thermal, borescope, tapping" value="${escv(c.addtestsnote)}"></div>
-      <div class="field"><label>Comment tone — how Claude finalises your notes</label>
-        ${chipSel("chipkey","tone",["Measured (standard)","More detailed / thorough","Brief & to the point","Firmer (stronger recommendations)","Plain / everyday wording"],c.tone||"Measured (standard)")}</div>
     </div>`;
   return b;
+}
+/* Additional tests (the moisture meter): its own card, always open, so it never gets missed. Same fields as before (addtests Yes/No + addtestsnote). */
+const TEST_OPTS=[
+  {k:"Moisture meter",s:"Moisture readings were taken using a Tramex Encounter Plus moisture meter."},
+  {k:"Thermal camera",s:"A thermal camera was used."},
+  {k:"Borescope",s:"A borescope was used."},
+  {k:"Tapping / sounding",s:"Tapping (sounding) of timbers was carried out."}];
+function testsSentence(c){return (c.testsUsed||[]).map(k=>(TEST_OPTS.find(o=>o.k===k)||{}).s).filter(Boolean).join(" ");}
+function buildTestsBlock(){
+  const c=STATE.customer;const used=c.testsUsed||[];
+  const b=document.createElement("div");b.className="block open testscard";b.id="b-TESTS";
+  b.innerHTML=`
+    <div class="block-h">
+      <span class="code">4</span><span class="name">Moisture meter &amp; other tests</span>
+      <span class="pill ${c.addtests?'clear':'todo'}" id="pill-TESTS">${c.addtests?'Done':'To do'}</span>
+    </div>
+    <div class="block-b">
+      <div class="field"><label>Did you use any of these? Tap all that apply</label>
+        <div class="chipset">${TEST_OPTS.map(o=>`<button type="button" class="mchip tchip ${used.includes(o.k)?'on':''}" data-test="${escv(o.k)}">${escv(o.k)}</button>`).join("")}<button type="button" class="mchip tchip ${c.addtests==='No'?'on':''}" data-test="__none">None used</button></div></div>
+      <div class="field"><label class="notelabel"><span>Details for the report (optional)</span>${MIC_BTN}</label>
+        <input data-c="addtestsnote" placeholder="e.g. where the readings were taken" value="${escv(c.addtestsnote)}"></div>
+    </div>`;
+  return b;
+}
+function toggleTest(k){
+  const c=STATE.customer;c.testsUsed=c.testsUsed||[];
+  if(k==="__none"){c.testsUsed=[];c.addtests=(c.addtests==="No")?"":"No";}
+  else{const i=c.testsUsed.indexOf(k);if(i>=0)c.testsUsed.splice(i,1);else c.testsUsed.push(k);c.addtests=c.testsUsed.length?"Yes":"";}
+  // keep the report sentence in step with the ticks, without touching anything Mitch typed himself
+  const nt=testsSentence(c),old=c.testsAuto||"";let v=c.addtestsnote||"";
+  if(old&&v.indexOf(old)>=0)v=v.replace(old,()=>nt);else if(nt)v=(v.trim()?v.trim()+" ":"")+nt;
+  v=v.replace(/ {2,}/g," ").trim();
+  c.testsAuto=nt;c.addtestsnote=v;
+  const blk=document.getElementById("b-TESTS");
+  if(blk){
+    const inp=blk.querySelector('[data-c="addtestsnote"]');if(inp)inp.value=v;
+    blk.querySelectorAll("[data-test]").forEach(b=>b.classList.toggle("on",b.dataset.test==="__none"?c.addtests==="No":c.testsUsed.includes(b.dataset.test)));
+    const p=document.getElementById("pill-TESTS");if(p){p.textContent=c.addtests?"Done":"To do";p.className="pill "+(c.addtests?"clear":"todo");}
+  }
+  scheduleSave();
 }
 function buildAccessBlock(){
   const c=STATE.customer;const areas=c.areas||[];const inacc=c.inacc||{yn:"",note:"",photos:[]};
@@ -883,6 +1059,7 @@ function buildAccessBlock(){
       <div class="field"><label>Inaccessible areas?</label>${ynSeg("inaccessible",c.inaccessible)}</div>
       <div class="field"><label class="notelabel"><span>Which areas couldn't be accessed? (if yes)</span>${MIC_BTN}</label>
         <input data-inaccnote placeholder="e.g. subfloor — no access hatch" value="${escv(inacc.note)}">
+        <div class="findrow"><button class="fbtn" type="button" data-findings="inacc">Findings</button></div>
         <div class="photos" id="inaccph" style="margin-top:10px"></div></div>
       <div class="field"><label>Undetected timber pest risk</label>
         ${chipSel("chipkey","risk",isPP()?["Low","Moderate","Moderate-High","High","Extremely High"]:["Low","Moderate","Moderate-High","High"],c.risk)}</div>
@@ -900,6 +1077,7 @@ function buildConcBlock(){
       <svg class="chev" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
     </div>
     <div class="block-b">
+      <div class="subqlead">A dashed outline is the answer I'd suggest from what you ticked above. You still tap.</div>
       <div class="grid2">
         <div class="field"><label>Treatment of pest attack required?</label>${ynSeg("treatment",c.treatment)}</div>
         <div class="field"><label>Remove conducive conditions?</label>${ynSeg("conducive",c.conducive)}</div>
@@ -991,8 +1169,10 @@ function render(){
   main.appendChild(buildQuickGrid());
   main.appendChild(buildSection(COVER,true));
   main.appendChild(buildDetails());
+  main.appendChild(buildTestsBlock());
   main.appendChild(buildScopeBlock());
   main.appendChild(buildAccessBlock());
+  main.appendChild(buildRestClear());
   ITEMS.forEach(it=>{main.appendChild(buildSection(it,false));if(it.code==="8.1")main.appendChild(buildStmpBlock());});
   main.appendChild(buildConcBlock());
   EXTRAS.forEach(it=>main.appendChild(buildSection(it,true)));
@@ -1002,6 +1182,7 @@ function render(){
   renderReportPhotos();renderComments();renderAnnex();updateOrientBadge();
   buildJump();updateProgress();refreshHasBlocks();
   try{refreshNaSuggest();}catch(e){}
+  try{refreshConcSuggest();}catch(e){}
 }
 
 function renderPhotos(code){
@@ -1168,16 +1349,19 @@ main.addEventListener("click",e=>{
   const ar=e.target.closest("[data-area]");
   if(ar){const a=ar.dataset.area;const arr=STATE.customer.areas=STATE.customer.areas||[];
     const i=arr.indexOf(a);if(i>=0){arr.splice(i,1);ar.classList.remove("on")}else{arr.push(a);ar.classList.add("on")}scheduleSave();return}
-  const spc=e.target.closest("[data-species]");
-  if(spc){const blk=spc.closest(".block");const code=blk.id.slice(2);const s=sec(code);const v=spc.dataset.species;
-    s.species=s.species||[];const i=s.species.indexOf(v);
-    if(i>=0)s.species.splice(i,1);else s.species.push(v);
-    spc.classList.toggle("on",i<0);
-    if(v==="Other"){const ol=blk.querySelector("[data-speciesother]");
-      if(ol){ol.style.display=i<0?"block":"none";if(i<0)ol.focus();else{ol.value="";s.speciesOther="";}}}
-    // a species picked on an untouched item implies a finding (same as adding a photo)
-    if(i<0&&!s.status)setStatus(code,"find",true);else{updateHeaderCount(code);refreshPill(code);scheduleSave();}
+  const spb=e.target.closest("[data-speciesbtn]");
+  if(spb){openSpecies(spb.closest(".block").id.slice(2));return}
+  const fb=e.target.closest("[data-findings]");
+  if(fb){const k=fb.dataset.findings;
+    if(k==="sec")openFindings("sec",fb.closest(".block").id.slice(2));
+    else if(k==="sub")openFindings("sub",fb.closest(".block").id.slice(2),fb.dataset.idx);
+    else if(k==="obs")openFindings("obs",fb.dataset.farea);
+    else openFindings("inacc");
     return}
+  const rcb=e.target.closest("[data-restclear]");
+  if(rcb){openRestClear();return}
+  const tstb=e.target.closest("[data-test]");
+  if(tstb){toggleTest(tstb.dataset.test);return}
   const mic=e.target.closest("[data-mic]");
   if(mic){toggleMic(mic);return}
   const acp=e.target.closest("[data-acpick]");
@@ -1198,11 +1382,6 @@ main.addEventListener("click",e=>{
   if(tog){tog.parentElement.classList.toggle("open");return}
   const st=e.target.closest("[data-status]");
   if(st){setStatus(st.closest(".block").id.slice(2),st.dataset.status,false);return}
-  const bank=e.target.closest("[data-bank]");
-  if(bank){const code=bank.closest(".block").id.slice(2);const line=BANK[code][+bank.dataset.bank];
-    const ta=bank.closest(".block").querySelector("[data-note]");
-    ta.value=(ta.value.trim()?ta.value.trim()+" ":"")+line;
-    sec(code).note=ta.value;refreshPill(code);updateHeaderCount(code);scheduleSave();updateProgress();toast("Added to note");return}
   const ap=e.target.closest("[data-addphoto]");
   if(ap){activePhotoCode=ap.dataset.addphoto;document.getElementById("fileInput").click();return}
   const obp=e.target.closest("[data-obsphoto]");
@@ -1239,7 +1418,6 @@ main.addEventListener("input",e=>{
     const pd=document.getElementById("pill-DET");
     if(pd){pd.textContent=STATE.customer.address?"Filled":"To do";pd.className="pill "+(STATE.customer.address?"clear":"todo");}
     scheduleSave();return}
-  if(e.target.matches("[data-speciesother]")){const code=e.target.closest(".block").id.slice(2);sec(code).speciesOther=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-obsnote]")){const a=e.target.dataset.obsnote;const o=STATE.customer.obs=STATE.customer.obs||{};o[a]=o[a]||{note:"",photos:[]};o[a].note=e.target.value;syncObstructions();scheduleSave();return}
   if(e.target.matches("[data-inaccnote]")){const i=STATE.customer.inacc=STATE.customer.inacc||{yn:"",note:"",photos:[]};i.note=e.target.value;scheduleSave();return}
   if(e.target.matches("[data-annexnote]")){const a=STATE.customer.annex=STATE.customer.annex||{note:"",photos:[]};a.note=e.target.value;scheduleSave();return}
@@ -1253,6 +1431,7 @@ main.addEventListener("change",e=>{
   if(e.target.matches("[data-stmprec]")){stmpState().rec=e.target.value;renderStmp();scheduleSave();return}
   if(e.target.matches("[data-sectone]")){const code=e.target.closest(".block").id.slice(2);sec(code).tone=e.target.value;scheduleSave();return}
   if(e.target.dataset.c!==undefined){STATE.customer[e.target.dataset.c]=e.target.value;
+    if(e.target.dataset.c==="inspector"){try{localStorage.setItem("lpc_inspector",e.target.value);}catch(err){}}
     if(e.target.tagName==="SELECT"){const key=e.target.dataset.c;const ol=e.target.parentElement.querySelector('[data-c="'+key+'Other"]');
       if(ol){const on=e.target.value==="Other";ol.style.display=on?"block":"none";if(!on){ol.value="";STATE.customer[key+"Other"]="";}else{ol.focus();}}}
     scheduleSave()}
@@ -1519,7 +1698,7 @@ function toast(m,ms){toastEl.textContent=m;toastEl.classList.add("show");clearTi
 
 /* ---------- modal ---------- */
 const modal=document.getElementById("modal"),sheet=document.getElementById("sheet");
-function closeModal(){modal.classList.remove("show")}
+function closeModal(){modal.classList.remove("show");sheet.classList.remove("tall");FS=null;}
 modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
 
 /* ---------- photo viewer: tap any thumbnail to see it big (swipe / arrows between the photos in that group) ---------- */
@@ -1573,7 +1752,7 @@ document.getElementById("srcpill").addEventListener("click",togglePhotoSrc);
 /* ---------- jobs (multi-inspection) ---------- */
 async function openNewJob(){
   if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
-  STATE={id:genId(),customer:{date:todayStr()},sections:{}};
+  STATE={id:genId(),customer:newJobCustomer(),sections:{}};
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
   document.getElementById("hsub").textContent=subFallback();
@@ -1605,7 +1784,7 @@ async function openJobs(){
   const rows=list.map(j=>{
     const active=j.id===STATE.id;
     const title=(j.address||"(no address yet)")+(j.suburb?", "+j.suburb:"");
-    const typeTag=j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"";
+    const typeTag=(j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"")+(j.inspector?`<span class="nowtag">${escv(j.inspector)}</span>`:"");
     const meta=`${j.find} finding${j.find===1?'':'s'} · ${j.photos} photo${j.photos===1?'':'s'} · ${timeAgo(j.updated)}`;
     return `<div class="jobrow${active?' active':''}">
       <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}${typeTag}${active?'<span class="nowtag">current</span>':''}</span><span class="jobmeta">${escv(meta)}</span></button>
@@ -1676,7 +1855,7 @@ function validateComplete(){
     if(!(s&&s.status)){miss.push({t:it.code+" "+it.title+" — not answered",go:it.code});return;}
     if((s.status==="find"||s.status==="undet")&&!((s.note||"").trim()))miss.push({t:it.code+" "+it.title+" — needs a note",go:it.code});
   });
-  if(!c.addtests)miss.push({t:"Scope — were additional tests carried out?",go:"SCOPE"});
+  if(!c.addtests)miss.push({t:"Moisture meter and other tests — did you use any?",go:"TESTS"});
   if(!c.inaccessible)miss.push({t:"Accessibility — any inaccessible areas?",go:"ACCESS"});
   const stp=c.stmp||{};
   if(!stp.issued)miss.push({t:"8.2 Subterranean termite management proposal — not answered",go:"8.2"});
@@ -1893,32 +2072,39 @@ Rules:
 - Plain, direct, professional and measured. No scare wording, no sales language, no jargon a tradie wouldn't say.
 - Use only what is in the inspector's note and the details given. Never add or guess a finding, location, measurement, date, species, cause or recommendation that is not there.
 - Fix obvious speech-to-text slips only when the meaning is clear from the note and the section. If a word or phrase is unclear, keep the inspector's words and put [CHECK: what is unclear] straight after it.
-- Keep any [SQUARE BRACKET] placeholders exactly as written.
+- Keep any [SQUARE BRACKET] placeholders exactly as written, unless the inspector's own words in the note say what goes there.
 - Follow the tone instruction given. The house wording lines are examples of the style, not text to copy in.
+- The note may already hold ready-made house sentences the inspector tapped in, with [SQUARE BRACKET] gaps, plus the inspector's own words (for example where it was). Join them into one clear paragraph, fill a gap only from the inspector's own words, leave it in brackets if the note doesn't say, and don't say the same thing twice.
 - Output only the report wording as one short paragraph (or a few short sentences). No heading, no quotation marks, no commentary.`;
-async function aiPolish(key,quiet){
-  const r=rvRaw[key];
-  if(!r||!vtxt(r.raw)){if(!quiet)toast("Nothing captured to polish");return false;}
-  const k=aiKey();if(!k){toast("Paste an API key first");return false;}
-  const x=r.ctx||{};
-  const msg=[`Section: ${x.label||key}`,x.status?`Status: ${x.status}`:"",(x.species&&x.species.length)?`Species selected by the inspector: ${x.species.join(", ")}`:"",`Report type: ${isPP()?"Pre-purchase (AS 4349.3)":"Regular (AS 3660)"}`,`Tone: ${x.tone||"Measured (standard)"}`,
-    (x.bank&&x.bank.length)?"House wording examples for this section:\n"+x.bank.map(l=>"- "+l).join("\n"):"","Inspector's rough note:\n\"\"\"\n"+r.raw.trim()+"\n\"\"\""].filter(Boolean).join("\n");
+// one call to the AI for any note (read-through Polish and the Findings sheet's Tidy): returns the wording, or "" after telling the user what went wrong
+async function aiCall(x,raw){
+  const k=aiKey();if(!k){toast("Paste an API key first");return "";}
+  x=x||{};
+  const msg=[`Section: ${x.label||"note"}`,x.status?`Status: ${x.status}`:"",(x.species&&x.species.length)?`Species selected by the inspector: ${x.species.join(", ")}`:"",`Report type: ${isPP()?"Pre-purchase (AS 4349.3)":"Regular (AS 3660)"}`,`Tone: ${x.tone||"Measured (standard)"}`,
+    (x.bank&&x.bank.length)?"House wording examples for this section:\n"+x.bank.map(l=>"- "+l).join("\n"):"","Inspector's rough note:\n\"\"\"\n"+(raw||"").trim()+"\n\"\"\""].filter(Boolean).join("\n");
   let res;
   try{
     res=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",
       headers:{"content-type":"application/json","x-api-key":k,"anthropic-version":"2023-06-01","anthropic-beta":"server-side-fallback-2026-07-01","anthropic-dangerous-direct-browser-access":"true"},
       body:JSON.stringify({model:"claude-sonnet-5-5",max_tokens:2000,fallbacks:"default",output_config:{effort:"low"},system:AI_SYSTEM,messages:[{role:"user",content:msg}]})});
-  }catch(e){toast("Couldn't reach the AI. No signal?",3200);return false;}
+  }catch(e){toast("Couldn't reach the AI. No signal?",3200);return "";}
   let data=null;try{data=await res.json();}catch(e){}
   if(!res.ok){
     if(res.status===401)toast("The key was rejected. Remove it and paste it again",3600);
     else if(res.status===429)toast("The AI is busy or over its limit. Try again soon",3200);
     else toast("AI error: "+((data&&data.error&&data.error.message)||res.status),4200);
-    return false;}
-  if(data.stop_reason==="refusal"){toast("The AI declined this one. Write it by hand",3200);return false;}
-  if(data.stop_reason==="max_tokens"){toast("The AI ran out of room. Try again",3200);return false;}
+    return "";}
+  if(data.stop_reason==="refusal"){toast("The AI declined this one. Write it by hand",3200);return "";}
+  if(data.stop_reason==="max_tokens"){toast("The AI ran out of room. Try again",3200);return "";}
   const text=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("").trim();
-  if(!text){toast("The AI sent nothing back",3000);return false;}
+  if(!text){toast("The AI sent nothing back",3000);return "";}
+  return text;
+}
+async function aiPolish(key,quiet){
+  const r=rvRaw[key];
+  if(!r||!vtxt(r.raw)){if(!quiet)toast("Nothing captured to polish");return false;}
+  const text=await aiCall(r.ctx,r.raw);
+  if(!text)return false;
   const ta=rvTa(key);if(!ta)return false;
   rvPrev[key]=ta.value;ta.value=text;setFinal(key,text);
   const ub=[...rvbody.querySelectorAll("[data-undo]")].find(b=>b.dataset.undo===key);if(ub)ub.hidden=false;
@@ -1987,6 +2173,196 @@ document.getElementById("importInput").addEventListener("change",async e=>{
   importPacket(p);
 });
 
+/* ---------- Findings sheet + Species sheet (tap a line, tap another) ---------- */
+let FS=null;   // the open sheet: {kind:"sec"|"sub"|"obs"|"inacc"|"species", code, idx, area, title, lines, prev}
+function fCfg(){
+  if(FS.kind==="sec")return FIND[FS.code]||{};
+  if(FS.kind==="sub")return {lines:((FIND[FS.code]||{}).sub||[])[FS.idx]||[]};
+  if(FS.kind==="obs")return {lines:FIND_OBS[FS.area]||[]};
+  return {lines:FIND_INACC};
+}
+function fEl(){
+  if(FS.kind==="sec"||FS.kind==="sub"){const b=document.getElementById("b-"+FS.code);if(!b)return null;
+    return FS.kind==="sec"?b.querySelector("[data-note]"):b.querySelector('[data-subqnote="'+FS.idx+'"]');}
+  if(FS.kind==="obs")return main.querySelector('[data-obsnote="'+FS.area+'"]');
+  return main.querySelector("[data-inaccnote]");
+}
+// write into the real note box and let the normal input handler save it, tick the pill, update counts
+function fSet(el,v){el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));}
+function fMarkFind(){
+  if(FS.kind!=="sec")return;
+  const it=ITEMS.find(i=>i.code===FS.code);if(!it||it.always)return;
+  const s=sec(FS.code);if(s.status!=="find"&&s.status!=="undet")setStatus(FS.code,"find",false);
+}
+function openFindings(kind,a,b){
+  FS={kind,code:(kind==="sec"||kind==="sub")?a:null,idx:kind==="sub"?+b:null,area:kind==="obs"?a:null,prev:null};
+  const el=fEl();if(!el){FS=null;return}
+  const cfg=fCfg();
+  const it=ITEMS.find(i=>i.code===FS.code);
+  FS.title=kind==="sec"?(FS.code+" "+(it?itemTitle(it):"")):kind==="sub"?(FS.code+" question "+(FS.idx+1)):kind==="obs"?("Obstructed: "+FS.area):"Areas that could not be accessed";
+  if(kind==="sec"){const s=sec(FS.code);if(s.locText&&el.value.indexOf(s.locText)<0){s.locSel=[];s.locText="";}}
+  FS.lines=(cfg.lines||[]).map(fx);
+  const sel=(kind==="sec"&&sec(FS.code).locSel)||[];
+  let h=`<h3>${escv(FS.title)}</h3><p class="fsub">Tap as many as you need, one after another. Tap one again to take it off.</p><div class="fscroll">`;
+  if(cfg.locs)h+=`<div class="flab">${escv(cfg.locs.label)}</div><div class="chipset">${cfg.locs.items.map((x,i)=>`<button type="button" class="mchip floc ${sel.includes(i)?'on':''}" data-floc="${i}">${escv(x)}</button>`).join("")}</div>`;
+  if(FS.lines.length)h+=`${cfg.locs?'<div class="flab">Ready-made lines</div>':''}<div class="flines">${FS.lines.map((l,i)=>`<button type="button" class="frow" data-fline="${i}"><span class="ftick"></span><span class="ftxt">${phHtml(l)}</span></button>`).join("")}</div>`;
+  h+=`</div><div id="fai"></div><div class="acts"><button class="btn primary" type="button" data-fdone id="fdone">Done</button></div>`;
+  sheet.innerHTML=h;sheet.classList.add("tall");modal.classList.add("show");
+  renderFAI();fSync();
+}
+function fSync(){
+  if(!FS||FS.kind==="species")return;
+  const el=fEl();const v=el?el.value:"";
+  sheet.querySelectorAll("[data-fline]").forEach(b=>b.classList.toggle("on",v.indexOf(FS.lines[+b.dataset.fline])>=0));
+  const n=sheet.querySelectorAll("[data-fline].on,[data-floc].on").length;
+  const d=document.getElementById("fdone");if(d)d.textContent=n?"Done, "+n+" added":"Done";
+}
+function fToggleLine(i){
+  const el=fEl();if(!el)return;const txt=FS.lines[i];let v=el.value;const at=v.indexOf(txt);
+  if(at>=0)v=(v.slice(0,at).replace(/[ \t]+$/,"")+" "+v.slice(at+txt.length).replace(/^[ \t]+/,"")).trim();
+  else{v=(v.trim()?v.trim()+" ":"")+txt;fMarkFind();}
+  fSet(el,v);fSync();
+}
+function fToggleLoc(i){
+  const el=fEl(),cfg=fCfg(),s=sec(FS.code);if(!el)return;
+  s.locSel=s.locSel||[];const k=s.locSel.indexOf(i);
+  if(k>=0)s.locSel.splice(k,1);else s.locSel.push(i);
+  const items=s.locSel.map(j=>cfg.locs.items[j]);
+  const list=items.length>1?items.slice(0,-1).join(", ")+" and "+items[items.length-1]:(items[0]||"");
+  const nt=items.length?cfg.locs.lead+" "+list+(cfg.locs.tail||"."):"";
+  let v=el.value;const old=s.locText||"";
+  if(old&&v.indexOf(old)>=0)v=v.replace(old,()=>nt);else if(nt)v=(v.trim()?v.trim()+" ":"")+nt;
+  v=v.replace(/ {2,}/g," ").trim();
+  s.locText=nt;
+  if(nt)fMarkFind();
+  fSet(el,v);
+  sheet.querySelectorAll("[data-floc]").forEach(b=>b.classList.toggle("on",s.locSel.includes(+b.dataset.floc)));
+  fSync();
+}
+/* AI Tidy: joins the picked lines + Mitch's own words into one paragraph (same AI call as the read-through Polish) */
+function renderFAI(){
+  const h=document.getElementById("fai");if(!h)return;
+  if(aiReady())h.innerHTML=`<div class="fairow"><button class="btn ghost" type="button" data-ftidy>Tidy with AI</button><button class="btn ghost" type="button" data-fundo hidden>Undo</button><span class="fnote">Joins your picked lines and your own words into one paragraph.</span></div>`;
+  else h.innerHTML=`<div class="fairow"><button class="btn ghost" type="button" data-fsetup>AI is off. Set up</button></div><div class="fkey" id="fkey" hidden><input type="password" id="fKeyIn" placeholder="Paste Anthropic API key" autocomplete="off"><button class="btn ghost" type="button" data-fkeysave>Save key</button></div><div class="fnote" id="fkeynote" hidden style="margin:-4px 0 12px">The key stays on this device only. It is never put in the packet.</div>`;
+}
+async function fTidy(btn){
+  const el=fEl();if(!el||!el.value.trim()){toast("Pick a line or write a note first");return}
+  const old=btn.textContent;btn.disabled=true;btn.textContent="Tidying…";
+  const hasSec=FS.kind==="sec"||FS.kind==="sub";const s=hasSec?sec(FS.code):null;
+  const ctx={label:FS.title,status:"Finding",species:(FS.kind==="sec"&&s)?spLabel(s):[],tone:rvTone(s||undefined),bank:hasSec?(BANK[FS.code]||[]):[]};
+  const text=await aiCall(ctx,el.value);
+  btn.disabled=false;btn.textContent=old;
+  if(!text||!FS)return;
+  FS.prev={v:el.value,sel:s&&s.locSel?s.locSel.slice():null,txt:s?s.locText:""};
+  if(s&&FS.kind==="sec"){s.locSel=[];s.locText="";sheet.querySelectorAll("[data-floc]").forEach(b=>b.classList.remove("on"));}
+  fSet(el,text);fSync();
+  const u=sheet.querySelector("[data-fundo]");if(u)u.hidden=false;
+  toast("Tidied. Read it before you send",2400);
+}
+function fUndo(){
+  const el=fEl();if(!el||!FS.prev)return;
+  const s=(FS.kind==="sec")?sec(FS.code):null;
+  fSet(el,FS.prev.v);
+  if(s){s.locSel=FS.prev.sel||[];s.locText=FS.prev.txt||"";sheet.querySelectorAll("[data-floc]").forEach(b=>b.classList.toggle("on",s.locSel.includes(+b.dataset.floc)));}
+  FS.prev=null;const u=sheet.querySelector("[data-fundo]");if(u)u.hidden=true;fSync();
+}
+/* Species: one button, opens a pick-list (replaces the row of chips on the main page) */
+function openSpecies(code){
+  const list=SPECIES_BY_CODE[code];if(!list)return;
+  FS={kind:"species",code};
+  const s=sec(code);
+  sheet.innerHTML=`<h3>${code==="8.8"?"Borer type":"Termite species"}</h3><p class="fsub">Tap all that apply.</p><div class="fscroll"><div class="flines">${list.map((sp,i)=>`<button type="button" class="frow ${(s.species||[]).includes(sp)?'on':''}" data-sp="${i}"><span class="ftick"></span><span class="ftxt">${escv(sp)}</span></button>`).join("")}</div>
+    <input class="obsnote" id="spOther" placeholder="Type the other species" value="${escv(s.speciesOther)}" style="margin-top:10px;display:${(s.species||[]).includes('Other')?'block':'none'}"></div>
+    <div class="acts"><button class="btn primary" type="button" data-fdone id="fdone">Done</button></div>`;
+  sheet.classList.add("tall");modal.classList.add("show");
+}
+function spTags(code){
+  const s=sec(code);const t=document.getElementById("sptags-"+code);if(t)t.innerHTML=spTagsHtml(s);
+}
+sheet.addEventListener("click",async e=>{
+  if(!FS)return;
+  const b=e.target.closest("[data-fline],[data-floc],[data-fdone],[data-ftidy],[data-fundo],[data-fsetup],[data-fkeysave],[data-sp]");
+  if(!b)return;
+  if(b.dataset.fdone!==undefined){closeModal();return}
+  if(b.dataset.fline!==undefined){fToggleLine(+b.dataset.fline);return}
+  if(b.dataset.floc!==undefined){fToggleLoc(+b.dataset.floc);return}
+  if(b.dataset.ftidy!==undefined){fTidy(b);return}
+  if(b.dataset.fundo!==undefined){fUndo();return}
+  if(b.dataset.fsetup!==undefined){const k=document.getElementById("fkey"),n=document.getElementById("fkeynote");if(k)k.hidden=false;if(n)n.hidden=false;const i=document.getElementById("fKeyIn");if(i)i.focus();return}
+  if(b.dataset.fkeysave!==undefined){
+    const v=(document.getElementById("fKeyIn").value||"").trim();if(!v){toast("Paste the key first");return}
+    try{localStorage.setItem("lpc_ai_key",v);}catch(err){toast("Couldn't save the key on this device");return}
+    renderFAI();toast("Key saved. Tidy with AI is on");return}
+  if(b.dataset.sp!==undefined&&FS.kind==="species"){
+    const code=FS.code,s=sec(code),v=SPECIES_BY_CODE[code][+b.dataset.sp];
+    s.species=s.species||[];const i=s.species.indexOf(v);
+    if(i>=0)s.species.splice(i,1);else s.species.push(v);
+    b.classList.toggle("on",i<0);
+    if(v==="Other"){const ol=document.getElementById("spOther");
+      if(ol){ol.style.display=i<0?"block":"none";if(i<0)ol.focus();else{ol.value="";s.speciesOther="";}}}
+    spTags(code);
+    // a species picked on an untouched item implies a finding (same as adding a photo)
+    if(i<0&&!s.status)setStatus(code,"find",true);else{updateHeaderCount(code);refreshPill(code);scheduleSave();}
+  }
+});
+sheet.addEventListener("input",e=>{
+  if(FS&&FS.kind==="species"&&e.target.id==="spOther"){sec(FS.code).speciesOther=e.target.value;spTags(FS.code);scheduleSave();}
+});
+
+/* ---------- "Rest are clear": one tap to mark every untouched 8.x section Clear ---------- */
+function buildRestClear(){
+  const d=document.createElement("div");
+  d.innerHTML=`<button class="restclear" type="button" data-restclear>Nothing else found? Mark the rest as Clear</button>`;
+  return d;
+}
+function restClearTargets(){
+  const out=[];
+  ITEMS.forEach(it=>{
+    if(it.always)return;
+    const s=STATE.sections[it.code]||{};
+    if(it.subQs){const ans=s.subq||{};const un=it.subQs.map((q,i)=>i).filter(i=>!ans[i]);if(un.length)out.push({it,subs:un});return}
+    if(s.status)return;
+    if((s.note||"").trim()||(s.photos||[]).length||(s.species||[]).length)return;
+    if(it.code==="8.9"&&slabNoSub()){out.push({it,skip:true});return}
+    out.push({it});
+  });
+  return out;
+}
+function openRestClear(){
+  const all=restClearTargets(),todo=all.filter(x=>!x.skip),skipped=all.filter(x=>x.skip);
+  if(!todo.length){toast("Nothing left to mark. Everything has an answer or something on it",2800);return}
+  sheet.innerHTML=`<h3>Mark the rest as Clear?</h3>
+    <p style="font-size:.85rem">These haven't been touched, so they'll be set to Clear (no evidence found). Anything you've answered or added to is left alone.</p>
+    <div class="pickwrap" style="max-height:40vh">${todo.map(x=>`<div class="pickrow" style="cursor:default"><span>${escv(x.it.code+" "+itemTitle(x.it))}${x.subs?` (${x.subs.length} question${x.subs.length>1?'s':''} set to No)`:''}</span></div>`).join("")}</div>
+    ${skipped.length?`<p style="font-size:.82rem">8.9 is left for you: slab floor and no subfloor, so N/A may be the right answer.</p>`:''}
+    <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn primary" id="mRestGo">Mark ${todo.length} as Clear</button></div>`;
+  modal.classList.add("show");
+  document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mRestGo").onclick=()=>{
+    todo.forEach(x=>{const code=x.it.code;
+      if(x.subs){const s=sec(code);s.subq=s.subq||{};x.subs.forEach(i=>{s.subq[i]="no";});
+        const blk=document.getElementById("b-"+code);
+        if(blk)x.subs.forEach(i=>blk.querySelectorAll('[data-subq="'+i+'"]').forEach(b=>b.classList.toggle("on",b.dataset.subv==="no")));
+        setStatus(code,subStatus(code),false);}
+      else setStatus(code,"clear",false);
+    });
+    closeModal();toast(todo.length+" marked Clear",2200);
+  };
+}
+
+/* ---------- Conclusion: dashed outline on the likely answer (you still tap) ---------- */
+function refreshConcSuggest(){
+  const S=STATE.sections||{};const st=c=>(S[c]||{}).status;
+  const isF=c=>st(c)==="find"||st(c)==="undet";
+  const mark=(sel,on)=>document.querySelectorAll(sel).forEach(b=>b.classList.toggle("suggest",!!on));
+  const t=st("8.1")==="find"?"Yes":(st("8.1")==="clear"?"No":"");
+  ["Yes","No"].forEach(v=>mark('[data-ynkey="treatment"] [data-yn="'+v+'"]',t===v));
+  const cond=["8.9","8.10","8.11","8.12","8.13"];
+  const cv=cond.some(isF)?"Yes":(cond.every(k=>st(k))?"No":"");
+  ["Yes","No"].forEach(v=>mark('[data-ynkey="conducive"] [data-yn="'+v+'"]',cv===v));
+  mark('[data-chipkey="nextinsp"] [data-cs="12 months"]',true);
+}
+
 /* ---------- boot ---------- */
 (async function(){
   try{ await openDB(); }catch(e){ db=null; }
@@ -2004,7 +2380,7 @@ document.getElementById("importInput").addEventListener("change",async e=>{
   let saved=activeId?await dbGet("job::"+activeId):null;
   if((!saved||!saved.sections)&&list.length){saved=await dbGet("job::"+list[0].id);}
   if(saved&&saved.sections){STATE=saved;}
-  else{STATE={id:genId(),customer:{date:todayStr()},sections:{}};}
+  else{STATE={id:genId(),customer:newJobCustomer(),sections:{}};}
   if(!STATE.id)STATE.id=genId();
   if(!STATE.customer)STATE.customer={};
   if(!STATE.customer.date)STATE.customer.date=todayStr();
