@@ -194,6 +194,12 @@ button.mi:hover,button.mi:focus-visible{background:var(--surface2)}
 @media(pointer:coarse){.rz{height:min(14px,40%)}.rz:after{opacity:.3;bottom:1px;width:16px;margin-left:-8px;height:2px}}
 .jc.resizing{z-index:5;box-shadow:0 0 0 2px var(--deep),0 6px 18px rgba(0,0,0,.25)}
 .jc.resizing .rz:after{opacity:.8}
+/* the same on the TOP edge (master only): drag it to start the job earlier or later, the finish stays put */
+.rzt{position:absolute;left:0;right:0;top:0;height:7px;cursor:ns-resize;z-index:2}
+.rzt:after{content:"";position:absolute;left:50%;top:2px;width:20px;margin-left:-10px;height:3px;border-radius:2px;background:var(--ink2);opacity:0;transition:opacity .15s}
+@media(hover:hover){.jc:hover .rzt:after{opacity:.6}}
+@media(pointer:coarse){.rzt{height:min(11px,30%)}.rzt:after{opacity:.3;top:1px;width:16px;margin-left:-8px;height:2px}}
+.jc.resizing .rzt:after{opacity:.8}
 body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:none;user-select:none}
 .rzlab{position:absolute;z-index:6;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
 .jc.st-done,.jm.st-done,.tcard.st-done{opacity:.6;filter:grayscale(.7)}
@@ -1649,6 +1655,7 @@ function gridCardHtml(j,s,dur,fit,style,w){
   const main=nw?mainTight(j,xn):mainLine(j,fitChars(w));
   const pr=propOf(j),pc=hasProp(j)?(pr.b&&pr.t?" pt2":" pt1"):"";
   return '<div class="jc '+fit+' st-'+esc(j.status)+hpCls(j)+pc+'" data-job="'+esc(j.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(j.staff_id)+';'+style+'">'+
+    (S.isMaster?'<div class="rzt" aria-hidden="true"></div>':"")+
     '<div class="l1"><span class="tm">'+esc(cardTime(fit,s,dur))+'</span>'+(done?IC.tick:"")+noteMark(j)+propMarks(j,true)+'</div>'+
     '<div class="nm">'+esc(main)+'</div>'+
     ((cl||sv)&&!nw?'<div class="ds">'+(cl?'<span class="cl">'+esc(cl)+'</span>':"")+(cl&&sv?'<span class="sep"> · </span>':"")+(sv?'<span class="sv">'+esc(sv)+'</span>':"")+'</div>':"")+
@@ -2344,7 +2351,7 @@ function setPhoneWho(v){v=v||"both";if(S.phoneWho===v)return;S.phoneWho=v;savePr
    DRAG AND DROP (Pointer Events: mouse, pen and touch)
    ===================================================================== */
 const DR={on:false,started:false,id:null,pid:null,sx:0,sy:0,lx:0,ly:0,offX:0,offY:0,w:0,h:0,card:null,ghost:null,mark:null,over:null,raf:0,zoneT:0,pageT:0,trayT:0,touch:false,armT:0,
-  mode:"move",rzS:0,rzOrig:0,rzOff:0,rzDur:0,rzMoved:false,lab:null};      // mode "resize": the job's bottom edge is being stretched (see startResize)
+  mode:"move",rzS:0,rzS0:0,rzTop0:0,top:false,rzOrig:0,rzOff:0,rzDur:0,rzMoved:false,lab:null};      // mode "resize": the job's bottom edge is being stretched (see startResize); with top:true it is the TOP edge (the start moves, the finish stays)
 const HOLD_MS=350;     // a finger has to rest on a card this long before it picks the job up; a quick swipe scrolls instead
 
 function onDown(e){
@@ -2361,8 +2368,10 @@ function onDown(e){
   const card=t.closest("[data-job]");if(!card)return;
   const job=S.byId[card.getAttribute("data-job")];if(!job)return;
   const r=card.getBoundingClientRect();
-  const rz=!!t.closest(".rz")&&tmToMin(job.start_time)!=null;      // the stretch handle on a timed card's bottom edge
-  DR.on=true;DR.started=false;DR.id=job.id;DR.pid=e.pointerId;DR.mode=rz?"resize":"move";
+  const rzb=!!t.closest(".rz")&&tmToMin(job.start_time)!=null;      // the stretch handle on a timed card's bottom edge
+  const rzu=!rzb&&!!t.closest(".rzt")&&tmToMin(job.start_time)!=null;      // and on its top edge (the start moves, the finish stays)
+  const rz=rzb||rzu;
+  DR.on=true;DR.started=false;DR.id=job.id;DR.pid=e.pointerId;DR.mode=rz?"resize":"move";DR.top=rzu;
   S.pressing=true;       // from now until release, a refetch must not rebuild the cards
   DR.sx=DR.lx=e.clientX;DR.sy=DR.ly=e.clientY;
   DR.offX=e.clientX-r.left;DR.offY=e.clientY-r.top;DR.w=r.width;DR.h=r.height;DR.card=card;
@@ -2377,8 +2386,8 @@ function onDown(e){
   if(rz){
     // Stretching: mouse and pen start straight away, a finger presses and holds the handle first (a quick swipe there still scrolls).
     const g=S.grid,col=card.parentNode,cr=col.getBoundingClientRect(),s0=tmToMin(job.start_time),d0=Math.max(+job.duration_min||0,1);
-    DR.rzS=s0;DR.rzOrig=d0;DR.rzDur=d0;
-    DR.rzOff=(s0+d0)-(g.gs+(e.clientY-cr.top)/g.ppm);      // minutes from the finger to the job's end, so the end doesn't jump to the finger
+    DR.rzS=s0;DR.rzS0=s0;DR.rzOrig=d0;DR.rzDur=d0;DR.rzTop0=parseFloat(card.style.top)||0;
+    DR.rzOff=(rzu?s0:s0+d0)-(g.gs+(e.clientY-cr.top)/g.ppm);      // minutes from the finger to the edge being dragged (the end, or the start for the top edge), so that edge doesn't jump to the finger
     if(DR.touch)DR.armT=setTimeout(armResize,HOLD_MS);
     else startResize();
     if(e.cancelable&&!DR.touch)e.preventDefault();      // no text selection while dragging the edge with a mouse
@@ -2408,6 +2417,11 @@ function rzDur(){
   if(!col||!col.getBoundingClientRect)return DR.rzOrig;
   if(Math.abs(DR.ly-DR.sy)<4&&!DR.rzMoved)return DR.rzOrig;      // not really moved: keep the length it had (it may not be on a 15 min step)
   DR.rzMoved=true;
+  if(DR.top){      // top edge: the START follows the finger (snapped to 15 min), the finish stays where it was; DR.rzS is the new start
+    const fin=DR.rzS0+DR.rzOrig,rt=col.getBoundingClientRect();
+    DR.rzS=Math.max(g.gs,Math.min(Math.round((g.gs+(DR.ly-rt.top)/g.ppm+DR.rzOff)/SNAP)*SNAP,fin-MIN_DUR));
+    return fin-DR.rzS;
+  }
   const r=col.getBoundingClientRect(),end=g.gs+(DR.ly-r.top)/g.ppm+DR.rzOff;
   const maxEnd=Math.min(24*60,Math.max(g.ge,WORK_END+120));
   const d=Math.round(end/SNAP)*SNAP-DR.rzS;      // the END snaps to 15 min (a job of 80 min starting at 9:00 is stretched to end at 10:15 or 10:30)
@@ -2418,6 +2432,7 @@ function updateResize(){
   const g=S.grid,d=rzDur();DR.rzDur=d;
   const h=Math.max(d*g.ppm-2,16);
   DR.card.style.height=h+"px";
+  if(DR.top)DR.card.style.top=(DR.rzTop0+(DR.rzS-DR.rzS0)*g.ppm)+"px";      // the top edge moves with the finger
   DR.card.classList.remove("tiny","short","mid","full");
   cardFit(h,DR.card.offsetWidth).split(" ").forEach(function(c){if(c&&c!=="nw"&&c!=="xn")DR.card.classList.add(c);});
   const tm=DR.card.querySelector(".tm");if(tm)tm.textContent=cardTime(DR.card.className,DR.rzS,d);
@@ -2563,7 +2578,7 @@ function endDrag(){
   if(DR.card)DR.card.classList.remove("dragging","resizing");
   if(DR.lab&&DR.lab.parentNode)DR.lab.parentNode.removeChild(DR.lab);
   document.body.classList.remove("isdrag","isresize");
-  DR.ghost=null;DR.card=null;DR.lab=null;DR.on=false;DR.started=false;DR.touch=false;DR.mode="move";DR.rzMoved=false;
+  DR.ghost=null;DR.card=null;DR.lab=null;DR.on=false;DR.started=false;DR.touch=false;DR.mode="move";DR.top=false;DR.rzMoved=false;
   S.dragging=false;S.pressing=false;
   if(D.dirty)driveSoon();      // a drive-time answer (or a redraw of the labels) came in while the card was held: put it in now
   if(S.dirtyRender){
@@ -2578,12 +2593,13 @@ function onUp(e){
   const started=DR.started,id=DR.id;
   if(DR.mode==="resize"){
     // a tap on the handle never opens the job; a stretch saves the new length (if it changed)
-    let d=DR.rzOrig;const orig=DR.rzOrig;
+    let d=DR.rzOrig;const orig=DR.rzOrig,top=DR.top,s0=DR.rzS0;
     if(started){DR.lx=e.clientX;DR.ly=e.clientY;d=rzDur();}
+    const ns=DR.rzS;      // (the new start, for the top edge)
     endDrag();
     S.noClickUntil=Date.now()+500;
     const j=S.byId[id];
-    if(started&&j&&d!==orig&&tmToMin(j.start_time)!=null)moveJob(j,{duration_min:d});
+    if(started&&j&&tmToMin(j.start_time)!=null&&(top?ns!==s0:d!==orig))moveJob(j,top?{start_time:minToTm(ns),duration_min:d}:{duration_min:d});
     else if(started)renderBody();      // nothing changed: put the card back the way it was drawn
     return;
   }
@@ -2617,6 +2633,7 @@ function sameField(k,a,b){
 function isLenOnly(patch){const k=Object.keys(patch);return k.length===1&&k[0]==="duration_min";}
 function moveLabel(patch,j){
   if(isLenOnly(patch)){const s=j&&tmToMin(j.start_time);return "Now "+fmtDur(patch.duration_min)+(s!=null?", "+fmtMin(s)+" to "+fmtMin(s+patch.duration_min):"");}
+  if(Object.keys(patch).length===2&&patch.start_time&&patch.duration_min){const s=tmToMin(patch.start_time);return "Now "+fmtMin(s)+" to "+fmtMin(s+patch.duration_min)+" ("+fmtDur(patch.duration_min)+")";}      // top edge stretched
   const parts=[];
   if("start_time" in patch)parts.push(patch.start_time==null?"no start time":fmtMin(tmToMin(patch.start_time)));
   if("job_date" in patch)parts.push(dayShort(patch.job_date));
