@@ -269,6 +269,9 @@
   .syncrow .btn{padding:9px 12px;font-size:.85rem}
   #teamlist{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
   .teamrow{width:100%}
+  .jobdel.clrbtn{width:78px;font-size:.7rem;font-weight:700;line-height:1.15;padding:0 6px}
+  .jobdel.clrbtn.armed{width:78px}
+  .jobdel.clrbtn:disabled{opacity:.5}
   .nowtag.tagnew{background:var(--find);color:#fff}
   .sheet.tall .joblist{max-height:none;overflow:visible}
   /* "rest are clear" shortcut */
@@ -2527,14 +2530,14 @@ let SEEN=null;
 async function getSeen(){if(!SEEN)SEEN=(await dbGet("seen"))||{};return SEEN;}
 async function fetchTeam(){
   const sb=await sbClient();
-  const since=new Date(Date.now()-7*864e5).toISOString();
+  const since=new Date(Date.now()-30*864e5).toISOString();
   const [r,st]=await Promise.all([
-    sb.from("inspections").select("id,updated_at,staff_id,summary:data->summary").gte("updated_at",since).order("updated_at",{ascending:false}).limit(60),
+    sb.from("inspections").select("id,updated_at,staff_id,summary:data->summary").gte("updated_at",since).order("updated_at",{ascending:false}).limit(100),
     sb.from("staff").select("id,name")]);
   if(r.error)throw r.error;
   const names={};((st&&st.data)||[]).forEach(s=>names[s.id]=s.name);
   const seen=await getSeen();
-  TEAM=(r.data||[]).filter(x=>x.staff_id&&x.staff_id!==ME.id).map(x=>({id:x.id,at:x.updated_at,who:names[x.staff_id]||"Someone",s:x.summary||{},
+  TEAM=(r.data||[]).filter(x=>x.staff_id&&x.staff_id!==ME.id).map(x=>({id:x.id,at:x.updated_at,staff:x.staff_id,who:names[x.staff_id]||"Someone",s:x.summary||{},cleared:!!(x.summary&&x.summary.photosCleared),
     tag:seen[x.id]===undefined?"New":(seen[x.id]!==x.updated_at?"Updated":"Opened")}));
   return TEAM;
 }
@@ -2546,9 +2549,39 @@ function updateSyncUI(){
 function renderTeam(){
   const el=document.getElementById("teamlist");if(!el)return;
   if(!TEAM.length){el.innerHTML=`<span class="fnote">Nothing sent in yet.</span>`;return}
-  const row=t=>`<button class="jobopen teamrow" type="button" data-teamrep="${escv(t.id)}"><span class="jobaddr">${escv([t.s.address,t.s.suburb].filter(Boolean).join(", ")||"(no address)")}<span class="nowtag${t.tag==="New"?" tagnew":""}">${t.tag}</span></span><span class="jobmeta">${escv(t.who)} · ${t.s.find||0} finding${(t.s.find||0)===1?"":"s"} · ${t.s.photos||0} photo${(t.s.photos||0)===1?"":"s"} · ${fmtTime(t.at)}</span></button>`;
+  const row=t=>`<div class="jobrow"><button class="jobopen teamrow" type="button" data-teamrep="${escv(t.id)}"><span class="jobaddr">${escv([t.s.address,t.s.suburb].filter(Boolean).join(", ")||"(no address)")}<span class="nowtag${t.tag==="New"?" tagnew":""}">${t.tag}</span></span><span class="jobmeta">${escv(t.who)} · ${t.s.find||0} finding${(t.s.find||0)===1?"":"s"} · ${t.cleared?"photos cleared":(t.s.photos||0)+" photo"+((t.s.photos||0)===1?"":"s")} · ${fmtTime(t.at)}</span></button><button class="jobdel clrbtn" type="button" data-clearph="${escv(t.id)}" ${t.cleared?"disabled":""}>${t.cleared?"Cleared":"Clear photos"}</button></div>`;
   const today=new Date().toDateString(),td=TEAM.filter(t=>new Date(t.at).toDateString()===today),ea=TEAM.filter(t=>new Date(t.at).toDateString()!==today);
-  el.innerHTML=(td.length?`<div class="flab">Today</div>`+td.map(row).join(""):"")+(ea.length?`<div class="flab">Earlier</div>`+ea.map(row).join(""):"");
+  const nClear=TEAM.filter(t=>t.tag==="Opened"&&!t.cleared&&(t.s.photos||0)>0).length;
+  el.innerHTML=(td.length?`<div class="flab">Today</div>`+td.map(row).join(""):"")+(ea.length?`<div class="flab">Earlier</div>`+ea.map(row).join(""):"")
+    +(nClear?`<button class="btn ghost" type="button" data-clearall style="margin-top:6px">Clear photos from the ${nClear} opened report${nClear===1?"":"s"}</button><div class="fnote" style="margin-top:6px">Frees space in the office copy once a report is done. The report wording stays. Only reports you've opened on this device can be cleared.</div>`:"");
+}
+/* Clear photos: removes the photo FILES of one report from the office storage (the report text stays). Only for reports already opened on this device, so a copy of the photos is safe here. */
+async function clearPhotosFor(t){
+  const sb=await sbClient();
+  const folder=t.staff+"/"+t.id;
+  const ls=await sb.storage.from(SB_BUCKET).list(folder,{limit:1000});
+  if(ls.error)throw ls.error;
+  const paths=(ls.data||[]).map(f=>folder+"/"+f.name);
+  if(paths.length){
+    const rm=await sb.storage.from(SB_BUCKET).remove(paths);
+    if(rm.error)throw rm.error;
+    const chk=await sb.storage.from(SB_BUCKET).list(folder,{limit:1000});
+    if(chk.error)throw chk.error;
+    if((chk.data||[]).length)throw new Error("Some photos didn't clear ("+chk.data.length+" left). Try again.");
+  }
+  const r=await sb.from("inspections").select("id,data").eq("id",t.id).single();
+  if(r.error)throw r.error;
+  const data=r.data.data||{};data.summary=Object.assign({},data.summary,{photosCleared:new Date().toISOString()});
+  const u=await sb.from("inspections").update({data}).eq("id",t.id).select("id,updated_at").single();
+  if(u.error)throw u.error;
+  const seen=await getSeen();seen[t.id]=u.data.updated_at;await dbSet("seen",seen);
+  t.at=u.data.updated_at;t.s=data.summary;t.cleared=true;
+  return paths.length;
+}
+function dropBlank(node){
+  if(Array.isArray(node))return node.filter(x=>x!=="").map(dropBlank);
+  if(node&&typeof node==="object"){const o={};for(const k in node)o[k]=dropBlank(node[k]);return o;}
+  return node;
 }
 async function fillSyncBox(){
   const box=document.getElementById("syncbox");if(!box||!sbCfg())return;
@@ -2558,7 +2591,7 @@ async function fillSyncBox(){
   const master=ME.role==="master";
   box.innerHTML=`<div class="syncrow"><span class="fnote">Signed in as <b>${escv(ME.name)}</b></span><button class="btn ghost" type="button" data-signout>Sign out</button></div>
     <div class="syncrow"><button class="btn ghost" type="button" data-todayjobs>Start from today's job</button><button class="btn ghost" type="button" data-sendnow>Send this job now</button></div>
-    ${master?`<div class="flab">Reports sent in (last 7 days)</div><div id="teamlist"><span class="fnote">Loading…</span></div>`:""}`;
+    ${master?`<div class="flab">Reports sent in (last 30 days)</div><div id="teamlist"><span class="fnote">Loading…</span></div>`:""}`;
   if(master){
     try{await fetchTeam();updateSyncUI();renderTeam();}
     catch(e){const el=document.getElementById("teamlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
@@ -2613,14 +2646,17 @@ async function openTeamReport(id){
     const r=await sb.from("inspections").select("id,updated_at,data").eq("id",id).single();
     if(r.error)throw r.error;
     const p=r.data&&r.data.data&&r.data.data.packet;if(!p)throw new Error("That report has nothing in it");
+    const wasCleared=!!(r.data.data.summary&&r.data.data.summary.photosCleared);
     const refs=[];mapStr(p,isRef,s=>{if(refs.indexOf(s)<0)refs.push(s);return s;});
     const got=new Map();let next=0,n=0;
+    if(wasCleared)next=refs.length;   // photos were cleared from the office copy: open the report without them
     const worker=async()=>{while(next<refs.length){const ref=refs[next++];
       const d=await sb.storage.from(SB_BUCKET).download(ref.slice(REF.length));
       if(d.error)throw d.error;
       got.set(ref,await blobToDataUrl(d.data));n++;say("Photo "+n+" of "+refs.length+"…");}};
     await Promise.all([worker(),worker(),worker(),worker()]);
-    const full=mapStr(p,isRef,s=>got.get(s)||"");
+    let full=mapStr(p,isRef,s=>got.get(s)||"");
+    if(wasCleared){full=dropBlank(full);toast("The photos for this report were cleared from the office copy",3600);}
     const seen=await getSeen();seen[id]=r.data.updated_at;await dbSet("seen",seen);
     const t=TEAM.find(x=>x.id===id);if(t){t.tag="Opened";t.at=r.data.updated_at;}
     updateSyncUI();
@@ -2631,8 +2667,32 @@ async function openTeamReport(id){
   }
 }
 sheet.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-signin],[data-signout],[data-sendnow],[data-todayjobs],[data-teamrep],[data-tj]");
+  const b=e.target.closest("[data-signin],[data-signout],[data-sendnow],[data-todayjobs],[data-teamrep],[data-tj],[data-clearph],[data-clearall]");
   if(!b)return;
+  if(b.dataset.clearph!==undefined){
+    const t=TEAM.find(x=>x.id===b.dataset.clearph);if(!t||t.cleared)return;
+    if(t.tag!=="Opened"){toast("Open this report first, so its photos are saved on this device",3400);return}
+    if(b.dataset.armed){b.disabled=true;b.textContent="Clearing…";
+      try{const n=await clearPhotosFor(t);toast(n+" photo"+(n===1?"":"s")+" cleared",2400);}catch(err){toast(sbErr(err),3800);}
+      updateSyncUI();renderTeam();return}
+    b.dataset.armed="1";b.textContent="Sure?";b.classList.add("armed");
+    setTimeout(()=>{if(b.isConnected&&b.dataset.armed){b.textContent="Clear photos";b.classList.remove("armed");delete b.dataset.armed;}},2500);
+    return}
+  if(b.dataset.clearall!==undefined){
+    const list=TEAM.filter(t=>t.tag==="Opened"&&!t.cleared&&(t.s.photos||0)>0);if(!list.length)return;
+    sheet.classList.remove("tall");
+    sheet.innerHTML=`<h3>Clear photos from ${list.length} report${list.length===1?"":"s"}?</h3>
+      <p style="font-size:.85rem">The photos come off the office copy, so they can't be fetched again. Each report's wording stays. You've opened every one of these on this device, so the photos are saved here.</p>
+      <div class="pickwrap" style="max-height:30vh">${list.map(t=>`<div class="pickrow" style="cursor:default"><span>${escv([t.s.address,t.s.suburb].filter(Boolean).join(", ")||"(no address)")} · ${t.s.photos||0} photos</span></div>`).join("")}</div>
+      <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn primary" id="mClearGo">Clear them</button></div>`;
+    document.getElementById("mCancel").onclick=()=>openJobs();
+    document.getElementById("mClearGo").onclick=async()=>{
+      const go=document.getElementById("mClearGo");go.disabled=true;let done=0,fail="";
+      for(const t of list){go.textContent="Clearing "+(done+1)+" of "+list.length+"…";
+        try{await clearPhotosFor(t);done++;}catch(err){fail=sbErr(err);break;}}
+      toast(fail?done+" cleared, then stopped: "+fail:done+" report"+(done===1?"":"s")+" cleared",fail?4200:2600);
+      openJobs();};
+    return}
   if(b.dataset.signin!==undefined){openSignIn(openJobs);return}
   if(b.dataset.signout!==undefined){try{const sb=await sbClient();await sb.auth.signOut({scope:"local"});}catch(err){}ME=null;TEAM=[];updateSyncUI();openJobs();return}
   if(b.dataset.sendnow!==undefined){sendToOffice();return}
