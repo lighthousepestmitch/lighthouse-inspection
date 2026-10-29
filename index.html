@@ -1881,9 +1881,9 @@ function validateComplete(){
 }
 function showIncomplete(miss,proceed){
   sheet.innerHTML=`<h3>Not finished yet</h3>
-    <p style="font-size:.85rem">${miss.length} thing${miss.length===1?'':'s'} still to complete before export. Tap one to jump to it.</p>
+    <p style="font-size:.85rem">${miss.length} thing${miss.length===1?'':'s'} still to complete before sending. Tap one to jump to it.</p>
     <div class="pickwrap">${miss.map(m=>`<button class="pickrow" data-missgo="${escv(m.go)}"><span>${escv(m.t)}</span></button>`).join("")}</div>
-    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mAnyway" style="opacity:.6">Export anyway</button></div>`;
+    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mAnyway" style="opacity:.6">Send anyway</button></div>`;
   modal.classList.add("show");
   document.getElementById("mCancel").onclick=closeModal;
   document.getElementById("mAnyway").onclick=()=>{closeModal();proceed();};
@@ -2036,6 +2036,7 @@ function buildReview(){
 }
 function openReview(){
   rvbody.innerHTML=buildReview();
+  try{updateSyncUI();}catch(e){}
   document.getElementById("rvsub").textContent=[STATE.customer.streetno,STATE.customer.address].filter(Boolean).join(" ")||subFallback();
   review.classList.add("show");document.body.style.overflow="hidden";
 }
@@ -2045,8 +2046,8 @@ document.getElementById("rvBack").addEventListener("click",closeReview);
 document.getElementById("rvSend").addEventListener("click",()=>{
   STATE.reviewedAt=Date.now();scheduleSave();
   const miss=validateComplete();
-  if(miss.length){showIncomplete(miss,openSendChoice);return;}
-  openSendChoice();
+  if(miss.length){showIncomplete(miss,sendReport);return;}
+  sendReport();
 });
 review.addEventListener("input",e=>{
   const k=e.target.dataset&&e.target.dataset.fkey;
@@ -2461,25 +2462,17 @@ async function syncBoot(){
 }
 
 /* send: the choice sheet, then the upload */
-function openSendChoice(){
-  if(!sbCfg()){doExport();return}
-  const c=STATE.customer;
-  sheet.classList.remove("tall");
-  sheet.innerHTML=`<h3>Send this inspection</h3><p><b>${escv(c.address||"(no address)")}</b></p>
-    <p style="font-size:.85rem">${ME?"Signed in as "+escv(ME.name)+". ":""}Sending puts the report and photos where Mitch can open them. Saving the file still works if there's no signal.</p>
-    <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn ghost" id="mFileOpt">Save / email the file</button><button class="btn primary" id="mSendOpt">${ME?"Send to the office":"Sign in and send"}</button></div>`;
-  modal.classList.add("show");
-  document.getElementById("mCancel").onclick=closeModal;
-  document.getElementById("mFileOpt").onclick=()=>{closeModal();doExport();};
-  document.getElementById("mSendOpt").onclick=()=>sendToOffice();
-}
+// the Send button on the finished report: straight to the office. Only a copy with no office link set up falls back to the old saved file.
+function sendReport(){if(sbCfg())sendToOffice();else doExport();}
+function sendWord(){return ME?(ME.role==='master'?'Send to desktop':'Send to Mitch'):'Send';}
+function sendDest(){return ME&&ME.role==='master'?'your desktop':'Mitch';}
 async function sendToOffice(){
   if(!sbCfg()){toast("Sending isn't set up on this copy",2600);return}
   if(!ME){try{await sbMe();}catch(e){}}
   if(!ME){openSignIn(sendToOffice);return}
   const sendingId=STATE.id;
   sheet.classList.remove("tall");
-  sheet.innerHTML=`<h3>Sending to the office</h3><p id="sendMsg">Getting ready…</p><div class="acts"><button class="btn ghost" id="mCancel">Close</button></div>`;
+  sheet.innerHTML=`<h3>Sending to ${sendDest()}</h3><p id="sendMsg">Getting ready…</p><div class="acts"><button class="btn ghost" id="mCancel">Close</button></div>`;
   modal.classList.add("show");
   document.getElementById("mCancel").onclick=closeModal;
   const say=t=>{const e=document.getElementById("sendMsg");if(e)e.textContent=t;};
@@ -2511,10 +2504,10 @@ async function sendToOffice(){
     const r=await sb.from("inspections").upsert(row,{onConflict:"id"}).select("id,updated_at").single();
     if(r.error)throw r.error;
     if(STATE.id===sendingId){STATE.sentAt=Date.now();scheduleSave();}
-    sheet.innerHTML=`<h3>Sent</h3><p><b>${escv(summary.address||"(no address)")}</b><br>${nFind} finding${nFind===1?"":"s"} · ${urls.length} photo${urls.length===1?"":"s"}. It's in the office list under Jobs. Send again any time if you add more.</p>
-      <div class="acts"><button class="btn ghost" id="mFile">Also save the file</button><button class="btn primary" id="mCancel">Done</button></div>`;
+    {const seen=await getSeen();seen[sendingId]=r.data.updated_at;await dbSet("seen",seen);}
+    sheet.innerHTML=`<h3>Sent</h3><p><b>${escv(summary.address||"(no address)")}</b><br>${nFind} finding${nFind===1?"":"s"} · ${urls.length} photo${urls.length===1?"":"s"}. ${ME.role==="master"?"It's waiting on your desktop: open the tool there, tap Jobs, and it's under Reports sent in.":"Mitch can open it under Jobs."} Send again any time if you add more.</p>
+      <div class="acts"><button class="btn primary" id="mCancel">Done</button></div>`;
     document.getElementById("mCancel").onclick=closeModal;
-    document.getElementById("mFile").onclick=()=>{closeModal();doExport();};
   }catch(e){
     sheet.innerHTML=`<h3>Didn't send</h3><p>${escv(sbErr(e))}</p>
       <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mFile">Save the file instead</button><button class="btn primary" id="mRetry">Try again</button></div>`;
@@ -2537,12 +2530,13 @@ async function fetchTeam(){
   if(r.error)throw r.error;
   const names={};((st&&st.data)||[]).forEach(s=>names[s.id]=s.name);
   const seen=await getSeen();
-  TEAM=(r.data||[]).filter(x=>x.staff_id&&x.staff_id!==ME.id).map(x=>({id:x.id,at:x.updated_at,staff:x.staff_id,who:names[x.staff_id]||"Someone",s:x.summary||{},cleared:!!(x.summary&&x.summary.photosCleared),
+  TEAM=(r.data||[]).filter(x=>x.staff_id).map(x=>({id:x.id,at:x.updated_at,staff:x.staff_id,who:names[x.staff_id]||"Someone",s:x.summary||{},cleared:!!(x.summary&&x.summary.photosCleared),
     tag:seen[x.id]===undefined?"New":(seen[x.id]!==x.updated_at?"Updated":"Opened")}));
   return TEAM;
 }
 async function checkTeam(){try{await fetchTeam();}catch(e){return}updateSyncUI();}
 function updateSyncUI(){
+  const sb=document.getElementById("rvSend");if(sb)sb.textContent=sendWord();
   const n=TEAM.filter(t=>t.tag!=="Opened").length,b=document.getElementById("jbadge");
   if(b){b.hidden=!(ME&&ME.role==="master"&&n>0);b.textContent=n;}
 }
