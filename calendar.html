@@ -311,8 +311,9 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .pcol{position:relative;border-left:1px solid var(--line);cursor:default;background-color:rgba(125,138,153,.06);
   background-image:linear-gradient(var(--line) 1px,transparent 1px);background-size:100% var(--hr)}
 .wday .pcol{flex:.62 1 0;min-width:0;border-left:1px dotted var(--line2)}
-.pb{position:absolute;left:1px;right:1px;box-sizing:border-box;border-left:3px solid var(--pc,#8d99a6);background:rgba(125,138,153,.16);border-radius:3px;padding:1px 3px;font-size:10px;line-height:1.15;color:var(--ink2);overflow:hidden;pointer-events:none}
-.pb span{display:block;overflow:hidden;text-overflow:ellipsis}
+.pb{position:absolute;left:2px;right:2px;box-sizing:border-box;background:var(--pc,#8d99a6);border-radius:6px;padding:4px 7px;font-size:13px;line-height:1.2;font-weight:700;color:var(--pt,#fff);overflow:hidden;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.25)}      /* solid colour, bold: the plan should stand out (Mitch, 2026-10-30). --pc and --pt are set per block by planInk() */
+.pb span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;overflow-wrap:anywhere}
+.wday .pb{font-size:11px;padding:2px 4px;border-radius:4px}
 .wlh.pgap{flex:.62 1 0;cursor:default;border-top-color:var(--line2)}
 .wnr .gut,.dnrow .gut{background:var(--surface2);color:var(--ink2);font-size:10.5px;line-height:1.1;font-weight:700;display:flex;align-items:center;justify-content:center;text-align:center;padding:2px}
 .wnc{border-left:1px solid var(--line);min-width:0;background:var(--surface2);display:flex}
@@ -1750,13 +1751,23 @@ function planFor(d){
 }
 function showPlan(){return !!(S.isMaster&&S.plan&&S.plan.length&&!isNarrow());}
 function showMaybe(){return !!(S.isMaster&&S.notes);}
+function planInk(c){      // a plan block's fill (its colour a touch deeper) and whichever of white or dark text reads better on it
+  const m=/^#([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(String(c||""));
+  if(!m)return {fill:c,text:"#fff"};
+  let h=m[1];if(h.length===3)h=h.replace(/./g,function(x){return x+x;});
+  const rgb=[0,2,4].map(function(i){return Math.round(parseInt(h.substr(i,2),16)*0.82);});
+  const lin=rgb.map(function(v){v/=255;return v<=0.03928?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
+  const L=0.2126*lin[0]+0.7152*lin[1]+0.0722*lin[2];
+  const white=1.05/(L+0.05),dark=(L+0.05)/0.0628;      // contrast against white, and against the dark ink #14201E (luminance about 0.0128)
+  return {fill:"#"+rgb.map(function(v){return ("0"+v.toString(16)).slice(-2);}).join(""),text:white>=dark?"#ffffff":"#14201E"};
+}
 function planColHtml(d,g){
   const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm;
   const items=planFor(d).map(function(b){
     const s=tmToMin(b.start_time),e=tmToMin(b.end_time);
     if(s==null||e==null||e<=g.gs||s>=g.ge)return "";      // outside the hours shown
-    const cs=Math.max(s,g.gs),ce=Math.min(e,g.ge),h=Math.max((ce-cs)*g.ppm-2,10);
-    return '<div class="pb" style="top:'+((cs-g.gs)*g.ppm)+'px;height:'+h+'px;--pc:'+safeColour(b.colour)+'" title="'+esc(hm(s)+" to "+hm(e)+" "+(b.title||""))+'"><span>'+esc(b.title||"")+'</span></div>';
+    const cs=Math.max(s,g.gs),ce=Math.min(e,g.ge),h=Math.max((ce-cs)*g.ppm-2,10),ink=planInk(safeColour(b.colour));
+    return '<div class="pb" style="top:'+((cs-g.gs)*g.ppm)+'px;height:'+h+'px;--pc:'+ink.fill+';--pt:'+ink.text+'" title="'+esc(hm(s)+" to "+hm(e)+" "+(b.title||""))+'"><span>'+esc(b.title||"")+'</span></div>';
   }).join("");
   return '<div class="pcol" data-plan="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px" aria-label="Weekly plan">'+nowLineHtml(d,g)+items+'</div>';
 }
