@@ -418,6 +418,7 @@
   <div class="rvbar"><div class="wrap">
     <button class="btn ghost" id="rvBack" type="button">&larr; Back</button>
     <div class="rvt">Read-through<small id="rvsub"></small></div>
+    <button class="btn ghost" id="rvSave" type="button">Save for Claude</button>
     <button class="btn primary" id="rvSend" type="button">Send to Mitch</button>
   </div></div>
   <div class="wrap rvbody" id="rvbody"></div>
@@ -1934,6 +1935,25 @@ async function doExport(){
     }
   };
 }
+/* Save for Claude (2026-11-02): one tap in the read-through saves the checked job as a file in Downloads, named
+   inspection_<address>_<date>.json, so Claude finds the newest one (see mira-rsa-report-recipe.md, "Where the packet comes from").
+   Always a plain download, never the share sheet. Hidden for a tech (Andrew): he sends to the office instead. */
+async function saveForClaude(){
+  toast("Building the file…");
+  try{
+    const packet=await buildPacket();
+    const c=STATE.customer||{};
+    const base=(c.address||c.client||("job_"+String(STATE.id||"").slice(-6))).replace(/[^\w]+/g,"_").replace(/^_+|_+$/g,"").slice(0,40)||"inspection";
+    const d=new Date(),p2=n=>String(n).padStart(2,"0");
+    const fname=`inspection_${base}_${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}.json`;
+    const blob=new Blob([JSON.stringify(packet)],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+    toast("Saved to Downloads: "+fname+". Tell Claude to build it.",4600);
+  }catch(err){toast("Couldn't save the file here. Tell Claude.",3400);}
+}
+document.getElementById("rvSave").addEventListener("click",saveForClaude);
 /* ---------- read-through (Review): Finish opens it; report wording boxes; AI Polish; Import ---------- */
 const review=document.getElementById("review"),rvbody=document.getElementById("rvbody");
 const rvRaw={},rvPrev={};   // rvRaw[key]={raw,ctx} rebuilt each time Review opens; rvPrev = undo for Polish
@@ -2537,6 +2557,7 @@ async function fetchTeam(){
 async function checkTeam(){try{await fetchTeam();}catch(e){return}updateSyncUI();}
 function updateSyncUI(){
   const sb=document.getElementById("rvSend");if(sb)sb.textContent=sendWord();
+  const sv=document.getElementById("rvSave");if(sv)sv.hidden=!!(ME&&ME.role==="tech");
   const n=TEAM.filter(t=>t.tag!=="Opened").length,b=document.getElementById("jbadge");
   if(b){b.hidden=!(ME&&ME.role==="master"&&n>0);b.textContent=n;}
 }
