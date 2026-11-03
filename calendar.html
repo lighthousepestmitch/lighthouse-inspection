@@ -1132,6 +1132,7 @@ async function signOut(){
   if(SH){closeSheet(true);}
   if(SV)closeSvcPanel();
   stopApp();
+  try{localStorage.removeItem("lpc_role");}catch(e){}   // before the network call, so it clears even with no signal
   let r=null;
   try{r=await S.sb.auth.signOut({scope:"local"});}catch(e){r={error:e};}
   // auth-js hands back {error} instead of throwing. If the logout call failed (no signal), the stored session is still there,
@@ -1254,6 +1255,7 @@ async function startApp(){
     if(me.error)throw me.error;
     if(!me.data||!me.data.active){S.starting=false;renderNotSetup();return;}
     S.me=me.data;S.isMaster=me.data.role==="master";
+    try{localStorage.setItem("lpc_role",me.data.role);}catch(e){}   // Home and Inspection Capture read this to know who is signed in on this device
     const res=await Promise.all([
       S.sb.from("staff").select("id,name,role,colour,active"),
       colRetry(function(){return S.sb.from("service_types").select(typeCols()).order("sort",{ascending:true});})

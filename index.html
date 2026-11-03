@@ -408,7 +408,7 @@
 <header>
   <div class="wrap">
     <div class="hrow">
-      <div style="display:flex;align-items:center;gap:10px"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"><div class="htitle">Inspection Capture<small id="hsub">New regular termite inspection</small></div></div>
+      <div style="display:flex;align-items:center;gap:10px"><a href="home.html" onclick="goHome(event)" aria-label="Back to Lighthouse home" style="display:block;line-height:0;flex:none"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"></a><div class="htitle">Inspection Capture<small id="hsub">New regular termite inspection</small></div></div>
       <div class="prog"><span id="pcount">0/14</span><span class="bar"><i id="pbar"></i></span></div>
     </div>
     <div class="jumprow">
@@ -757,6 +757,13 @@ function scheduleSave(){
     await upsertJobMeta();
     document.getElementById("saveinfo").textContent="Saved on this device";
   },500);
+}
+
+// The LPC badge goes back to Home. Save first, because the autosave above waits half a second.
+async function goHome(ev){
+  ev.preventDefault();clearTimeout(saveT);
+  try{if(STATE&&STATE.id){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}}catch(e){}
+  location.href="home.html";
 }
 
 /* ---------- photo handling: shrink on capture ---------- */
