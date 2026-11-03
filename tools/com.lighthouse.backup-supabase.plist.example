@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  EXAMPLE ONLY. Not installed. Nothing here runs until you copy it into place and load it.
+
+  Nightly Job Calendar backup at 2:30 am. Written by Claude on 2026-11-04. Steps are in backup_supabase.md.
+
+  1. Copy this file to ~/Library/LaunchAgents/com.lighthouse.backup-supabase.plist
+  2. In the copy, change every YOUR_USERNAME to your Mac username (launchd needs full paths, no tilde).
+  3. Load it:    launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.lighthouse.backup-supabase.plist
+  4. Test it now (runs the backup straight away):
+                 launchctl kickstart -k gui/$(id -u)/com.lighthouse.backup-supabase
+     then look at ~/Library/Logs/lpc-backup.log
+  5. To switch it off:   launchctl bootout gui/$(id -u)/com.lighthouse.backup-supabase
+
+  If the Mac is asleep at 2:30 am, launchd runs it when the Mac wakes up. If it is shut down, that night is skipped.
+  To put the backups on the external drive instead, add two more strings after backup_supabase.py in
+  ProgramArguments: first the flag for the destination, then the folder, for example /Volumes/YOUR_DRIVE/lpc-backups
+  (the flag is written in backup_supabase.md).
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.lighthouse.backup-supabase</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>/Users/YOUR_USERNAME/lighthouse-inspection/tools/backup_supabase.py</string>
+  </array>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>2</integer>
+    <key>Minute</key>
+    <integer>30</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/YOUR_USERNAME/Library/Logs/lpc-backup.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOUR_USERNAME/Library/Logs/lpc-backup.log</string>
+
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>LowPriorityIO</key>
+  <true/>
+</dict>
+</plist>
