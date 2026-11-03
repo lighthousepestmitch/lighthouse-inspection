@@ -234,7 +234,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-09r1";   // same cache-buster as jobbook.html
+const BUILD="2026-11-04r1";   // cache-buster for the data files (bump it when they change)
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -252,7 +252,7 @@ const titleCase=s=>String(s||"").toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCa
 const uid=()=>"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ---------- state ---------- */
-const S={clients:{},props:{},jobs:{},services:[],chem:null,prefs:{},records:[],index:[],
+const S={clients:{},props:{},jobs:{},services:[],chem:null,prefs:{},records:[],tomb:[],index:[],   // tomb = deleted records still waiting to tell the server
   tab:"new",openId:null,justSaved:false,rq:""};
 let F=null;          // the form being filled in
 let W=null;          // weather state for the form
@@ -324,7 +324,7 @@ const EMAIL_KEY="lpc_jobbook_last_email", CAL_EMAIL_KEY="lpc_calendar_last_email
 const PRIVATE_RE=/^(clients|properties|jobs)_(\d+)$/;    // the only families this page needs (same names as jobbook.html)
 const MANIFEST_NAME="jobbook_manifest";                    // written last by every Job Book upload: the rows that belong together
 let SB=null;
-const C={state:"boot",msg:"",kind:"warn",uid:null,gen:0,loading:false};   // state: boot login offline denied nodata problem ready
+const C={state:"boot",msg:"",kind:"warn",uid:null,gen:0,loading:false};   // state: boot login offline denied typed nodata problem ready
 const trim=s=>String(s==null?"":s).trim();
 const looksEmail=s=>/^[^\s@?&#,;]+@[^\s@?&#,;]+\.[^\s@?&#,;]+$/.test(trim(s));
 const netErr=e=>(typeof navigator!=="undefined"&&navigator.onLine===false)||(e&&(e.name==="AuthRetryableFetchError"||e.status===0))
@@ -340,18 +340,57 @@ function friendly(e){
   if(status===429||/rate limit|too many/i.test(msg)) return "Too many tries. Wait a few minutes and try again.";
   return "Something went wrong"+(msg?" ("+msg+")":"")+".";
 }
+
+/* ---------- who is signed in, and their licence ----------
+   The staff row (name, role, licence number / class / expiry) is the one source for "Applied by". Mitch (master) keeps using
+   operator.techs in chemicals.json exactly as before. A tech (a worker) is always themselves, from their own staff row. Nobody is ever
+   pre-filled as somebody else. With no signal the last copy kept on this device for the SAME login is used, and the form says so. */
+const ME={state:"none",id:"",name:"",role:"",lic:"",cls:"",exp:"",cached:false};   // state: none ready
+const ME_KEY="lpc-records-me";
+let meDone; const meWait=new Promise(r=>{ meDone=r; });     // settles the first time we know who is signed in (or that nobody is)
+function meSet(row,cached){ ME.state="ready"; ME.id=row.id; ME.name=trim(row.name); ME.role=row.role; ME.lic=trim(row.licence_no);
+  ME.cls=trim(row.licence_class); ME.exp=row.licence_expiry||""; ME.cached=!!cached; }
+function meClear(){ ME.state="none"; ME.id=ME.name=ME.role=ME.lic=ME.cls=ME.exp=""; ME.cached=false; }
+function meCacheGet(uid){ try{ const o=JSON.parse(localStorage.getItem(ME_KEY)||"{}"); return (uid&&o&&o[uid])||null; }catch(e){ return null; } }
+function meCachePut(row){ try{ const o=JSON.parse(localStorage.getItem(ME_KEY)||"{}")||{};
+  o[row.id]={id:row.id,name:row.name,role:row.role,active:true,licence_no:row.licence_no||"",licence_class:row.licence_class||"",licence_expiry:row.licence_expiry||""};
+  localStorage.setItem(ME_KEY,JSON.stringify(o)); }catch(e){} }
+/* the login's user id read straight from the stored session: still there when the token has run out and there is no signal to renew it */
+function storedUid(){ try{ const k=(SB&&SB.auth&&SB.auth.storageKey)||""; const s=k&&JSON.parse(localStorage.getItem(k)||"null"); return (s&&s.user&&s.user.id)||""; }catch(e){ return ""; } }
+/* the signed-in person's staff row. Sets ME. Gives {row, cached, err}: cached = the saved copy was used because the lookup failed */
+async function meLoad(uid){
+  let row=null, err=null;
+  try{
+    let r=await SB.from("staff").select("id,name,role,active,licence_no,licence_class,licence_expiry").eq("id",uid).maybeSingle();
+    if(r.error&&r.error.code==="42703") r=await SB.from("staff").select("id,name,role,active").eq("id",uid).maybeSingle();   // the licence columns are not there yet (37_staff_licence_and_records_sync.sql not run)
+    if(r.error) throw r.error;
+    row=r.data;
+  }catch(e){ err=e; }
+  if(!err){
+    if(row&&row.active){ meSet(row,false); meCachePut(row); } else meClear();
+    return {row:row,err:null,cached:false};
+  }
+  if(authErr(err)){ meClear(); return {row:null,err:err,cached:false}; }
+  const c=meCacheGet(uid);
+  if(c){ meSet(c,true); return {row:c,err:err,cached:true}; }
+  return {row:null,err:err,cached:false};
+}
 /* nothing from the database stays in memory once the login is gone */
 function custWipe(){ C.gen++; C.loading=false; S.clients={}; S.props={}; S.jobs={}; S.index=[]; }
 function custState(state,msg,kind){
   C.state=state; C.msg=msg||""; C.kind=kind||"warn";
-  /* only the customer picker changes: never redraw a form that already has a customer (it would lose what was typed) */
-  if(F&&!F.propId&&S.tab==="new"&&!S.justSaved) render();
+  if(state!=="boot") meDone();
+  /* only the customer picker changes: a form that already has a customer is redrawn only while we still don't know who is
+     signed in (the Applied by note changes), and never under a box being typed in (the keyboard would drop) */
+  const a=document.activeElement, typing=!!(a&&a.dataset&&a.dataset.f);
+  if(F&&(!F.propId||(ME.state!=="ready"&&state!=="boot"))&&S.tab==="new"&&!S.justSaved&&!typing) render();
 }
 function custHTML(){
   const st=C.state, note=C.msg?'<div class="banner '+C.kind+'" role="alert" style="margin:8px 0">'+esc(C.msg)+'</div>':"";
   const out=btn=>'<div class="btns"><button type="button" class="btn" data-a="custout">Log out</button></div>';
   if(st==="ready") return '<input class="inp search" id="q" data-f="q" placeholder="Start typing a name or street" autocomplete="off" autocapitalize="off" value="'+esc(F.q)+'">'
-    +'<div id="qres"></div>';
+    +'<div id="qres"></div>'+typedHTML(false);
+  if(st==="typed") return typedHTML(true);          // a worker: no customer list, so they type the customer (or come in from a calendar job)
   let h='<div class="card custcard">';
   if(st==="login") h+='<img class="stackedlogo" src="logo/logo-stacked.svg" alt="Lighthouse Pest Control">';
   if(st==="boot") h+='<div class="wxline"><span class="spin"></span> Opening the customer list…</div>'+note;
@@ -363,11 +402,20 @@ function custHTML(){
     +'<div class="btns"><button class="btn pri" id="lg-go" type="submit">Log in</button></div></form>';
   else if(st==="offline") h+='<b>No signal</b><div class="hint">The customer list needs a connection. Saved records still open under Records.</div>'+note
     +'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Try again</button></div>';
-  else if(st==="denied") h+='<b>Customer list</b><div class="hint">The customer list is for Mitch only.</div>'+note+out();
+  else if(st==="denied") h+='<b>Not set up yet</b><div class="hint">Your login isn\'t set up for Service Records yet. Tell Mitch.</div>'+note+out();
   else if(st==="nodata") h+='<b>No customers yet</b><div class="hint">The Job Book data isn\'t uploaded yet. On the Mac, open http://127.0.0.1:8942/jobbook.html and tap Upload from this Mac.</div>'+note
     +'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Check again</button><button type="button" class="btn" data-a="custout">Log out</button></div>';
   else h+='<b>Couldn\'t open the customer list</b>'+note+'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Try again</button><button type="button" class="btn" data-a="custout">Log out</button></div>';
-  return h+'</div>';
+  return h+'</div>'+(st==="boot"||st==="denied"?"":typedHTML(true));     // not on the list, no signal or no login: the customer can still be typed in
+}
+/* a customer typed in by hand (anyone). The record is marked isNewCustomer. The shared type-ahead will plug into lookupClients() below. */
+function typedHTML(open){
+  if(!open&&!UI.typedOpen) return '<div class="chips" style="margin-top:8px">'+chip("Not on the list? Type the customer",false,'data-a="typedopen"',"ghost")+'</div>';
+  return '<div class="card custcard" style="margin-top:8px"><b>Type the customer</b>'
+    +'<label class="fl" for="t-name">Customer name</label><input class="inp" id="t-name" data-f="tname" autocomplete="off" autocapitalize="words" value="'+esc(F.tName)+'">'
+    +'<label class="fl" for="t-addr">Job address</label><input class="inp" id="t-addr" data-f="taddr" autocomplete="off" autocapitalize="words" placeholder="e.g. 12 Smith St, Ballina NSW 2478" value="'+esc(F.tAddr)+'">'
+    +(F.tErr?'<div class="need" role="alert">'+esc(F.tErr)+'</div>':'')
+    +'<div class="btns"><button type="button" class="btn pri" data-a="typedgo">Use this customer</button></div></div>';
 }
 function custLastEmail(){ try{ return localStorage.getItem(EMAIL_KEY)||localStorage.getItem(CAL_EMAIL_KEY)||""; }catch(e){ return ""; } }
 function custMsg(text,kind){ const f=$("#lg-form"); if(!f) return; let m=$("#lg-msg");
@@ -390,7 +438,7 @@ async function custPasswordLogin(){
   }
 }
 async function custSignOut(){
-  C.uid=null; custWipe();
+  C.uid=null; custWipe(); meClear(); applyMe();
   let r=null;
   try{ r=await SB.auth.signOut({scope:"local"}); }catch(e){ r={error:e}; }
   /* no signal: signOut hands back {error} and leaves the stored login behind, so clear the stored keys ourselves */
@@ -428,10 +476,14 @@ async function custLoad(){
   C.loading=true; const gen=C.gen;
   custState("boot");
   try{
-    const me=await SB.from("staff").select("id,role,active").eq("id",C.uid).maybeSingle();
+    const me=await meLoad(C.uid);
     if(gen!==C.gen) return;
-    if(me.error) throw me.error;
-    if(!me.data||!me.data.active||me.data.role!=="master"){ custState("denied"); return; }     // master only; the database says no as well
+    if(me.err&&!me.cached) throw me.err;
+    applyMe();                                                    // Applied by (and the licence notes) catch up with who this is
+    if(!me.row||!me.row.active){ custState("denied"); return; }     // no staff row, or switched off
+    syncRecords().then(syncPaint);                                 // a login is here: send anything still waiting
+    if(me.row.role!=="master"){ custState("typed"); return; }     // the customer list is the master's (the database says no to others as well)
+    if(me.cached) throw me.err;                                   // the master with no signal: the list needs a connection
     const rows=await custFetch();
     if(gen!==C.gen) return;
     const fam={clients:[],properties:[],jobs:[]};
@@ -450,7 +502,7 @@ async function custLoad(){
     custState("ready");
   }catch(e){
     if(gen!==C.gen) return;
-    if(authErr(e)){ custWipe(); C.uid=null; custState("login",friendly(e),"warn"); return; }
+    if(authErr(e)){ custWipe(); C.uid=null; meClear(); applyMe(); custState("login",friendly(e),"warn"); return; }
     if(netErr(e)){ custState("offline"); return; }
     custState("problem",friendly(e),"bad");
   }finally{ if(gen===C.gen) C.loading=false; }
@@ -461,9 +513,15 @@ function custCheck(){
     const s=r&&r.data&&r.data.session;
     if(s) return custOnSession(s);
     if(C.state!=="boot"&&C.state!=="offline") return;
-    if(r&&r.error&&netErr(r.error)){ custState("offline"); return; }
+    if(r&&r.error&&netErr(r.error)){ custOffline(); return; }
     custState("login");
-  }).catch(e=>{ if(netErr(e)) custState("offline"); else custState("login",friendly(e),"bad"); });
+  }).catch(e=>{ if(netErr(e)) custOffline(); else custState("login",friendly(e),"bad"); });
+}
+/* no signal and the login can't be read (its token ran out): the saved copy of who this device's login is keeps record-keeping going */
+function custOffline(){
+  const c=meCacheGet(storedUid());
+  if(c&&c.active){ meSet(c,true); applyMe(); }
+  custState(c&&c.role==="tech"?"typed":"offline");
 }
 function custStart(){
   if(!CFG.url||!CFG.anonKey){ custState("problem","The Job Book isn't linked to its database yet. Ask Mitch to finish the setup.","bad"); return; }
@@ -475,6 +533,70 @@ function custStart(){
   custCheck();
 }
 function boot(h,p){ $("#main").innerHTML='<div class="boot"><h2>'+esc(h)+'</h2><p>'+esc(p)+'</p></div>'; }
+
+/* ---------- licence, address and history helpers (pure: no page state, so they can be unit tested) ---------- */
+const UUID_RE=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const STATE_AB="(?:NSW|QLD|VIC|TAS|SA|WA|NT|ACT)";
+/* One key for "the same place": lower case, punctuation gone, single spaces, no trailing country, state or postcode. The calendar's
+   "12 Smith St, Ballina NSW 2478" and the Job Book's own line for it come out the same, and so do typed ones. */
+function histKey(a){
+  return String(a==null?"":a).toLowerCase().replace(/[^a-z0-9\s]/g," ").replace(/\s+/g," ").trim()
+    .replace(/\s+australia$/,"").replace(new RegExp("\\s+"+STATE_AB.toLowerCase()+"\\s+\\d{4}$"),"").replace(/\s+\d{4}$/,"").replace(/\s+nsw$/,"").trim();
+}
+/* a record's customer id: the old "addr:<address>" form and the new one both reduce to the same thing; Job Book ids stay as they are */
+const propKey=p=>/^addr:/i.test(String(p||""))?histKey(String(p).slice(5)):String(p||"");
+/* is this saved record for the same place? By customer id (old or new form) or by the address on it (the old records have one too) */
+function sameSpot(r,pid,addr){
+  if(pid&&r.propId&&propKey(r.propId)===propKey(pid)) return true;
+  const k=histKey(addr); return !!k&&histKey(r.address)===k;
+}
+/* the suburb out of "12 Smith St, Ballina NSW 2478" (street, then suburb with state and postcode), for the weather lookup */
+const STREET_TYPE="(?:st|street|rd|road|ave|avenue|dr|drive|ln|lane|cres|crescent|pde|parade|pl|place|ct|court|cl|close|way|tce|terrace|hwy|highway|blvd|esp|esplanade|cct|circuit|row|walk|loop|grove)";
+function suburbFromAddr(a){
+  const cut=x=>x.replace(new RegExp("\\s*\\b"+STATE_AB+"\\b\\.?\\s*\\d{0,4}\\s*$","i"),"").replace(/\s*\b\d{4}\s*$/,"").trim();
+  const parts=String(a||"").split(",").map(x=>x.trim()).filter(x=>x&&!/^australia$/i.test(x));
+  for(let i=parts.length-1;i>=1;i--){ const s=cut(parts[i]); if(s&&!/\d/.test(s)) return titleCase(s); }
+  if(parts.length===1){                                     // no commas: "12 Smith St Ballina NSW 2478"
+    const one=cut(parts[0]), m=new RegExp("^.*\\b"+STREET_TYPE+"\\b\\.?\\s+(\\D+)$","i").exec(one);
+    if(m) return titleCase(m[1].trim());
+    if(one&&!/\d/.test(one)) return titleCase(one);
+  }
+  return "";
+}
+/* "" = fine. A person can't be on a record with no licence number or a licence past its expiry date (p.self = the signed-in person) */
+function licenceProblem(p,today){
+  const who=p.self?"Your":(p.name||"Their")+"'s";
+  if(!String(p.licence||"").trim()) return who+" licence number isn't on file."+(p.self?" Tell Mitch.":"");
+  if(p.exp&&String(p.exp)<today) return who+" licence expired on "+nice(p.exp)+".";
+  return "";
+}
+/* A note (never a block) when a general pest treatment goes on a record whose licence class doesn't mention general pest.
+   Only services named in the list below count, and only a class that is actually filled in: a blank class is unknown, not wrong. */
+const GP_SVC=/\b(general pest|cockroach|ant|spider|flea|rodent|mosquito|wasp)\b/i;
+const coversGP=c=>/general|gp/i.test(c||"");
+function classNote(serviceNames,classes){
+  if(!(serviceNames||[]).some(n=>GP_SVC.test(n))) return "";
+  const bad=(classes||[]).map(c=>String(c||"").trim()).filter(c=>c&&!coversGP(c));
+  return bad.length?"Check your licence class covers this treatment ("+bad.join(", ")+").":"";
+}
+/* the people on a record: new records carry a list, old ones just a name and a licence number (joined with " / " when there were several) */
+function peopleOf(ab){
+  ab=ab||{};
+  if(Array.isArray(ab.people)&&ab.people.length) return ab.people.map(p=>({name:p.name,licence:p.licence||"",cls:p.licenceClass||"",exp:p.licenceExpiry||""}));
+  const n=String(ab.name||"").split(" / "), l=String(ab.licence||"").split(" / ");
+  return n.filter(Boolean).map((x,i)=>({name:x,licence:l[i]||"",cls:"",exp:""}));
+}
+const byLabel=t=>t.name+((t.licence||t.cls)?" ("+[t.licence,t.cls].filter(Boolean).join(", ")+")":"");
+const licText=a=>a?(a.licence||"")+(a.licenceClass?", class "+a.licenceClass:""):"";
+/* the row for public.service_records: the whole record goes in "data" (photos stay on the device, only the count goes); job_id only if it is a real job uuid */
+function recRow(r,uid){
+  const data=Object.assign({},r); ["photos","syncPending","syncErr","syncedAt"].forEach(k=>{ delete data[k]; });
+  data.photoCount=(r.photos||[]).length||r.photoCount||0;
+  return {id:r.uuid,job_id:(!r.deleted&&UUID_RE.test(r.jobId||""))?r.jobId:null,client_id:null,data:data,staff_id:uid};
+}
+const newUuid=()=>{ try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{ const v=Math.random()*16|0; return (c==="x"?v:(v&3|8)).toString(16); }); };
+/* ---------- end of the pure helpers ---------- */
 
 /* search index: name, street line, suburb */
 function suburbOf(pid){ const p=S.props[pid]||{}, c=S.clients[p.c]||{}; return titleCase((c.a||[])[1]||""); }
@@ -557,7 +679,7 @@ const wxOK=w=>!!w&&(w.pending||(w.beaufort&&w.conditions));
 async function fetchWx(){
   const tok=++W.tok; W.status="Getting the weather…"; W.auto=null; W.pend=null; renderWx();
   let loc=await getLoc();
-  if(!loc) loc=await geocode(suburbOf(F.propId));
+  if(!loc) loc=await geocode(suburbOf(F.propId)||suburbFromAddr(F.address));     // Job Book customer, else the suburb in the address (calendar jobs and typed customers)
   if(tok!==W.tok) return;
   if(!loc){ W.status="Couldn't work out where you are. Pick the weather below."; renderWx(); return; }
   W.loc=loc;
@@ -593,9 +715,10 @@ async function backfill(){
       const nw=weatherFrom({temperature_2m:h.temperature_2m[i],precipitation:h.precipitation[i],
         wind_speed_10m:h.wind_speed_10m[i],wind_direction_10m:h.wind_direction_10m[i],weather_code:h.weather_code[i]});
       nw.lat=w.lat; nw.lon=w.lon; nw.source="auto"; nw.pending=false; nw.text=wxText(nw);
-      r.weather=nw; await dbPut(r); n++;
+      r.weather=nw; if(r.uuid) r.syncPending=true; await dbPut(r); n++;
     }catch(e){}
   }
+  if(n) syncRecords().then(syncPaint);          // the office copy still says "weather pending"
   return n;
 }
 const pendingCount=()=>S.records.filter(r=>r.weather&&r.weather.pending).length;
@@ -633,13 +756,39 @@ const allEquip=()=>S.chem.equipment.concat(P().customEquip.filter(e=>S.chem.equi
 function lastAmount(id){ for(const sv of F.services){ const v=P().amounts[sv.s+"|"+id]; if(v!=null&&v!=="") return v; } return ""; }
 
 /* ---------- form model ---------- */
+/* Who can be ticked as "Applied by": a tech is only ever themselves (their staff row). The master gets operator.techs from
+   chemicals.json as before, with the class and expiry from their staff row when it is the same person. Nobody signed in = nobody. */
+function applicators(){
+  if(ME.state!=="ready") return [];
+  if(ME.role==="tech") return [{name:ME.name,licence:ME.lic,cls:ME.cls,exp:ME.exp,self:true}];
+  return (S.chem.operator.techs||[]).map(t=>{ const me=ME.name.toLowerCase()===String(t.name).toLowerCase();
+    return {name:t.name,licence:t.licence,cls:me?ME.cls:"",exp:me?ME.exp:"",self:me}; });
+}
+/* ...plus the people already on a saved record being edited (kept as they were, never swapped for whoever is signed in) */
+function pool(){ const a=applicators(); ((F&&F.keep)||[]).forEach(k=>{ if(!a.some(x=>x.name===k.name)) a.push(k); }); return a; }
+function licenceIssues(){
+  const live=applicators(), chosen=live.filter(p=>F.appliedBy.indexOf(p.name)>=0);
+  return (chosen.length?chosen:(live.length===1?live:[])).map(p=>licenceProblem(p,TODAY)).filter(Boolean);
+}
+const noIdText=()=>C.state==="denied"?"Your login isn't set up yet. Tell Mitch."
+  :(C.uid||storedUid())?"Couldn't check your licence details (no signal yet). Reload the page when you have signal.":"Log in first, so your name and licence number go on the record.";
 function newForm(){
-  const t=S.chem.operator.techs||[];
-  return {id:null,savedAt:null,propId:"",client:"",address:"",date:TODAY,start:"",finish:"",finishTouched:false,
-    services:[],products:[],areas:[],equipment:[],appliedBy:t.length===1?[t[0].name]:[],
-    next:{k:"",date:""},notes:"",photos:[],q:"",errors:[]};
+  const a=applicators();
+  return {id:null,uuid:null,savedAt:null,propId:"",client:"",address:"",isNew:false,jobId:null,date:TODAY,start:"",finish:"",finishTouched:false,
+    services:[],products:[],areas:[],equipment:[],appliedBy:a.length===1?[a[0].name]:[],keep:[],byTouched:false,
+    next:{k:"",date:""},notes:"",photos:[],q:"",tName:"",tAddr:"",tErr:"",errors:[]};
 }
 function resetForm(){ F=newForm(); W=newWx(); UI={}; }
+/* who is signed in has just become known (or changed): fix Applied by on the form in front of the user. The form stays "clean"
+   if it was clean, so the Leave without saving? question isn't asked over something nobody touched. */
+function applyMe(){
+  if(!F||!S.chem) return;
+  const before=JSON.stringify(F.appliedBy), clean=snap()===BASE, names=pool().map(p=>p.name);
+  F.appliedBy=F.appliedBy.filter(n=>names.indexOf(n)>=0);                       // never keep somebody else's name
+  const a=applicators(); if(!F.byTouched&&!F.appliedBy.length&&a.length===1) F.appliedBy=[a[0].name];
+  if(clean) markClean();
+  if(JSON.stringify(F.appliedBy)!==before||ME.cached){ if(F.propId&&S.tab==="new"&&!S.justSaved) render(); }
+}
 /* Drafts live in memory only. "Unsaved work" = a customer is picked and something in the form has changed since it was
    picked, loaded or saved (so a form that only has what the calendar or the last job filled in does not count). */
 function snap(){ return JSON.stringify([F.propId,F.services,F.products,F.areas,F.equipment,F.appliedBy,F.next,F.notes,
@@ -674,9 +823,10 @@ function svcOff(n){
   F.services=F.services.filter(x=>x.s!==n);
   F.products=F.products.filter(p=>F.services.some(sv=>belongs(sv.s,p.id)));
 }
-function lastRecord(pid){ return S.records.filter(r=>r.propId===pid).sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""))[0]; }
+/* history is by place: the same record is found whether the job came from the Job Book, the calendar or a typed customer (old and new ids both work) */
+function lastRecord(pid,addr){ return S.records.filter(r=>sameSpot(r,pid,addr)).sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""))[0]; }
 function sameAsLast(){
-  const mine=lastRecord(F.propId); if(!mine) return;
+  const mine=lastRecord(F.propId,F.address); if(!mine) return;
   F.services=[]; mine.services.forEach(x=>{ const n=alias(x.s); if(hiddenSvc(n)||F.services.some(y=>y.s===n)) return;
     const d=n===x.s?(x.d||""):defaultDesc(n); F.services.push({s:n,d:d,custom:isCustomDesc(n,d)}); });
   F.areas=(mine.areas||[]).slice(); F.equipment=(mine.equipment||[]).slice();
@@ -687,11 +837,12 @@ function pickProperty(pid){
   const p=S.props[pid]; if(!p) return;
   startFor(pid,(S.clients[p.c]||{}).n||"(unknown)",addressOf(pid));
 }
-/* the last 5 customers with a saved record on this device: no network, no extra storage */
+/* the last 5 customers with a saved record on this device: no network, no extra storage (one chip per place, whichever way it was started) */
 function recentRecs(){
   const seen={}, out=[];
   S.records.slice().sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||"")).forEach(r=>{
-    if(!r.propId||seen[r.propId]||out.length>=5) return; seen[r.propId]=1; out.push(r); });
+    const k=histKey(r.address)||propKey(r.propId);
+    if(!r.propId||seen[k]||out.length>=5) return; seen[k]=1; out.push(r); });
   return out;
 }
 function recentHTML(){
@@ -699,23 +850,24 @@ function recentHTML(){
   const cnt={}; rs.forEach(r=>{ cnt[r.client]=(cnt[r.client]||0)+1; });
   return '<div class="recent"><div class="lbl">Recent customers</div><div class="chips">'+rs.map(r=>{
     const street=String(r.address||"").split(",")[0];     // two customers with the same name: show the street too
-    return '<button type="button" class="chip rchip" data-a="rpick" data-pid="'+esc(r.propId)+'">'+esc(r.client)
+    return '<button type="button" class="chip rchip" data-a="rpick" data-rid="'+esc(r.id)+'">'+esc(r.client)
       +(cnt[r.client]>1&&street?' <span class="small">'+esc(street)+'</span>':'')+'</button>'; }).join("")+'</div></div>';
 }
 /* A recent customer: from the customer list when it has them (same as searching), otherwise exactly what their last
    saved record says, so it also works with no login and no signal. */
-function pickRecent(pid){
-  if(S.props[pid]){ pickProperty(pid); return; }
-  const r=lastRecord(pid); if(r) startFor(pid,r.client,r.address);
+function pickRecent(rid){
+  const r=byId(rid); if(!r) return;
+  if(S.props[r.propId]){ pickProperty(r.propId); return; }
+  startFor(r.propId,r.client,r.address,{isNew:!!r.isNewCustomer});
 }
-function startFor(pid,client,address){
-  F.propId=pid; F.client=client; F.address=address;
+function startFor(pid,client,address,opts){
+  F.propId=pid; F.client=client; F.address=address; F.isNew=!!(opts&&opts.isNew);
   F.start=nowHM(); F.date=TODAY; F.finish=""; F.finishTouched=false; F.q="";
   F.services=[];F.products=[];F.areas=[];F.equipment=[]; F.next={k:"",date:""};
   W=newWx(); UI={};
   /* With a saved record, the "Same as last time" button does the loading. Without one,
      start from the last Xero job (old names mapped to the new ones, hidden ones dropped). */
-  if(!lastRecord(pid)){
+  if(!lastRecord(pid,address)){
     const jobs=(S.jobs[pid]||[]).slice().sort((a,b)=>b.d.localeCompare(a.d)), j=jobs[0];
     if(j) (j.s||[]).forEach(x=>{ const n=alias(x.s); if(!offered(n)||F.services.some(y=>y.s===n)) return;
       svcOn(n,n===x.s?cutTail(x.d||""):""); });
@@ -768,7 +920,7 @@ const NXT_SHORT={"6 months":"6 m","12 months":"12 m","6 weeks":"6 wk","3 months"
 function lastNext(){
   if(!F.propId||!F.services.length) return null;
   const names=F.services.map(x=>x.s);
-  const rs=S.records.filter(r=>r.propId===F.propId&&r.id!==F.id&&r.nextService&&Object.prototype.hasOwnProperty.call(NXT_SHORT,r.nextService.label)
+  const rs=S.records.filter(r=>sameSpot(r,F.propId,F.address)&&r.id!==F.id&&r.nextService&&Object.prototype.hasOwnProperty.call(NXT_SHORT,r.nextService.label)
       &&(r.services||[]).some(x=>names.indexOf(alias(x.s))>=0))
     .sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""));
   return rs[0]?rs[0].nextService.label:null;
@@ -796,12 +948,18 @@ function renderForm(){
   let h="";
   if(F.errors.length) h+='<div class="banner bad" id="errs"><b>Not saved yet. Still needed:</b><ul>'+F.errors.map(e=>'<li>'+esc(e)+'</li>').join("")+'</ul></div>';
   if(F.id) h+='<div class="banner warn">Editing a saved record. Saving replaces it.</div>';
+  if(ME.cached&&ME.state==="ready") h+='<div class="banner warn">Using saved licence details for '+esc(ME.name)+' (no signal to check them just now).</div>';
+  if(F.propId){
+    licenceIssues().forEach(m=>{ h+='<div class="banner bad" role="alert">'+esc(m)+'</div>'; });      // said up front, not after all the work is done
+    const cn=classNote(F.services.map(x=>x.s),pool().filter(p=>F.appliedBy.indexOf(p.name)>=0).map(p=>p.cls));
+    if(cn) h+='<div class="banner warn">'+esc(cn)+'</div>';
+  }
   /* 1. customer */
   h+=sec("Customer");
   if(F.propId){
     h+='<div class="card"><div class="top"><b>'+esc(F.client)+'</b><button class="mic" data-a="clearcust">Change</button></div>'
       +'<div>'+esc(F.address)+'</div></div>';
-    const mine=lastRecord(F.propId);
+    const mine=lastRecord(F.propId,F.address);
     if(mine&&!F.id&&!UI.sameDone) h+='<button class="btn pri same" data-a="sameas">Same as last time <span class="small" style="color:inherit;opacity:.8">('+esc(nice(mine.date))+')</span></button>';
   }else{
     h+=custHTML();
@@ -844,17 +1002,17 @@ function renderForm(){
     /* Each card opens on its own. Tapping the row opens all four. Weather opens by itself when a spray needs it, and after a
        failed Save any card that holds a missing required field (Applied by) is forced open, so nothing required stays hidden. */
     const nw=needWx(), all=!!UI.autoOpen, fo=UI.force||{}, hasErr=F.errors.length>0;
-    const showWx=all||nw, showBy=all||!!fo.by, showDt=all, showEq=all;
+    const showWx=all||nw, showBy=all||!!fo.by||!pool().length, showDt=all, showEq=all;
     h+='<button class="autorow'+(nw?' warn':'')+'" id="autorow" data-a="autotoggle"><b>'+(nw?'Weather needed':'Auto-filled ✓')+'</b><span class="sum" id="autosum">'+esc(autoSummary())+'</span><span>'+(all?'▴':'▾')+'</span></button>';
     if(showWx){
       h+='<div id="sec-wx"'+((hasErr&&nw)?' data-bad':'')+'>'+sec("Weather","needed for outdoor spraying");
       h+='<div id="wx">'+wxHTML()+'</div></div>';
     }
     if(showBy){
-      const badBy=hasErr&&!F.appliedBy.length;
-      h+='<div id="sec-by"'+(badBy?' data-bad':'')+'>'+sec("Applied by");
-      h+='<div class="chips">'+(S.chem.operator.techs||[]).map(t=>chip(t.name+" ("+t.licence+")",F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>'
-        +(badBy?'<div class="need">Pick who applied it.</div>':'')+'</div>';
+      const pl=pool(), badBy=hasErr&&!F.appliedBy.length;
+      h+='<div id="sec-by"'+((badBy||!pl.length)?' data-bad':'')+'>'+sec("Applied by");
+      h+='<div class="chips">'+pl.map(t=>chip(byLabel(t),F.appliedBy.indexOf(t.name)>=0,'data-a="tech" data-v="'+esc(t.name)+'"')).join("")+'</div>'
+        +(!pl.length?'<div class="need">'+esc(noIdText())+'</div>':badBy?'<div class="need">Pick who applied it.</div>':'')+'</div>';
     }
     if(showDt){
       h+=sec("Date and times");
@@ -945,10 +1103,19 @@ function renderQres(){
   const box=$("#qres"); if(!box) return;
   const q=F.q.trim().toLowerCase();
   if(q.length<2){ box.innerHTML=(q.length===0&&recentHTML())||'<div class="hint">Type 2 or more letters.</div>'; return; }
-  const words=q.split(/\s+/); const hits=[];
+  const tok=++QTOK, paint=hits=>{ const b=$("#qres"); if(tok!==QTOK||!b) return;
+    b.innerHTML=hits.length?hits.map(x=>'<button class="pick" data-a="pick" data-pid="'+esc(x.pid)+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line+(x.sub?", "+x.sub:""))+'</div></button>').join("")
+      :'<div class="empty">No match. Try a different spelling.</div>'; };
+  const r=lookupClients(q); if(r&&typeof r.then==="function") r.then(paint); else paint(r||[]);
+}
+let QTOK=0;       // newest search wins, if lookupClients ever answers late
+/* HOOK for the shared customer type-ahead: a later task backs this with the shared list (it may return a promise).
+   Takes what was typed, gives back [{pid,name,line,sub}]. For now it is the master's Job Book index; a worker has no list and types the customer in. */
+function lookupClients(q){
+  const words=String(q||"").trim().toLowerCase().split(/\s+/).filter(Boolean), hits=[];
+  if(!words.length) return hits;
   for(const x of S.index){ if(words.every(w=>x.hay.indexOf(w)>=0)){ hits.push(x); if(hits.length>=25) break; } }
-  box.innerHTML=hits.length?hits.map(x=>'<button class="pick" data-a="pick" data-pid="'+esc(x.pid)+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line+(x.sub?", "+x.sub:""))+'</div></button>').join("")
-    :'<div class="empty">No match. Try a different spelling.</div>';
+  return hits;
 }
 function renderAres(){
   const box=$("#ares"); if(!box) return;
@@ -962,10 +1129,11 @@ function renderAres(){
 const amtMissing=p=>p.amount===""||p.amount==null||isNaN(Number(p.amount));   // the "amount used" rule, same test for the form and the validator
 function problems(){
   const e=[];
-  if(!F.propId) e.push("Pick a customer.");
+  if(!F.propId) e.push("Pick a customer (or type one in).");
   if(!F.services.length) e.push("Pick at least one service.");
   F.products.forEach(p=>{ if(amtMissing(p)) e.push("Amount used for "+p.name+"."); });
-  if(!F.appliedBy.length) e.push("Who applied it.");
+  if(!F.appliedBy.length) e.push(pool().length?"Who applied it.":noIdText());
+  licenceIssues().forEach(m=>e.push(m));        // a missing licence number or a licence past its expiry date blocks the save
   if(!F.next.k) e.push("Next service (pick None if there isn't one).");
   else if(F.next.k==="Custom date"&&!F.next.date) e.push("A date for the next service.");
   const air=(S.chem.airTypes||[]);
@@ -974,6 +1142,7 @@ function problems(){
   return e;
 }
 async function save(){
+  if(C.state==="boot") await Promise.race([meWait,new Promise(r=>setTimeout(r,4000))]);     // still finding out who is signed in
   F.errors=problems();
   if(F.errors.length){
     /* a missing required field must never sit in a folded-away card: open the card that holds it and go to it */
@@ -982,16 +1151,19 @@ async function save(){
     const bad=document.querySelector("[data-bad]"), e=bad||$("#errs");
     if(e) e.scrollIntoView({block:"start"});
     toast("Missing: "+F.errors.length+" thing"+(F.errors.length>1?"s":"")+(bad?". The red notes show where.":". See the top of the form."),true); return; }
-  const op=S.chem.operator, techs=(op.techs||[]).filter(t=>F.appliedBy.indexOf(t.name)>=0);
+  const op=S.chem.operator, people=pool().filter(p=>F.appliedBy.indexOf(p.name)>=0);
   const finish=F.finishTouched&&F.finish?F.finish:(F.id&&F.finish?F.finish:nowHM());
-  const rec={id:F.id||uid(),propId:F.propId,jobId:F.jobId||null,client:F.client,address:F.address,date:F.date,start:F.start,finish:finish,
+  const rec={id:F.id||uid(),uuid:F.uuid||newUuid(),propId:F.propId,jobId:F.jobId||null,client:F.client,address:F.address,hist:histKey(F.address),isNewCustomer:!!F.isNew,
+    staffId:ME.id||null,licenceFrom:ME.cached?"saved copy":"staff row",date:F.date,start:F.start,finish:finish,
     services:F.services.map(x=>({s:x.s,d:x.d})),
     products:F.products.map(p=>({id:p.id,name:p.name,active:p.active,apvma:p.apvma,type:p.type,amount:p.amount,unit:p.unit,mix:p.mix})),
     areas:F.areas.slice(),equipment:F.equipment.slice(),
     weather:curWeather(),
-    appliedBy:{name:techs.map(t=>t.name).join(" / "),licence:techs.map(t=>t.licence).join(" / ")},
+    appliedBy:{name:people.map(t=>t.name).join(" / "),licence:people.map(t=>t.licence).join(" / "),
+      licenceClass:people.some(t=>t.cls)?people.map(t=>t.cls||"").join(" / "):"",
+      people:people.map(t=>({name:t.name,licence:t.licence,licenceClass:t.cls||"",licenceExpiry:t.exp||""}))},
     business:{name:op.business,address:op.address,phone:op.phone,abn:ABN},
-    nextService:nextObj(),notes:F.notes.trim(),photos:F.photos.slice(),savedAt:new Date().toISOString()};
+    nextService:nextObj(),notes:F.notes.trim(),photos:F.photos.slice(),savedAt:new Date().toISOString(),syncPending:true};
   if(F.id) rec.editedAt=rec.savedAt;
   try{ await dbPut(rec); }
   catch(e){ toast("Couldn't save the record to this device ("+(e&&e.message?e.message:"storage error")+"). Nothing was lost on screen. Take a screenshot as a backup.",true); return; }
@@ -1007,7 +1179,64 @@ async function save(){
   markClean();
   toast("Record saved.");
   S.openId=rec.id; S.justSaved=true; render();
+  syncRecords().then(syncPaint);
 }
+
+/* ---------- sending records to Supabase (public.service_records) ----------
+   IndexedDB stays the offline copy. A record is saved there first with syncPending:true, then sent. Nothing sent (no signal,
+   not logged in, a refused row) stays syncPending and is tried again on page load, when the browser fires "online", and after each save.
+   A shared outbox module is meant to replace this one function. Photos stay on the device (only the count goes). A deleted record
+   is kept in IndexedDB as a tombstone until the server has the "deleted" update, then dropped. */
+let SYNCING=false;
+const SYNC={why:"",again:false};      // why a pass stopped: signal, login, error ("" = fine)
+async function syncRecords(){
+  if(SYNCING){ SYNC.again=true; return 0; }
+  if(!SB) return 0;
+  SYNCING=true; let sent=0;
+  try{
+    do{
+      SYNC.again=false;
+      const todo=S.records.concat(S.tomb).filter(r=>r.syncPending);
+      if(!todo.length) break;
+      let uid=""; SYNC.why="";
+      try{ const g=await SB.auth.getSession(); uid=(g&&g.data&&g.data.session&&g.data.session.user&&g.data.session.user.id)||""; if(!uid&&g&&g.error) SYNC.why=netErr(g.error)?"signal":"login"; }
+      catch(e){ SYNC.why=netErr(e)?"signal":"login"; }
+      if(!uid){ if(!SYNC.why) SYNC.why="login"; break; }
+      for(const r of todo){
+        if(r.staffId&&r.staffId!==uid){ SYNC.why="login"; continue; }          // somebody else's record: only their own login may send it
+        if(!r.uuid) r.uuid=newUuid();                                          // an old record edited or deleted before it ever had one
+        const row=recRow(r,uid); let res;
+        try{
+          res=await SB.from("service_records").upsert(row,{onConflict:"id"});
+          if(res&&res.error&&(res.error.code==="23503"||res.error.code==="42501")&&row.job_id){ row.job_id=null; res=await SB.from("service_records").upsert(row,{onConflict:"id"}); }   // the job was deleted or moved to someone else since: keep the record, unlinked
+        }catch(e){ res={error:e}; }
+        if(res&&res.error){
+          r.syncErr=friendly(res.error);
+          SYNC.why=netErr(res.error)?"signal":authErr(res.error)?"login":"error";
+          if(SYNC.why!=="error") break;                                         // no signal or no login: the rest would fail the same way
+          continue;
+        }
+        const cur=r.deleted?r:(S.records.find(x=>x.id===r.id)||r);
+        if(cur!==r) { SYNC.again=true; continue; }                              // edited while it was going: the new version goes next pass
+        r.syncPending=false; r.syncErr=""; r.syncedAt=new Date().toISOString(); sent++;
+        try{ if(r.deleted){ await dbDel(r.id); S.tomb=S.tomb.filter(x=>x!==r); } else await dbPut(r); }catch(e){}
+      }
+    }while(SYNC.again);
+  }finally{ SYNCING=false; }
+  return sent;
+}
+/* what the record says about it: quiet, one line */
+function syncText(r){
+  if(r.syncPending){
+    if(SYNCING) return "Sending...";
+    if(SYNC.why==="login") return "Waiting for login";
+    if(SYNC.why==="error") return "Not sent yet. Will try again.";
+    return "Waiting for signal";
+  }
+  if(r.syncedAt) return ME.role==="master"?"Backed up online":"Sent to Mitch";
+  return "Saved on this device";
+}
+function syncPaint(){ const e=$("#syncnote"), r=e&&S.openId&&byId(S.openId); if(r) e.textContent=syncText(r); }
 
 /* ---------- read-only record view, email, print, CSV ---------- */
 const byId=id=>S.records.find(r=>r.id===id);
@@ -1024,7 +1253,7 @@ function recText(r){
   L.push("Products:"); if(r.products.length) r.products.forEach(p=>L.push("  - "+prodLine(p))); else L.push("  - none");
   L.push("Areas: "+listPlain(r.areas)); L.push("Equipment: "+listPlain(r.equipment));
   L.push("Weather: "+(w?(w.text||wxText(w)):"not recorded"));
-  L.push("Applied by: "+r.appliedBy.name+" (licence "+r.appliedBy.licence+"), "+r.business.phone);
+  L.push("Applied by: "+r.appliedBy.name+" (licence "+licText(r.appliedBy)+"), "+r.business.phone);
   L.push("Next service: "+nextText(r.nextService));
   if(r.notes) L.push("Notes: "+r.notes);
   L.push("Photos: "+(r.photos||[]).length+" (not included)");
@@ -1039,7 +1268,7 @@ function recHTML(r){
   h+=kv("Products",r.products.length?r.products.map(prodLine).join("\n"):"None");
   h+=kv("Areas",listPlain(r.areas))+kv("Equipment",listPlain(r.equipment));
   h+=kv("Weather",w?(w.text||wxText(w)):"Not recorded");
-  h+=kv("Applied by",r.appliedBy.name+"\nLicence "+r.appliedBy.licence);
+  h+=kv("Applied by",r.appliedBy.name+"\nLicence "+r.appliedBy.licence+(r.appliedBy.licenceClass?"\nClass "+r.appliedBy.licenceClass:""));
   h+=kv("Next service",nextText(r.nextService));
   if(r.notes) h+=kv("Notes",r.notes);
   h+=kv("Saved",new Date(r.savedAt).toLocaleString("en-AU"));
@@ -1049,9 +1278,13 @@ function recHTML(r){
 function renderView(){
   const r=byId(S.openId); if(!r){ S.openId=null; S.justSaved=false; render(); return; }
   let h='';
-  if(S.justSaved) h+='<div class="banner ok noprint" style="margin-top:14px"><b>Saved.</b> It stays on this device for the 3 years you have to keep it.</div>';
-  else h+='<div class="btns noprint" style="margin-bottom:0"><button class="btn" data-a="back">Back to list</button></div>';
+  if(S.justSaved){
+    h+='<div class="banner ok noprint" style="margin-top:14px"><b>Saved.</b> It stays on this device for the 3 years you have to keep it.</div>';
+    const cn=classNote((r.services||[]).map(x=>x.s),String((r.appliedBy||{}).licenceClass||"").split(" / "));
+    if(cn) h+='<div class="banner warn noprint">'+esc(cn)+'</div>';
+  }else h+='<div class="btns noprint" style="margin-bottom:0"><button class="btn" data-a="back">Back to list</button></div>';
   h+=recHTML(r);
+  h+='<div class="small noprint" id="syncnote" style="margin-top:8px">'+esc(syncText(r))+'</div>';
   h+='<div class="btns noprint">'
     +'<a class="btn pri" href="'+esc(mailHref(MY_EMAIL,subjFor(r),recText(r)))+'">Email me a copy</a>'
     +(S.justSaved?'<button class="btn" data-a="newrec">New record</button>':'')
@@ -1073,16 +1306,16 @@ function listHTML(list){
   if(!list.length) return '<div class="empty"><h3>No records</h3><p>'+(S.records.length?'Nothing matches that search.':'Saved records show up here.')+'</p></div>';
   return list.map(r=>'<button class="row'+(r.weather&&r.weather.pending?' pend':'')+'" data-a="open" data-id="'+esc(r.id)+'"><span class="stripe"></span><span class="main">'
     +'<div class="nm">'+esc(r.client)+'</div><div class="pl">'+esc(r.address)+'</div>'
-    +'<div class="mt">'+esc(nice(r.date)+"  "+(r.start||"")+"  |  "+r.services.map(x=>x.s).join(", "))+'</div></span></button>').join("");
+    +'<div class="mt">'+esc(nice(r.date)+"  "+(r.start||"")+"  |  "+r.services.map(x=>x.s).join(", ")+(r.syncPending?"  |  not sent yet":""))+'</div></span></button>').join("");
 }
 function exportCSV(){
   const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
-  const head=["Record ID","Date","Start","Finish","Customer","Address","Services","Areas","Equipment","Applied by","Licence","Weather","Temp C","Wind km/h","Wind from","Conditions","Rain mm","Weather source","Next service","Notes","Product","Active","APVMA","Amount","Unit","Mix rate"];
+  const head=["Record ID","Date","Start","Finish","Customer","Address","Services","Areas","Equipment","Applied by","Licence","Licence class","Weather","Temp C","Wind km/h","Wind from","Conditions","Rain mm","Weather source","Next service","Notes","Product","Active","APVMA","Amount","Unit","Mix rate"];
   const rows=[head.map(q).join(",")];
   S.records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
     const w=r.weather||{};
     const base=[r.id,r.date,r.start,r.finish,r.client,r.address,r.services.map(x=>x.s+(x.d?": "+x.d:"")).join("; "),
-      listPlain(r.areas),listPlain(r.equipment),r.appliedBy.name,r.appliedBy.licence,w.text||wxText(w),w.tempC,w.windKmh,w.windDir,w.conditions,w.rain,
+      listPlain(r.areas),listPlain(r.equipment),r.appliedBy.name,r.appliedBy.licence,r.appliedBy.licenceClass||"",w.text||wxText(w),w.tempC,w.windKmh,w.windDir,w.conditions,w.rain,
       w.pending?"pending":w.source,nextText(r.nextService),r.notes];
     const ps=r.products.length?r.products:[null];
     ps.forEach(p=>rows.push(base.concat(p?[p.name,p.active,p.apvma,p.amount,p.unit,p.mix]:["","","","","",""]).map(q).join(",")));
@@ -1144,7 +1377,12 @@ document.addEventListener("click",function(e){
   const a=t.dataset.a, d=t.dataset, svOf=s=>F.services.find(x=>x.s===s);
   if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
-  if(a==="rpick"){ pickRecent(d.pid); return; }
+  if(a==="rpick"){ pickRecent(d.rid); return; }
+  if(a==="typedopen"){ UI.typedOpen=!UI.typedOpen; render(); return; }
+  if(a==="typedgo"){
+    const name=trim(F.tName), addr=trim(F.tAddr);
+    if(!name||!addr){ F.tErr=name?"Type the job address.":"Type the customer's name."; render(); return; }
+    F.tErr=""; startFor("addr:"+histKey(addr),name,addr,{isNew:true}); return; }
   if(a==="tilesopen"){ UI.tilesOpen=true; render(); return; }
   if(a==="tilesdone"){ UI.tilesOpen=false; render(); return; }
   if(a==="pexp"){ UI.pexp=UI.pexp||{}; UI.pexp[d.id]=!(UI.pexp[d.id]===true); render(); return; }
@@ -1183,7 +1421,7 @@ document.addEventListener("click",function(e){
   if(a==="wdir"){ W.man.dir=W.man.dir===d.v?"":d.v; renderWx(); return; }
   if(a==="wcond"){ W.man.cond=W.man.cond===d.v?"":d.v; renderWx(); return; }
   if(a==="wxagain"){ fetchWx(); return; }
-  if(a==="tech"){ toggle(F.appliedBy,d.v); render(); return; }
+  if(a==="tech"){ toggle(F.appliedBy,d.v); F.byTouched=true; render(); return; }
   if(a==="nxt"){ F.next.k=F.next.k===d.v?"":d.v; if(d.v==="6 months"||d.v==="12 months") UI.nextOther=false; render(); return; }
   if(a==="photo"){ const i=$("#photoIn"); if(i) i.click(); return; }
   if(a==="photorm"){ F.photos.splice(+d.i,1); render(); return; }
@@ -1197,7 +1435,7 @@ document.addEventListener("click",function(e){
   if(a==="retrywx"){ backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); else toast("Still pending. Needs signal, and the record can't be older than the weather service holds.",true); renderBanner(); }); return; }
   if(a==="del"){ const r=byId(d.id); if(!r) return;
     if(!confirm("Delete the record for "+r.client+" on "+nice(r.date)+"? You're meant to keep these for 3 years. This can't be undone.")) return;
-    dbDel(d.id).then(()=>{ S.records=S.records.filter(x=>x.id!==d.id); S.openId=null; S.justSaved=false; S.tab="records"; toast("Record deleted."); render(); })
+    deleteRec(r).then(()=>{ S.openId=null; S.justSaved=false; S.tab="records"; toast("Record deleted."); render(); syncRecords().then(syncPaint); })
       .catch(()=>toast("Couldn't delete the record.",true)); return; }
   if(a==="edit"){ const r=byId(d.id); if(r) loadForEdit(r); return; }
 });
@@ -1216,6 +1454,8 @@ document.addEventListener("input",function(e){
       .filter(r=>!q||(r.client+" "+r.address+" "+r.date+" "+nice(r.date)).toLowerCase().indexOf(q)>=0);
     $("#rlist").innerHTML=listHTML(list); }
   else if(f==="aq"){ UI.aq=t.value; renderAres(); }
+  else if(f==="tname"){ F.tName=t.value; }
+  else if(f==="taddr"){ F.tAddr=t.value; }
   else if(f==="cd"){ const sv=F.services.find(x=>x.s===t.dataset.s); if(sv) sv.d=t.value; }
   else if(f==="amt"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.amount=t.value; keepOpen(t.dataset.id); }
   else if(f==="mix"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.mix=t.value; keepOpen(t.dataset.id); }
@@ -1232,15 +1472,24 @@ document.addEventListener("change",async function(e){
   render();
 });
 
+/* A record with an id of its own (made since sync started) is kept as a tombstone until the server has been told, so the office copy
+   is marked deleted and unlinked from the job (never erased: these are kept 3 years). An older record just goes, as before. */
+async function deleteRec(r){
+  if(!r.uuid){ await dbDel(r.id); S.records=S.records.filter(x=>x.id!==r.id); return; }
+  const t=Object.assign({},r,{deleted:true,deletedAt:new Date().toISOString(),photoCount:(r.photos||[]).length,photos:[],syncPending:true});
+  await dbPut(t);
+  S.records=S.records.filter(x=>x.id!==r.id); S.tomb=S.tomb.filter(x=>x.id!==r.id).concat([t]);
+}
 /* open a saved record back in the form */
 function loadForEdit(r){
   F=newForm(); W=newWx(); UI={};
-  F.id=r.id; F.propId=r.propId; F.client=r.client; F.address=r.address; F.date=r.date; F.start=r.start||""; F.finish=r.finish||"";
+  F.id=r.id; F.uuid=r.uuid||null; F.jobId=r.jobId||null; F.isNew=!!r.isNewCustomer;
+  F.propId=r.propId; F.client=r.client; F.address=r.address; F.date=r.date; F.start=r.start||""; F.finish=r.finish||"";
   F.finishTouched=!!r.finish;
   F.services=r.services.map(x=>{ const info=S.services.find(y=>y.s===x.s);
     return {s:x.s,d:x.d||"",custom:!!x.d&&!(info&&info.d.indexOf(x.d)>=0)}; });
   F.products=r.products.map(x=>Object.assign({},x)); F.areas=(r.areas||[]).slice(); F.equipment=(r.equipment||[]).slice();
-  const names=(r.appliedBy.name||"").split(" / "); F.appliedBy=names.filter(Boolean);
+  F.keep=peopleOf(r.appliedBy); F.appliedBy=F.keep.map(p=>p.name); F.byTouched=true;     // the people on the record stay as they were
   const ns=r.nextService||{}; F.next={k:ns.label||"",date:ns.label==="Custom date"?(ns.date||""):""};
   F.notes=r.notes||""; F.photos=(r.photos||[]).slice();
   const w=r.weather;
@@ -1277,23 +1526,25 @@ window.addEventListener("hashchange",function(){ if(F&&applyHash()) render(); })
   resetForm_pre();
   const ok=await loadAll(); if(!ok) return;
   S.prefs=STORE.read(); P();
-  try{ S.records=(await dbAll())||[]; }
+  try{ const all=(await dbAll())||[]; S.records=all.filter(r=>!r.deleted); S.tomb=all.filter(r=>r.deleted); }
   catch(e){ S.records=[]; toast("Couldn't open the saved records on this device ("+(e&&e.message?e.message:"storage error")+"). New records may not save.",true); }
   resetForm(); const fromCal=fromJob(); if(fromCal) markClean(); applyHash(); render(); if(fromCal) fetchWx();
   custStart();
+  syncRecords().then(syncPaint);
   if(pendingCount()) backfill().then(()=>renderBanner());
-  window.addEventListener("online",()=>{ if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
+  window.addEventListener("online",()=>{ syncRecords().then(syncPaint);
+    if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
 })();
 function resetForm_pre(){}
 /* Opened from a job on the Job Calendar (records.html?job=..&client=..&addr=..&service=..): the client, the address and
    the job's services are filled in, so the worker (who can't search the customer list) goes straight to the treatment.
-   The "customer" is keyed by the address, so "Same as last time" works on a repeat visit to the same place. */
+   The "customer" is keyed by the address (histKey, the same key the Job Book route and typed customers use), so "Same as last time" works on a repeat visit to the same place. */
 function fromJob(){
   let q; try{ q=new URLSearchParams(location.search); }catch(e){ return false; }
   const job=(q.get("job")||"").trim(); if(!job) return false;
   const client=(q.get("client")||"").trim(), addr=(q.get("addr")||"").trim(), svc=(q.get("service")||"").trim();
   if(!client&&!addr) return false;
-  F.jobId=job; F.propId="addr:"+(addr||client).toLowerCase().replace(/\s+/g," ");
+  F.jobId=job; F.propId="addr:"+histKey(addr||client);
   F.client=client||"(no name on the job)"; F.address=addr; F.date=TODAY; F.start=nowHM();
   svc.split("+").map(x=>alias(x.trim())).filter(Boolean).forEach(n=>{ if(offered(n)) svcOn(n); });
   return true;
