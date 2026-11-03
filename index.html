@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <title>Inspection Capture</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inspection Capture">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap">
@@ -56,9 +59,10 @@
   header{position:sticky;top:0;z-index:30;background:var(--paper);border-bottom:1px solid var(--edge);
     padding:calc(env(safe-area-inset-top) + 12px) 0 10px}
   .hrow{display:flex;align-items:center;gap:12px;justify-content:space-between}
-  .htitle{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.2rem;line-height:1.05}
-  .htitle small{display:block;font-family:"Public Sans";font-weight:500;font-size:.72rem;color:var(--muted);margin-top:2px}
-  .prog{display:flex;align-items:center;gap:8px;font-family:"Spline Sans Mono",monospace;font-size:.72rem;color:var(--muted)}
+  .hrow>div:first-child{min-width:0}   /* the subtitle is now "number street, suburb": cut it short rather than push the progress bar off */
+  .htitle{font-family:"Newsreader",Georgia,serif;font-weight:600;font-size:1.2rem;line-height:1.05;min-width:0}
+  .htitle small{display:block;font-family:"Public Sans";font-weight:500;font-size:.72rem;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .prog{display:flex;align-items:center;gap:8px;flex:none;font-family:"Spline Sans Mono",monospace;font-size:.72rem;color:var(--muted)}
   .bar{width:70px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
   .bar i{display:block;height:100%;background:var(--timber);width:0;transition:width .3s}
 
@@ -272,6 +276,13 @@
   .jobdel.clrbtn{width:78px;font-size:.7rem;font-weight:700;line-height:1.15;padding:0 6px}
   .jobdel.clrbtn.armed{width:78px}
   .jobdel.clrbtn:disabled{opacity:.5}
+  .teamitem{display:flex;flex-direction:column;gap:6px}
+  .rowbtns{display:flex;flex-direction:column;justify-content:center;gap:6px;flex:none;width:78px}   /* Clear photos above Delete; a cleared row just has Delete */
+  .rowbtns .jobdel.clrbtn{flex:0 0 auto;min-height:38px}
+  .delwarn{font-size:.78rem;line-height:1.4;color:var(--find);background:var(--find-bg);border-radius:9px;padding:8px 10px}
+  .delwarn[hidden]{display:none}
+  .buildstamp{margin-top:10px;text-align:center;font-family:"Spline Sans Mono",monospace;font-size:.64rem;color:var(--faint)}
+  a.btn{display:inline-flex;align-items:center;text-decoration:none}
   .nowtag.tagnew{background:var(--find);color:#fff}
   .sheet.tall .joblist{max-height:none;overflow:visible}
   /* "rest are clear" shortcut */
@@ -328,7 +339,11 @@
   .jobrow{display:flex;align-items:stretch;gap:8px}
   .jobrow.active .jobopen{border-color:var(--timber);box-shadow:inset 3px 0 0 var(--timber)}
   .jobopen{flex:1;text-align:left;background:var(--raised);border:1px solid var(--edge);border-radius:10px;padding:10px 12px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
-  .jobaddr{font-weight:600;font-size:.92rem;color:var(--ink)}
+  .jobaddr{font-weight:700;font-size:1.1rem;line-height:1.25;color:var(--ink)}   /* the address is the headline of every row (Jobs and Reports sent in) */
+  .jobchips{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+  .datechip{font-size:.74rem;font-weight:700;background:var(--sunk);color:var(--ink);border:1px solid var(--edge);border-radius:6px;padding:1px 7px}
+  .jobchips .nowtag{margin-left:0;font-size:.7rem;padding:1px 7px}
+  .jobwho{font-size:.82rem;color:var(--muted)}
   .jobmeta{font-size:.76rem;color:var(--muted)}
   .nowtag{font-size:.62rem;background:var(--timber-soft);color:var(--timber);border-radius:6px;padding:1px 6px;font-weight:700;margin-left:6px;vertical-align:middle}
   .jobdel{width:42px;flex:none;border:1px solid var(--edge);background:var(--raised);border-radius:10px;color:var(--muted);font-size:1.2rem;cursor:pointer}
@@ -418,7 +433,7 @@
   <div class="rvbar"><div class="wrap">
     <button class="btn ghost" id="rvBack" type="button">&larr; Back</button>
     <div class="rvt">Read-through<small id="rvsub"></small></div>
-    <button class="btn ghost" id="rvSave" type="button">Save for Claude</button>
+    <button class="btn ghost" id="rvSave" type="button" hidden>Save for Claude</button>   <!-- Mitch only: shown by refreshRoleBits() once a master login is known -->
     <button class="btn primary" id="rvSend" type="button">Send to Mitch</button>
   </div></div>
   <div class="wrap rvbody" id="rvbody"></div>
@@ -445,6 +460,9 @@
 <script src="lpc-config.js?v=2"></script>   <!-- the Supabase address + public key, same file the Job Calendar uses. Missing = the send-to-office buttons stay hidden -->
 <script>
 "use strict";
+
+// Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
+const BUILD="2026-11-04a";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -605,6 +623,9 @@ function subFallback(){return isPP()?"New pre-purchase inspection":"New regular 
 // shared mic ("Speak") button — dropped next to every free-text field except client contact fields
 const MIC_SVG='<svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>';
 const MIC_BTN='<button class="mic" type="button" data-mic>'+MIC_SVG+'Speak</button>';
+// Notes-box hints: Mitch's lines mention the polishing step, which is his side of the job. Everyone else gets the plain line (see refreshRoleBits).
+const PH_NOTE_POLISH="Type or speak quick notes. I will polish them into report wording.",PH_NOTE_PLAIN="Type or speak quick notes.";
+const PH_SUBQ_POLISH="Type or speak what you found. I'll polish it for the report.",PH_SUBQ_PLAIN="Type or speak what you found.";
 // camera + library icons; CSS (body.lib) shows one and hides the other so every photo button shows the current source
 const ICON_ATTR='viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"';
 const CAMICON=`<svg class="ic-cam" ${ICON_ATTR}><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg><svg class="ic-lib" ${ICON_ATTR}><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-8 8"/></svg>`;
@@ -658,13 +679,49 @@ function jobMeta(state){
   if(c.obs)Object.keys(c.obs).forEach(a=>photos+=(((c.obs[a]||{}).photos)||[]).length);
   if(c.inacc)photos+=((c.inacc.photos)||[]).length;
   const insp=c.inspector==="Other"?(c.inspectorOther||"").trim():(c.inspector||"");
-  return {id:state.id,address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),rtype:c.rtype||"regular",inspector:insp,updated:Date.now(),sent:state.sentAt||0,find,photos};
+  // address stays the street name only (as before); streetno, client, date and calJobId are new on 2026-11-04. Index entries saved before then lack them until the job is next saved.
+  return {id:state.id,streetno:(c.streetno||"").trim(),address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),client:(c.client||"").trim(),date:(c.date||"").trim(),calJobId:c.calJobId||"",rtype:c.rtype||"regular",inspector:insp,updated:Date.now(),sent:state.sentAt||0,find,photos};
 }
-// the last inspector picked on this device is the starting answer for the next new job
+// "37" + "Beech Lane" -> "37 Beech Lane" (the number has its own box on the form); "37 Beech Lane" + "Wilsons Creek" -> "37 Beech Lane, Wilsons Creek"
+function streetJoin(no,street){return [no,street].map(x=>String(x==null?"":x).trim()).filter(Boolean).join(" ");}
+function streetLine(c){c=c||{};return streetJoin(c.streetno,c.address);}
+function addrTitle(street,suburb){const s=String(street||"").trim(),u=String(suburb||"").trim();return s&&u?s+", "+u:(s||u);}
+function headerSub(){const c=STATE.customer||{};return addrTitle(streetLine(c),c.suburb)||subFallback();}
+function setHsub(){const h=document.getElementById("hsub");if(h)h.textContent=headerSub();}
+/* Day chips ("Wed 4 Nov") for the Jobs lists. A typed report date ("4 Nov 2026") is read as a plain calendar day; a timestamp is
+   turned into the Sydney day it fell on, whatever time zone the device is in. The year only shows when it isn't this year. */
+const DOW3=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+function sydParts(t){
+  const d=new Date(t);if(isNaN(d))return null;
+  try{const p=new Intl.DateTimeFormat("en-AU",{timeZone:"Australia/Sydney",year:"numeric",month:"numeric",day:"numeric"}).formatToParts(d);
+    const g=k=>+((p.find(x=>x.type===k)||{}).value);return {y:g("year"),m:g("month")-1,d:g("day")};}
+  catch(e){return {y:d.getFullYear(),m:d.getMonth(),d:d.getDate()};}
+}
+function chipYMD(y,m,d){
+  const dt=new Date(Date.UTC(y,m,d));
+  if(!(y>1999&&y<2100)||dt.getUTCMonth()!==m||dt.getUTCDate()!==d)return "";
+  const now=sydParts(Date.now());
+  return DOW3[dt.getUTCDay()]+" "+d+" "+MON3[m]+(now&&now.y!==y?" "+y:"");
+}
+function chipFromText(s){
+  s=String(s==null?"":s).trim().replace(/^[A-Za-z]{3,9},?\s+(?=\d)/,"");   // drop a leading weekday ("Wed 4 Nov 2026")
+  const yr=x=>x?(x.length===2?2000+(+x):+x):(sydParts(Date.now())||{}).y;
+  let m=s.match(/^(\d{1,2})\s+([A-Za-z]{3,9})\.?,?(?:\s+(\d{4}))?$/);
+  if(m){const mi=MON3.findIndex(x=>x.toLowerCase()===m[2].slice(0,3).toLowerCase());return mi<0?"":chipYMD(yr(m[3]),mi,+m[1]);}
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|[T\s])/);
+  if(m)return chipYMD(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4}|\d{2})$/);   // day first, the Australian way
+  if(m)return chipYMD(yr(m[3]),+m[2]-1,+m[1]);
+  return "";
+}
+function chipFromTime(t){const p=t?sydParts(t):null;return p?chipYMD(p.y,p.m,p.d):"";}
+// the report date if it can be read, otherwise the day the job was last saved or sent
+function dayChip(text,time){return chipFromText(text)||chipFromTime(time)||"";}
+// the last inspector picked on this device is the starting answer for the next new job; failing that, whoever is signed in
 function savedInspector(){try{return localStorage.getItem("lpc_inspector")||"";}catch(e){return "";}}
-function newJobCustomer(){const c={date:todayStr()};const i=savedInspector();if(i)c.inspector=i;return c;}
+function newJobCustomer(){const c={date:todayStr()};const i=savedInspector();if(i)c.inspector=i;else fillInspector(c);return c;}
 async function loadJobsIndex(){return (db?await dbGet("jobs"):null)||[];}
-async function saveJobsIndex(list){await dbSet("jobs",list);}
+async function saveJobsIndex(list){return await dbSet("jobs",list);}
 async function upsertJobMeta(){
   const list=await loadJobsIndex();const m=jobMeta(STATE);
   const i=list.findIndex(j=>j.id===STATE.id);
@@ -763,10 +820,10 @@ function buildDetails(){
     </div>
     <div class="block-b">
       <div class="grid2">
-        <div class="field"><label>Client name</label><input data-c="client" autocomplete="name" placeholder="Full name" value="${escv(c.client)}"></div>
-        <div class="field"><label>Client phone</label><input data-c="phone" inputmode="tel" autocomplete="tel" value="${escv(c.phone)}"></div>
+        <div class="field"><label>Client name</label><input data-c="client" autocomplete="off" placeholder="Full name" value="${escv(c.client)}"></div>
+        <div class="field"><label>Client phone</label><input data-c="phone" inputmode="tel" autocomplete="off" value="${escv(c.phone)}"></div>
       </div>
-      <div class="field"><label>Client email</label><input data-c="email" inputmode="email" autocomplete="email" placeholder="name@example.com" value="${escv(c.email)}"></div>
+      <div class="field"><label>Client email</label><input data-c="email" inputmode="email" autocomplete="off" placeholder="name@example.com" value="${escv(c.email)}"></div>
       <div class="field"><label class="notelabel"><span>Property address — start typing to search</span>
         <button class="mic" type="button" data-locate><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5.7-6-10a6 6 0 0 1 12 0c0 4.3-6 10-6 10Z"/><circle cx="12" cy="11" r="2.2"/></svg>Locate</button></label>
         <div style="display:flex;gap:8px;align-items:stretch">
@@ -870,7 +927,7 @@ function buildSection(item,isExtra){
           <div class="field subqfind" id="subqfind-${code}-${i}" style="display:${(a==='yes'||a==='undet')?'block':'none'}">
             <label class="notelabel"><span>Findings — what did you see?</span>
               <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
-            <textarea data-subqnote="${i}" placeholder="Type or speak what you found — I'll polish it for the report.">${escv((s.subqNotes&&s.subqNotes[i])||'')}</textarea>
+            <textarea data-subqnote="${i}" placeholder="${escv(isMaster()?PH_SUBQ_POLISH:PH_SUBQ_PLAIN)}">${escv((s.subqNotes&&s.subqNotes[i])||'')}</textarea>
             ${(((FIND[code]||{}).sub||[])[i]||[]).length?`<div class="findrow"><button class="fbtn" type="button" data-findings="sub" data-idx="${i}">Findings</button></div>`:''}
           </div></div>`}).join("")}
       </div>`:''}
@@ -889,7 +946,7 @@ function buildSection(item,isExtra){
         ${SPECIES_BY_CODE[code]?`<div class="findrow" style="margin:0 0 12px"><button class="fbtn" type="button" data-speciesbtn>${code==="8.8"?"Borer type":"Species"}</button><span class="sptags" id="sptags-${code}">${spTagsHtml(s)}</span></div>`:''}
         <div class="field"><label class="notelabel"><span>${item.always?'Note':(isExtra?'Notes':'What did you see? (rough note is fine)')}</span>
           <button class="mic" type="button" data-mic><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4"/></svg>Speak</button></label>
-          <textarea data-note placeholder="${escv(item.ph||(item.always?'e.g. 6 months':'Type or speak quick notes — I will polish them into report wording.'))}">${escv(s.note)}</textarea></div>
+          <textarea data-note placeholder="${escv(item.ph||(item.always?'e.g. 6 months':(isMaster()?PH_NOTE_POLISH:PH_NOTE_PLAIN)))}">${escv(s.note)}</textarea></div>
         ${hasFindings(code)?`<div class="findrow"><button class="fbtn" type="button" data-findings="sec">Findings</button></div>`:''}
         ${!item.nophoto?`<div class="banklab">Photos</div>
         <div class="photos" id="ph-${code}"></div>`:''}
@@ -1329,7 +1386,7 @@ main.addEventListener("click",e=>{
       STATE.customer.rtype=v;
       if(v==="prepurchase"){STATE.customer.scope=PP_SCOPE;}
       else if(STATE.customer.scope===PP_SCOPE){STATE.customer.scope="";}
-      render();document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
+      render();setHsub();
       scheduleSave();toast(v==="prepurchase"?"Pre-purchase inspection":"Regular inspection");
     }
     return}
@@ -1423,8 +1480,8 @@ main.addEventListener("click",e=>{
 main.addEventListener("input",e=>{
   const c=e.target.dataset.c;
   if(c!==undefined){STATE.customer[c]=e.target.value;
-    if(c==="address"){document.getElementById("hsub").textContent=e.target.value||subFallback();
-      clearTimeout(acT);acT=setTimeout(()=>addrLookup(e.target.value),400);}
+    if(c==="address"||c==="streetno"||c==="suburb")setHsub();
+    if(c==="address"){clearTimeout(acT);acT=setTimeout(()=>addrLookup(e.target.value),400);}
     const pd=document.getElementById("pill-DET");
     if(pd){pd.textContent=STATE.customer.address?"Filled":"To do";pd.className="pill "+(STATE.customer.address?"clear":"todo");}
     scheduleSave();return}
@@ -1626,7 +1683,7 @@ function setDetailFieldValues(){
   const set=(k,v)=>{const el=document.querySelector('[data-c="'+k+'"]');if(el)el.value=v||"";};
   set("streetno",c.streetno);set("address",c.address);set("suburb",c.suburb);set("state",c.state);set("postcode",c.postcode);
   const pd=document.getElementById("pill-DET");if(pd){pd.textContent=c.address?"Filled":"To do";pd.className="pill "+(c.address?"clear":"todo");}
-  document.getElementById("hsub").textContent=c.address||subFallback();
+  setHsub();
   const gh=document.getElementById("geo-hint");if(gh&&c.geo){gh.style.display="block";gh.textContent=`📍 Location captured (±${c.geo.acc||"?"}m)`;}
 }
 function applyAddr(d){
@@ -1765,7 +1822,7 @@ async function openNewJob(){
   STATE={id:genId(),customer:newJobCustomer(),sections:{}};
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
-  document.getElementById("hsub").textContent=subFallback();
+  setHsub();
   toast("New job started — the old one is saved under Jobs");
 }
 async function switchJob(id){
@@ -1775,35 +1832,44 @@ async function switchJob(id){
   STATE=s;if(!STATE.customer.date)STATE.customer.date=todayStr();
   await dbSet("activeId",id);
   render();window.scrollTo(0,0);
-  document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
-  toast("Opened "+(STATE.customer.address||"job"));
+  setHsub();
+  toast("Opened "+(streetLine(STATE.customer)||"job"));
 }
 async function deleteJob(id){
-  await dbDel("job::"+id);
-  const list=(await loadJobsIndex()).filter(j=>j.id!==id);await saveJobsIndex(list);
+  // dbDel/dbSet say false when the phone refused (storage full, private mode...), so check before telling anyone it worked
+  if(!await dbDel("job::"+id)){toast("Couldn't delete that job on this device. Nothing was removed. Try again",3800);return false;}
+  const list=(await loadJobsIndex()).filter(j=>j.id!==id);
+  const listOk=await saveJobsIndex(list);
+  let blank=false;
   if(id===STATE.id){
-    if(list.length){const s=await dbGet("job::"+list[0].id);STATE=s||{id:genId(),customer:{date:todayStr()},sections:{}};await dbSet("activeId",STATE.id);}
-    else{STATE={id:genId(),customer:{date:todayStr()},sections:{}};await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
-    render();document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
+    if(list.length){const s=await dbGet("job::"+list[0].id);STATE=s||{id:genId(),customer:newJobCustomer(),sections:{}};await dbSet("activeId",STATE.id);}
+    else{STATE={id:genId(),customer:newJobCustomer(),sections:{}};await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();blank=true;}
+    render();setHsub();
   }
-  toast("Job deleted");
+  if(!listOk)toast("Job deleted, but the list didn't update. Close Jobs and open it again",4200);
+  else toast(blank?"Job deleted. That was the last one, so a blank job is open":"Job deleted",blank?3200:1600);
+  return true;
 }
 async function openJobs(){
   if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
   const list=(await loadJobsIndex()).sort((a,b)=>b.updated-a.updated);
   const rows=list.map(j=>{
     const active=j.id===STATE.id;
-    const title=(j.address||"(no address yet)")+(j.suburb?", "+j.suburb:"");
-    const typeTag=(j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"")+(j.inspector?`<span class="nowtag">${escv(j.inspector)}</span>`:"")+(j.sent?`<span class="nowtag">${j.updated-j.sent>5000?"Changed since sent":"Sent "+fmtTime(j.sent)}</span>`:"");
+    // headline = the full address, then a row of small tags, then who it's for and who did it, then the counts
+    const title=addrTitle(streetJoin(j.streetno,j.address),j.suburb)||"(no address yet)";
+    const chip=dayChip(j.date,j.updated);
+    const tags=(chip?`<span class="datechip">${escv(chip)}</span>`:"")+(j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"")+(j.sent?`<span class="nowtag">${j.updated-j.sent>5000?"Changed since sent":"Sent "+fmtTime(j.sent)}</span>`:"")+(active?'<span class="nowtag">current</span>':"");
+    const who=[j.client,j.inspector?"inspected by "+j.inspector:""].filter(Boolean).join(" · ");
     const meta=`${j.find} finding${j.find===1?'':'s'} · ${j.photos} photo${j.photos===1?'':'s'} · ${timeAgo(j.updated)}`;
     return `<div class="jobrow${active?' active':''}">
-      <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}${typeTag}${active?'<span class="nowtag">current</span>':''}</span><span class="jobmeta">${escv(meta)}</span></button>
+      <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}</span>${tags?`<span class="jobchips">${tags}</span>`:""}${who?`<span class="jobwho">${escv(who)}</span>`:""}<span class="jobmeta">${escv(meta)}</span></button>
       <button class="jobdel" data-deljob="${escv(j.id)}" aria-label="Delete job">&times;</button></div>`;
   }).join("")||`<p style="font-size:.85rem">No saved jobs yet.</p>`;
   sheet.innerHTML=`<h3>Your jobs</h3>
     <p style="font-size:.85rem">Tap a job to open it. Everything's saved on this phone. Send it to the office (or Export it) so there's a backup off the device.</p>
     <div class="fscroll"><div id="syncbox"></div><div class="joblist">${rows}</div></div>
-    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mImport">Import packet</button><button class="btn primary" id="mNewJob">Start new job</button></div>`;
+    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mImport">Import packet</button><button class="btn primary" id="mNewJob">Start new job</button></div>
+    <div class="buildstamp">Build ${escv(BUILD)}</div>`;
   sheet.classList.add("tall");
   modal.classList.add("show");
   fillSyncBox();
@@ -1815,7 +1881,7 @@ async function openJobs(){
     ev.stopPropagation();
     if(b.dataset.armed){deleteJob(b.dataset.deljob).then(openJobs);return;}
     b.dataset.armed="1";b.textContent="Delete?";b.classList.add("armed");
-    setTimeout(()=>{if(b.isConnected){b.textContent="×";b.classList.remove("armed");delete b.dataset.armed;}},2500);
+    setTimeout(()=>{if(b.isConnected){b.textContent="×";b.classList.remove("armed");delete b.dataset.armed;}},4000);
   });
 }
 document.getElementById("jobsBtn").addEventListener("click",openJobs);
@@ -1900,12 +1966,12 @@ async function doExport(){
     sizeMB=(new Blob([json]).size/1048576).toFixed(1);
     nPhotos=packet.sections.reduce((a,s)=>a+s.photos.length+((s.subq||[]).reduce((b,q)=>b+((q.photos||[]).length),0)),0);
     nFind=packet.sections.filter(s=>s.status==="find").length;
-  }catch(err){toast("Couldn't build the packet — tell Claude");return;}
+  }catch(err){toast("Couldn't build the packet. "+tellHelp());return;}
 
   sheet.innerHTML=`<h3>Export this inspection</h3>
-    <p><b>${escv(STATE.customer.address||"(no address)")}</b><br>
+    <p><b>${escv(streetLine(STATE.customer)||"(no address)")}</b><br>
     ${nFind} finding${nFind===1?'':'s'} · ${nPhotos} photo${nPhotos===1?'':'s'} · ${sizeMB} MB packet</p>
-    <p style="font-size:.82rem">Saves one file. On your phone the share sheet opens — pick <b>Mail</b> and send it to yourself, or <b>Save to Files / AirDrop</b>. Then tell Claude the job's ready.</p>
+    <p style="font-size:.82rem">Saves one file. On your phone the share sheet opens. Pick <b>Mail</b> and send it to yourself, or <b>Save to Files / AirDrop</b>. Then tell ${isMaster()?"Claude":"Mitch"} the job's ready.</p>
     <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn primary" id="mExport">Save / Share packet</button></div>`;
   modal.classList.add("show");
   document.getElementById("mCancel").onclick=closeModal;
@@ -1930,7 +1996,7 @@ async function doExport(){
     }catch(err){
       const code=err&&err.code;
       if(code==="declined"){toast("Export cancelled")}
-      else{toast("Couldn't save here — tell Claude")}
+      else{toast("Couldn't save here. "+tellHelp())}
       resetBtn();
     }
   };
@@ -1939,6 +2005,7 @@ async function doExport(){
    inspection_<address>_<date>.json, so Claude finds the newest one (see mira-rsa-report-recipe.md, "Where the packet comes from").
    Always a plain download, never the share sheet. Hidden for a tech (Andrew): he sends to the office instead. */
 async function saveForClaude(){
+  if(!isMaster())return;   // the button is hidden for everyone else; this just makes sure
   toast("Building the file…");
   try{
     const packet=await buildPacket();
@@ -1951,7 +2018,7 @@ async function saveForClaude(){
     document.body.appendChild(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),5000);
     toast("Saved to Downloads: "+fname+". Tell Claude to build it.",4600);
-  }catch(err){toast("Couldn't save the file here. Tell Claude.",3400);}
+  }catch(err){toast("Couldn't save the file here. "+tellHelp(),3400);}
 }
 document.getElementById("rvSave").addEventListener("click",saveForClaude);
 /* ---------- read-through (Review): Finish opens it; report wording boxes; AI Polish; Import ---------- */
@@ -2027,6 +2094,7 @@ function rvExtra(id,code,name,key,raw,photos,label){
   return `<div class="rvcard has" id="rv-${id}"><div class="rvhead"><span class="code">${code}</span><span class="name">${name}</span></div>`+rvWord(key,raw,{label,status:"Comment",tone:rvTone()})+rvPhotos(photos)+`</div>`;
 }
 function aiRow(){
+  if(!isMaster())return "";   // the API-key card is Mitch's; nobody else needs to see it
   if(aiReady())return `<div class="rvcard"><div class="rvhead"><span class="name">AI wording help</span></div>
     <div class="rvai"><span>Key saved on this device.</span><button class="rvmini" type="button" data-polishall>Polish all</button><button class="rvmini ghost" type="button" data-aikeyremove>Remove key</button></div>
     <div class="rvsub" style="margin:8px 0 0">Sends only the note text and the section name. Never names, addresses or photos. Nothing is replaced without you reading it.</div></div>`;
@@ -2057,7 +2125,7 @@ function buildReview(){
 function openReview(){
   rvbody.innerHTML=buildReview();
   try{updateSyncUI();}catch(e){}
-  document.getElementById("rvsub").textContent=[STATE.customer.streetno,STATE.customer.address].filter(Boolean).join(" ")||subFallback();
+  document.getElementById("rvsub").textContent=headerSub();
   review.classList.add("show");document.body.style.overflow="hidden";
 }
 function closeReview(){review.classList.remove("show");document.body.style.overflow="";}
@@ -2177,19 +2245,25 @@ async function loadImported(st){
   STATE=st;if(!STATE.customer.date)STATE.customer.date=todayStr();
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
-  document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
-  toast("Imported "+(STATE.customer.address||"job"));
+  setHsub();
+  toast("Imported "+(streetLine(STATE.customer)||"job"));
   openReview();
 }
-async function importPacket(p){
+async function importPacket(p,opts){
   if(!p||!p.meta||p.meta.app!=="LPC Inspection Capture"||!p.customer||!Array.isArray(p.sections)){toast("That isn't an Inspection Capture packet",2800);return}
   const st=stateFromPacket(p);
   const jid=p.meta.jobId;
   const list=await loadJobsIndex();
   if(jid&&list.some(j=>j.id===jid)){
+    // Replace swaps in the incoming copy. If that copy has fewer photos than this device holds (a report whose photos were cleared at the office
+    // has none), Replace would throw the local photos away, so Keep both becomes the main button and Replace carries a warning.
+    const here=jid===STATE.id?jobMeta(STATE).photos:((list.find(j=>j.id===jid)||{}).photos||0),there=jobMeta(st).photos,lost=here-there;
+    const risky=lost>0;
+    const warn=risky?`<p style="font-size:.85rem;font-weight:600;color:var(--find)">${opts&&opts.cleared?"The office copy has had its photos cleared. ":"This copy has fewer photos than the one on this device. "}Replace would drop ${lost} photo${lost===1?"":"s"} saved here. Keep both is the safe choice.</p>`:"";
+    const bBoth=`<button class="btn ${risky?"primary":"ghost"}" id="mBoth">Keep both</button>`,bRepl=`<button class="btn ${risky?"ghost":"primary"}" id="mRepl">Replace</button>`;
     sheet.innerHTML=`<h3>Already on this device</h3>
-      <p style="font-size:.85rem">${escv(st.customer.address||"This job")} is already here. Replace it with the file's version, or keep both?</p>
-      <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn ghost" id="mBoth">Keep both</button><button class="btn primary" id="mRepl">Replace</button></div>`;
+      <p style="font-size:.85rem">${escv(streetLine(st.customer)||"This job")} is already here. Replace it with the file's version, or keep both?</p>${warn}
+      <div class="acts"><button class="btn ghost" id="mCancel">Cancel</button>${risky?bRepl+bBoth:bBoth+bRepl}</div>`;
     modal.classList.add("show");
     document.getElementById("mCancel").onclick=closeModal;
     document.getElementById("mBoth").onclick=()=>{st.id=genId();loadImported(st);};
@@ -2274,6 +2348,7 @@ function fToggleLoc(i){
 /* AI Tidy: joins the picked lines + Mitch's own words into one paragraph (same AI call as the read-through Polish) */
 function renderFAI(){
   const h=document.getElementById("fai");if(!h)return;
+  if(!isMaster()){h.innerHTML="";return;}   // no "AI is off. Set up" line for anyone but Mitch
   if(aiReady())h.innerHTML=`<div class="fairow"><button class="btn ghost" type="button" data-ftidy>Tidy with AI</button><button class="btn ghost" type="button" data-fundo hidden>Undo</button><span class="fnote">Joins your picked lines and your own words into one paragraph.</span></div>`;
   else h.innerHTML=`<div class="fairow"><button class="btn ghost" type="button" data-fsetup>AI is off. Set up</button></div><div class="fkey" id="fkey" hidden><input type="password" id="fKeyIn" placeholder="Paste Anthropic API key" autocomplete="off"><button class="btn ghost" type="button" data-fkeysave>Save key</button></div><div class="fnote" id="fkeynote" hidden style="margin:-4px 0 12px">The key stays on this device only. It is never put in the packet.</div>`;
 }
@@ -2411,15 +2486,45 @@ function loadSbLib(){return new Promise((res,rej)=>{if(window.supabase&&window.s
 async function sbClient(){if(SB)return SB;const cfg=sbCfg();if(!cfg)throw new Error("Sending isn't set up on this copy");await loadSbLib();SB=window.supabase.createClient(cfg.url,cfg.anonKey);return SB;}
 async function sbMe(){
   const sb=await sbClient();const g=await sb.auth.getSession();const u=g&&g.data&&g.data.session&&g.data.session.user;
-  if(!u){ME=null;return null;}
+  if(!u){ME=null;if(!sbHasSession())setCachedRole("");return null;}
   const r=await sb.from("staff").select("id,name,role,active").eq("id",u.id).maybeSingle();
-  const s=r&&r.data;ME=(s&&s.active)?{id:s.id,name:s.name,role:s.role}:null;return ME;
+  const s=r&&r.data;ME=(s&&s.active)?{id:s.id,name:s.name,role:s.role}:null;
+  if(ME)setCachedRole(ME.role);else if(r&&!r.error)setCachedRole("");   // a failed lookup (no signal) keeps what we knew
+  return ME;
+}
+/* Who is this device's person? ME is filled in once the login is checked, which needs signal. The last role seen is remembered, so Mitch's
+   own phone still shows his extras in a paddock with no bars. A device that never signed in as master, or has signed out, shows the plain version. */
+const ROLE_KEY="lpc_role";
+function cachedRole(){try{return localStorage.getItem(ROLE_KEY)||"";}catch(e){return "";}}
+function setCachedRole(r){try{if(r)localStorage.setItem(ROLE_KEY,r);else localStorage.removeItem(ROLE_KEY);}catch(e){}}
+function isMaster(){return (ME?ME.role:cachedRole())==="master";}
+function tellHelp(){return isMaster()?"Tell Claude.":"Tell Mitch.";}
+// the signed-in person as an Inspector answer ("Mitch", "Andrew", or Other plus their name); only fills a blank
+function fillInspector(c){
+  if(c.inspector||!ME||!ME.name)return false;
+  if(/^mitch/i.test(ME.name))c.inspector="Mitch";else if(/^andrew/i.test(ME.name))c.inspector="Andrew";else{c.inspector="Other";c.inspectorOther=ME.name;}
+  return true;
+}
+function syncInspectorUI(){
+  const c=STATE.customer||{};
+  const sel=document.querySelector('[data-c="inspector"]');if(sel)sel.value=c.inspector||"";
+  const ol=document.querySelector('[data-c="inspectorOther"]');if(ol){ol.value=c.inspectorOther||"";ol.style.display=c.inspector==="Other"?"block":"none";}
+}
+// the bits that differ for Mitch and everyone else: the notes-box hints that talk about polishing, and the read-through's Save for Claude button
+function refreshRoleBits(){
+  const m=isMaster();
+  main.querySelectorAll("textarea[data-note],textarea[data-subqnote]").forEach(t=>{
+    const p=t.getAttribute("placeholder");
+    if(p===PH_NOTE_POLISH||p===PH_NOTE_PLAIN)t.setAttribute("placeholder",m?PH_NOTE_POLISH:PH_NOTE_PLAIN);
+    else if(p===PH_SUBQ_POLISH||p===PH_SUBQ_PLAIN)t.setAttribute("placeholder",m?PH_SUBQ_POLISH:PH_SUBQ_PLAIN);
+  });
+  const sv=document.getElementById("rvSave");if(sv)sv.hidden=!m;
 }
 function sbErr(e){
   const m=String((e&&e.message)||e||"");
   if(navigator.onLine===false||/failed to fetch|networkerror|load failed|network request failed/i.test(m))return "No signal. It's all still saved on this device. Try again when you have signal.";
   if(/jwt|not authenticated|invalid.*token|refresh token|session/i.test(m)){ME=null;return "You've been logged out. Sign in again.";}
-  if(/row-level security|permission denied|42501|violates/i.test(m))return "The office said no. Tell Mitch: the one-off Supabase step (file 16) may not have been run yet.";
+  if(/row-level security|permission denied|42501|violates/i.test(m))return isMaster()?"The office said no. Tell Mitch: the one-off Supabase step (file 16) may not have been run yet.":"The office said no. Tell Mitch.";
   return "Couldn't do that: "+m.slice(0,140);
 }
 function fmtTime(t){const d=new Date(t);if(isNaN(d))return "";const tm=d.toLocaleTimeString("en-AU",{hour:"numeric",minute:"2-digit"});
@@ -2472,6 +2577,8 @@ function openSignIn(after){
   document.getElementById("siPass").addEventListener("keydown",e=>{if(e.key==="Enter")go();});
 }
 function afterSignIn(){
+  // a job still waiting on its Inspector answer (fresh device) gets the signed-in person's name
+  if(ME&&!STATE.sentAt&&fillInspector(STATE.customer||(STATE.customer={}))){syncInspectorUI();scheduleSave();}
   updateSyncUI();
   if(ME&&ME.role==="master"){checkTeam();if(!teamTimer)teamTimer=setInterval(()=>{if(document.visibilityState==="visible"&&ME&&ME.role==="master")checkTeam();},60000);}
 }
@@ -2491,6 +2598,8 @@ async function sendToOffice(){
   if(!ME){try{await sbMe();}catch(e){}}
   if(!ME){openSignIn(sendToOffice);return}
   const sendingId=STATE.id;
+  // a report always goes with an Inspector: if it's still blank, it's whoever is sending it
+  if(fillInspector(STATE.customer)){syncInspectorUI();scheduleSave();}
   sheet.classList.remove("tall");
   sheet.innerHTML=`<h3>Sending to ${sendDest()}</h3><p id="sendMsg">Getting ready…</p><div class="acts"><button class="btn ghost" id="mCancel">Close</button></div>`;
   modal.classList.add("show");
@@ -2517,7 +2626,8 @@ async function sendToOffice(){
     await Promise.all([worker(),worker(),worker()]);
     const light=mapStr(packet,isDataImg,u=>REF+pathOf.get(u));
     const cust=packet.customer,nFind=packet.sections.filter(s=>s.status==="find").length;
-    const summary={address:cust.address||"",suburb:cust.suburb||"",client:cust.client||"",rtype:cust.rtype||"regular",inspector:ME.name,find:nFind,photos:urls.length};
+    // date (the report date as typed) is new on 2026-11-04 so the sent-in rows can show a day; older rows lack it and fall back to the sent time
+    const summary={address:cust.address||"",suburb:cust.suburb||"",client:cust.client||"",date:cust.date||"",rtype:cust.rtype||"regular",inspector:ME.name,find:nFind,photos:urls.length};
     say("Saving the report…");
     const row={id:sendingId,data:{packet:light,summary,sentAt:new Date().toISOString()}};
     if(cust.calJobId)row.job_id=cust.calJobId;
@@ -2525,8 +2635,8 @@ async function sendToOffice(){
     if(r.error)throw r.error;
     if(STATE.id===sendingId){STATE.sentAt=Date.now();scheduleSave();}
     {const seen=await getSeen();seen[sendingId]=r.data.updated_at;await dbSet("seen",seen);}
-    sheet.innerHTML=`<h3>Sent</h3><p><b>${escv(summary.address||"(no address)")}</b><br>${nFind} finding${nFind===1?"":"s"} · ${urls.length} photo${urls.length===1?"":"s"}. ${ME.role==="master"?"It's waiting on your desktop: open the tool there, tap Jobs, and it's under Reports sent in.":"Mitch can open it under Jobs."} Send again any time if you add more.</p>
-      <div class="acts"><button class="btn primary" id="mCancel">Done</button></div>`;
+    sheet.innerHTML=`<h3>Sent</h3><p><b>${escv(addrTitle(summary.address,summary.suburb)||"(no address)")}</b><br>${nFind} finding${nFind===1?"":"s"} · ${urls.length} photo${urls.length===1?"":"s"}. ${ME.role==="master"?"It will appear in your Inspection Inbox folder on the Mac in about 5 minutes.":"It has gone to Mitch."} Send again any time if you add more.</p>
+      <div class="acts">${cust.calJobId?`<a class="btn ghost" href="calendar.html">Back to calendar</a>`:""}<button class="btn primary" id="mCancel">Done</button></div>`;
     document.getElementById("mCancel").onclick=closeModal;
   }catch(e){
     sheet.innerHTML=`<h3>Didn't send</h3><p>${escv(sbErr(e))}</p>
@@ -2557,14 +2667,25 @@ async function fetchTeam(){
 async function checkTeam(){try{await fetchTeam();}catch(e){return}updateSyncUI();}
 function updateSyncUI(){
   const sb=document.getElementById("rvSend");if(sb)sb.textContent=sendWord();
-  const sv=document.getElementById("rvSave");if(sv)sv.hidden=!!(ME&&ME.role==="tech");
+  refreshRoleBits();
   const n=TEAM.filter(t=>t.tag!=="Opened").length,b=document.getElementById("jbadge");
   if(b){b.hidden=!(ME&&ME.role==="master"&&n>0);b.textContent=n;}
 }
 function renderTeam(){
   const el=document.getElementById("teamlist");if(!el)return;
   if(!TEAM.length){el.innerHTML=`<span class="fnote">Nothing sent in yet.</span>`;return}
-  const row=t=>`<div class="jobrow"><button class="jobopen teamrow" type="button" data-teamrep="${escv(t.id)}"><span class="jobaddr">${escv([t.s.address,t.s.suburb].filter(Boolean).join(", ")||"(no address)")}<span class="nowtag${t.tag==="New"?" tagnew":""}">${t.tag}</span></span><span class="jobmeta">${escv(t.who)} · ${t.s.find||0} finding${(t.s.find||0)===1?"":"s"} · ${t.cleared?"photos cleared":(t.s.photos||0)+" photo"+((t.s.photos||0)===1?"":"s")} · ${fmtTime(t.at)}</span></button><button class="jobdel clrbtn" type="button" data-clearph="${escv(t.id)}" ${t.cleared?"disabled":""}>${t.cleared?"Cleared":"Clear photos"}</button></div>`;
+  // the address is the headline; a day chip and small tags under it; client and inspector as a quieter line. Rows sent before 2026-11-04 have no date, so they show the sent day.
+  const row=t=>{
+    const s=t.s||{},nF=s.find||0,nP=s.photos||0,id=escv(t.id);
+    const title=addrTitle(s.address,s.suburb)||"(no address)";
+    const chip=dayChip(s.date,t.at);
+    const tags=(chip?`<span class="datechip">${escv(chip)}</span>`:"")+`<span class="nowtag${t.tag==="New"?" tagnew":""}">${t.tag}</span>`+(s.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"");
+    const who=[s.client,t.who?"inspected by "+t.who:""].filter(Boolean).join(" · ");
+    const meta=`${nF} finding${nF===1?"":"s"} · ${t.cleared?"photos cleared":nP+" photo"+(nP===1?"":"s")} · ${fmtTime(t.at)}`;
+    const btns=(!t.cleared&&nP>0?`<button class="jobdel clrbtn" type="button" data-clearph="${id}">Clear photos</button>`:"")+`<button class="jobdel clrbtn" type="button" data-delrep="${id}">Delete</button>`;
+    const warn=`Delete this report from the office copy? It removes the report text${t.cleared?"":" and "+(nP?"all "+nP+" photo"+(nP===1?"":"s"):"any photos")+" in storage"}. It can't be undone. The copy in your Mac Inspection Inbox folder is separate and stays.${t.tag!=="Opened"?" You haven't opened this one on this device yet.":""}`;
+    return `<div class="teamitem"><div class="jobrow"><button class="jobopen teamrow" type="button" data-teamrep="${id}"><span class="jobaddr">${escv(title)}</span><span class="jobchips">${tags}</span>${who?`<span class="jobwho">${escv(who)}</span>`:""}<span class="jobmeta">${escv(meta)}</span></button><div class="rowbtns">${btns}</div></div><div class="delwarn" hidden>${escv(warn)}</div></div>`;
+  };
   const today=new Date().toDateString(),td=TEAM.filter(t=>new Date(t.at).toDateString()===today),ea=TEAM.filter(t=>new Date(t.at).toDateString()!==today);
   const nClear=TEAM.filter(t=>t.tag==="Opened"&&!t.cleared&&(t.s.photos||0)>0).length;
   el.innerHTML=(td.length?`<div class="flab">Today</div>`+td.map(row).join(""):"")+(ea.length?`<div class="flab">Earlier</div>`+ea.map(row).join(""):"")
@@ -2593,6 +2714,37 @@ async function clearPhotosFor(t){
   t.at=u.data.updated_at;t.s=data.summary;t.cleared=true;
   return paths.length;
 }
+/* Delete a sent-in report from the office copy (Mitch only): the photo files first, then the report row. Photos first so a failed second step can be
+   finished by tapping Delete again (the other way round would leave photos nobody can reach). The "inspections" delete is allowed by the master rule in 01_schema.sql. */
+async function deleteReportFor(t){
+  const sb=await sbClient();
+  const folder=t.staff+"/"+t.id;
+  const ls=await sb.storage.from(SB_BUCKET).list(folder,{limit:1000});
+  if(ls.error)throw ls.error;
+  const paths=(ls.data||[]).map(f=>folder+"/"+f.name);
+  if(paths.length){
+    const rm=await sb.storage.from(SB_BUCKET).remove(paths);
+    if(rm.error)throw rm.error;
+    const chk=await sb.storage.from(SB_BUCKET).list(folder,{limit:1000});
+    if(chk.error)throw chk.error;
+    if((chk.data||[]).length)throw new Error("Some photos didn't delete ("+chk.data.length+" left). Try again.");
+  }
+  let d;
+  try{
+    d=await sb.from("inspections").delete().eq("id",t.id).select("id");
+    if(d.error)throw d.error;
+    if(!(d.data||[]).length)throw new Error("The office didn't remove the report");   // a refused delete comes back as zero rows, not an error
+  }catch(e){
+    throw new Error((paths.length?"The photos are gone but the report is still there. Tap Delete again to finish. ":"")+String((e&&e.message)||e||"").slice(0,100));
+  }
+  const seen=await getSeen();delete seen[t.id];await dbSet("seen",seen);
+  TEAM=TEAM.filter(x=>x.id!==t.id);
+  return paths.length;
+}
+function delErr(e){
+  const m=String((e&&e.message)||e||"");
+  return /row-level security|permission denied|42501|violates/i.test(m)?"The office refused the delete: "+m.slice(0,100):sbErr(e);
+}
 function dropBlank(node){
   if(Array.isArray(node))return node.filter(x=>x!=="").map(dropBlank);
   if(node&&typeof node==="object"){const o={};for(const k in node)o[k]=dropBlank(node[k]);return o;}
@@ -2615,13 +2767,28 @@ async function fillSyncBox(){
 const JOB_COLS="id,job_date,start_time,service_type,services,address,status,staff_id,client:clients(id,name,phone,email,street,suburb,state,postcode)";
 function isoToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function titleCase(s){return String(s||"").toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());}
-// a calendar job's address is one line ("37 Beech Lane Wilsons Creek"): peel off the number and, when the client record knows it, the suburb
+// a calendar job's address is one line: "3 Oleander St, Mullumbimby NSW 2482" (or the older "37 Beech Lane Wilsons Creek"). Peel off the number, the
+// suburb, the state and the postcode so each lands in its own box, and leave the street name in the street box.
 function splitJobAddress(addr,cl){
   let a=String(addr||"").trim(),suburb="",state="",postcode="";cl=cl||{};
-  if(!a){a=cl.street||"";}
-  if(cl.suburb&&a.toLowerCase().endsWith(String(cl.suburb).toLowerCase())){a=a.slice(0,a.length-cl.suburb.length).trim().replace(/,$/,"").trim();suburb=titleCase(cl.suburb);state=cl.state||"";postcode=cl.postcode||"";}
-  let no="";const m=a.match(/^(\d+[A-Za-z]?(?:\s*[\/-]\s*\d+[A-Za-z]?)?)\s+(.+)$/);
-  if(m){no=m[1].replace(/\s+/g,"");a=m[2];}
+  const fromClient=!a;
+  if(fromClient){a=cl.street||"";suburb=titleCase(cl.suburb||"");state=cl.state||"";postcode=cl.postcode||"";}   // no job address: the client's own record
+  const ST="NSW|QLD|VIC|SA|WA|TAS|NT|ACT";
+  // 1. ", Suburb [STATE] [2xxx]" after the last comma (a suburb never starts with a digit, so "Unit 4, 6 Smith St" isn't split)
+  let m=a.match(new RegExp("^(.*),\\s*([A-Za-z][A-Za-z'\u2019.\\- ]*?)(?:\\s+("+ST+"))?(?:\\s+(\\d{4}))?\\s*$","i"));
+  if(m&&m[1].trim()){
+    a=m[1].trim();suburb=m[2].trim();if(!/[a-z]/.test(suburb))suburb=titleCase(suburb);
+    state=(m[3]||"").toUpperCase();postcode=m[4]||"";
+    if(cl.suburb&&String(cl.suburb).toLowerCase()===suburb.toLowerCase()){state=state||cl.state||"";postcode=postcode||cl.postcode||"";}
+  }else{
+    // 2. no comma: take a trailing "NSW 2482" off, then (old form) the client's suburb if the line ends with it
+    const t=a.match(new RegExp("^(.*?)\\s+("+ST+")\\s+(\\d{4})\\s*$","i"));
+    if(t){a=t[1].trim();state=t[2].toUpperCase();postcode=t[3];}
+    if(cl.suburb&&a.toLowerCase().endsWith(String(cl.suburb).toLowerCase())){a=a.slice(0,a.length-cl.suburb.length).trim().replace(/,$/,"").trim();suburb=titleCase(cl.suburb);state=state||cl.state||"";postcode=postcode||cl.postcode||"";}
+  }
+  // the street number: 37, 37A, 4/6, 4-6, 3 & 5, or a lettered pair like "21 A & B"
+  let no="";const n=a.match(/^(\d+[A-Za-z]?(?:\s*[\/-]\s*\d+[A-Za-z]?)?(?:\s+[A-Za-z]\s*(?:&|and)\s*[A-Za-z](?=\s)|\s*(?:&|and)\s*\d+[A-Za-z]?(?=\s))?)\s+(.+)$/i);
+  if(n){no=n[1].replace(/\s*([\/-])\s*/g,"$1").replace(/\s+/g," ");a=n[2];}
   return {streetno:no,address:a,suburb,state,postcode};
 }
 async function openTodayJobs(){
@@ -2648,11 +2815,11 @@ async function startFromJob(j){
   Object.assign(c,{client:cl.name||"",phone:cl.phone||"",email:cl.email||"",streetno:a.streetno,address:a.address,suburb:a.suburb,state:a.state,postcode:a.postcode,calJobId:j.id});
   const svcText=[j.service_type].concat((j.services||[]).map(x=>x&&x.type)).join(" ");
   if(/pre[\s-]*purchase/i.test(svcText)){c.rtype="prepurchase";c.scope=PP_SCOPE;}
-  if(!c.inspector&&ME){if(/^mitch/i.test(ME.name))c.inspector="Mitch";else if(/^andrew/i.test(ME.name))c.inspector="Andrew";else{c.inspector="Other";c.inspectorOther=ME.name;}}
+  fillInspector(c);
   STATE={id:keepId,customer:c,sections:{}};
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
-  document.getElementById("hsub").textContent=STATE.customer.address||subFallback();
+  setHsub();
   toast("Started from "+(cl.name||"the job"));
 }
 async function openTeamReport(id){
@@ -2680,15 +2847,25 @@ async function openTeamReport(id){
     const seen=await getSeen();seen[id]=r.data.updated_at;await dbSet("seen",seen);
     const t=TEAM.find(x=>x.id===id);if(t){t.tag="Opened";t.at=r.data.updated_at;}
     updateSyncUI();
-    await importPacket(full);
+    await importPacket(full,{cleared:wasCleared});
   }catch(e){
     sheet.innerHTML=`<h3>Couldn't get it</h3><p>${escv(sbErr(e))}</p><div class="acts"><button class="btn primary" id="mCancel">Close</button></div>`;
     document.getElementById("mCancel").onclick=closeModal;
   }
 }
 sheet.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-signin],[data-signout],[data-sendnow],[data-todayjobs],[data-teamrep],[data-tj],[data-clearph],[data-clearall]");
+  const b=e.target.closest("[data-signin],[data-signout],[data-sendnow],[data-todayjobs],[data-teamrep],[data-tj],[data-clearph],[data-clearall],[data-delrep]");
   if(!b)return;
+  if(b.dataset.delrep!==undefined){
+    if(!ME||ME.role!=="master")return;   // office deletes are Mitch's (the office rules refuse a tech anyway)
+    const t=TEAM.find(x=>x.id===b.dataset.delrep);if(!t)return;
+    const item=b.closest(".teamitem"),warn=item&&item.querySelector(".delwarn");
+    if(b.dataset.armed){b.disabled=true;b.textContent="Deleting…";
+      try{const n=await deleteReportFor(t);toast("Deleted from the office copy"+(n?" ("+n+" photo"+(n===1?"":"s")+")":""),3000);}catch(err){toast(delErr(err),4600);}
+      updateSyncUI();renderTeam();return}
+    b.dataset.armed="1";b.textContent="Delete?";b.classList.add("armed");if(warn)warn.hidden=false;
+    setTimeout(()=>{if(b.isConnected&&b.dataset.armed){b.textContent="Delete";b.classList.remove("armed");delete b.dataset.armed;if(warn)warn.hidden=true;}},4000);
+    return}
   if(b.dataset.clearph!==undefined){
     const t=TEAM.find(x=>x.id===b.dataset.clearph);if(!t||t.cleared)return;
     if(t.tag!=="Opened"){toast("Open this report first, so its photos are saved on this device",3400);return}
@@ -2714,7 +2891,7 @@ sheet.addEventListener("click",async e=>{
       openJobs();};
     return}
   if(b.dataset.signin!==undefined){openSignIn(openJobs);return}
-  if(b.dataset.signout!==undefined){try{const sb=await sbClient();await sb.auth.signOut({scope:"local"});}catch(err){}ME=null;TEAM=[];updateSyncUI();openJobs();return}
+  if(b.dataset.signout!==undefined){try{const sb=await sbClient();await sb.auth.signOut({scope:"local"});}catch(err){}ME=null;TEAM=[];setCachedRole("");updateSyncUI();openJobs();return}
   if(b.dataset.sendnow!==undefined){sendToOffice();return}
   if(b.dataset.todayjobs!==undefined){openTodayJobs();return}
   if(b.dataset.teamrep!==undefined){openTeamReport(b.dataset.teamrep);return}
@@ -2728,9 +2905,14 @@ async function handleLaunchParams(){
   const client=q.get("client")||"",addr=q.get("addr")||"";
   try{history.replaceState(null,"",location.pathname);}catch(e){}   // so a refresh doesn't start it a second time
   // 1. already started on this device? open that one
+  // The index remembers each job's calendar id (2026-11-04), so the usual case loads nothing. Entries saved before then have no calJobId key at all,
+  // and only those get the old look-inside scan (which reads each job's photos).
   const list=await loadJobsIndex();
-  for(const m of list){const st=await dbGet("job::"+m.id);
-    if(st&&st.customer&&st.customer.calJobId===jid){await switchJob(m.id);toast("Opened your inspection for "+(st.customer.client||st.customer.address||"this job"),2600);return}}
+  const hit=list.find(m=>m.calJobId===jid);
+  if(hit){await switchJob(hit.id);
+    if(STATE.id===hit.id){toast("Opened your inspection for "+(STATE.customer.client||streetLine(STATE.customer)||"this job"),2600);return}}
+  for(const m of list){if(m.calJobId!==undefined)continue;const st=await dbGet("job::"+m.id);
+    if(st&&st.customer&&st.customer.calJobId===jid){await switchJob(m.id);toast("Opened your inspection for "+(st.customer.client||streetLine(st.customer)||"this job"),2600);return}}
   // 2. signed in (the calendar login is shared): fetch the full job, client details and all
   if(sbCfg()){
     if(!ME&&sbHasSession()){try{await sbMe();}catch(e){}}
@@ -2764,7 +2946,7 @@ async function handleLaunchParams(){
   if(!STATE.customer)STATE.customer={};
   if(!STATE.customer.date)STATE.customer.date=todayStr();
   if(db){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
-  if(STATE.customer.address)document.getElementById("hsub").textContent=STATE.customer.address;
+  setHsub();
   applyPhotoSrc();
   render();
   try{syncBoot();}catch(e){}

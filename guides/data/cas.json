@@ -1,0 +1,117 @@
+{
+ "id": "cas",
+ "title": "CAS treatment guide",
+ "subtitle": "Cockroach, ant and spider. The full general pest treatment.",
+ "updated": "2026-11-04",
+ "source": "LPC_CAS_Field_Guide.pdf",
+ "sections": [
+  {
+   "type": "callout",
+   "kind": "note",
+   "id": "cupboards",
+   "title": "Heavy activity in cupboards?",
+   "body": "Food, linen or clothing: ask customer to empty. Big difference to outcome. If they can't, note on job report: harborage untreated, eggs/nests may remain."
+  },
+  {
+   "type": "text",
+   "body": "Ask customer for hot spots. Go straight to treatment."
+  },
+  {
+   "type": "table",
+   "heading": "Equipment and products",
+   "short": "Products",
+   "columns": ["Method", "Product", "How and where"],
+   "rows": [
+    ["ASTRO", "Astro aerosol", "Cracks, crevices, hinges, power point cavities, behind/under furniture, kickboards, under bench crevices, architrave gaps, roof void"],
+    ["POWDER", "Permethrin powder", "Light dust: behind/under furniture, under bottom drawer, kickboards. Powder blower through weep holes into wall cavity & enclosed subfloor only."],
+    ["REGA", "Aquamax (standard)\nDemand Duo (heavy infestation)", "HIGH PRESSURE: clean start/stop, no dripping. Light & neat, extra light on cornices. Internal skirtings & cornices only."],
+    ["PUMP", "Fipronil (default)\nBifenthrin (heavy spiders)", "All exterior via pump sprayer off truck. Swap to Bifenthrin if spiders are the main issue."],
+    ["GEL", "Seclira (ON REQUEST ONLY)", "Slow activation. Only if customer specifically asks. Pea-sized dots in cracks & harborage points."]
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Interior: where to treat",
+   "short": "Interior",
+   "columns": ["Area", "What to do"],
+   "rows": [
+    ["Kitchen", "Under/behind fridge, dishwasher, oven. Under sink. Cabinet hinges. Drawer runners (light spray). Under bottom drawer (light powder). Crevices under benches. Behind kickboards: spray/powder, look for gaps. Dishwasher hose hole access under sink."],
+    ["Bathroom", "Under vanity, toilet base, pipe penetrations, behind mirror cabinet."],
+    ["Laundry", "Behind/under washing machine & dryer. Pipe penetrations. Skirting."],
+    ["Skirting boards", "All accessible skirting boards: light Rega spray. Add cornices if heavy spider activity."],
+    ["Power points", "Remove cover plate, quick Astro spray into wall cavity, replace."],
+    ["Furniture", "Light Astro & powder behind/under large furniture."],
+    ["Window/door architraves", "Look for gaps, get Astro in. Key ant entry point."],
+    ["Pantry & linen", "Shelf undersides & corners if emptied by customer."],
+    ["Wardrobes", "Floor corners & skirting inside."],
+    ["Garage", "Skirting, floor joints, wall/ceiling junctions, undisturbed corners."],
+    ["Roof void", "Powder & Astro into cavities. NOTE if no access."],
+    ["Subfloor", "Pump sprayer if open/accessible. Powder blower if enclosed. Do NOT powder open subfloor. NOTE if no access."],
+    ["Wall cavities", "Powder blower through weep holes into wall cavity."]
+   ]
+  },
+  {
+   "type": "text",
+   "heading": "Exterior: where to treat",
+   "short": "Exterior",
+   "body": "All exterior with pump sprayer off truck. Fipronil default, Bifenthrin if heavy spider problem."
+  },
+  {
+   "type": "table",
+   "columns": ["Area", "What to do"],
+   "rows": [
+    ["All external walls", "Full band treatment at base of all walls."],
+    ["Windows & doors", "Around all frames & weep holes."],
+    ["Eaves", "Full length. Priority for spiders."],
+    ["Soil & gardens", "All adjacent garden beds, soil & fence line adjacent to structure."],
+    ["Retaining walls", "Face & top. Major ant & spider harborage."],
+    ["Meter box & HWS", "Inside meter box. Around hot water system."],
+    ["AC penetrations", "Around all AC unit wall penetrations."],
+    ["Letterbox & garden lights", "Around bases. Cockroach harborage."],
+    ["Deck & pergola", "Under decking & pergola joints/beam ends."]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "All internal areas treated (skirtings, cracks, power points, furniture, kickboards)",
+    "Roof void & subfloor done or access noted on job report",
+    "Full exterior band completed",
+    "Any untreated/inaccessible areas noted on job report",
+    "Any other pest activity (termites, rodents etc.) flagged to customer & quote offered",
+    "Customer briefed on re-entry time & what to expect"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Is it safe for my kids & pets?",
+     "a": "Yes. Synthetic pyrethroids, derived from plants, low-tox. Actually less than your average supermarket fly spray. Targeted application, not blanketed. Safe once dry, about an hour. Just keep kids and pets out while we're treating. [Mitch to confirm this wording]"
+    },
+    {
+     "q": "Why am I still seeing pests after treatment?",
+     "a": "Completely normal. Takes 2 to 3 weeks for full effect. May see more activity at first as they contact the product, which means it's working. Still active after 3 weeks? Call us and we'll come back."
+    },
+    {
+     "q": "How long does it last?",
+     "a": "Exterior around 3 to 6 months depending on weather. We recommend a service every 6 to 12 months. [Mitch to confirm: the onboarding pack script says exterior about 3 months and interior about 6 months]"
+    },
+    {
+     "q": "Why do I need to empty the cupboards?",
+     "a": "Pests hide and breed deep in harborage areas. If we can't get in there we can't treat where they're nesting. Emptying gives us the best result. If we can't access those areas, the problem is likely to come back."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "body": "Rega: high pressure, clean start/stop, no dripping. Extra light on cornices. Note all untreated areas on job report. Clean pump sprayer between chemical types."
+  }
+ ]
+}

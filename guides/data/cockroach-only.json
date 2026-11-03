@@ -1,0 +1,86 @@
+{
+ "id": "cockroach-only",
+ "title": "Cockroach only",
+ "subtitle": "Internal treatment only.",
+ "updated": "2026-11-04",
+ "source": "LPC_Cockroach_Only.pdf",
+ "sections": [
+  {
+   "type": "text",
+   "body": "Internal treatment only. Ask customer for hot spots. Go straight to treatment."
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "title": "Heavy activity in cupboards with food/linen?",
+   "body": "Ask to empty. If they can't, note the limitation on job report."
+  },
+  {
+   "type": "table",
+   "heading": "Products",
+   "short": "Products",
+   "columns": ["Method", "Product", "How and where"],
+   "rows": [
+    ["ASTRO", "Astro aerosol", "Cracks, crevices, hinges, power point cavities, behind/under furniture, kickboards, under bench crevices, dishwasher hose hole, roof void"],
+    ["POWDER", "Permethrin powder", "Light dust: behind/under furniture, under bottom drawer, kickboards. Powder blower through weep holes & enclosed subfloor."],
+    ["REGA", "Aquamax (standard)\nDemand Duo (heavy infestation)", "All skirting boards. High pressure, clean start/stop. No dripping. No cornices on cockroach-only jobs."],
+    ["GEL", "Seclira (ON REQUEST ONLY)", "Pea-sized dots in cracks & harborage points only if customer asks."]
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Where to treat (internal only)",
+   "short": "Where to treat",
+   "columns": ["Area", "What to do"],
+   "rows": [
+    ["Kitchen", "Under/behind all appliances, under sink, hinges, drawer runners, under bottom drawer, crevices under benches, kickboards, dishwasher hose hole."],
+    ["Bathroom", "Under vanity, toilet base, pipe penetrations, mirror cabinet."],
+    ["Laundry", "Behind/under washer & dryer, pipe penetrations, skirting."],
+    ["Skirting boards", "All accessible skirting boards: light Rega spray."],
+    ["Power points", "Remove cover, quick Astro into cavity, replace."],
+    ["Furniture", "Light Astro & powder behind/under large furniture."],
+    ["Pantry & linen", "Shelf undersides & corners if emptied by customer."],
+    ["Roof void", "Astro & powder around pipe penetrations. NOTE if no access."],
+    ["Wall cavities", "Powder blower through weep holes."],
+    ["Subfloor", "Powder blower if enclosed. NOTE if no access."]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "All internal areas treated",
+    "Roof void & subfloor done or noted on job report",
+    "Untreated areas noted on job report",
+    "Any other pest activity flagged to customer",
+    "Customer briefed on re-entry & what to expect"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Is it safe?",
+     "a": "Yes. Synthetic pyrethroids, plant-derived, low-tox. Less than supermarket fly spray. Targeted, not blanketed. Safe once dry, about an hour. [Mitch to confirm this wording]"
+    },
+    {
+     "q": "Still seeing cockroaches after treatment?",
+     "a": "Normal. Takes 2 to 3 weeks. May see more at first as they contact the product. Still active after 3 weeks? Call us, we'll come back."
+    },
+    {
+     "q": "How long does it last?",
+     "a": "Interior treatment lasts several months. We recommend a service every 6 to 12 months to stay on top of it."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "body": "Internal only. No exterior on this job. Note all untreated areas on report."
+  }
+ ]
+}

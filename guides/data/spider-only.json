@@ -1,0 +1,82 @@
+{
+ "id": "spider-only",
+ "title": "Spider only",
+ "subtitle": "Mainly exterior. Internal only if activity is present.",
+ "updated": "2026-11-04",
+ "source": "LPC_Spider_Only.pdf",
+ "sections": [
+  {
+   "type": "text",
+   "body": "Mainly exterior. Internal only if activity noted: skirtings & cornices."
+  },
+  {
+   "type": "table",
+   "heading": "Products",
+   "short": "Products",
+   "columns": ["Method", "Product", "How and where"],
+   "rows": [
+    ["REGA", "Aquamax (internal only if activity)", "Skirting boards if activity present. Cornices if heavy spider activity. HIGH PRESSURE: extra light on cornices, no dripping, clean start/stop."],
+    ["PUMP", "Bifenthrin (exterior)", "All exterior via pump sprayer off truck. Bifenthrin instead of Fipronil for spider jobs."]
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Key spider focus areas",
+   "short": "Focus areas",
+   "columns": ["Area", "What to do"],
+   "rows": [
+    ["Eaves", "Full length. Priority area for spiders."],
+    ["Window frames & fly screens", "Common web locations. Treat all frames thoroughly."],
+    ["Deck & pergola", "Joints, beam ends, undisturbed corners under deck."],
+    ["Garage", "Ceiling corners, wall/ceiling junctions, undisturbed areas."],
+    ["Retaining walls", "Face & top. Spiders love these."],
+    ["Garden beds & vegetation", "Adjacent to structure: treat soil & plant bases."],
+    ["All external walls", "Full band treatment at base."],
+    ["Internal cornices", "Light Rega spray if heavy spider activity inside."],
+    ["Internal skirting boards", "Light Rega spray if activity present indoors."]
+   ]
+  },
+  {
+   "type": "text",
+   "heading": "Exterior: all areas",
+   "short": "Exterior",
+   "body": "Pump sprayer off truck, Bifenthrin. All walls, eaves, windows, doors, soil, gardens, retaining walls, fence line, deck/pergola, garage exterior."
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "Full exterior done: eaves, walls, windows, gardens, deck",
+    "Internal skirtings & cornices done if activity present",
+    "Untreated areas noted on job report",
+    "Customer briefed on re-entry & what to expect"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Is it safe?",
+     "a": "Yes. Synthetic pyrethroids, plant-derived, low-tox. Less than supermarket fly spray. Targeted application. Safe once dry, about an hour. [Mitch to confirm this wording]"
+    },
+    {
+     "q": "Still seeing spiders after treatment?",
+     "a": "Normal. Takes 2 to 3 weeks. You may still see dead spiders as the product works. Still active after 3 weeks? Call us, we'll come back."
+    },
+    {
+     "q": "How long does it last?",
+     "a": "Exterior around 3 to 6 months depending on weather. Every 6 to 12 months recommended. [Mitch to confirm: the onboarding pack script says exterior about 3 months and interior about 6 months]"
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "body": "Bifenthrin on exterior for spider jobs, NOT Fipronil. Extra light on cornices with Rega. Note all untreated areas on job report."
+  }
+ ]
+}

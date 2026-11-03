@@ -43,6 +43,15 @@
    "todo": []
   },
   {
+   "id": "guides",
+   "name": "Field Guides",
+   "does": "Job steps and checklists",
+   "url": "guides/index.html",
+   "field": true,
+   "status": "Working",
+   "todo": []
+  },
+  {
    "id": "records",
    "name": "Service Records",
    "does": "Pesticide use records",

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<title>Field Guides</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Guides">
+<meta name="theme-color" content="#F6F7F5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="../logo/icon-32.png">
+<link rel="apple-touch-icon" href="../logo/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Same fonts as Inspection Capture. Loaded without blocking the page, so a weak signal on site never holds the guide up.
+     With no signal (or no fonts yet) the fallbacks in lpc-look.css take over: Georgia and the iPad's own font. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;600&display=swap"></noscript>
+<link rel="stylesheet" href="lpc-look.css">
+<link rel="stylesheet" href="guides.css">
+</head>
+<body>
+
+<div id="newver" role="status" hidden>
+  <div class="in"><span class="tx">A new version is available.</span><button class="btn" id="refresh" type="button">Tap to refresh</button></div>
+</div>
+
+<div class="top" id="top">
+  <div class="wrap">
+    <div class="hrow" id="hHome">
+      <div class="brand">
+        <img class="lpcmark" src="../logo/lpc-badge.png" alt="Lighthouse Pest Control" width="30" height="30">
+        <div class="htitle">Field Guides<small>Lighthouse Pest Control</small></div>
+      </div>
+    </div>
+    <div id="hGuide" hidden>
+      <div class="hrow">
+        <button class="btn back" id="back" type="button" aria-label="Back to all guides">
+          <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>Back
+        </button>
+        <div class="gt" id="gtitle"></div>
+        <div class="prog" id="prog" hidden><span id="pcount">0/0</span><span class="bar"><i id="pbar"></i></span></div>
+        <button class="btn iconbtn" id="printBtn" type="button" aria-label="Print this guide" hidden>
+          <svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/></svg>
+        </button>
+      </div>
+      <nav class="jump" id="jump" aria-label="Jump to a section" hidden></nav>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="boot" id="boot">Opening the guides&hellip;</div>
+
+  <section id="vHome">
+    <p class="howto">How to use this: tap a guide, tick things off as you go, and tap Reset ticks before the next job. Ticks stay on this iPad. Once you have opened Field Guides with signal, it works with no signal.</p>
+    <div class="note-banner" id="off" role="status" hidden>Offline. Showing the copy saved on this iPad.</div>
+    <input class="search" id="q" type="search" placeholder="Search guides, e.g. subfloor, PPE, spiders"
+      autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" aria-label="Search guides">
+    <div id="list" aria-live="polite"></div>
+  </section>
+
+  <article id="vGuide" hidden></article>
+
+  <noscript><p class="empty">Field Guides needs JavaScript switched on.</p></noscript>
+  <p class="foot" id="build"></p>
+</main>
+
+<script src="render.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

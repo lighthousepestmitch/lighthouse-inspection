@@ -1,0 +1,405 @@
+{
+ "id": "termite-inspection",
+ "title": "Termite inspection checklist",
+ "subtitle": "Regular inspection (AS 3660.1:2014 & AS 3660.2-2017) and pre-purchase (AS 4349.3). Same walk. Photo every finding.",
+ "updated": "2026-11-04",
+ "source": "LPC_Termite_Inspection_Field_Checklist.pdf, reworded to Inspection Capture (section names taken from Capture itself).",
+ "sections": [
+  {
+   "type": "callout",
+   "kind": "note",
+   "title": "How this works",
+   "body": "Record everything in Capture on the iPad: all findings and all inaccessible areas. When you are done, send the job to Mitch from Capture. Mitch builds the Mira report from it."
+  },
+  {
+   "type": "text",
+   "body": "Regular inspection: AS 3660.1:2014 & AS 3660.2-2017. Pre-purchase: AS 4349.3. Same process: pick the correct inspection type in Capture. Photo every finding. Enter all findings & inaccessible areas into Capture."
+  },
+  {
+   "type": "table",
+   "heading": "Inspection order: always follow this sequence",
+   "short": "Order",
+   "columns": ["Step", "Where", "What to do"],
+   "rows": [
+    ["1", "INTERIOR", "All rooms. Enter, go LEFT, work CLOCKWISE around walls. Do not skip corners."],
+    ["2", "ROOF VOID", "If accessible. Always attempt entry with ladder unless sarking covers all beams."],
+    ["3", "EXTERIOR", "Full perimeter walk. Walls, weepholes, slab edge, site within 30m."],
+    ["4", "SUBFLOOR", "Last. Suspended floors only. You will get dirty. Slab-on-ground = N/A."]
+   ]
+  },
+
+  {
+   "type": "checklist",
+   "id": "pre-confirm",
+   "heading": "Step 0: Pre-inspection",
+   "short": "Step 0",
+   "title": "Confirm before entering",
+   "items": [
+    "Client name, address & inspection type confirmed",
+    {"text": "Inspection type picked in Capture: Regular termite inspection or Pre-purchase (AS4349.3)", "detail": "For a regular inspection, also pick the Scope of work ordered (Option 1 / 2 / 3)."},
+    {"text": "Regular inspection = AS 3660.1:2014 / AS 3660.2-2017. Pre-purchase = AS 4349.3 (AS 4349.1 for building).", "detail": "Same physical inspection. Just confirm the correct inspection type is picked in Capture before you start."},
+    "Weather conditions noted (Capture has no weather box, so tell Mitch) [Mitch to confirm where the weather gets recorded]",
+    {"text": "Building type, storeys & construction noted in Customer & property details in Capture", "detail": "Building type, Storeys, Floor construction, Wall construction, Roof construction. Orientation goes in Cover shots."}
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "pre-property",
+   "title": "Property type: confirm in Capture",
+   "items": [
+    "House / detached: full inspection applies",
+    "Duplex / townhouse: full inspection of this lot only",
+    {"text": "Strata / unit: interior + immediate exterior of this lot ONLY. Common property NOT inspected. Note in Capture.", "detail": "Capture: Accessibility & obstructions, Strata / company title? Client may have additional liability for common property."}
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "pre-equipment",
+   "title": "Equipment check",
+   "items": [
+    {"text": "Torch: charged & working", "detail": "No torch = no inspection"},
+    "Donga (tapping tool)",
+    "Ladder: in vehicle, available for roof void",
+    {"text": "Moisture meter: available if needed", "detail": "Use if you suspect moisture or conducive conditions. Good client engagement, they love seeing it used."},
+    "Borescope: available if needed for wall cavities",
+    "Phone/iPad: Capture open & job loaded",
+    {"text": "Camera ready", "detail": "Photo EVERY finding before moving on or touching"},
+    "Termatrac & thermal imaging: specialist add-ons only. Confirm with client before inspection. Extra time & cost. Do NOT use without prior arrangement."
+   ]
+  },
+
+  {
+   "type": "text",
+   "heading": "Step 1: Interior, all rooms",
+   "short": "Step 1 Interior",
+   "title": "Method",
+   "body": "Enter each room, go LEFT, work CLOCKWISE around the full perimeter. Stay against the walls. Cover every wall, corner, behind doors and in recesses. Do not cut corners."
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "body": "ALL obstructions must be recorded in Capture (Accessibility & obstructions) with specific details. Furnishings, stored items, floor coverings, insulation, fixed cabinetry, wall linings: each one noted separately with location."
+  },
+  {
+   "type": "checklist",
+   "id": "int-room",
+   "title": "Each room: work clockwise from entry",
+   "items": [
+    {"text": "Skirting boards: tap the full length of EVERY wall", "detail": "Hollow sound = possible damage. Note location precisely."},
+    {"text": "Door frames & window architraves: tap & visually inspect all", "detail": "Common termite entry & attack point"},
+    "Cornices & ceiling junctions: look for mud, staining, lead tubes",
+    {"text": "Walls: look for blistering paint, bubbling, staining", "detail": "Indicates moisture or activity behind surface"},
+    {"text": "Behind doors & in corners: do not skip", "detail": "Termites love undisturbed corners"},
+    {"text": "Floor coverings: note type (carpet, tiles, timber, vinyl)", "detail": "Record as an obstruction in Capture if restricting inspection"}
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "int-wet",
+   "title": "Wet areas: use moisture meter if you suspect or see signs",
+   "items": [
+    "Bathroom: shower recess walls, bath surround, vanity base, toilet base, pipe penetrations",
+    "Laundry: behind/under appliances, pipe penetrations, skirting",
+    "Kitchen: under sink, around dishwasher, kickboards, pipe penetrations through floor/wall",
+    "Any reading above 18%: investigate source, record in Capture & photograph"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "int-other",
+   "title": "Other internal areas",
+   "items": [
+    "Wardrobes: back wall, floor & skirting inside",
+    "Garage: skirting, floor joints, wall/ceiling junctions, undisturbed corners",
+    "Under stairs if accessible",
+    "Any storage areas or utility rooms"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "int-inacc",
+   "title": "If any room or internal area is not fully accessible: record the SPECIFIC reason in Capture (Inaccessible areas)",
+   "items": [
+    "Furniture or stored items blocking access, could not be moved",
+    "Fixed cabinetry, built-in shelving or joinery restricting access",
+    "Floor coverings (carpet/vinyl) restricting inspection of floor/subfloor junction",
+    "Wall linings or fixed ceilings concealing framing timbers",
+    "Area locked or not made available at time of inspection",
+    "Clutter or accumulated items preventing access to walls/skirtings",
+    "Other: write the specific reason in Capture"
+   ]
+  },
+
+  {
+   "type": "text",
+   "heading": "Step 2: Roof void",
+   "short": "Step 2 Roof void",
+   "body": "Always attempt entry using ladder. Inspect all visible timbers systematically. Minimum access required: 600mm high x 600mm wide."
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "body": "If roof void is NOT inspected, record the SPECIFIC reason in Capture. \"No access\" alone is not sufficient. State exactly what prevented entry."
+  },
+  {
+   "type": "checklist",
+   "id": "roof-before",
+   "title": "Before entering",
+   "items": [
+    "Locate access hatch: confirm dimensions at least 600mm H x 600mm W",
+    "Set up ladder safely",
+    "Torch working: check before entering",
+    "Assess void from hatch before committing: look for hazards"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "roof-inspect",
+   "title": "If accessible: inspect all visible timbers systematically",
+   "items": [
+    {"text": "Enter: work away from access point methodically", "detail": "Treat like a room: work outward, cover all areas"},
+    {"text": "Rafters & battens: tap and visually inspect", "detail": "Look for mud leads, workings, damage, hollowness"},
+    "Truss members: tap chords and webs",
+    {"text": "Ceiling joists at perimeter & eave line", "detail": "Most common termite entry point via wall cavity: priority area"},
+    {"text": "Around downlights & pipe/duct penetrations through ceiling", "detail": "Gaps = termite entry points"},
+    "Ridge board & upper timbers",
+    {"text": "Look for lead tubes on timbers, walls, noggins", "detail": "Photo immediately if found. Do not disturb."},
+    {"text": "Moisture or water staining on timbers or sarking", "detail": "Note source if identifiable"},
+    {"text": "Evidence of previous termite activity: active or old workings", "detail": "Note active vs inactive, photo"},
+    {"text": "Note any areas within void that could not be reached & why", "detail": "Record in Capture. Partial access must be documented."}
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "roof-inacc",
+   "title": "If roof void is not fully accessible: record the SPECIFIC reason in Capture",
+   "items": [
+    "No access hatch present: flat roof or concealed ceiling",
+    "Access hatch present but clearance less than 600mm H x 600mm W",
+    "Sarking covering all beams throughout void (liability risk, electrocution)",
+    "Sarking partially covering beams: note which areas were and were not accessible",
+    "Insulation fully blocking visibility and safe movement through void",
+    "AC ducting or pipe work blocking access to sections: note which areas",
+    "Unsafe to enter: inadequate structural support or other hazard identified",
+    "Roof void not present due to construction type (e.g. skillion/flat roof)",
+    "Other: write the specific reason in Capture"
+   ]
+  },
+
+  {
+   "type": "text",
+   "heading": "Step 3: Exterior, full perimeter",
+   "short": "Step 3 Exterior",
+   "body": "Walk the FULL perimeter close to the building. Inspect weepholes, slab edge, inspection zones, ground levels, site within 30 metres of structure."
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "body": "AS 3660.2-2017: 75mm minimum visual inspection zone must be maintained below weepholes and slab edges at all times. Record EVERY location where this is not met and the specific reason."
+  },
+  {
+   "type": "checklist",
+   "id": "ext-walls",
+   "title": "External walls: full perimeter",
+   "items": [
+    {"text": "Weepholes: visible and unobstructed throughout", "detail": "Min 75mm inspection zone below each weephole. Note & photo where not achieved."},
+    {"text": "Slab edge: min 75mm visible and unobstructed", "detail": "Note if covered by render, pavers, soil, garden, cladding"},
+    {"text": "Ground levels: not built up against walls", "detail": "High ground = concealed termite entry risk. Note location & photo."},
+    {"text": "Inspection zones: clear throughout", "detail": "Note location of any concealment and reason"},
+    {"text": "Evidence of bridging or breaching of inspection zones", "detail": "Mud leads crossing zone, gaps in barrier. Photo immediately."},
+    {"text": "Previous treatment drill holes in paths or slabs", "detail": "Note location, photograph"},
+    {"text": "Reticulation fill points", "detail": "Note location & condition, photograph"},
+    {"text": "Termite protection notice: check meter box", "detail": "Photograph notice, record installer / date / product / areas in Capture (Previous termite management)"},
+    {"text": "Post stirrups: visible inspection zone around all posts?", "detail": "Cladding or fill around stirrups restricts inspection. Note each location."},
+    "Timber wall cladding or weatherboards: tap and inspect base course"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ext-site",
+   "title": "Site: inspect within 30 metres of structure",
+   "items": [
+    {"text": "Trees & stumps >100mm diameter", "detail": "Check base for mud leads, workings, lead tubes. Note & photo."},
+    {"text": "Garden timbers, sleepers or logs in soil contact", "detail": "High termite risk. Note location & photo."},
+    {"text": "Timber fencing in soil contact", "detail": "Note condition & proximity to structure"},
+    {"text": "Firewood or timber stored against structure", "detail": "Conducive condition. Note & photo."},
+    {"text": "Outbuildings, sheds, cubby houses on site", "detail": "Inspect as per main building"},
+    "Retaining walls: check for activity"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ext-moisture",
+   "title": "Moisture & conducive conditions: exterior",
+   "items": [
+    {"text": "Downpipes discharging adjacent to building", "detail": "Note location. Conducive condition."},
+    {"text": "Hot water system overflow adjacent to building", "detail": "Very common finding. Note & photo."},
+    {"text": "Guttering: damaged, blocked or overflowing sections", "detail": "Moisture risk. Note location."},
+    "AC condensate discharge near structure",
+    "Leaking taps, pipes or irrigation near building",
+    "Pooling water or persistently damp soil adjacent to structure"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ext-decks",
+   "title": "Decks, pergolas & other timber structures",
+   "items": [
+    {"text": "Deck timbers: tap boards, bearers, joists", "detail": "Check condition and for workings or lead tubes"},
+    {"text": "Deck posts: stirrups present, visible inspection zone, soil level", "detail": "Stirrups should provide clear visual inspection zone. Note if compromised."},
+    "Pergola: joints, beam ends, posts",
+    "Stairs: stringers, treads, posts",
+    {"text": "Any timber in ground contact", "detail": "Note all instances. Conducive condition."}
+   ]
+  },
+
+  {
+   "type": "text",
+   "heading": "Step 4: Subfloor, suspended floors only (last)",
+   "short": "Step 4 Subfloor",
+   "body": "ONLY applicable if building is on bearers & joists (suspended timber floor). Slab-on-ground = mark N/A in Capture (Subfloor ventilation) and skip this step. You will get dirty, so do this last."
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "body": "Partial access must be documented. State which areas were reached and which were not, and the specific reason. \"Unable to access all areas in accordance with AS 4349.3\" must be noted in Capture."
+  },
+  {
+   "type": "checklist",
+   "id": "sub-before",
+   "title": "Confirm before entering",
+   "items": [
+    {"text": "Floor construction confirmed as suspended: bearers & joists present", "detail": "If slab-on-ground: STOP. Mark N/A in Capture (Subfloor ventilation). Skip this step."},
+    "Access point identified: minimum clearance 400mm H x 600mm W",
+    "Safe to enter: no standing water, no immediate hazard",
+    "Torch working: essential in subfloor"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "sub-inspect",
+   "title": "If accessible: inspect systematically (hug left wall, work clockwise)",
+   "items": [
+    {"text": "Enter: go LEFT, work CLOCKWISE, stay against perimeter walls first", "detail": "Cover the full perimeter before moving inward"},
+    {"text": "Bearers: tap every accessible bearer full length", "detail": "Hollow sound or soft spots = possible damage. Note & photo."},
+    {"text": "Joists: tap & visually inspect", "detail": "Look for mud, workings, lead tubes, damage"},
+    "Stumps & piers: check base for mud leads",
+    {"text": "Ant capping: present on all stumps & piers?", "detail": "Must be continuous, turned down & unobstructed"},
+    {"text": "Ant capping: compromised, missing, bridged or incorrectly installed?", "detail": "Note location precisely. Photo. Conducive condition."},
+    {"text": "Timber in ground contact: off-cuts, form work, stumps, debris", "detail": "All instances = termite risk. Note & photo."},
+    {"text": "Moisture: damp soil, standing water, efflorescence on piers", "detail": "Note source if identifiable"},
+    {"text": "Subfloor ventilation: vents present, clear & functional?", "detail": "Blocked vents = moisture risk. Note location."},
+    "Plumbing penetrations through bearers or floor",
+    {"text": "Evidence of previous termite activity: active or old", "detail": "Active vs inactive. Photo immediately if found."},
+    {"text": "Lead tubes or mud on any surface: stumps, piers, walls, joists", "detail": "Photo immediately. Do not disturb."},
+    {"text": "Note any areas within subfloor that could not be reached & why", "detail": "Partial access must be documented in Capture."}
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "sub-inacc",
+   "title": "If subfloor is not fully accessible: record the SPECIFIC reason in Capture",
+   "items": [
+    "Slab-on-ground construction: subfloor not applicable",
+    "No access point or hatch present",
+    "Access clearance less than 400mm H x 600mm W: state actual clearance if measurable",
+    "Standing water or wet conditions preventing safe entry",
+    "Excessive debris, stored materials or fill blocking access",
+    "AC ducting, pipe work or other obstruction blocking sections: specify which areas",
+    "Partial access: entered but could not reach all areas in accordance with AS 4349.3",
+    "Inadequate clearance in sections of subfloor: specify location",
+    "Other: write the specific reason in Capture"
+   ]
+  },
+
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Significant findings",
+   "short": "Findings",
+   "body": "Photo FIRST. Always photograph before touching or disturbing any finding. These are the finding sections in Capture, in the same order."
+  },
+  {
+   "type": "table",
+   "columns": ["Capture section", "What to record"],
+   "rows": [
+    ["Active (live) termites", "Location, genus/species if identifiable, nest found Y/N, active Y/N"],
+    ["Subterranean termite management proposal", "Recommend Y/N. Note if being delivered to client."],
+    ["Termite workings and/or damage", "Location, active or inactive, extent of damage"],
+    ["Previous termite management", "Installer, date, product, areas treated. From durable notice."],
+    ["Frequency of future inspections", "3 months (high risk) / 6 months / 12 months"],
+    ["Chemical delignification", "Location & extent"],
+    ["Fungal decay", "Location & likely moisture source"],
+    ["Wood borers", "Active or inactive, species if identifiable"],
+    ["Subfloor ventilation", "Inadequate subfloor ventilation: location & extent"],
+    ["Excessive moisture", "Location & source: downpipe, HWS, plumbing, drainage etc."],
+    ["Bridging / breaching", "Inspection zone / bridging / breaching: weepholes, slab edge, ground levels, specific locations"],
+    ["Untreated / non-durable timber", "Untreated timber in hazardous environment: timber in ground contact, stirrups not visible, location"],
+    ["Other conducive conditions", "Debris, stored timber, foliage against building, cracking in slab"],
+    ["Major safety hazards", "Imminent structural risk. Advise client verbally before leaving site."]
+   ]
+  },
+
+  {
+   "type": "checklist",
+   "id": "wrap",
+   "heading": "Wrap-up: before leaving site",
+   "short": "Wrap-up",
+   "title": "Complete before leaving",
+   "items": [
+    "All 4 steps complete: interior, roof void, exterior, subfloor",
+    "All inaccessible areas recorded in Capture with specific reasons",
+    "All obstructions recorded in Capture with specific details & location",
+    "All photos taken & saved",
+    "All significant findings entered in Capture (the finding sections above)",
+    "Frequency of future inspections set in Capture",
+    "Termite management proposal recommended Y/N noted in Capture (Subterranean termite management proposal)",
+    "Major safety hazard: if found, advised to client verbally on site",
+    "Certification: Capture has no certification step, so tell Mitch [Mitch to confirm who completes the certification]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "active",
+   "title": "If ACTIVE termites found",
+   "items": [
+    "Advise client verbally: stay calm, do not alarm",
+    "Do NOT disturb activity: leave area completely intact",
+    "Photograph thoroughly from multiple angles",
+    "Note exact location, extent & whether active in Capture",
+    "Arrange treatment quote same day"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "body": "Every inaccessible, obstructed or not-inspected area MUST be documented in Capture with the specific reason. \"No access\" alone is not sufficient. State what was present, why access was not possible, and what clearance was available if measurable."
+  },
+
+  {
+   "type": "table",
+   "heading": "Quick reference: signs to look for",
+   "short": "Signs",
+   "columns": ["Sign", "What it looks like", "What it means"],
+   "rows": [
+    ["Mud lead / tube", "Brown mud tube on walls, piers, slab edge, pipes, timbers", "Termite travel route. Check if active."],
+    ["Hollow timber", "Sounds hollow when tapped, surface may look fine", "Internal termite damage"],
+    ["Workings in timber", "Mud-filled galleries inside damaged wood", "Termite activity, active or old"],
+    ["Blistering paint", "Bubbling or lifting paint on wall or skirting", "Activity or moisture behind surface"],
+    ["Frass / pellets", "Small granular piles near or below timber", "Drywood termite or borer activity"],
+    ["Exit holes", "Small round holes in timber surface", "Borer activity, active or old"],
+    ["Fungal decay", "Soft, discoloured, crumbling or spongy timber", "Moisture driven. Also attracts termites."],
+    ["Wall / ceiling staining", "Brown or yellow staining on internal surfaces", "Moisture entry. Find the source."],
+    ["Swarmer wings", "Discarded wings near windows, doors or lights", "Recent termite swarm. Colony nearby."],
+    ["Moisture reading >18%", "Elevated moisture meter reading", "Investigate source. Conducive condition."],
+    ["Ant capping issues", "Missing, turned up, bridged or damaged capping on piers", "Allows concealed termite entry to bearers"],
+    ["Cracking in slab", "Crack extending beneath wall or through slab", "Potential concealed termite entry point"]
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "body": "AS 3660.2: 75mm minimum inspection zone below weepholes and slab edges. Document every location where not achieved and the specific reason why."
+  }
+ ]
+}

@@ -1,0 +1,79 @@
+{
+ "id": "ant-only",
+ "title": "Ant only",
+ "subtitle": "Internal plus full exterior. Same as CAS.",
+ "updated": "2026-11-04",
+ "source": "LPC_Ant_Only.pdf",
+ "sections": [
+  {
+   "type": "text",
+   "body": "Same as CAS. Ask customer for hot spots and ant trails. Internal + full exterior."
+  },
+  {
+   "type": "table",
+   "heading": "Products",
+   "short": "Products",
+   "columns": ["Method", "Product", "How and where"],
+   "rows": [
+    ["ASTRO", "Astro aerosol", "Cracks, crevices, power point cavities, behind/under furniture, kickboards. Window & door architrave gaps: key ant entry points."],
+    ["POWDER", "Permethrin powder", "Light dust behind/under furniture, under bottom drawer. Powder blower through weep holes into wall cavity & enclosed subfloor."],
+    ["REGA", "Aquamax (standard)", "All skirting boards. High pressure, clean start/stop. No dripping."],
+    ["PUMP", "Fipronil (exterior)", "Full exterior via pump sprayer off truck."]
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Key ant focus areas",
+   "short": "Focus areas",
+   "columns": ["Area", "What to do"],
+   "rows": [
+    ["Window/door architraves", "Look for gaps, get Astro in. Main ant entry point into the structure."],
+    ["Power point cavities", "Remove cover, Astro into wall void, replace. Ants travel through wall cavities."],
+    ["Under sink", "Pipe runs & penetrations are ant highways. Treat thoroughly."],
+    ["Weep holes / wall cavity", "Powder blower through weep holes. Ants nest in wall cavities."],
+    ["Retaining walls", "Face & top. Major ant harborage. Priority exterior area."],
+    ["Garden beds & pavers", "Adjacent to structure: spray soil & pavers near building."],
+    ["Fence line", "Spray along fence line adjacent to structure."],
+    ["All skirting boards", "Light Rega spray throughout."]
+   ]
+  },
+  {
+   "type": "text",
+   "heading": "Exterior: all areas",
+   "short": "Exterior",
+   "body": "Pump sprayer off truck, Fipronil. All walls, weep holes, eaves, windows, doors, soil, garden beds, retaining walls, fence line, meter box, AC penetrations, deck/pergola."
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "All interior areas treated incl. architrave gaps & power points",
+    "Wall cavities dusted via weep holes",
+    "Full exterior band done",
+    "Untreated areas noted on job report",
+    "Customer briefed on re-entry & what to expect"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Is it safe?",
+     "a": "Yes. Synthetic pyrethroids, plant-derived, low-tox. Less than supermarket fly spray. Targeted, not blanketed. Safe once dry, about an hour. [Mitch to confirm this wording]"
+    },
+    {
+     "q": "Still seeing ants after treatment?",
+     "a": "Normal. Takes 2 to 3 weeks for full effect. Still active after 3 weeks? Call us, we'll come back and assess."
+    },
+    {
+     "q": "How long does it last?",
+     "a": "Exterior around 3 to 6 months depending on weather. We recommend every 6 to 12 months. [Mitch to confirm: the onboarding pack script says exterior about 3 months and interior about 6 months]"
+    }
+   ]
+  }
+ ]
+}

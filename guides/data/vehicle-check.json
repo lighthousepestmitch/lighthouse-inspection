@@ -1,0 +1,49 @@
+{
+ "id": "vehicle-check",
+ "title": "Vehicle check",
+ "subtitle": "The daily vehicle check before leaving each morning, and PPE.",
+ "updated": "2026-11-04",
+ "resetNote": "Ticks are saved on this iPad. Reset them each morning.",
+ "source": "LPC Tech Onboarding Pack: vehicle (daily vehicle check) and PPE requirements",
+ "sections": [
+  {
+   "type": "text",
+   "body": "The company vehicle is for work use only. You are responsible for keeping it clean, stocked and in good order during the week."
+  },
+  {
+   "type": "checklist",
+   "id": "daily",
+   "heading": "Daily vehicle check",
+   "short": "Daily check",
+   "title": "Before leaving each morning",
+   "items": [
+    "Clean inside and out: professional image starts at the kerb",
+    "Chemical stock checked: restock if anything is low",
+    "PPE in vehicle (gloves, mask, coveralls, goggles)",
+    "SDS sheets present for all chemicals carried",
+    "Equipment secure and not leaking",
+    "Fuel above quarter tank",
+    "Any vehicle damage, incident or mechanical issue: call Mitch immediately. Do not wait."
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "PPE requirements",
+   "short": "PPE",
+   "columns": ["Job", "PPE"],
+   "rows": [
+    ["CAS / general pest", "Gloves and closed shoes at minimum on every job"],
+    ["Chemical spray application", "Gloves, mask, eye protection as per product SDS"],
+    ["Roof void entry", "Dust mask, gloves, torch, appropriate footwear"],
+    ["Subfloor entry", "Coveralls, gloves, dust mask, torch"],
+    ["Rodent work", "Gloves at all times when handling traps or bait"],
+    ["Bed bug work", "Coveralls, gloves, mask. Change before entering next property."]
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "never",
+   "body": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions."
+  }
+ ]
+}

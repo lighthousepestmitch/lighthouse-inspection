@@ -1,0 +1,153 @@
+{
+ "id": "every-job",
+ "title": "Every job",
+ "subtitle": "The job process, the never list, PPE, what to do if something goes wrong, and the free service period.",
+ "updated": "2026-11-04",
+ "source": "LPC Tech Onboarding Pack: job process, never list, PPE requirements, if something goes wrong, free service period",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "The job process: every job, every time",
+   "short": "Job process",
+   "body": "Follow this process on every job without exception. It is what separates a professional service from an average one."
+  },
+  {
+   "type": "checklist",
+   "id": "before",
+   "title": "1. Before leaving",
+   "items": [
+    "Check the Job Calendar: confirm job details, address & any customer notes",
+    "Vehicle stocked with correct chemicals & equipment for this job type",
+    "SMS or call customer with ETA if running late"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "arrival",
+   "title": "2. On arrival",
+   "items": [
+    "Park professionally (do not block driveways or neighbours)",
+    "PPE on before entering",
+    "Greet customer: introduce yourself by name",
+    "Ask customer to point out hot spots or problem areas",
+    "Briefly explain what you'll be doing before you start"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "during",
+   "title": "3. During treatment",
+   "items": [
+    "Take BEFORE photos of hot spot areas",
+    "Follow the field guide for this job type, no shortcuts",
+    "Apply per product label, never exceed rates",
+    "Keep chemicals away from food, children and pets",
+    "Note any areas you cannot treat and why"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "after",
+   "title": "4. After treatment",
+   "items": [
+    "Take AFTER photos",
+    "Brief customer on re-entry time (1 to 2 hours once dry) [Mitch to confirm: the CAS, cockroach, ant and spider guides tell the customer about an hour once dry]",
+    "Tell customer what to expect: may see more activity for 2 to 3 weeks, that's normal",
+    "Explain the free service period (internal 6 months, external 3 months)",
+    "Ask for a Google review: do it now, while they're happy",
+    "Leave service report or confirm it's being emailed"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "end",
+   "title": "5. End of day",
+   "items": [
+    "Log job with chemical usage in reporting system [Mitch to confirm which system]",
+    "Send invoice if not already provided",
+    "Note any follow-up required and tell Mitch",
+    "Restock vehicle if anything is low",
+    "Update Mitch on anything unusual from the day"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "never",
+   "heading": "Never do these, ever",
+   "short": "Never list",
+   "items": [
+    {"text": "Never mix chemicals without checking the label first", "detail": "If in doubt, call Mitch"},
+    {"text": "Never apply chemicals without appropriate PPE", "detail": "No gloves = no treatment"},
+    {"text": "Never exceed label rates", "detail": "More is not better and it's illegal"},
+    {"text": "Never apply a chemical off-label", "detail": "Label is law"},
+    {"text": "Never quote termite treatments, barriers or complex jobs", "detail": "These always go to Mitch, too many variables"},
+    {"text": "Never discuss pricing on complex jobs", "detail": "Say \"Mitch will get back to you with a quote\""},
+    {"text": "Never argue with a customer", "detail": "Listen, empathise, call Mitch"},
+    {"text": "Never leave a spill unattended", "detail": "Follow SDS procedure and call Mitch immediately"},
+    {"text": "Never use the vehicle for personal use", "detail": "Work use only"},
+    {"text": "Never post about jobs or customers on social media", "detail": "Privacy, always"}
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "PPE requirements",
+   "short": "PPE",
+   "columns": ["Job", "PPE"],
+   "rows": [
+    ["CAS / general pest", "Gloves and closed shoes at minimum on every job"],
+    ["Chemical spray application", "Gloves, mask, eye protection as per product SDS"],
+    ["Roof void entry", "Dust mask, gloves, torch, appropriate footwear"],
+    ["Subfloor entry", "Coveralls, gloves, dust mask, torch"],
+    ["Rodent work", "Gloves at all times when handling traps or bait"],
+    ["Bed bug work", "Coveralls, gloves, mask. Change before entering next property."]
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "never",
+   "body": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions."
+  },
+  {
+   "type": "table",
+   "heading": "If something goes wrong",
+   "short": "If it goes wrong",
+   "columns": ["If this happens", "Do this"],
+   "rows": [
+    ["Customer complaint", "Listen, stay calm, do not argue. Tell them Mitch will call them today. Call Mitch immediately."],
+    ["Wrong chemical applied", "Stop immediately. Do not continue. Call Mitch."],
+    ["Chemical spill", "Follow SDS procedure. Call Mitch immediately."],
+    ["Vehicle accident", "Ensure safety. Call 000 if needed. Then call Mitch."],
+    ["Injury on site", "Treat injury first. Call Mitch. Document what happened."],
+    ["Aggressive customer", "Stay calm. Remove yourself. Call Mitch."]
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "title": "Call Mitch",
+   "body": "0432 181 689. After hours or urgent, call Mitch directly."
+  },
+  {
+   "type": "text",
+   "heading": "Free service period",
+   "short": "Free service period",
+   "body": "We call it a free service period, not a warranty. If a customer is not happy, we go back. Customer satisfaction comes first, always."
+  },
+  {
+   "type": "table",
+   "columns": ["Job", "Free service period"],
+   "rows": [
+    ["Internal treatment", "6 months free service period"],
+    ["External treatment", "3 months free service period"],
+    ["Termite inspection", "No free service period. Inspection only, not a guarantee."],
+    ["Our approach", "Be lenient. If a customer calls with an issue, we go back. It costs less than losing a customer or a bad review."],
+    ["Callbacks", "Tell Mitch. He will decide whether to send you back or attend himself."]
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "never",
+   "body": "Never tell a customer their issue is not covered without checking with Mitch first."
+  }
+ ]
+}

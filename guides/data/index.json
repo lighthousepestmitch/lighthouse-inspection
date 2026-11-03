@@ -1,0 +1,62 @@
+{
+ "schema": 1,
+ "title": "Field Guides",
+ "guides": [
+  {
+   "id": "every-job",
+   "title": "Every job",
+   "summary": "The job process, the never list, PPE, what to do if something goes wrong, and the free service period.",
+   "updated": "2026-11-04",
+   "order": 1,
+   "group": "Start here"
+  },
+  {
+   "id": "vehicle-check",
+   "title": "Vehicle check",
+   "summary": "The daily vehicle check before leaving each morning, and PPE.",
+   "updated": "2026-11-04",
+   "order": 2,
+   "group": "Start here"
+  },
+  {
+   "id": "cas",
+   "title": "CAS treatment guide",
+   "summary": "Cockroach, ant and spider. The full general pest treatment. Most common job.",
+   "updated": "2026-11-04",
+   "order": 3,
+   "group": "General pest"
+  },
+  {
+   "id": "cockroach-only",
+   "title": "Cockroach only",
+   "summary": "Internal treatment only.",
+   "updated": "2026-11-04",
+   "order": 4,
+   "group": "General pest"
+  },
+  {
+   "id": "ant-only",
+   "title": "Ant only",
+   "summary": "Same as CAS: full internal plus full exterior.",
+   "updated": "2026-11-04",
+   "order": 5,
+   "group": "General pest"
+  },
+  {
+   "id": "spider-only",
+   "title": "Spider only",
+   "summary": "Mainly exterior, bifenthrin instead of fipronil.",
+   "updated": "2026-11-04",
+   "order": 6,
+   "group": "General pest"
+  },
+  {
+   "id": "termite-inspection",
+   "title": "Termite inspection checklist",
+   "summary": "Step-by-step inspection for regular and pre-purchase jobs. Record it all in Capture.",
+   "updated": "2026-11-04",
+   "order": 7,
+   "group": "Termites"
+  }
+ ]
+}
