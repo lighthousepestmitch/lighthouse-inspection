@@ -228,6 +228,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 <div id="savebar"></div>
 
 <script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
+<script src="lpc-clients.js?v=1"></script>   <!-- the shared client auto-fill (also used by Inspection Capture). Missing = the boxes just type as before -->
 <!-- Pinned on purpose, same version and hash as jobbook.html and calendar.html. To upgrade: change the version, re-hash with
      curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, find a customer, log out. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
@@ -408,7 +409,7 @@ function custHTML(){
   else h+='<b>Couldn\'t open the customer list</b>'+note+'<div class="btns"><button type="button" class="btn pri" data-a="custretry">Try again</button><button type="button" class="btn" data-a="custout">Log out</button></div>';
   return h+'</div>'+(st==="boot"||st==="denied"?"":typedHTML(true));     // not on the list, no signal or no login: the customer can still be typed in
 }
-/* a customer typed in by hand (anyone). The record is marked isNewCustomer. The shared type-ahead will plug into lookupClients() below. */
+/* a customer typed in by hand (anyone). The record is marked isNewCustomer, unless a client was picked from the type-ahead on these two boxes (attachTyped). */
 function typedHTML(open){
   if(!open&&!UI.typedOpen) return '<div class="chips" style="margin-top:8px">'+chip("Not on the list? Type the customer",false,'data-a="typedopen"',"ghost")+'</div>';
   return '<div class="card custcard" style="margin-top:8px"><b>Type the customer</b>'
@@ -776,7 +777,7 @@ function newForm(){
   const a=applicators();
   return {id:null,uuid:null,savedAt:null,propId:"",client:"",address:"",isNew:false,jobId:null,date:TODAY,start:"",finish:"",finishTouched:false,
     services:[],products:[],areas:[],equipment:[],appliedBy:a.length===1?[a[0].name]:[],keep:[],byTouched:false,
-    next:{k:"",date:""},notes:"",photos:[],q:"",tName:"",tAddr:"",tErr:"",errors:[]};
+    next:{k:"",date:""},notes:"",photos:[],q:"",tName:"",tAddr:"",tClientId:"",tPickName:"",clientId:null,tErr:"",errors:[]};
 }
 function resetForm(){ F=newForm(); W=newWx(); UI={}; }
 /* who is signed in has just become known (or changed): fix Applied by on the form in front of the user. The form stays "clean"
@@ -858,10 +859,10 @@ function recentHTML(){
 function pickRecent(rid){
   const r=byId(rid); if(!r) return;
   if(S.props[r.propId]){ pickProperty(r.propId); return; }
-  startFor(r.propId,r.client,r.address,{isNew:!!r.isNewCustomer});
+  startFor(r.propId,r.client,r.address,{isNew:!!r.isNewCustomer,clientId:r.clientId});
 }
 function startFor(pid,client,address,opts){
-  F.propId=pid; F.client=client; F.address=address; F.isNew=!!(opts&&opts.isNew);
+  F.propId=pid; F.client=client; F.address=address; F.isNew=!!(opts&&opts.isNew); F.clientId=(opts&&opts.clientId)||null;
   F.start=nowHM(); F.date=TODAY; F.finish=""; F.finishTouched=false; F.q="";
   F.services=[];F.products=[];F.areas=[];F.equipment=[]; F.next={k:"",date:""};
   W=newWx(); UI={};
@@ -901,6 +902,7 @@ function render(){
   else renderForm();
   renderBanner(); fitBar();
   window.scrollTo(0,y);
+  attachTyped();
 }
 /* keep the bottom of the page clear of the sticky bar, whatever height it is this time */
 function fitBar(){ const b=$("#savebar"); document.documentElement.style.setProperty("--barh",((b&&b.offsetHeight)||0)+"px"); }
@@ -1101,21 +1103,64 @@ function renderWx(){ const e=$("#wx"); if(e) e.innerHTML=wxHTML();
   const r=$("#autorow"); if(r&&!needWx()&&r.classList.contains("warn")){ r.classList.remove("warn"); r.querySelector("b").textContent="Auto-filled ✓"; } }
 function renderQres(){
   const box=$("#qres"); if(!box) return;
-  const q=F.q.trim().toLowerCase();
+  const q=F.q.trim().toLowerCase(), tok=++QTOK; clearTimeout(QT);
   if(q.length<2){ box.innerHTML=(q.length===0&&recentHTML())||'<div class="hint">Type 2 or more letters.</div>'; return; }
-  const tok=++QTOK, paint=hits=>{ const b=$("#qres"); if(tok!==QTOK||!b) return;
-    b.innerHTML=hits.length?hits.map(x=>'<button class="pick" data-a="pick" data-pid="'+esc(x.pid)+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line+(x.sub?", "+x.sub:""))+'</div></button>').join("")
-      :'<div class="empty">No match. Try a different spelling.</div>'; };
-  const r=lookupClients(q); if(r&&typeof r.then==="function") r.then(paint); else paint(r||[]);
+  let base=null, more=[], wait=moreOn();
+  const paint=()=>{ const b=$("#qres"); if(tok!==QTOK||!b||base===null) return;
+    QMORE=more;
+    let h=base.map(x=>'<button class="pick" data-a="pick" data-pid="'+esc(x.pid)+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line+(x.sub?", "+x.sub:""))+'</div></button>').join("");
+    if(more.length) h+=(base.length?'<div class="hint">More from the client list</div>':'')
+      +more.map((x,i)=>'<button class="pick" data-a="cpick" data-i="'+i+'"><div class="nm">'+esc(x.name)+'</div><div class="pl">'+esc(x.line)+'</div></button>').join("");
+    b.innerHTML=h||(wait?'<div class="hint">Checking the client list...</div>':'<div class="empty">No match. Try a different spelling.</div>'); };
+  const r=lookupClients(q); if(r&&typeof r.then==="function") r.then(h=>{ base=h||[]; paint(); }); else{ base=r||[]; paint(); }
+  /* the Job Book list shows at once; clients it doesn't have yet (added on the calendar, say) join in once typing pauses */
+  if(wait) QT=setTimeout(()=>{ lookupMore(q).then(m=>{ if(tok!==QTOK) return; more=m; wait=false; paint(); }); },250);
 }
-let QTOK=0;       // newest search wins, if lookupClients ever answers late
-/* HOOK for the shared customer type-ahead: a later task backs this with the shared list (it may return a promise).
-   Takes what was typed, gives back [{pid,name,line,sub}]. For now it is the master's Job Book index; a worker has no list and types the customer in. */
+let QTOK=0, QT=0, QMORE=[];       // QTOK: newest search wins, if a lookup ever answers late. QMORE: the client-list rows on screen
+/* The customer type-ahead hook: takes what was typed, gives back [{pid,name,line,sub}] (it may return a promise). This is the master's Job Book
+   index; a worker has no list and types the customer in (typed boxes below, which use the shared lpc-clients.js). */
 function lookupClients(q){
   const words=String(q||"").trim().toLowerCase().split(/\s+/).filter(Boolean), hits=[];
   if(!words.length) return hits;
   for(const x of S.index){ if(words.every(w=>x.hay.indexOf(w)>=0)){ hits.push(x); if(hits.length>=25) break; } }
   return hits;
+}
+/* The same search the typed boxes use, on the database's client list (master only, it reads the clients table directly). Gives
+   [{name,line,p}], quietly [] when it can't. Anyone already in the Job Book list is left out so nobody shows twice. */
+const moreOn=()=>!!(window.LPCClients&&SB&&C.uid&&ME.role==="master");
+let JBK=null;
+function jbKeys(){
+  if(!JBK||JBK.src!==S.index){ const o={}; S.index.forEach(x=>{ o[x.name.toLowerCase()+"|"+histKey(addressOf(x.pid))]=1; }); JBK={src:S.index,o:o}; }
+  return JBK.o;
+}
+function lookupMore(q){
+  if(!moreOn()) return Promise.resolve([]);
+  return LPCClients.search(q,{sb:SB,master:true}).then(items=>{
+    const have=jbKeys(), out=[];
+    items.forEach(it=>[{street:it.street,suburb:it.suburb,state:it.state,postcode:it.postcode}].concat(it.sites||[]).slice(0,3).forEach(a=>{
+      const line=LPCClients.fullAddress(a);
+      if(!line||have[it.name.toLowerCase()+"|"+histKey(line)]) return;
+      out.push({name:it.name,line:line,p:{id:it.id}});
+    }));
+    return out.slice(0,8);
+  }).catch(()=>[]);
+}
+/* the shared client type-ahead (lpc-clients.js) on the two typed-customer boxes. The boxes are rebuilt on every redraw, so this runs after each one. */
+function attachTyped(){
+  if(!window.LPCClients) return;
+  const base={isMaster:()=>ME.role==="master", getSb:()=>(C.uid&&SB)?SB:null};
+  const n=$("#t-name"), a=$("#t-addr");
+  if(n) LPCClients.attach(n,Object.assign({onPick:p=>pickTyped(p,"tname")},base));
+  if(a) LPCClients.attach(a,Object.assign({by:"address",minChars:3,onPick:p=>pickTyped(p,"taddr")},base));
+}
+/* A client picked: the box typed in takes the client's own spelling, the other box only fills if it is still blank. A street picked while a
+   different name is already typed is only an address, so it isn't linked to that client. */
+function pickTyped(p,f){
+  const line=LPCClients.fullAddress(p), nm=trim(F.tName).toLowerCase();
+  if(f==="tname"){ F.tName=p.name; if(!trim(F.tAddr)&&line) F.tAddr=line; }
+  else{ if(line) F.tAddr=line; if(!trim(F.tName)) F.tName=p.name; }
+  if(f==="tname"||!nm||nm===p.name.toLowerCase()){ F.tClientId=p.id; F.tPickName=p.name; }
+  const n=$("#t-name"), a=$("#t-addr"); if(n) n.value=F.tName; if(a) a.value=F.tAddr;
 }
 function renderAres(){
   const box=$("#ares"); if(!box) return;
@@ -1165,6 +1210,7 @@ async function save(){
     business:{name:op.business,address:op.address,phone:op.phone,abn:ABN},
     nextService:nextObj(),notes:F.notes.trim(),photos:F.photos.slice(),savedAt:new Date().toISOString(),syncPending:true};
   if(F.id) rec.editedAt=rec.savedAt;
+  if(F.clientId) rec.clientId=F.clientId;      // the client picked from the client list (clients.id), when there was one
   try{ await dbPut(rec); }
   catch(e){ toast("Couldn't save the record to this device ("+(e&&e.message?e.message:"storage error")+"). Nothing was lost on screen. Take a screenshot as a backup.",true); return; }
   /* remember amounts and mix rates for next time */
@@ -1378,11 +1424,12 @@ document.addEventListener("click",function(e){
   if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
   if(a==="rpick"){ pickRecent(d.rid); return; }
+  if(a==="cpick"){ const x=QMORE[+d.i]; if(x) startFor("addr:"+histKey(x.line),x.name,x.line,{isNew:false,clientId:x.p.id}); return; }
   if(a==="typedopen"){ UI.typedOpen=!UI.typedOpen; render(); return; }
   if(a==="typedgo"){
     const name=trim(F.tName), addr=trim(F.tAddr);
     if(!name||!addr){ F.tErr=name?"Type the job address.":"Type the customer's name."; render(); return; }
-    F.tErr=""; startFor("addr:"+histKey(addr),name,addr,{isNew:true}); return; }
+    F.tErr=""; startFor("addr:"+histKey(addr),name,addr,{isNew:!F.tClientId,clientId:F.tClientId||null}); return; }
   if(a==="tilesopen"){ UI.tilesOpen=true; render(); return; }
   if(a==="tilesdone"){ UI.tilesOpen=false; render(); return; }
   if(a==="pexp"){ UI.pexp=UI.pexp||{}; UI.pexp[d.id]=!(UI.pexp[d.id]===true); render(); return; }
@@ -1454,7 +1501,7 @@ document.addEventListener("input",function(e){
       .filter(r=>!q||(r.client+" "+r.address+" "+r.date+" "+nice(r.date)).toLowerCase().indexOf(q)>=0);
     $("#rlist").innerHTML=listHTML(list); }
   else if(f==="aq"){ UI.aq=t.value; renderAres(); }
-  else if(f==="tname"){ F.tName=t.value; }
+  else if(f==="tname"){ F.tName=t.value; if(F.tClientId&&trim(F.tName).toLowerCase()!==F.tPickName.toLowerCase()) F.tClientId=""; }      // a changed name is no longer the client picked
   else if(f==="taddr"){ F.tAddr=t.value; }
   else if(f==="cd"){ const sv=F.services.find(x=>x.s===t.dataset.s); if(sv) sv.d=t.value; }
   else if(f==="amt"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.amount=t.value; keepOpen(t.dataset.id); }
@@ -1483,7 +1530,7 @@ async function deleteRec(r){
 /* open a saved record back in the form */
 function loadForEdit(r){
   F=newForm(); W=newWx(); UI={};
-  F.id=r.id; F.uuid=r.uuid||null; F.jobId=r.jobId||null; F.isNew=!!r.isNewCustomer;
+  F.id=r.id; F.uuid=r.uuid||null; F.jobId=r.jobId||null; F.isNew=!!r.isNewCustomer; F.clientId=r.clientId||null;
   F.propId=r.propId; F.client=r.client; F.address=r.address; F.date=r.date; F.start=r.start||""; F.finish=r.finish||"";
   F.finishTouched=!!r.finish;
   F.services=r.services.map(x=>{ const info=S.services.find(y=>y.s===x.s);

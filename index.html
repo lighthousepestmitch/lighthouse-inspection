@@ -458,11 +458,12 @@
 <input type="file" id="importInput" accept=".json,application/json" hidden>
 
 <script src="lpc-config.js?v=2"></script>   <!-- the Supabase address + public key, same file the Job Calendar uses. Missing = the send-to-office buttons stay hidden -->
+<script src="lpc-clients.js?v=1"></script>   <!-- the shared client auto-fill (also used by Service Records). Missing = the boxes just type as before -->
 <script>
 "use strict";
 
 // Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
-const BUILD="2026-11-04a";
+const BUILD="2026-11-04b";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -1243,6 +1244,7 @@ function render(){
   main.appendChild(buildQuickGrid());
   main.appendChild(buildSection(COVER,true));
   main.appendChild(buildDetails());
+  attachClientLookup();
   main.appendChild(buildTestsBlock());
   main.appendChild(buildScopeBlock());
   main.appendChild(buildAccessBlock());
@@ -1487,6 +1489,7 @@ main.addEventListener("click",e=>{
 main.addEventListener("input",e=>{
   const c=e.target.dataset.c;
   if(c!==undefined){STATE.customer[c]=e.target.value;
+    if(c==="client")clientRenamed(e.target.value);
     if(c==="address"||c==="streetno"||c==="suburb")setHsub();
     if(c==="address"){clearTimeout(acT);acT=setTimeout(()=>addrLookup(e.target.value),400);}
     const pd=document.getElementById("pill-DET");
@@ -1714,6 +1717,44 @@ async function reverseGeo(lat,lng){
     if(!r.ok)return;const d=await r.json();
     if(d&&d.address){applyAddr(d);toast("Address filled from GPS");}
   }catch(e){}
+}
+
+/* ---------- client auto-fill (the type-ahead itself is the shared lpc-clients.js, also used by Service Records) ----------
+   Type a name or a street and the clients already on the books show under the box. Tapping one fills only the boxes that are still blank
+   (the box you typed in takes the client's own spelling) and notes which client in customer.clientId. A new name is typed as before. */
+let CLPICK=null;      // {id,name}: the client last picked on this device, so changing the name afterwards drops the link
+const AU_STATES=["NSW","QLD","VIC","SA","WA","TAS","NT","ACT"];
+function fillFromClient(p,typed){
+  const c=STATE.customer,a=splitJobAddress("",{street:p.street,suburb:p.suburb,state:p.state,postcode:p.postcode});
+  const st=String(a.state||"").toUpperCase().trim();
+  const vals={streetno:a.streetno,address:a.address,suburb:a.suburb,state:AU_STATES.indexOf(st)>=0?st:"",postcode:a.postcode};
+  // a street picked while a different name is already typed is only an address: that person's phone and email must not land on this customer
+  const typedName=String(c.client||"").trim().toLowerCase();
+  if(typed==="client"||!typedName||typedName===p.name.trim().toLowerCase()){
+    vals.client=p.name;vals.phone=p.phone;if(isMaster())vals.email=p.email;
+    c.clientId=p.id;CLPICK={id:p.id,name:p.name};
+  }
+  Object.keys(vals).forEach(k=>{
+    const v=String(vals[k]==null?"":vals[k]).trim(),el=document.querySelector('[data-c="'+k+'"]');
+    if(!v||!el)return;
+    if(k!==typed&&(String(c[k]||"").trim()||String(el.value||"").trim()))return;       // never overwrite what is already typed
+    c[k]=v;el.value=v;
+  });
+  clearTimeout(acT);if(acAbort)acAbort.abort();hideAC();      // the street search for the half-typed text must not pop up over the pick
+  const pd=document.getElementById("pill-DET");if(pd){pd.textContent=c.address?"Filled":"To do";pd.className="pill "+(c.address?"clear":"todo");}
+  setHsub();scheduleSave();toast("Client details filled in");
+}
+function clientRenamed(v){
+  const c=STATE.customer;
+  if(c.clientId&&CLPICK&&CLPICK.id===c.clientId&&String(v||"").trim().toLowerCase()!==CLPICK.name.toLowerCase())delete c.clientId;
+}
+function attachClientLookup(){
+  if(!window.LPCClients)return;
+  // getSb gives nothing when signed out, so no list shows and typing is untouched
+  const base={isMaster:isMaster,getSb:async()=>(sbCfg()&&sbHasSession())?sbClient():null};
+  const nm=document.querySelector('[data-c="client"]'),st=document.querySelector('[data-c="address"]');
+  if(nm)LPCClients.attach(nm,Object.assign({anchor:nm.closest(".grid2"),onPick:p=>fillFromClient(p,"client")},base));
+  if(st)LPCClients.attach(st,Object.assign({anchor:st.parentNode,by:"address",minChars:3,onPick:p=>fillFromClient(p,"address")},base));   // under the street row, above the OpenStreetMap list
 }
 
 /* ---------- voice dictation ---------- */
