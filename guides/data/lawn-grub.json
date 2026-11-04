@@ -1,0 +1,153 @@
+{
+ "id": "lawn-grub",
+ "title": "Lawn grub treatment",
+ "subtitle": "Draft. Only a few past jobs and no written procedure, so this one is mostly questions for Mitch.",
+ "updated": "2026-11-05",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Lawn Grub Treatment products); jobbook-data/services.json (past wordings)",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "When this job comes up",
+   "short": "When",
+   "body": [
+    "Customer has lawn grubs in their lawn. Mitch's service is called Lawn Grub Treatment. Past invoices read: \"Lawn grub treatment using registered insecticide\" with the lawn area in square metres, and \"Larvae Treatment, cottage only\".",
+    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "PPE on before you go in",
+   "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
+   "items": [
+    "Gloves and closed shoes at minimum",
+    "Gloves, mask and eye protection for any spray, as per the product SDS"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Products Mitch uses",
+   "short": "Products",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which product for which job]",
+   "columns": [
+    "Product",
+    "Active (as listed)",
+    "Equipment (as listed)"
+   ],
+   "rows": [
+    [
+     "Country Bifenthrin 100 Low Odour Termiticide & Insecticide",
+     "Bifenthrin",
+     "Power spray rig"
+    ],
+    [
+     "Aquastar 100SC Termiticide & Insecticide",
+     "Bifenthrin",
+     "Power spray rig"
+    ],
+    [
+     "Biflex",
+     "Bifenthrin",
+     "Power spray rig"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "steps",
+   "heading": "Steps",
+   "short": "Steps",
+   "title": "Steps",
+   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "items": [
+    "Ask the customer to show you where the lawn is damaged",
+    "Take BEFORE photos of the damaged areas",
+    {
+     "text": "Work out the lawn area in square metres",
+     "detail": "Past invoices give the area in m2. [Mitch to confirm: how you measure it]"
+    },
+    {
+     "text": "Treat the lawn",
+     "detail": "[Mitch to confirm: how you apply it, and whether it is watered in]"
+    },
+    {
+     "text": "Apply per the product label. Never exceed label rates",
+     "detail": "Never mix chemicals without checking the label first. If in doubt, call Mitch."
+    },
+    "Keep chemicals away from food, children and pets",
+    "Note anything you could not treat or reach, and why",
+    "Take AFTER photos"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "BEFORE and AFTER photos taken",
+    "Lawn area treated as agreed with Mitch, and the area in square metres written on the job report",
+    "Anything you could not treat or reach is noted on the job report, with the reason",
+    "Product, rate, area and quantity recorded on the job report",
+    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You apply the wrong chemical",
+     "detail": "Stop immediately. Do not continue. Call Mitch."
+    },
+    {
+     "text": "There is a spill",
+     "detail": "Follow the SDS procedure. Call Mitch immediately. Never leave a spill unattended."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    },
+    {
+     "text": "The customer complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "The customer asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "You see signs of termites or other pests outside this job",
+     "detail": "Photograph it and tell Mitch. Termite quotes always go to Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. How do you confirm it is lawn grubs (what you check, and where)?",
+    "2. Which grubs or larvae do you see most (lawn grub, army worm, curl grub, other)?",
+    "3. Which product for which job: Country Bifenthrin, Aquastar or Biflex?",
+    "4. How do you apply it (power spray rig, other), and is it watered in?",
+    "5. What does the customer do before and after (mow, water)?",
+    "6. How long until the customer, kids and pets can use the lawn?",
+    "7. What weather do you need?",
+    "8. How do you measure the lawn area?",
+    "9. Do you record wind speed, direction and other weather on the job? (The old Pest Management Certificate of Treatment form asks for it.)",
+    "10. How long until the grubs are gone and the lawn recovers, and when is a second visit needed?",
+    "11. What do customers ask most, and what do you tell them?"
+   ]
+  }
+ ]
+}

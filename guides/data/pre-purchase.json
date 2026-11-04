@@ -1,0 +1,189 @@
+{
+ "id": "pre-purchase",
+ "title": "Pre-purchase inspection",
+ "subtitle": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite inspection checklist. Only what is different is here.",
+ "updated": "2026-11-05",
+ "source": "Termite inspection checklist guide; Inspection Capture (pre-purchase mode); LPC Tech Onboarding Pack (standards, PPE, free service period, never list); Mitch's 2025 pre-purchase inspection agreement wording; business-context notes on the pre-purchase report",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "The same walk, with a few differences",
+   "short": "Same walk",
+   "body": [
+    "A pre-purchase timber pest inspection is the same physical walk as a regular termite inspection. Use the Termite inspection checklist guide for the steps: interior, roof void, exterior, subfloor and wrap-up. Only the differences are listed here.",
+    "The standard is AS 4349.3-2010 for the pest inspection (AS 4349.1 for building). The client is a buyer."
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "diff",
+   "heading": "What is different",
+   "short": "Differences",
+   "title": "In Capture and on site",
+   "items": [
+    {
+     "text": "Pick Pre-purchase (AS4349.3) as the inspection type in Capture before you start",
+     "detail": "If you start Capture from today's job and the service is pre-purchase, it picks the type for you. Check it before you start."
+    },
+    {
+     "text": "The scope is fixed: Pre-Purchase Standard Timber Pest Inspection Report",
+     "detail": "There is no Option 1, 2 or 3 to pick."
+    },
+    {
+     "text": "Special conditions or instructions: type in anything the client asked for",
+     "detail": "Leave it blank if there are none."
+    },
+    {
+     "text": "Undetected timber pest risk can also be set to Extremely High",
+     "detail": "The choices are Low, Moderate, Moderate-High, High and Extremely High."
+    },
+    {
+     "text": "A few findings have different names in Capture",
+     "detail": "Lack of adequate subfloor ventilation. Untreated or non-durable timber used in a hazardous environment. Other conditions conducive to timber pest attack."
+    },
+    {
+     "text": "Record any extra tests you used in the Moisture meter and other tests card",
+     "detail": "The pre-purchase report asks whether extra tests were done, and needs the details."
+    },
+    "You do not fill in a results summary. Mitch builds it from your findings",
+    "The report wording says AS 4349.3 where the regular one says AS 3660. Capture does that for you"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "The client is a buyer",
+   "short": "The buyer",
+   "body": [
+    "The client is the buyer, not the owner. [Mitch to confirm: who arranges access, and who is on site: the agent, the owner or the buyer?]",
+    "In Mitch's 2025 pre-purchase agreement, the person asking for the inspection (or their agent) has to sign the Pest Inspection Agreement before the results can be issued. [Mitch to confirm: is the agreement still used, who sends it, and does a tech need to check it is signed?]"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Scope wording",
+   "short": "Scope",
+   "title": "From Mitch's 2025 pre-purchase inspection agreement. [Mitch to confirm: still current for the RSA pre-purchase report?]",
+   "columns": [
+    "Point",
+    "What the agreement says"
+   ],
+   "rows": [
+    [
+     "Standard",
+     "AS 4349.3-2010, Inspection of buildings, Part 3: Timber pest inspections."
+    ],
+    [
+     "What it reports on",
+     "Subterranean and dampwood termites, borers of seasoned timber and wood decay fungi (rot), present on the day."
+    ],
+    [
+     "Not covered",
+     "Other pests. Dry wood termites and European House Borer are left out."
+    ],
+    [
+     "How",
+     "Visual and non-invasive. Reasonable access areas only. Nothing is cut, moved, dismantled or removed."
+    ],
+    [
+     "Probing",
+     "The inspector may tap and sound timbers with a probe or screwdriver. Splinter testing is NOT done when the client is a buyer and not the owner."
+    ],
+    [
+     "Moisture meter",
+     "Used on walls backing onto wet areas such as showers. Elsewhere only if the visual inspection shows a need."
+    ],
+    [
+     "Hidden or blocked areas",
+     "The report does not say they are free of pests, and it is not a guarantee."
+    ],
+    [
+     "Termite-only request",
+     "A termite-only inspection is not recommended for a pre-purchase. If the client asks only for that, it is done to AS 3660.2 and not AS 4349.3."
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "From the onboarding pack, when you go in",
+   "items": [
+    {
+     "text": "Roof void entry: dust mask, gloves, torch, appropriate footwear"
+    },
+    {
+     "text": "Subfloor entry: coveralls, gloves, dust mask, torch"
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "No free service period",
+   "short": "No free service period",
+   "body": "An inspection has no free service period. It is an inspection only, not a guarantee. The Every job guide has the free service period for treatments."
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "Everything in the wrap-up of the Termite inspection checklist is done",
+    "Capture shows Pre-purchase as the inspection type",
+    "Special conditions or instructions entered, or left blank because there are none",
+    "Any extra tests you used are recorded in the Moisture meter and other tests card",
+    "Every inaccessible area and obstruction is recorded in Capture with the specific reason",
+    "The job is sent to Mitch from Capture"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You find active termites",
+     "detail": "Do not disturb them. Photograph them thoroughly. Tell Mitch. Termite quotes always go to Mitch."
+    },
+    {
+     "text": "You find a major safety hazard",
+     "detail": "Advise the client verbally before you leave site, and tell Mitch. [Mitch to confirm: who to tell if the buyer is not there]"
+    },
+    {
+     "text": "The client asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "The client complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. Who arranges access for a pre-purchase (agent, owner or buyer), and does the buyer come along?",
+    "2. Is the Pest Inspection Agreement still used, who sends it, and does a tech need to check it is signed before going?",
+    "3. Is the 2025 agreement wording (splinter testing, moisture meter, what is left out) still right for the RSA pre-purchase report?",
+    "4. What do you tell a buyer on site about findings, and what waits for the report?",
+    "5. Can a tech quote a pre-purchase inspection, or does that go to you?",
+    "6. Do any pre-purchase jobs come with a builder (the Specialist Property Assessments builder and pest joint venture)? What does the tech do on those?",
+    "7. How soon does the buyer get the report?",
+    "8. What do buyers ask most, and what do you tell them?"
+   ]
+  }
+ ]
+}

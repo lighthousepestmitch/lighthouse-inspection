@@ -57,6 +57,102 @@
    "updated": "2026-11-04",
    "order": 7,
    "group": "Termites"
+  },
+  {
+   "id": "pre-purchase",
+   "title": "Pre-purchase inspection",
+   "summary": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite checklist, with only the differences. Draft.",
+   "updated": "2026-11-05",
+   "order": 8,
+   "group": "Termites"
+  },
+  {
+   "id": "wasp",
+   "title": "Wasp treatment",
+   "summary": "Wasp jobs: PPE, products and the rules. Draft, Mitch still to fill in the steps.",
+   "updated": "2026-11-05",
+   "order": 9,
+   "group": "Other pests"
+  },
+  {
+   "id": "bee",
+   "title": "Bee treatment",
+   "summary": "Bee jobs: PPE, products and the rules. Draft, Mitch still to fill in the steps.",
+   "updated": "2026-11-05",
+   "order": 10,
+   "group": "Other pests"
+  },
+  {
+   "id": "rodent",
+   "title": "Rodent baiting and bait boxes",
+   "summary": "Bait station checks, cleaning and refills, and supplying boxes. Draft, Mitch still to fill in the steps.",
+   "updated": "2026-11-05",
+   "order": 11,
+   "group": "Other pests"
+  },
+  {
+   "id": "bed-bug",
+   "title": "Bed bug treatment",
+   "summary": "Bed bug jobs: PPE, products and where they hide. Draft, Mitch still to fill in the steps.",
+   "updated": "2026-11-05",
+   "order": 12,
+   "group": "Other pests"
+  },
+  {
+   "id": "mites",
+   "title": "Mites",
+   "summary": "Bird, clover and rodent mites. Draft, mostly questions for Mitch.",
+   "updated": "2026-11-05",
+   "order": 13,
+   "group": "Other pests"
+  },
+  {
+   "id": "flea",
+   "title": "Flea treatment",
+   "summary": "Fleas, including end of lease. Draft, Mitch still to fill in the steps.",
+   "updated": "2026-11-05",
+   "order": 14,
+   "group": "Other pests"
+  },
+  {
+   "id": "mosquito",
+   "title": "Mosquito treatment",
+   "summary": "Mosquito jobs for homes and gardens. Draft, Mitch still to fill in the steps.",
+   "updated": "2026-11-05",
+   "order": 15,
+   "group": "Other pests"
+  },
+  {
+   "id": "carpet-beetle",
+   "title": "Carpet beetle treatment",
+   "summary": "Carpet beetle jobs. Draft, mostly questions for Mitch.",
+   "updated": "2026-11-05",
+   "order": 16,
+   "group": "Other pests"
+  },
+  {
+   "id": "clothes-moth",
+   "title": "Clothes moth treatment",
+   "summary": "Clothes moth, carpet moth and silverfish. Draft, mostly questions for Mitch.",
+   "updated": "2026-11-05",
+   "order": 17,
+   "group": "Other pests"
+  },
+  {
+   "id": "drain-fly",
+   "title": "Drain fly treatment",
+   "summary": "Drain fly jobs. Draft, mostly questions for Mitch.",
+   "updated": "2026-11-05",
+   "order": 18,
+   "group": "Other pests"
+  },
+  {
+   "id": "lawn-grub",
+   "title": "Lawn grub treatment",
+   "summary": "Lawn grub jobs. Draft, mostly questions for Mitch.",
+   "updated": "2026-11-05",
+   "order": 19,
+   "group": "Other pests"
   }
  ]
 }

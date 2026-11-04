@@ -1,0 +1,149 @@
+{
+ "id": "mosquito",
+ "title": "Mosquito treatment",
+ "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
+ "updated": "2026-11-05",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Mosquito Treatment products); jobbook-data/services.json (past wordings)",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "When this job comes up",
+   "short": "When",
+   "body": [
+    "Mosquito treatment for a home and its garden. Mitch's service is called Mosquito Treatment. Past invoices read: \"Mosquito treatment, approved residual insecticide\", \"Mosquito & tick treatment to accessible gardens and lawns\" and \"Mosquito/midge treatment\".",
+    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "PPE on before you go in",
+   "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
+   "items": [
+    "Gloves and closed shoes at minimum",
+    "Gloves, mask and eye protection for any spray, as per the product SDS"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Products Mitch uses",
+   "short": "Products",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: what each product is used for on a mosquito job]",
+   "columns": [
+    "Product",
+    "Active (as listed)",
+    "Equipment (as listed)"
+   ],
+   "rows": [
+    [
+     "VectoBac WG",
+     "Bacillus thuringiensis subsp. israelensis",
+     "Mister / fogger"
+    ],
+    [
+     "Country Bifenthrin 100 Low Odour Termiticide & Insecticide",
+     "Bifenthrin",
+     "Power spray rig"
+    ],
+    [
+     "Aquastar 100SC Termiticide & Insecticide",
+     "Bifenthrin",
+     "Power spray rig"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "steps",
+   "heading": "Steps",
+   "short": "Steps",
+   "title": "Steps",
+   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "items": [
+    "Ask the customer to point out where the mosquitoes are worst",
+    "Take BEFORE photos of the areas",
+    {
+     "text": "Treat the accessible gardens and lawns",
+     "detail": "Past invoices say \"accessible gardens and lawns\". [Mitch to confirm: what you treat, with what, and how]"
+    },
+    {
+     "text": "Apply per the product label. Never exceed label rates",
+     "detail": "Never mix chemicals without checking the label first. If in doubt, call Mitch."
+    },
+    "Keep chemicals away from food, children and pets",
+    "Note anything you could not treat or reach, and why",
+    "Take AFTER photos"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "BEFORE and AFTER photos taken",
+    "Accessible gardens and lawns treated",
+    "Anything you could not treat or reach is noted on the job report, with the reason",
+    "Product, rate, area and quantity recorded on the job report",
+    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You apply the wrong chemical",
+     "detail": "Stop immediately. Do not continue. Call Mitch."
+    },
+    {
+     "text": "There is a spill",
+     "detail": "Follow the SDS procedure. Call Mitch immediately. Never leave a spill unattended."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    },
+    {
+     "text": "The customer complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "The customer asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "You see signs of termites or other pests outside this job",
+     "detail": "Photograph it and tell Mitch. Termite quotes always go to Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. What weather do you need (wind, rain, temperature), and do you rebook for weather?",
+    "2. Do you look for breeding spots (standing water, gutters, pots), and do you tell the customer?",
+    "3. What is VectoBac used for on a mosquito job, and what are the bifenthrin products (Country Bifenthrin, Aquastar) used for?",
+    "4. Which equipment goes with which product (mister or fogger, power spray rig)?",
+    "5. Which areas do you treat (foliage, fences, eaves, under decks, lawn), and how high do you go?",
+    "6. What do you avoid treating (ponds, tanks, fish, edible gardens, flowering plants)?",
+    "7. How long do the customer, kids and pets stay off the treated areas?",
+    "8. How long does it last, how often should it be repeated, and is there a season?",
+    "9. Do you record wind speed, direction and other weather on the job? (The old Pest Management Certificate of Treatment form asks for it.)",
+    "10. You have emailed customers a \"Mosquito Treatment Information\" sheet before. Should techs give the same one?",
+    "11. What do customers ask most (still seeing mozzies), and what do you tell them?"
+   ]
+  }
+ ]
+}

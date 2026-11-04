@@ -1,0 +1,177 @@
+{
+ "id": "flea",
+ "title": "Flea treatment",
+ "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
+ "updated": "2026-11-05",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, what you can quote, certificate note); jobbook-data/chemicals.json (Flea Treatment products); jobbook-data/services.json (past wordings); past inspection report wording in the treatment history",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "When this job comes up",
+   "short": "When",
+   "body": [
+    "Fleas in a home, including end of lease flea treatments. Mitch's service is called Flea Treatment. Past invoices read: \"Flea Treatment\", \"End of lease flea treatment\" and \"Flea treatment end of lease internal & external\".",
+    "The onboarding pack lists a certificate with small and end of lease flea jobs. [Mitch to confirm: what the certificate is, who issues it, and when you give one]",
+    "Once you are experienced you can quote flea jobs. Anything complex goes to Mitch.",
+    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "PPE on before you go in",
+   "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
+   "items": [
+    "Gloves and closed shoes at minimum",
+    "Gloves, mask and eye protection for any spray, as per the product SDS",
+    {
+     "text": "Subfloor entry: coveralls, gloves, dust mask, torch"
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Products Mitch uses",
+   "short": "Products",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which product goes inside, outside and in the subfloor]",
+   "columns": [
+    "Product",
+    "Active (as listed)",
+    "Equipment (as listed)"
+   ],
+   "rows": [
+    [
+     "Country Bifenthrin 100 Low Odour Termiticide & Insecticide",
+     "Bifenthrin",
+     "Power spray rig"
+    ],
+    [
+     "Aquastar 100SC Termiticide & Insecticide",
+     "Bifenthrin",
+     "Power spray rig"
+    ],
+    [
+     "Coopex Insecticidal Dusting Powder",
+     "Permethrin",
+     "Bulb duster"
+    ]
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Where past jobs and reports point to",
+   "short": "Where",
+   "columns": [
+    "Where",
+    "What the sources say"
+   ],
+   "rows": [
+    [
+     "Inside and outside",
+     "One end of lease invoice reads \"internal & external\". [Mitch to confirm: is that every end of lease job?]"
+    ],
+    [
+     "Subfloor and around the perimeter",
+     "A past inspection report noted a heavy flea infestation here and said it should be treated."
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "steps",
+   "heading": "Steps",
+   "short": "Steps",
+   "title": "Steps",
+   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "items": [
+    "Ask the customer to point out where the fleas are, and where pets spend time",
+    "Take BEFORE photos of the problem areas",
+    {
+     "text": "Treat the areas booked: inside, outside, or both",
+     "detail": "[Mitch to confirm: what you treat inside, outside and under the house, and how]"
+    },
+    {
+     "text": "Apply per the product label. Never exceed label rates",
+     "detail": "Never mix chemicals without checking the label first. If in doubt, call Mitch."
+    },
+    "Keep chemicals away from food, children and pets",
+    "Note anything you could not treat or reach, and why",
+    "Take AFTER photos",
+    {
+     "text": "End of lease: give the certificate",
+     "detail": "[Mitch to confirm: what it is and where you make it]"
+    }
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "BEFORE and AFTER photos taken",
+    "Areas booked have been treated, or noted with the reason they were not",
+    "Anything you could not treat or reach is noted on the job report, with the reason",
+    "Product, rate, area and quantity recorded on the job report",
+    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You apply the wrong chemical",
+     "detail": "Stop immediately. Do not continue. Call Mitch."
+    },
+    {
+     "text": "There is a spill",
+     "detail": "Follow the SDS procedure. Call Mitch immediately. Never leave a spill unattended."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    },
+    {
+     "text": "The customer complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "The customer asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "You see signs of termites or other pests outside this job",
+     "detail": "Photograph it and tell Mitch. Termite quotes always go to Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. What do you ask the customer first (pets, where they sleep, last treatment, vacuumed)?",
+    "2. What must the customer do before you arrive (vacuum, wash pet bedding, lift items, move pets out)?",
+    "3. Which product goes where: bifenthrin spray (Country Bifenthrin or Aquastar) or Coopex dust?",
+    "4. Which surfaces inside do you treat (carpet, bedding, skirting, under furniture)?",
+    "5. Do you treat the subfloor and the perimeter every time?",
+    "6. How long before the customer can go back in, and when can pets come back?",
+    "7. What do you tell them about vacuuming and mopping after?",
+    "8. How long until the fleas stop, and when is a second treatment needed?",
+    "9. End of lease: what is in the certificate, who gets it, and what do agents need?",
+    "10. Do you inspect first to confirm it is fleas?",
+    "11. What do customers ask most, and what do you tell them?"
+   ]
+  }
+ ]
+}

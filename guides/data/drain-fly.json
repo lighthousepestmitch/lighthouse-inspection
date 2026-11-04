@@ -1,0 +1,140 @@
+{
+ "id": "drain-fly",
+ "title": "Drain fly treatment",
+ "subtitle": "Draft. Only one product and a few past jobs are written down, so this one is mostly questions for Mitch.",
+ "updated": "2026-11-05",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Drain Fly Treatment product); jobbook-data/services.json (past wordings)",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "When this job comes up",
+   "short": "When",
+   "body": [
+    "Customer has drain flies. Mitch's service is called Drain Fly Treatment. Past invoices read: \"Drain fly treatment\", \"Drain fly treatment, second treatment\" and \"External fly treatment only including residual treatment to common fly activity areas around the property\".",
+    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "PPE on before you go in",
+   "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
+   "items": [
+    "Gloves and closed shoes at minimum",
+    "Gloves, mask and eye protection for any spray, as per the product SDS"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Products Mitch uses",
+   "short": "Products",
+   "title": "Name as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: is this the only product, and how is it used]",
+   "columns": [
+    "Product",
+    "Active (as listed)",
+    "Equipment (as listed)"
+   ],
+   "rows": [
+    [
+     "Bio Plus drain treatment",
+     "Biological (bacteria)",
+     "Hand-held compression sprayer"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "steps",
+   "heading": "Steps",
+   "short": "Steps",
+   "title": "Steps",
+   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "items": [
+    "Ask the customer which drains and areas have the flies",
+    "Take BEFORE photos",
+    {
+     "text": "Treat the drains",
+     "detail": "[Mitch to confirm: which drains, how the product goes in, and how much]"
+    },
+    {
+     "text": "Apply per the product label. Never exceed label rates",
+     "detail": "Never mix chemicals without checking the label first. If in doubt, call Mitch."
+    },
+    "Keep chemicals away from food, children and pets",
+    "Note anything you could not treat or reach, and why",
+    "Take AFTER photos",
+    {
+     "text": "Some jobs get a second treatment",
+     "detail": "Past invoices say \"second treatment\". [Mitch to confirm: when, and how long after the first]"
+    }
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "BEFORE and AFTER photos taken",
+    "Drains treated as agreed with Mitch",
+    "Anything you could not treat or reach is noted on the job report, with the reason",
+    "Product, rate, area and quantity recorded on the job report",
+    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You apply the wrong chemical",
+     "detail": "Stop immediately. Do not continue. Call Mitch."
+    },
+    {
+     "text": "There is a spill",
+     "detail": "Follow the SDS procedure. Call Mitch immediately. Never leave a spill unattended."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    },
+    {
+     "text": "The customer complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "The customer asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "You see signs of termites or other pests outside this job",
+     "detail": "Photograph it and tell Mitch. Termite quotes always go to Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. How do you find which drains have the flies (kitchen, bathroom, laundry, floor wastes, outside)?",
+    "2. How do you apply Bio Plus (sprayed or poured), and how much goes in each drain?",
+    "3. Do you clean the drain first (brush, flush)?",
+    "4. What is the usual cause, and what do you tell the customer about it?",
+    "5. When is a second treatment needed, and how long after the first?",
+    "6. What is the \"external fly treatment\" job, and which products does it use?",
+    "7. How long until the flies are gone?",
+    "8. What must the customer do or not do after (running water, other drain products)?",
+    "9. What do customers ask most, and what do you tell them?"
+   ]
+  }
+ ]
+}

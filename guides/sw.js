@@ -11,7 +11,7 @@
    it is network first, so the next visit with signal picks it up. */
 "use strict";
 
-const VERSION = "2026-11-04a";
+const VERSION = "2026-11-05a";
 const SHELL = "guides-shell-v1";
 const FONTS = "guides-fonts-v1";
 const WAIT_MS = 4000;

@@ -1,0 +1,213 @@
+{
+ "id": "bed-bug",
+ "title": "Bed bug treatment",
+ "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
+ "updated": "2026-11-05",
+ "source": "LPC Tech Onboarding Pack (PPE for bed bug work, never list, what you can quote); jobbook-data/chemicals.json (Bed Bug Treatment products); jobbook-data/services.json (past wordings); Garrards technical advisory note on bedbug management found in the treatment history files",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "When this job comes up",
+   "short": "When",
+   "body": [
+    "Customer thinks they have bed bugs. Mitch's service is called Bed Bug Treatment. Past invoices read: \"Bed Bug Inspection\" (with a report provided), \"Bedbug Treatment x 1 room\", \"Bedbug Treatment x 2 rooms\", and an inspection and treatment of a vehicle.",
+    "A bed bug job is one visit. A follow-up visit is quoted separately. [Mitch to confirm: can a tech quote bed bug work, or does Mitch?]",
+    "[Mitch to confirm: is a job sized by room (as on past invoices) or by small or large dwelling (as in the onboarding pack)?]",
+    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "PPE on before you go in",
+   "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
+   "items": [
+    "Gloves and closed shoes at minimum",
+    "Gloves, mask and eye protection for any spray, as per the product SDS",
+    {
+     "text": "Coveralls, gloves and mask on before you go in",
+     "detail": "Change them before you go into the next property."
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Products Mitch uses",
+   "short": "Products",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which product goes where]",
+   "columns": [
+    "Product",
+    "Active (as listed)",
+    "Equipment (as listed)"
+   ],
+   "rows": [
+    [
+     "Demand Duo Insecticide",
+     "Lambda-cyhalothrin, Thiamethoxam",
+     "Backpack sprayer"
+    ],
+    [
+     "Coopex Insecticidal Dusting Powder",
+     "Permethrin",
+     "Bulb duster"
+    ]
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Where bed bugs hide",
+   "short": "Where they hide",
+   "title": "From a Garrards advisory note in Mitch's files. [Mitch to confirm: does this match how you work?]",
+   "columns": [
+    "Where",
+    "What the note says"
+   ],
+   "rows": [
+    [
+     "How far to look",
+     "Find every harbourage within 2 to 3 metres of the bed. A harbourage is any crack you can slide the corner of a piece of paper into."
+    ],
+    [
+     "Bed linen",
+     "Needs laundering."
+    ],
+    [
+     "Mattress",
+     "Wrap in black plastic and put it in the hot sun."
+    ],
+    [
+     "Bedhead",
+     "Screw it off the wall, treat behind it, put it back, seal the edges."
+    ],
+    [
+     "Furniture",
+     "Take it apart, treat, put it back together, seal the gaps."
+    ],
+    [
+     "Wall coverings",
+     "Check for cracks in wallpaper."
+    ],
+    [
+     "Curtains and hangings",
+     "Check the curtain rails too. May need to come down and be cleaned."
+    ],
+    [
+     "Skirting",
+     "Treat and seal."
+    ],
+    [
+     "Flooring",
+     "Timber tongue-in-groove: get rid of the cracks."
+    ],
+    [
+     "Cane furniture",
+     "Take it out and put it in the sun, or fumigate it. Otherwise don't put it back for three months. Liquid and dust can't treat it properly."
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "steps",
+   "heading": "Steps",
+   "short": "Steps",
+   "title": "Steps",
+   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "items": [
+    "Ask the customer to show you the rooms and beds with the problem",
+    "Coveralls, gloves and mask on before you go in",
+    "Take BEFORE photos",
+    {
+     "text": "Inspect the bed and everything near it for signs",
+     "detail": "The Garrards note lists: dots of blood on the sheets, a sickly sweet smell, and dried blood in cracks around the bed, bedhead, bedside furniture and mattress. [Mitch to confirm: how you inspect]"
+    },
+    {
+     "text": "Treat the harbourages you find",
+     "detail": "[Mitch to confirm: how you treat, and which of Demand Duo spray and Coopex dust goes where]"
+    },
+    {
+     "text": "Apply per the product label. Never exceed label rates",
+     "detail": "Never mix chemicals without checking the label first. If in doubt, call Mitch."
+    },
+    "Keep chemicals away from food, children and pets",
+    "Note anything you could not treat or reach, and why",
+    "Take AFTER photos",
+    "Before you go into the next property, change your coveralls, gloves and mask",
+    "Note any follow-up needed and tell Mitch"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "BEFORE and AFTER photos taken",
+    "Harbourages found are treated, or noted with the reason they were not",
+    "PPE changed before the next property",
+    "Any follow-up noted and Mitch told",
+    "Anything you could not treat or reach is noted on the job report, with the reason",
+    "Product, rate, area and quantity recorded on the job report",
+    "Customer told what to do before and after, and what to expect [Mitch to confirm: what you tell them (the Garrards note mentions laundering linen and wrapping the mattress)]",
+    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You apply the wrong chemical",
+     "detail": "Stop immediately. Do not continue. Call Mitch."
+    },
+    {
+     "text": "There is a spill",
+     "detail": "Follow the SDS procedure. Call Mitch immediately. Never leave a spill unattended."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    },
+    {
+     "text": "The customer complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "The customer asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "You see signs of termites or other pests outside this job",
+     "detail": "Photograph it and tell Mitch. Termite quotes always go to Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. How do you tell it is bed bugs and not fleas, mites or something else?",
+    "2. What must the customer do before you arrive (strip beds, wash linen, clear the floor, move furniture)?",
+    "3. How far from the bed do you search and treat, and what do you pull apart (bedhead, furniture, skirting)?",
+    "4. Which product for what: Demand Duo spray or Coopex dust, and where does each go?",
+    "5. Do you treat the mattress? How?",
+    "6. How long before the customer can go back in the room or sleep in the bed?",
+    "7. When is a follow-up visit needed, how long after, and what does the tech do on it?",
+    "8. What does the customer do after (vacuum, launder, mattress covers)?",
+    "9. Is a job sized by room or by dwelling?",
+    "10. When do you give a written report (Bed Bug Inspection)?",
+    "11. A vehicle was done once. What is different about treating a vehicle?",
+    "12. How do you stop carrying bugs to the next property, beyond changing coveralls, gloves and mask?",
+    "13. What do customers ask most, and what do you tell them?"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,153 @@
+{
+ "id": "bee",
+ "title": "Bee treatment",
+ "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
+ "updated": "2026-11-05",
+ "source": "jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); LPC Tech Onboarding Pack (PPE, never list); past inspection report wording in the treatment history",
+ "sections": [
+  {
+   "type": "text",
+   "heading": "When this job comes up",
+   "short": "When",
+   "body": [
+    "Customer has bees. Mitch's service is called Wasp/Bee Treatment (wasps and bees share one service). Past invoices read: \"Treated active bee infestation\".",
+    "Bees also turn up as a finding on inspections, for example an active bee infestation in a gable, or mortar bee activity in brickwork. For an active bee infestation the report tells the customer to contact Mitch if they want it treated. [Mitch to confirm: is mortar bee a treatment job, or only an inspection finding?]",
+    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "ppe",
+   "heading": "PPE",
+   "short": "PPE",
+   "title": "PPE on before you go in",
+   "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
+   "items": [
+    "Gloves and closed shoes at minimum",
+    "Gloves, mask and eye protection for any spray, as per the product SDS",
+    {
+     "text": "Roof void entry: dust mask, gloves, torch, appropriate footwear"
+    },
+    {
+     "text": "Subfloor entry: coveralls, gloves, dust mask, torch"
+    },
+    "[Mitch to confirm: any bee-specific PPE, such as a veil or suit]"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Products Mitch uses",
+   "short": "Products",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: same two products for bees as for wasps, and which for what]",
+   "columns": [
+    "Product",
+    "Active (as listed)",
+    "Equipment (as listed)"
+   ],
+   "rows": [
+    [
+     "Wasp Force Insecticide",
+     "d-Allethrin, d-Phenothrin",
+     "Aerosol (direct spray)"
+    ],
+    [
+     "Coopex Insecticidal Dusting Powder",
+     "Permethrin",
+     "Bulb duster"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "steps",
+   "heading": "Steps",
+   "short": "Steps",
+   "title": "Steps",
+   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "items": [
+    "Ask the customer to point out where the bees are and where they are going in and out",
+    "Take BEFORE photos of the area",
+    {
+     "text": "Treat the active bee infestation",
+     "detail": "[Mitch to confirm: how you treat bees, which product, and where you work from]"
+    },
+    {
+     "text": "Apply per the product label. Never exceed label rates",
+     "detail": "Never mix chemicals without checking the label first. If in doubt, call Mitch."
+    },
+    "Keep chemicals away from food, children and pets",
+    "Note anything you could not treat or reach, and why",
+    "Take AFTER photos"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "complete",
+   "heading": "Job complete when",
+   "short": "Complete",
+   "items": [
+    "BEFORE and AFTER photos taken",
+    "Bees treated",
+    "Anything you could not treat or reach is noted on the job report, with the reason",
+    "Product, rate, area and quantity recorded on the job report",
+    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Tell Mitch straight away if",
+   "short": "Tell Mitch",
+   "body": "Call Mitch on 0432 181 689. After hours or urgent, call Mitch directly.",
+   "items": [
+    {
+     "text": "You apply the wrong chemical",
+     "detail": "Stop immediately. Do not continue. Call Mitch."
+    },
+    {
+     "text": "There is a spill",
+     "detail": "Follow the SDS procedure. Call Mitch immediately. Never leave a spill unattended."
+    },
+    {
+     "text": "Someone is hurt",
+     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+    },
+    {
+     "text": "The customer complains or gets aggressive",
+     "detail": "Stay calm and do not argue. For a complaint, tell them Mitch will call them today. If they are aggressive, remove yourself. Call Mitch either way."
+    },
+    {
+     "text": "The customer asks for a quote on anything complex, or you are not sure",
+     "detail": "Say \"I'll need to get Mitch to come and have a look and provide a quote for that.\""
+    },
+    {
+     "text": "You see signs of termites or other pests outside this job",
+     "detail": "Photograph it and tell Mitch. Termite quotes always go to Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mitch to fill in",
+   "short": "Questions",
+   "title": "Answer each in one line and this guide is done",
+   "items": [
+    "1. Which bees do you treat (honey bees, native bees), and which do you send to a beekeeper?",
+    "2. Same products as wasps (Wasp Force and Coopex), or something else for bees?",
+    "3. How do you tell bees from wasps before you go, and what do you ask on the phone?",
+    "4. How do you treat a hive in a wall, roof or eave?",
+    "5. Do you remove the comb or hive? If not, what do you tell the customer about what is left behind?",
+    "6. What PPE for bees (veil, suit, gloves)?",
+    "7. What time of day do you treat?",
+    "8. Where do you stand, and how do you keep the customer and pets away while you treat?",
+    "9. Mortar bee: do you treat it, or is it only a finding on inspections?",
+    "10. When is a second visit needed (bees still flying), and is it part of the job?",
+    "11. What does a tech do if someone is stung or reacts badly?",
+    "12. What do customers ask most about bees, and what do you tell them?"
+   ]
+  }
+ ]
+}

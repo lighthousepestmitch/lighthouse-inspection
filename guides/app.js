@@ -2,7 +2,7 @@
    Works with no signal once opened (see sw.js). Ticks are kept in this browser only. */
 (function () {
   "use strict";
-  const BUILD = "2026-11-04a";   // bump with VERSION in sw.js whenever the page, styles or schema change (guide text alone does not need it)
+  const BUILD = "2026-11-05a";   // bump with VERSION in sw.js whenever the page, styles or schema change (guide text alone does not need it)
   const R = window.LPCRender;
   const $ = function (s) { return document.querySelector(s); };
   const TICK_KEY = "lpc-guides-ticks:";
