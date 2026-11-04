@@ -182,6 +182,7 @@ select.inp{appearance:none;-webkit-appearance:none}
   .rec .thumbs .thumb{width:60px;height:60px}
   .rec .thumbs .thumb button{display:none}
   .rec .thumbs{page-break-inside:avoid}
+  .svchd{color:#000;page-break-after:avoid}
   .rec .printlogo{display:block;height:34px;width:auto;margin:0 0 8px}
 }
 .lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;filter:brightness(0) invert(1)}
@@ -207,7 +208,17 @@ select.inp{appearance:none;-webkit-appearance:none}
 .pbtns{display:flex;gap:10px;flex:0 0 auto}
 .pbtns .mic{min-height:40px;padding:0 14px}
 .need{color:var(--over);font-size:13px;font-weight:600;margin:6px 0 0}
-[data-bad],#errs{scroll-margin-top:106px}      /* the header is sticky: land just under it */
+[data-bad],#errs,[id^="blk-"],#addsvc{scroll-margin-top:106px}      /* the header is sticky: land just under it */
+/* one block per service on a record (description, products, areas, equipment) */
+.svcblk{margin-top:18px;padding:0 12px 12px;border:1px solid var(--line2);border-radius:13px;background:var(--bg)}
+.svcblk .sechead{margin-top:14px}
+.svcblk .lbl{margin-top:14px}
+.svcblk .jobline{border-bottom:none}
+.eqline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.eqline .small{flex:1;min-width:0}
+.add2{width:100%;margin:12px 0 0;font-size:15px;padding:14px;border-style:dashed;color:var(--deep)}
+.tile:disabled{opacity:.55;cursor:default}
+.svchd{margin:14px 0 2px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;color:var(--deep)}
 </style>
 </head>
 <body>
@@ -236,7 +247,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-11-04r1";   // cache-buster for the data files (bump it when they change)
+const BUILD="2026-11-05r1";   // cache-buster for the data files (bump it when they change)
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -577,6 +588,9 @@ function licenceProblem(p,today){
 const GP_SVC=/\b(general pest|cockroach|ant|spider|flea|rodent|mosquito|wasp)\b/i;
 const coversGP=c=>/general|gp/i.test(c||"");
 function classNote(serviceNames,classes){
+  // Switched off 5 Nov 2026: Mitch confirmed Andrew can do general pest (his card shows PMT-TP, he also holds the general pest statement of attainment).
+  // The saved class is still printed exactly as it is on the licence. To bring the reminder back, delete this return.
+  return "";
   if(!(serviceNames||[]).some(n=>GP_SVC.test(n))) return "";
   const bad=(classes||[]).map(c=>String(c||"").trim()).filter(c=>c&&!coversGP(c));
   return bad.length?"Check your licence class covers this treatment ("+bad.join(", ")+").":"";
@@ -743,19 +757,20 @@ function svcProducts(s){
   const base=(S.chem.jobProducts||{})[s]||[], add=P().svcAdd[s]||[], rem=P().svcRemove[s]||[];
   return base.concat(add.filter(x=>base.indexOf(x)<0)).filter(x=>rem.indexOf(x)<0);
 }
-function unionProducts(){
-  const out=[]; F.services.forEach(sv=>svcProducts(sv.s).forEach(id=>{ if(out.indexOf(id)<0&&prodById(id)) out.push(id); }));
-  F.products.forEach(x=>{ if(out.indexOf(x.id)<0&&prodById(x.id)) out.push(x.id); });
+/* the products offered on one service block: that service's usual list, plus anything already on the block */
+function blockProductIds(b){
+  const out=[]; svcProducts(b.s).forEach(id=>{ if(out.indexOf(id)<0&&prodById(id)) out.push(id); });
+  b.products.forEach(x=>{ if(out.indexOf(x.id)<0&&prodById(x.id)) out.push(x.id); });
   return out;
 }
-function listAdd(id){ F.services.forEach(sv=>{ const p=P();
-  p.svcAdd[sv.s]=p.svcAdd[sv.s]||[]; if(p.svcAdd[sv.s].indexOf(id)<0) p.svcAdd[sv.s].push(id);
-  p.svcRemove[sv.s]=(p.svcRemove[sv.s]||[]).filter(x=>x!==id); }); savePrefs(); }
-function listRemove(id){ F.services.forEach(sv=>{ const p=P();
-  if(svcProducts(sv.s).indexOf(id)>=0){ p.svcRemove[sv.s]=p.svcRemove[sv.s]||[]; p.svcRemove[sv.s].push(id); }
-  p.svcAdd[sv.s]=(p.svcAdd[sv.s]||[]).filter(x=>x!==id); }); savePrefs(); }
+function listAdd(s,id){ const p=P();
+  p.svcAdd[s]=p.svcAdd[s]||[]; if(p.svcAdd[s].indexOf(id)<0) p.svcAdd[s].push(id);
+  p.svcRemove[s]=(p.svcRemove[s]||[]).filter(x=>x!==id); savePrefs(); }
+function listRemove(s,id){ const p=P();
+  if(svcProducts(s).indexOf(id)>=0){ p.svcRemove[s]=p.svcRemove[s]||[]; p.svcRemove[s].push(id); }
+  p.svcAdd[s]=(p.svcAdd[s]||[]).filter(x=>x!==id); savePrefs(); }
 const allEquip=()=>S.chem.equipment.concat(P().customEquip.filter(e=>S.chem.equipment.indexOf(e)<0));
-function lastAmount(id){ for(const sv of F.services){ const v=P().amounts[sv.s+"|"+id]; if(v!=null&&v!=="") return v; } return ""; }
+function lastAmount(s,id){ const v=P().amounts[s+"|"+id]; return v!=null&&v!==""?v:""; }
 
 /* ---------- form model ---------- */
 /* Who can be ticked as "Applied by": a tech is only ever themselves (their staff row). The master gets operator.techs from
@@ -777,7 +792,7 @@ const noIdText=()=>C.state==="denied"?"Your login isn't set up yet. Tell Mitch."
 function newForm(){
   const a=applicators();
   return {id:null,uuid:null,savedAt:null,propId:"",client:"",address:"",isNew:false,jobId:null,date:TODAY,start:"",finish:"",finishTouched:false,
-    services:[],products:[],areas:[],equipment:[],appliedBy:a.length===1?[a[0].name]:[],keep:[],byTouched:false,
+    services:[],appliedBy:a.length===1?[a[0].name]:[],keep:[],byTouched:false,   // services = one block each: {s,d,custom,products,areas,equipment}
     next:{k:"",date:""},notes:"",photos:[],q:"",tName:"",tAddr:"",tClientId:"",tPickName:"",clientId:null,tErr:"",errors:[]};
 }
 function resetForm(){ F=newForm(); W=newWx(); UI={}; }
@@ -793,7 +808,7 @@ function applyMe(){
 }
 /* Drafts live in memory only. "Unsaved work" = a customer is picked and something in the form has changed since it was
    picked, loaded or saved (so a form that only has what the calendar or the last job filled in does not count). */
-function snap(){ return JSON.stringify([F.propId,F.services,F.products,F.areas,F.equipment,F.appliedBy,F.next,F.notes,
+function snap(){ return JSON.stringify([F.propId,F.services,F.appliedBy,F.next,F.notes,
   F.photos.map(p=>p.length),F.date,F.start,F.finish,W?W.man:null]); }
 const markClean=()=>{ BASE=snap(); };
 const dirty=()=>!!(F&&F.propId&&!S.justSaved&&snap()!==BASE);
@@ -812,27 +827,42 @@ function descList(n){ const info=S.services.find(x=>x.s===n); const l=info?info.
 function defaultDesc(n){ return P().lastDesc[n]||descList(n)[0]||n; }
 function isCustomDesc(n,d){ return !!d&&descList(n).indexOf(d)<0; }
 const belongs=(n,id)=>svcProducts(n).indexOf(id)>=0||(P().lastProducts[n]||[]).indexOf(id)>=0;
-/* turning a service on loads what you used last time for it on this device */
+/* adding a service block loads what you used last time for that service on this device */
 function svcOn(n,desc){
-  if(F.services.some(x=>x.s===n)) return;
-  const d=desc||defaultDesc(n);
-  F.services.push({s:n,d:d,custom:isCustomDesc(n,d)});
-  (P().lastProducts[n]||[]).forEach(id=>addProduct(id));
-  (P().lastAreas[n]||[]).forEach(a=>{ if(F.areas.indexOf(a)<0) F.areas.push(a); });
+  const had=F.services.find(x=>x.s===n); if(had) return had;
+  const d=desc||defaultDesc(n), b={s:n,d:d,custom:isCustomDesc(n,d),products:[],areas:[],equipment:[]};
+  F.services.push(b);
+  (P().lastProducts[n]||[]).forEach(id=>addProduct(b,id));
+  (P().lastAreas[n]||[]).forEach(a=>{ if(b.areas.indexOf(a)<0) b.areas.push(a); });
+  return b;
 }
-/* turning it off drops the service and any products that only belonged to it */
-function svcOff(n){
-  F.services=F.services.filter(x=>x.s!==n);
-  F.products=F.products.filter(p=>F.services.some(sv=>belongs(sv.s,p.id)));
-}
+const svBlock=s=>F.services.find(x=>x.s===s);
 /* history is by place: the same record is found whether the job came from the Job Book, the calendar or a typed customer (old and new ids both work) */
-function lastRecord(pid,addr){ return S.records.filter(r=>sameSpot(r,pid,addr)).sort((a,b)=>(b.savedAt||"").localeCompare(a.savedAt||""))[0]; }
+const newest=(a,b)=>(b.savedAt||"").localeCompare(a.savedAt||"");
+function lastRecord(pid,addr){ return S.records.filter(r=>sameSpot(r,pid,addr)).sort(newest)[0]; }
+/* A saved record as form blocks. A record saved since 2026-11-05 carries products, areas and equipment on each service; an older one has a single
+   set for the whole visit, which goes on its first service. remap = bring old service names up to date and drop hidden ones (Same as last time). */
+function blocksFromRecord(r,remap){
+  const sv=r.services||[], per=sv.some(x=>x&&Array.isArray(x.products)), out=[];
+  sv.forEach(x=>{
+    let n=x.s, d=x.d||"";
+    if(remap){ n=alias(x.s); if(hiddenSvc(n)||out.some(y=>y.s===n)) return; if(n!==x.s) d=defaultDesc(n); }
+    const src=per?x:(out.length?{}:r);
+    out.push({s:n,d:d,custom:isCustomDesc(n,d),products:(src.products||[]).map(p=>Object.assign({},p)),areas:(src.areas||[]).slice(),equipment:(src.equipment||[]).slice()});
+  });
+  return out;
+}
+/* the latest earlier record at this place that has this service on its own (not lumped in with others in an older record's single set of lists) */
+function lastBlock(s){
+  for(const r of S.records.filter(r=>sameSpot(r,F.propId,F.address)&&r.id!==F.id).sort(newest)){
+    const g=recGroups(r).find(g=>g.svc.length===1&&alias(g.svc[0].s)===s);
+    if(g){ const x=g.svc[0]; return {date:r.date,d:x.s===s?(x.d||""):defaultDesc(s),products:g.products.map(p=>Object.assign({},p)),areas:g.areas.slice(),equipment:g.equipment.slice()}; }
+  }
+  return null;
+}
 function sameAsLast(){
   const mine=lastRecord(F.propId,F.address); if(!mine) return;
-  F.services=[]; mine.services.forEach(x=>{ const n=alias(x.s); if(hiddenSvc(n)||F.services.some(y=>y.s===n)) return;
-    const d=n===x.s?(x.d||""):defaultDesc(n); F.services.push({s:n,d:d,custom:isCustomDesc(n,d)}); });
-  F.areas=(mine.areas||[]).slice(); F.equipment=(mine.equipment||[]).slice();
-  F.products=(mine.products||[]).map(x=>Object.assign({},x));
+  F.services=blocksFromRecord(mine,true);
   UI.sameDone=true; render();
 }
 function pickProperty(pid){
@@ -865,7 +895,7 @@ function pickRecent(rid){
 function startFor(pid,client,address,opts){
   F.propId=pid; F.client=client; F.address=address; F.isNew=!!(opts&&opts.isNew); F.clientId=(opts&&opts.clientId)||null;
   F.start=nowHM(); F.date=TODAY; F.finish=""; F.finishTouched=false; F.q="";
-  F.services=[];F.products=[];F.areas=[];F.equipment=[]; F.next={k:"",date:""};
+  F.services=[]; F.next={k:"",date:""};
   W=newWx(); UI={};
   /* With a saved record, the "Same as last time" button does the loading. Without one,
      start from the last Xero job (old names mapped to the new ones, hidden ones dropped). */
@@ -876,11 +906,11 @@ function startFor(pid,client,address,opts){
   }
   markClean(); render(); fetchWx();
 }
-function addProduct(id){
-  const lib=prodById(id); if(!lib||F.products.some(x=>x.id===id)) return;
-  F.products.push({id:id,name:lib.name,active:lib.active||"",apvma:lib.apvma||"",type:lib.type||"",
-    amount:lastAmount(id),unit:lib.unit||"",mix:lib.type==="liquid"?(P().mix[id]||""):""});
-  (lib.equip||[]).forEach(e=>{ if(F.equipment.indexOf(e)<0) F.equipment.push(e); });
+function addProduct(b,id){
+  const lib=prodById(id); if(!lib||b.products.some(x=>x.id===id)) return;
+  b.products.push({id:id,name:lib.name,active:lib.active||"",apvma:lib.apvma||"",type:lib.type||"",
+    amount:lastAmount(b.s,id),unit:lib.unit||"",mix:lib.type==="liquid"?(P().mix[id]||""):""});
+  (lib.equip||[]).forEach(e=>{ if(b.equipment.indexOf(e)<0) b.equipment.push(e); });
 }
 function nextDate(){
   const k=F.next.k; if(!k||k==="None") return ""; if(k==="Custom date") return F.next.date;
@@ -904,18 +934,22 @@ function render(){
   renderBanner(); fitBar();
   window.scrollTo(0,y);
   attachTyped();
+  if(UI.scrollTo){ const e=$(UI.scrollTo); UI.scrollTo=""; if(e) e.scrollIntoView({block:"start"}); }      // a service block just added
 }
 /* keep the bottom of the page clear of the sticky bar, whatever height it is this time */
 function fitBar(){ const b=$("#savebar"); document.documentElement.style.setProperty("--barh",((b&&b.offsetHeight)||0)+"px"); }
 window.addEventListener("resize",fitBar);
-const needWx=()=>F.products.some(p=>(S.chem.airTypes||[]).indexOf(p.type)>=0)&&!wxOK(curWeather());
+/* weather is recorded once, and is needed if ANY service on the record uses an air-borne product */
+const usesAir=()=>F.services.some(b=>b.products.some(p=>(S.chem.airTypes||[]).indexOf(p.type)>=0));
+const needWx=()=>usesAir()&&!wxOK(curWeather());
 function autoSummary(){
   const w=curWeather(); let ws;
   if(!w) ws=(W.status&&/^Getting/.test(W.status))?"getting weather…":"no weather yet";
   else if(w.pending) ws="weather pending";
   else ws=[w.tempC!=null?Math.round(w.tempC)+"°C":"",w.windDir,w.beaufort,w.conditions].filter(Boolean).join(" ")||"weather";
-  const d=parse(F.date), dt=d.getDate()+" "+AU[d.getMonth()]+(F.start?" "+F.start:"");
-  return [ws,F.appliedBy.join(", ")||"no applicator",dt,F.equipment.join(", ")||"no equipment"].join(" · ");
+  const d=parse(F.date), dt=d.getDate()+" "+AU[d.getMonth()]+(F.start?" "+F.start:""), eq=[];
+  F.services.forEach(b=>b.equipment.forEach(x=>{ if(eq.indexOf(x)<0) eq.push(x); }));
+  return [ws,F.appliedBy.join(", ")||"no applicator",dt,eq.join(", ")||"no equipment"].join(" · ");
 }
 /* "Same as last: 6 m": the follow-up the last saved record for this customer gave for the same service. It is only an offer:
    the Next service choice is still forced (nothing is preselected), and the chip sets the same value the buttons set. */
@@ -951,6 +985,7 @@ function renderForm(){
   let h="";
   if(F.errors.length) h+='<div class="banner bad" id="errs"><b>Not saved yet. Still needed:</b><ul>'+F.errors.map(e=>'<li>'+esc(e)+'</li>').join("")+'</ul></div>';
   if(F.id) h+='<div class="banner warn">Editing a saved record. Saving replaces it.</div>';
+  if(UI.sharedNote) h+='<div class="banner warn">This record was saved with one list of products, areas and equipment for all its services. They are under the first service now. Move them if they belong to another one.</div>';
   if(ME.cached&&ME.state==="ready") h+='<div class="banner warn">Using saved licence details for '+esc(ME.name)+' (no signal to check them just now).</div>';
   if(F.propId){
     licenceIssues().forEach(m=>{ h+='<div class="banner bad" role="alert">'+esc(m)+'</div>'; });      // said up front, not after all the work is done
@@ -969,43 +1004,23 @@ function renderForm(){
     if(C.state!=="ready") h+=recentHTML();      // with the search box showing, the chips sit under it (renderQres)
   }
   if(F.propId){
-    /* 2. job tiles: once a service is ticked they fold into one line (Change opens them again) */
-    const more=moreList(), moreOn=F.services.filter(x=>more.indexOf(x.s)>=0).length;
-    if(F.services.length&&!UI.tilesOpen){
-      h+='<div class="svcline"><div class="t">'+esc(F.services.map(x=>tileLabel(x.s)).join(", "))+' <span class="small">('
-        +(F.services.length>1?F.services.length+" ticked":"ticked")+')</span></div><button class="mic" data-a="tilesopen" aria-label="Change the job type">Change</button></div>';
-    }else{
-      h+='<div class="sechead"><h2>Job</h2><span class="n" style="flex:1">tap all that apply</span>'
-        +(UI.tilesOpen&&F.services.length?'<button class="mic" data-a="tilesdone">Done</button>':'')+'</div>';
-      h+='<div class="tilegrid">'+tileList().map(t=>'<button type="button" class="tile" aria-pressed="'+(F.services.some(x=>x.s===t.service)?"true":"false")+'" data-a="svc" data-s="'+esc(t.service)+'">'+esc(t.label)+'</button>').join("")
-        +'<button type="button" class="tile more" aria-pressed="false" data-a="moreopen">More…'+(moreOn?' ('+moreOn+')':'')+'</button></div>';
-      if(UI.more) h+='<div class="chips" style="margin-top:8px">'+more.map(n=>chip(n,F.services.some(x=>x.s===n),'data-a="svc" data-s="'+esc(n)+'"')).join("")+'</div>';
-    }
-    /* 3. this job */
-    if(F.services.length){
-      h+=sec("This job");
-      h+='<div class="card">';
-      F.services.forEach(sv=>{
-        h+='<div class="jobline"><span><b>'+esc(sv.s)+'</b>: '+esc(sv.d||"(no description)")+'</span><button class="mic" data-a="dchg" data-s="'+esc(sv.s)+'">Change</button></div>';
-        if(UI.dchg&&UI.dchg[sv.s]){
-          const ds=descList(sv.s).slice(0,8); if(sv.d&&!sv.custom&&ds.indexOf(sv.d)<0) ds.unshift(sv.d);
-          h+='<div class="chips" style="margin:6px 0">'+ds.map(d=>chip(d,!sv.custom&&sv.d===d,'data-a="desc" data-s="'+esc(sv.s)+'" data-d="'+esc(d)+'"',"desc")).join("")
-            +chip("Custom",sv.custom,'data-a="custdesc" data-s="'+esc(sv.s)+'"',"desc ghost")+'</div>'
-            +(sv.custom?'<input class="inp" style="margin-bottom:6px" data-f="cd" data-s="'+esc(sv.s)+'" placeholder="Describe the work" value="'+esc(sv.d)+'">':'');
-        }
-      });
-      if(F.photos.length) h+='<div class="thumbs">'+F.photos.map((p,i)=>'<div class="thumb"><img src="'+p+'" alt="Photo '+(i+1)+'"><button data-a="photorm" data-i="'+i+'" aria-label="Remove photo">✕</button></div>').join("")+'</div>';
-      h+='</div>';
-      h+=sec("Products used");
-      h+=productsHTML();
-      h+=sec("Areas treated");
-      h+='<div class="chips">'+S.chem.areas.map(a=>chip(a,F.areas.indexOf(a)>=0,'data-a="area" data-v="'+esc(a)+'"')).join("")+'</div>';
-    }
+    /* 2. the services on this visit: one block each (description, products, areas, equipment). The tiles pick the first one,
+       and "Add another service" opens them again for the next. */
+    const has=n=>F.services.some(x=>x.s===n), more=moreList(), adding=!F.services.length||!!UI.tilesOpen;
+    F.services.forEach((b,i)=>{ h+=blockHTML(b,i); });
+    if(F.services.length&&F.photos.length) h+='<div class="thumbs">'+F.photos.map((p,i)=>'<div class="thumb"><img src="'+p+'" alt="Photo '+(i+1)+'"><button data-a="photorm" data-i="'+i+'" aria-label="Remove photo">✕</button></div>').join("")+'</div>';
+    if(adding){
+      h+='<div class="sechead" id="addsvc"><h2>'+(F.services.length?"Add a service":"Job")+'</h2><span class="n" style="flex:1">'+(F.services.length?"tap the one to add":"tap the service")+'</span>'
+        +(F.services.length?'<button class="mic" data-a="tilesdone">Cancel</button>':'')+'</div>';
+      h+='<div class="tilegrid">'+tileList().map(t=>'<button type="button" class="tile" aria-pressed="'+(has(t.service)?"true":"false")+'"'+(has(t.service)?' disabled':'')+' data-a="svc" data-s="'+esc(t.service)+'">'+esc(t.label)+'</button>').join("")
+        +'<button type="button" class="tile more" aria-pressed="false" data-a="moreopen">More…</button></div>';
+      if(UI.more) h+='<div class="chips" style="margin-top:8px">'+more.map(n=>chip(n,has(n),'data-a="svc" data-s="'+esc(n)+'"'+(has(n)?' disabled':''))).join("")+'</div>';
+    }else h+='<button type="button" class="btn add2" data-a="tilesopen">+ Add another service</button>';
     /* 4. auto-filled row */
-    /* Each card opens on its own. Tapping the row opens all four. Weather opens by itself when a spray needs it, and after a
+    /* Each card opens on its own. Tapping the row opens all three. Weather opens by itself when a spray needs it, and after a
        failed Save any card that holds a missing required field (Applied by) is forced open, so nothing required stays hidden. */
     const nw=needWx(), all=!!UI.autoOpen, fo=UI.force||{}, hasErr=F.errors.length>0;
-    const showWx=all||nw, showBy=all||!!fo.by||!pool().length, showDt=all, showEq=all;
+    const showWx=all||nw, showBy=all||!!fo.by||!pool().length, showDt=all;
     h+='<button class="autorow'+(nw?' warn':'')+'" id="autorow" data-a="autotoggle"><b>'+(nw?'Weather needed':'Auto-filled ✓')+'</b><span class="sum" id="autosum">'+esc(autoSummary())+'</span><span>'+(all?'▴':'▾')+'</span></button>';
     if(showWx){
       h+='<div id="sec-wx"'+((hasErr&&nw)?' data-bad':'')+'>'+sec("Weather","needed for outdoor spraying");
@@ -1024,12 +1039,6 @@ function renderForm(){
         +'<div><label>Finish</label><input class="inp" type="time" data-f="finish" value="'+esc(F.finish)+'"></div></div>'
         +'<div class="hint">Finish is set to the time you tap Save, unless you change it.</div>';
     }
-    if(showEq){
-      h+=sec("Equipment");
-      h+='<div class="chips">'+allEquip().map(a=>chip(a,F.equipment.indexOf(a)>=0,'data-a="equip" data-v="'+esc(a)+'"')).join("")
-        +chip("+ Add",false,'data-a="equipadd"',"ghost")+'</div>';
-      if(UI.equipAdd) h+='<div class="card" style="margin-top:8px"><input class="inp" id="neweq" placeholder="Equipment name"><div class="btns"><button class="btn pri" data-a="equipsave">Add equipment</button><button class="btn" data-a="equipadd">Cancel</button></div></div>';
-    }
     /* 5. notes */
     if(UI.notesOpen){
       h+='<textarea class="inp" id="notes" data-f="notes" style="margin-top:10px" placeholder="Anything worth recording">'+esc(F.notes)+'</textarea>'
@@ -1043,41 +1052,65 @@ function renderForm(){
   m.innerHTML=h;
   if(!F.propId){ renderQres(); }
 }
-function productsHTML(){
-  if(!F.services.length) return '<div class="hint">Pick a service first and its usual products show up here.</div>';
-  const ids=unionProducts();
-  let h='<div class="chips">'+ids.map(id=>{ const p=prodById(id), on=F.products.some(x=>x.id===id);
-    const c=chip(p.name,on,'data-a="prod" data-id="'+esc(id)+'"');
-    return UI.pedit?'<span class="chipx">'+c+'<button class="rm" data-a="prem" data-id="'+esc(id)+'" aria-label="Remove from list">✕</button></span>':c; }).join("")+'</div>';
+/* one service on the record: its description, products, areas and equipment */
+function blockHTML(b,i){
+  const n=F.services.length, s=esc(b.s), lb=F.id?null:lastBlock(b.s);
+  let h='<div class="svcblk" id="blk-'+i+'"><div class="sechead"><h2>'+esc(b.s)+'</h2><span class="n" style="flex:1">'+(n>1?"service "+(i+1)+" of "+n:"")+'</span>'
+    +'<button class="mic" data-a="svcrm" data-s="'+s+'">Remove</button></div>';
+  h+='<div class="card"><div class="jobline"><span>'+esc(b.d||"(no description)")+'</span><button class="mic" data-a="dchg" data-s="'+s+'">Change</button></div>';
+  if(UI.dchg&&UI.dchg[b.s]){
+    const ds=descList(b.s).slice(0,8); if(b.d&&!b.custom&&ds.indexOf(b.d)<0) ds.unshift(b.d);
+    h+='<div class="chips" style="margin:6px 0">'+ds.map(d=>chip(d,!b.custom&&b.d===d,'data-a="desc" data-s="'+s+'" data-d="'+esc(d)+'"',"desc")).join("")
+      +chip("Custom",b.custom,'data-a="custdesc" data-s="'+s+'"',"desc ghost")+'</div>'
+      +(b.custom?'<input class="inp" style="margin-bottom:6px" data-f="cd" data-s="'+s+'" placeholder="Describe the work" value="'+esc(b.d)+'">':'');
+  }
+  h+='</div>';
+  if(lb&&!(UI.sameBlk&&UI.sameBlk[b.s])) h+='<div class="chips" style="margin-top:8px">'+chip("Same as last time for this service ("+nice(lb.date)+")",false,'data-a="sameblk" data-s="'+s+'"',"ghost")+'</div>';
+  h+='<div class="lbl">Products used</div>'+productsHTML(b);
+  h+='<div class="lbl">Areas treated</div><div class="chips">'+S.chem.areas.map(a=>chip(a,b.areas.indexOf(a)>=0,'data-a="area" data-s="'+s+'" data-v="'+esc(a)+'"')).join("")+'</div>';
+  h+='<div class="eqline"><span class="small">Equipment: <b>'+esc(b.equipment.join(", ")||"none picked")+'</b></span><button class="mic" data-a="eqopen" data-s="'+s+'">'+((UI.eqOpen||{})[b.s]?"Done":"Change")+'</button></div>';
+  if((UI.eqOpen||{})[b.s]){
+    h+='<div class="chips" style="margin-top:8px">'+allEquip().map(a=>chip(a,b.equipment.indexOf(a)>=0,'data-a="equip" data-s="'+s+'" data-v="'+esc(a)+'"')).join("")
+      +chip("+ Add",false,'data-a="equipadd" data-s="'+s+'"',"ghost")+'</div>';
+    if(UI.equipAdd===b.s) h+='<div class="card" style="margin-top:8px"><input class="inp" id="neweq" placeholder="Equipment name"><div class="btns"><button class="btn pri" data-a="equipsave" data-s="'+s+'">Add equipment</button><button class="btn" data-a="equipadd" data-s="'+s+'">Cancel</button></div></div>';
+  }
+  return h+'</div>';
+}
+const pk=(s,id)=>s+"|"+id;      // key for a product line's open/closed state (the same product can be on two services)
+function productsHTML(b){
+  const s=esc(b.s), ids=blockProductIds(b), pe=(UI.pedit||{})[b.s];
+  let h='<div class="chips">'+ids.map(id=>{ const p=prodById(id), on=b.products.some(x=>x.id===id);
+    const c=chip(p.name,on,'data-a="prod" data-s="'+s+'" data-id="'+esc(id)+'"');
+    return pe?'<span class="chipx">'+c+'<button class="rm" data-a="prem" data-s="'+s+'" data-id="'+esc(id)+'" aria-label="Remove from list">✕</button></span>':c; }).join("")+'</div>';
   h+='<div class="chips" style="margin-top:6px">'
-    +chip("+ Add product",false,'data-a="addopen"',"ghost")+chip("+ New product",false,'data-a="newopen"',"ghost")
-    +chip(UI.pedit?"Done":"Edit",!!UI.pedit,'data-a="pedit"',"ghost")+'</div>';
-  if(UI.pedit) h+='<div class="hint">Tap ✕ to take a product off this list for good. It stays in the library.</div>';
-  if(UI.add) h+='<div class="card" style="margin-top:8px"><input class="inp" id="aq" data-f="aq" placeholder="Search the whole library" autocomplete="off"><div id="ares" style="margin-top:8px"></div>'
-    +'<div class="btns" style="margin-bottom:0"><button class="btn" data-a="addopen">Close</button></div></div>';
-  if(UI.newp) h+='<div class="card" style="margin-top:8px"><div class="lbl" style="margin-top:0">New product</div>'
+    +chip("+ Add product",false,'data-a="addopen" data-s="'+s+'"',"ghost")+chip("+ New product",false,'data-a="newopen" data-s="'+s+'"',"ghost")
+    +chip(pe?"Done":"Edit",!!pe,'data-a="pedit" data-s="'+s+'"',"ghost")+'</div>';
+  if(pe) h+='<div class="hint">Tap ✕ to take a product off this service\'s list for good. It stays in the library.</div>';
+  if(UI.add===b.s) h+='<div class="card" style="margin-top:8px"><input class="inp" id="aq" data-f="aq" placeholder="Search the whole library" autocomplete="off"><div id="ares" style="margin-top:8px"></div>'
+    +'<div class="btns" style="margin-bottom:0"><button class="btn" data-a="addopen" data-s="'+s+'">Close</button></div></div>';
+  if(UI.newp===b.s) h+='<div class="card" style="margin-top:8px"><div class="lbl" style="margin-top:0">New product</div>'
     +'<input class="inp" id="np-name" placeholder="Full product name (required)" style="margin-bottom:8px">'
     +'<input class="inp" id="np-active" placeholder="Active ingredient (optional)" style="margin-bottom:8px">'
     +'<input class="inp" id="np-apvma" placeholder="APVMA number (optional)" style="margin-bottom:8px">'
     +'<div class="grid3" style="grid-template-columns:1fr 1fr"><input class="inp" id="np-unit" placeholder="Unit (L of mix, g, cans)">'
     +'<select class="inp" id="np-type"><option value="liquid">Liquid</option><option value="aerosol">Aerosol</option><option value="dust">Dust</option><option value="granule">Granule</option><option value="gel">Gel</option><option value="foam">Foam</option><option value="bait">Bait</option><option value="other">Other</option></select></div>'
-    +'<div class="btns" style="margin-bottom:0"><button class="btn pri" data-a="newsave">Save product</button><button class="btn" data-a="newopen">Cancel</button></div></div>';
-  /* the products on this record: one line each (name, amount, unit); tap a line for the full editor (active ingredient,
+    +'<div class="btns" style="margin-bottom:0"><button class="btn pri" data-a="newsave" data-s="'+s+'">Save product</button><button class="btn" data-a="newopen" data-s="'+s+'">Cancel</button></div></div>';
+  /* the products on this service: one line each (name, amount, unit); tap a line for the full editor (active ingredient,
      APVMA, amount, mix rate, Remove). A product with no amount yet always stays open, because the amount is required. */
-  F.products.forEach(p=>{
-    const miss=amtMissing(p), open=miss||(UI.pexp&&UI.pexp[p.id]===true);
+  b.products.forEach(p=>{
+    const miss=amtMissing(p), open=miss||(UI.pexp&&UI.pexp[pk(b.s,p.id)]===true);
     if(!open){
-      h+='<button type="button" class="prow" data-a="pexp" data-id="'+esc(p.id)+'" aria-expanded="false"><span class="nm">'+esc(p.name)
+      h+='<button type="button" class="prow" data-a="pexp" data-s="'+s+'" data-id="'+esc(p.id)+'" aria-expanded="false"><span class="nm">'+esc(p.name)
         +'</span><span class="am">'+esc(p.amount)+' '+esc(p.unit||"units")+'</span><span class="cv" aria-hidden="true">▾</span></button>';
       return;
     }
     const bad=F.errors.length>0&&miss;
     h+='<div class="card"'+(bad?' data-bad':'')+'><div class="top"><b>'+esc(p.name)+'</b><span class="pbtns">'
-      +(miss?'':'<button class="mic" data-a="pexp" data-id="'+esc(p.id)+'">Done</button>')
-      +'<button class="mic" data-a="prod" data-id="'+esc(p.id)+'" aria-label="Remove from record">Remove</button></span></div>'
+      +(miss?'':'<button class="mic" data-a="pexp" data-s="'+s+'" data-id="'+esc(p.id)+'">Done</button>')
+      +'<button class="mic" data-a="prod" data-s="'+s+'" data-id="'+esc(p.id)+'" aria-label="Remove from record">Remove</button></span></div>'
       +((p.active||p.apvma)?'<div class="small">'+esc([p.active,p.apvma?"APVMA "+p.apvma:""].filter(Boolean).join("  |  "))+'</div>':'')
-      +'<div class="amt" style="margin-top:8px"><input class="inp" type="number" inputmode="decimal" min="0" step="any" data-f="amt" data-id="'+esc(p.id)+'" placeholder="Amount used" value="'+esc(p.amount)+'"><span class="unit">'+esc(p.unit||"units")+'</span></div>'
-      +(p.type==="liquid"?'<div class="mixrow"><input class="inp" data-f="mix" data-id="'+esc(p.id)+'" placeholder="Mix rate, e.g. 50 mL per 10 L" value="'+esc(p.mix)+'"></div>':'')
+      +'<div class="amt" style="margin-top:8px"><input class="inp" type="number" inputmode="decimal" min="0" step="any" data-f="amt" data-s="'+s+'" data-id="'+esc(p.id)+'" placeholder="Amount used" value="'+esc(p.amount)+'"><span class="unit">'+esc(p.unit||"units")+'</span></div>'
+      +(p.type==="liquid"?'<div class="mixrow"><input class="inp" data-f="mix" data-s="'+s+'" data-id="'+esc(p.id)+'" placeholder="Mix rate, e.g. 50 mL per 10 L" value="'+esc(p.mix)+'"></div>':'')
       +(bad?'<div class="need">Amount used is needed.</div>':'')
       +'</div>';
   });
@@ -1165,9 +1198,10 @@ function pickTyped(p,f){
 }
 function renderAres(){
   const box=$("#ares"); if(!box) return;
-  const q=(UI.aq||"").trim().toLowerCase(), have=unionProducts();
+  const blk=svBlock(UI.add); if(!blk){ box.innerHTML=""; return; }
+  const q=(UI.aq||"").trim().toLowerCase(), have=blockProductIds(blk);
   const hits=library().filter(p=>have.indexOf(p.id)<0&&(!q||(p.name+" "+(p.active||"")).toLowerCase().indexOf(q)>=0)).slice(0,12);
-  box.innerHTML=hits.length?hits.map(p=>'<button class="pick" data-a="addpick" data-id="'+esc(p.id)+'"><div class="nm">'+esc(p.name)+'</div><div class="pl">'+esc(p.active||"")+'</div></button>').join("")
+  box.innerHTML=hits.length?hits.map(p=>'<button class="pick" data-a="addpick" data-s="'+esc(blk.s)+'" data-id="'+esc(p.id)+'"><div class="nm">'+esc(p.name)+'</div><div class="pl">'+esc(p.active||"")+'</div></button>').join("")
     :'<div class="hint">Nothing else matches.</div>';
 }
 
@@ -1177,13 +1211,16 @@ function problems(){
   const e=[];
   if(!F.propId) e.push("Pick a customer (or type one in).");
   if(!F.services.length) e.push("Pick at least one service.");
-  F.products.forEach(p=>{ if(amtMissing(p)) e.push("Amount used for "+p.name+"."); });
+  F.services.forEach(b=>{                                                    // each service on the record is checked on its own
+    const of=F.services.length>1?" ("+(b.s||"service")+")":"";
+    if(!trim(b.s)) e.push("Pick the service for each block.");
+    b.products.forEach(p=>{ if(amtMissing(p)) e.push("Amount used for "+p.name+of+"."); });
+  });
   if(!F.appliedBy.length) e.push(pool().length?"Who applied it.":noIdText());
   licenceIssues().forEach(m=>e.push(m));        // a missing licence number or a licence past its expiry date blocks the save
   if(!F.next.k) e.push("Next service (pick None if there isn't one).");
   else if(F.next.k==="Custom date"&&!F.next.date) e.push("A date for the next service.");
-  const air=(S.chem.airTypes||[]);
-  if(F.products.some(p=>air.indexOf(p.type)>=0)&&!wxOK(curWeather()))
+  if(usesAir()&&!wxOK(curWeather()))
     e.push("Weather: wind and conditions (needed for outdoor spraying).");
   return e;
 }
@@ -1199,11 +1236,14 @@ async function save(){
     toast("Missing: "+F.errors.length+" thing"+(F.errors.length>1?"s":"")+(bad?". The red notes show where.":". See the top of the form."),true); return; }
   const op=S.chem.operator, people=pool().filter(p=>F.appliedBy.indexOf(p.name)>=0);
   const finish=F.finishTouched&&F.finish?F.finish:(F.id&&F.finish?F.finish:nowHM());
+  /* each service carries its own products, areas and equipment (the shape since 2026-11-05; an older record has one set for the visit, see recGroups) */
+  const blocks=F.services.map(b=>({s:b.s,d:b.d,
+    products:b.products.map(p=>({id:p.id,name:p.name,active:p.active,apvma:p.apvma,type:p.type,amount:p.amount,unit:p.unit,mix:p.mix})),
+    areas:b.areas.slice(),equipment:b.equipment.slice()}));
   const rec={id:F.id||uid(),uuid:F.uuid||newUuid(),propId:F.propId,jobId:F.jobId||null,client:F.client,address:F.address,hist:histKey(F.address),isNewCustomer:!!F.isNew,
     staffId:ME.id||null,licenceFrom:ME.cached?"saved copy":"staff row",date:F.date,start:F.start,finish:finish,
-    services:F.services.map(x=>({s:x.s,d:x.d})),
-    products:F.products.map(p=>({id:p.id,name:p.name,active:p.active,apvma:p.apvma,type:p.type,amount:p.amount,unit:p.unit,mix:p.mix})),
-    areas:F.areas.slice(),equipment:F.equipment.slice(),
+    services:blocks,
+    products:blocks[0].products.map(p=>Object.assign({},p)),areas:blocks[0].areas.slice(),equipment:blocks[0].equipment.slice(),     // the first service's, in the old places, so anything that reads one service still works
     weather:curWeather(),
     appliedBy:{name:people.map(t=>t.name).join(" / "),licence:people.map(t=>t.licence).join(" / "),
       licenceClass:people.some(t=>t.cls)?people.map(t=>t.cls||"").join(" / "):"",
@@ -1214,13 +1254,10 @@ async function save(){
   if(F.clientId) rec.clientId=F.clientId;      // the client picked from the client list (clients.id), when there was one
   try{ await dbPut(rec); }
   catch(e){ toast("Couldn't save the record to this device ("+(e&&e.message?e.message:"storage error")+"). Nothing was lost on screen. Take a screenshot as a backup.",true); return; }
-  /* remember amounts and mix rates for next time */
-  rec.products.forEach(p=>{ F.services.forEach(sv=>{ if(svcProducts(sv.s).indexOf(p.id)>=0) P().amounts[sv.s+"|"+p.id]=p.amount; });
-    if(p.mix) P().mix[p.id]=p.mix; });
-  F.services.forEach(sv=>rec.products.forEach(p=>{ if(P().amounts[sv.s+"|"+p.id]==null&&svcProducts(sv.s).indexOf(p.id)<0) P().amounts[sv.s+"|"+p.id]=p.amount; }));
-  F.services.forEach(sv=>{
-    const mine=rec.products.filter(p=>belongs(sv.s,p.id)||!F.services.some(o=>belongs(o.s,p.id))).map(p=>p.id);
-    P().lastProducts[sv.s]=mine; P().lastAreas[sv.s]=F.areas.slice(); if(sv.d) P().lastDesc[sv.s]=sv.d; });
+  /* remember amounts, mix rates, products, areas and the description for next time, service by service */
+  F.services.forEach(b=>{
+    b.products.forEach(p=>{ P().amounts[pk(b.s,p.id)]=p.amount; if(p.mix) P().mix[p.id]=p.mix; });
+    P().lastProducts[b.s]=b.products.map(p=>p.id); P().lastAreas[b.s]=b.areas.slice(); if(b.d) P().lastDesc[b.s]=b.d; });
   savePrefs();
   S.records=S.records.filter(r=>r.id!==rec.id); S.records.push(rec);
   markClean();
@@ -1290,15 +1327,27 @@ const byId=id=>S.records.find(r=>r.id===id);
 const listPlain=a=>(a||[]).join(", ");
 const nextText=n=>!n||!n.label?"":(n.label==="None"?"None":n.label+(n.date?" ("+nice(n.date)+")":""));
 function prodLine(p){ return p.name+(p.active?" ["+p.active+"]":"")+(p.apvma?" APVMA "+p.apvma:"")+": "+p.amount+" "+(p.unit||"")+(p.mix?", mix "+p.mix:""); }
+/* What was done, as sections. A record saved since 2026-11-05 has one per service (products, areas and equipment on the service). An older one
+   has a single section: all its services and its one set of lists. Everything below (view, print, email, CSV) reads records through this. */
+function recGroups(r){
+  const sv=r.services||[];
+  if(sv.some(x=>x&&Array.isArray(x.products))) return sv.map(x=>({svc:[{s:x.s,d:x.d}],products:x.products||[],areas:x.areas||[],equipment:x.equipment||[]}));
+  return [{svc:sv.map(x=>({s:x.s,d:x.d})),products:r.products||[],areas:r.areas||[],equipment:r.equipment||[]}];
+}
+const svcText=g=>g.svc.map(x=>x.s+(x.d?": "+x.d:""));
 function recText(r){
-  const w=r.weather, L=[];
+  const w=r.weather, L=[], gs=recGroups(r), many=gs.length>1;
   L.push("SERVICE RECORD");
   L.push(r.business.name+", "+r.business.address+", ABN "+(r.business.abn||ABN));
   L.push("Date: "+nice(r.date)+"   Start: "+(r.start||"")+"   Finish: "+(r.finish||""));
   L.push("Customer: "+r.client); L.push("Address: "+r.address);
-  L.push("Services:"); r.services.forEach(x=>L.push("  - "+x.s+(x.d?": "+x.d:"")));
-  L.push("Products:"); if(r.products.length) r.products.forEach(p=>L.push("  - "+prodLine(p))); else L.push("  - none");
-  L.push("Areas: "+listPlain(r.areas)); L.push("Equipment: "+listPlain(r.equipment));
+  gs.forEach((g,i)=>{
+    if(many) L.push("","Service "+(i+1)+" of "+gs.length+": "+svcText(g).join("; "));
+    else{ L.push("Services:"); svcText(g).forEach(x=>L.push("  - "+x)); }
+    L.push("Products:"); if(g.products.length) g.products.forEach(p=>L.push("  - "+prodLine(p))); else L.push("  - none");
+    L.push("Areas: "+listPlain(g.areas)); L.push("Equipment: "+listPlain(g.equipment));
+  });
+  if(many) L.push("");
   L.push("Weather: "+(w?(w.text||wxText(w)):"not recorded"));
   L.push("Applied by: "+r.appliedBy.name+" (licence "+licText(r.appliedBy)+"), "+r.business.phone);
   L.push("Next service: "+nextText(r.nextService));
@@ -1311,9 +1360,13 @@ function recHTML(r){
   const w=r.weather, kv=(k,v)=>'<div class="kv"><dt>'+esc(k)+'</dt><dd>'+esc(v)+'</dd></div>';
   let h='<div class="rec"><img class="printlogo" src="logo/logo-horizontal.svg" alt="Lighthouse Pest Control"><h2>Pesticide service record</h2><div class="biz">'+esc(r.business.name)+', '+esc(r.business.address)+'. ABN '+esc(r.business.abn||ABN)+'. Phone '+esc(r.business.phone)+'.</div>';
   h+=kv("Date",nice(r.date))+kv("Start / finish",(r.start||"")+" to "+(r.finish||""))+kv("Customer",r.client)+kv("Address",r.address);
-  h+=kv("Services",r.services.map(x=>x.s+(x.d?": "+x.d:"")).join("\n"));
-  h+=kv("Products",r.products.length?r.products.map(prodLine).join("\n"):"None");
-  h+=kv("Areas",listPlain(r.areas))+kv("Equipment",listPlain(r.equipment));
+  const gs=recGroups(r), many=gs.length>1;
+  gs.forEach((g,i)=>{
+    if(many) h+='<div class="svchd">Service '+(i+1)+' of '+gs.length+'</div>';
+    h+=kv(many?"Service":"Services",svcText(g).join("\n"));
+    h+=kv("Products",g.products.length?g.products.map(prodLine).join("\n"):"None");
+    h+=kv("Areas",listPlain(g.areas))+kv("Equipment",listPlain(g.equipment));
+  });
   h+=kv("Weather",w?(w.text||wxText(w)):"Not recorded");
   h+=kv("Applied by",r.appliedBy.name+"\nLicence "+r.appliedBy.licence+(r.appliedBy.licenceClass?"\nClass "+r.appliedBy.licenceClass:""));
   h+=kv("Next service",nextText(r.nextService));
@@ -1355,20 +1408,26 @@ function listHTML(list){
     +'<div class="nm">'+esc(r.client)+'</div><div class="pl">'+esc(r.address)+'</div>'
     +'<div class="mt">'+esc(nice(r.date)+"  "+(r.start||"")+"  |  "+r.services.map(x=>x.s).join(", ")+(r.syncPending?"  |  not sent yet":""))+'</div></span></button>').join("");
 }
-function exportCSV(){
+/* one row per product, as before; with several services each service's products get their own rows, carrying that service's name, areas and equipment */
+function csvText(records){
   const q=v=>'"'+String(v==null?"":v).replace(/"/g,'""')+'"';
   const head=["Record ID","Date","Start","Finish","Customer","Address","Services","Areas","Equipment","Applied by","Licence","Licence class","Weather","Temp C","Wind km/h","Wind from","Conditions","Rain mm","Weather source","Next service","Notes","Product","Active","APVMA","Amount","Unit","Mix rate"];
   const rows=[head.map(q).join(",")];
-  S.records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
+  records.slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(r=>{
     const w=r.weather||{};
-    const base=[r.id,r.date,r.start,r.finish,r.client,r.address,r.services.map(x=>x.s+(x.d?": "+x.d:"")).join("; "),
-      listPlain(r.areas),listPlain(r.equipment),r.appliedBy.name,r.appliedBy.licence,r.appliedBy.licenceClass||"",w.text||wxText(w),w.tempC,w.windKmh,w.windDir,w.conditions,w.rain,
-      w.pending?"pending":w.source,nextText(r.nextService),r.notes];
-    const ps=r.products.length?r.products:[null];
-    ps.forEach(p=>rows.push(base.concat(p?[p.name,p.active,p.apvma,p.amount,p.unit,p.mix]:["","","","","",""]).map(q).join(",")));
+    recGroups(r).forEach(g=>{
+      const base=[r.id,r.date,r.start,r.finish,r.client,r.address,svcText(g).join("; "),
+        listPlain(g.areas),listPlain(g.equipment),r.appliedBy.name,r.appliedBy.licence,r.appliedBy.licenceClass||"",w.text||wxText(w),w.tempC,w.windKmh,w.windDir,w.conditions,w.rain,
+        w.pending?"pending":w.source,nextText(r.nextService),r.notes];
+      const ps=g.products.length?g.products:[null];
+      ps.forEach(p=>rows.push(base.concat(p?[p.name,p.active,p.apvma,p.amount,p.unit,p.mix]:["","","","","",""]).map(q).join(",")));
+    });
   });
+  return rows.join("\r\n");
+}
+function exportCSV(){
   try{
-    const blob=new Blob(["﻿"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
+    const blob=new Blob(["\ufeff"+csvText(S.records)],{type:"text/csv;charset=utf-8"});
     const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="service-records-"+TODAY+".csv";
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
   }catch(e){ toast("Couldn't make the CSV file.",true); }
@@ -1421,7 +1480,7 @@ function toggleMic(btn){
 /* ---------- events ---------- */
 document.addEventListener("click",function(e){
   const t=e.target.closest("[data-a]"); if(!t) return;
-  const a=t.dataset.a, d=t.dataset, svOf=s=>F.services.find(x=>x.s===s);
+  const a=t.dataset.a, d=t.dataset, svOf=svBlock;
   if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
   if(a==="rpick"){ pickRecent(d.rid); return; }
@@ -1431,15 +1490,22 @@ document.addEventListener("click",function(e){
     const name=trim(F.tName), addr=trim(F.tAddr);
     if(!name||!addr){ F.tErr=name?"Type the job address.":"Type the customer's name."; render(); return; }
     F.tErr=""; startFor("addr:"+histKey(addr),name,addr,{isNew:!F.tClientId,clientId:F.tClientId||null}); return; }
-  if(a==="tilesopen"){ UI.tilesOpen=true; render(); return; }
+  if(a==="tilesopen"){ UI.tilesOpen=true; UI.scrollTo="#addsvc"; render(); return; }
   if(a==="tilesdone"){ UI.tilesOpen=false; render(); return; }
-  if(a==="pexp"){ UI.pexp=UI.pexp||{}; UI.pexp[d.id]=!(UI.pexp[d.id]===true); render(); return; }
+  if(a==="pexp"){ UI.pexp=UI.pexp||{}; UI.pexp[pk(d.s,d.id)]=!(UI.pexp[pk(d.s,d.id)]===true); render(); return; }
   if(a==="custretry"){ if(C.uid){ C.loading=false; custLoad(); } else custCheck(); return; }
   if(a==="custout"){ custSignOut(); return; }
   if(a==="clearcust"){ resetForm(); render(); return; }
-  if(a==="svc"){ const had=F.services.length; if(F.services.some(x=>x.s===d.s)) svcOff(d.s); else svcOn(d.s);
-    if(!had&&F.services.length) UI.tilesOpen=false;      // the first tile ticked folds the grid (even if it was opened with Change)
-    prunePexp(); render(); return; }
+  if(a==="svc"){ if(svBlock(d.s)) return; svcOn(d.s);      // a tile adds that service's block (one already on the record is greyed out; Remove is on the block)
+    UI.tilesOpen=false; UI.more=false; if(F.services.length>1) UI.scrollTo="#blk-"+(F.services.length-1);
+    render(); return; }
+  if(a==="svcrm"){ const b=svBlock(d.s); if(!b) return;
+    if(b.products.length&&!confirm("Take "+b.s+" off this record? Its products and amounts go too.")) return;
+    F.services=F.services.filter(x=>x!==b); prunePexp(); render(); return; }
+  if(a==="sameblk"){ const b=svBlock(d.s), lb=b&&lastBlock(b.s); if(!lb) return;
+    b.d=lb.d; b.custom=isCustomDesc(b.s,b.d); b.products=lb.products; b.areas=lb.areas; b.equipment=lb.equipment;
+    UI.sameBlk=UI.sameBlk||{}; UI.sameBlk[b.s]=true; prunePexp(); render(); return; }
+  if(a==="eqopen"){ UI.eqOpen=UI.eqOpen||{}; UI.eqOpen[d.s]=!UI.eqOpen[d.s]; render(); return; }
   if(a==="sameas"){ sameAsLast(); return; }
   if(a==="moreopen"){ UI.more=!UI.more; render(); return; }
   if(a==="dchg"){ UI.dchg=UI.dchg||{}; UI.dchg[d.s]=!UI.dchg[d.s]; render(); return; }
@@ -1448,23 +1514,23 @@ document.addEventListener("click",function(e){
   if(a==="nextother"){ UI.nextOther=!UI.nextOther; render(); return; }
   if(a==="desc"){ const sv=svOf(d.s); if(sv){ sv.custom=false; sv.d=(sv.d===d.d)?"":d.d; } render(); return; }
   if(a==="custdesc"){ const sv=svOf(d.s); if(sv){ sv.custom=!sv.custom; if(sv.custom) sv.d=""; } render(); return; }
-  if(a==="prod"){ const i=F.products.findIndex(x=>x.id===d.id); if(i>=0) F.products.splice(i,1); else addProduct(d.id); prunePexp(); render(); return; }
-  if(a==="pedit"){ UI.pedit=!UI.pedit; render(); return; }
-  if(a==="prem"){ const p=prodById(d.id); if(p&&confirm("Take "+p.name+" off this service's list for good?")){ listRemove(d.id); render(); } return; }
-  if(a==="addopen"){ UI.add=!UI.add; UI.newp=false; UI.aq=""; render(); renderAres(); return; }
-  if(a==="addpick"){ listAdd(d.id); addProduct(d.id); UI.add=false; render(); return; }
-  if(a==="newopen"){ UI.newp=!UI.newp; UI.add=false; render(); return; }
+  if(a==="prod"){ const b=svBlock(d.s); if(!b) return; const i=b.products.findIndex(x=>x.id===d.id); if(i>=0) b.products.splice(i,1); else addProduct(b,d.id); prunePexp(); render(); return; }
+  if(a==="pedit"){ UI.pedit=UI.pedit||{}; UI.pedit[d.s]=!UI.pedit[d.s]; render(); return; }
+  if(a==="prem"){ const p=prodById(d.id); if(p&&confirm("Take "+p.name+" off this service's list for good?")){ listRemove(d.s,d.id); render(); } return; }
+  if(a==="addopen"){ UI.add=UI.add===d.s?"":d.s; UI.newp=""; UI.aq=""; render(); renderAres(); return; }
+  if(a==="addpick"){ const b=svBlock(d.s); if(!b) return; listAdd(b.s,d.id); addProduct(b,d.id); UI.add=""; render(); return; }
+  if(a==="newopen"){ UI.newp=UI.newp===d.s?"":d.s; UI.add=""; render(); return; }
   if(a==="newsave"){
     const name=($("#np-name").value||"").trim(); if(!name){ toast("Give the product a name.",true); return; }
     const np={id:"c"+Date.now().toString(36),name:name,active:($("#np-active").value||"").trim(),apvma:($("#np-apvma").value||"").trim(),
       type:$("#np-type").value,unit:($("#np-unit").value||"").trim()||"units",equip:[]};
-    P().customProducts.push(np); listAdd(np.id); addProduct(np.id); UI.newp=false; render(); return; }
-  if(a==="area"){ toggle(F.areas,d.v); render(); return; }
-  if(a==="equip"){ toggle(F.equipment,d.v); render(); return; }
-  if(a==="equipadd"){ UI.equipAdd=!UI.equipAdd; render(); return; }
-  if(a==="equipsave"){ const n=($("#neweq").value||"").trim(); if(!n) return;
-    if(allEquip().indexOf(n)<0){ P().customEquip.push(n); savePrefs(); } if(F.equipment.indexOf(n)<0) F.equipment.push(n);
-    UI.equipAdd=false; render(); return; }
+    const b=svBlock(d.s); P().customProducts.push(np); if(b){ listAdd(b.s,np.id); addProduct(b,np.id); } savePrefs(); UI.newp=""; render(); return; }
+  if(a==="area"){ const b=svBlock(d.s); if(b){ toggle(b.areas,d.v); render(); } return; }
+  if(a==="equip"){ const b=svBlock(d.s); if(b){ toggle(b.equipment,d.v); render(); } return; }
+  if(a==="equipadd"){ UI.equipAdd=UI.equipAdd===d.s?"":d.s; render(); return; }
+  if(a==="equipsave"){ const n=($("#neweq").value||"").trim(), b=svBlock(d.s); if(!n||!b) return;
+    if(allEquip().indexOf(n)<0){ P().customEquip.push(n); savePrefs(); } if(b.equipment.indexOf(n)<0) b.equipment.push(n);
+    UI.equipAdd=""; render(); return; }
   if(a==="wwind"){ W.man.wind=W.man.wind===d.v?"":d.v; renderWx(); return; }
   if(a==="wdir"){ W.man.dir=W.man.dir===d.v?"":d.v; renderWx(); return; }
   if(a==="wcond"){ W.man.cond=W.man.cond===d.v?"":d.v; renderWx(); return; }
@@ -1491,9 +1557,9 @@ document.addEventListener("submit",function(e){
   if(e.target&&e.target.id==="lg-form"){ e.preventDefault(); custPasswordLogin(); }
 });
 /* a product line you are typing into stays open until you tap Done (it would otherwise fold up on the next redraw) */
-function keepOpen(id){ UI.pexp=UI.pexp||{}; if(UI.pexp[id]===undefined) UI.pexp[id]=true; }
+function keepOpen(s,id){ UI.pexp=UI.pexp||{}; if(UI.pexp[pk(s,id)]===undefined) UI.pexp[pk(s,id)]=true; }
 /* a product taken off the record forgets it was open, so adding it again gives the one-line row, not the open editor */
-function prunePexp(){ if(UI.pexp) Object.keys(UI.pexp).forEach(k=>{ if(!F.products.some(p=>p.id===k)) delete UI.pexp[k]; }); }
+function prunePexp(){ if(UI.pexp) Object.keys(UI.pexp).forEach(k=>{ if(!F.services.some(b=>b.products.some(p=>pk(b.s,p.id)===k))) delete UI.pexp[k]; }); }
 document.addEventListener("input",function(e){
   const t=e.target, f=t.dataset&&t.dataset.f; if(!f) return;
   if(f==="q"){ F.q=t.value; renderQres(); }
@@ -1504,9 +1570,8 @@ document.addEventListener("input",function(e){
   else if(f==="aq"){ UI.aq=t.value; renderAres(); }
   else if(f==="tname"){ F.tName=t.value; if(F.tClientId&&trim(F.tName).toLowerCase()!==F.tPickName.toLowerCase()) F.tClientId=""; }      // a changed name is no longer the client picked
   else if(f==="taddr"){ F.tAddr=t.value; }
-  else if(f==="cd"){ const sv=F.services.find(x=>x.s===t.dataset.s); if(sv) sv.d=t.value; }
-  else if(f==="amt"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.amount=t.value; keepOpen(t.dataset.id); }
-  else if(f==="mix"){ const p=F.products.find(x=>x.id===t.dataset.id); if(p) p.mix=t.value; keepOpen(t.dataset.id); }
+  else if(f==="cd"){ const sv=svBlock(t.dataset.s); if(sv) sv.d=t.value; }
+  else if(f==="amt"||f==="mix"){ const b=svBlock(t.dataset.s), p=b&&b.products.find(x=>x.id===t.dataset.id); if(p){ p[f==="amt"?"amount":"mix"]=t.value; keepOpen(b.s,p.id); } }
   else if(f==="notes"){ F.notes=t.value; }
   else if(f==="date"){ F.date=t.value; }
   else if(f==="start"){ F.start=t.value; }
@@ -1534,9 +1599,8 @@ function loadForEdit(r){
   F.id=r.id; F.uuid=r.uuid||null; F.jobId=r.jobId||null; F.isNew=!!r.isNewCustomer; F.clientId=r.clientId||null;
   F.propId=r.propId; F.client=r.client; F.address=r.address; F.date=r.date; F.start=r.start||""; F.finish=r.finish||"";
   F.finishTouched=!!r.finish;
-  F.services=r.services.map(x=>{ const info=S.services.find(y=>y.s===x.s);
-    return {s:x.s,d:x.d||"",custom:!!x.d&&!(info&&info.d.indexOf(x.d)>=0)}; });
-  F.products=r.products.map(x=>Object.assign({},x)); F.areas=(r.areas||[]).slice(); F.equipment=(r.equipment||[]).slice();
+  F.services=blocksFromRecord(r,false);
+  if((r.services||[]).length>1&&!(r.services||[]).some(x=>x&&Array.isArray(x.products))) UI.sharedNote=true;      // an older record: its one set of lists is now on the first service
   F.keep=peopleOf(r.appliedBy); F.appliedBy=F.keep.map(p=>p.name); F.byTouched=true;     // the people on the record stay as they were
   const ns=r.nextService||{}; F.next={k:ns.label||"",date:ns.label==="Custom date"?(ns.date||""):""};
   F.notes=r.notes||""; F.photos=(r.photos||[]).slice();

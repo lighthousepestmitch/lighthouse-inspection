@@ -348,6 +348,29 @@
   .nowtag{font-size:.62rem;background:var(--timber-soft);color:var(--timber);border-radius:6px;padding:1px 6px;font-weight:700;margin-left:6px;vertical-align:middle}
   .jobdel{width:42px;flex:none;border:1px solid var(--edge);background:var(--raised);border-radius:10px;color:var(--muted);font-size:1.2rem;cursor:pointer}
   .jobdel.armed{background:var(--find);color:#fff;border-color:var(--find);font-size:.76rem;font-weight:700;width:70px}
+  /* Jobs sheet: search box, and ticking several rows to delete at once */
+  .jsearch{position:relative;margin:0 0 10px}
+  .jsearch input{width:100%;font-family:inherit;font-size:1rem;color:var(--ink);background:var(--paper);border:1px solid var(--edge);border-radius:10px;padding:10px 38px 10px 12px;outline:0;-webkit-appearance:none;appearance:none}
+  .jsearch input:focus{border-color:var(--timber)}
+  .jsearch input::-webkit-search-cancel-button{-webkit-appearance:none}
+  .jqx{position:absolute;right:3px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:none;color:var(--muted);font-size:1.4rem;line-height:1;cursor:pointer}
+  .jqx[hidden]{display:none}
+  .listhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .selbtn{font-size:.78rem;font-weight:700;padding:5px 12px;border-radius:9px;border:1.5px solid var(--timber);background:var(--timber-soft);color:var(--timber);cursor:pointer;text-transform:none;letter-spacing:0}
+  .selbtn[hidden]{display:none}
+  .stick{position:absolute;left:11px;top:50%;margin-top:-11px;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--edge);background:var(--raised)}
+  .jobrow.pick .jobopen{position:relative;padding-left:44px}
+  .jobrow.pick.on .jobopen{border-color:var(--timber);background:var(--timber-soft)}
+  .jobrow.pick.on .stick{background:var(--timber);border-color:var(--timber)}
+  .jobrow.pick.on .stick:after{content:"";position:absolute;left:6px;top:2px;width:6px;height:11px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+  .selbar{flex:none;display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--edge);padding-top:10px}
+  .selbar[hidden]{display:none}
+  .seltop,.selbtns{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .selbtns{justify-content:flex-end}
+  .selbar .btn{padding:10px 14px;font-size:.88rem}
+  .btn.armed{background:var(--find);border-color:var(--find);color:#fff}
+  .jnote{margin:0 0 10px;font-size:.8rem;line-height:1.4}
+  .jnote ul{margin:4px 0 6px;padding-left:18px}
 .lpcmark{height:26px;width:26px;flex:none;align-self:center;display:block;}
   .thumb img{cursor:zoom-in}
 
@@ -464,7 +487,7 @@
 "use strict";
 
 // Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
-const BUILD="2026-11-04c";
+const BUILD="2026-11-05a";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -1820,7 +1843,7 @@ function toast(m,ms){toastEl.textContent=m;toastEl.classList.add("show");clearTi
 
 /* ---------- modal ---------- */
 const modal=document.getElementById("modal"),sheet=document.getElementById("sheet");
-function closeModal(){modal.classList.remove("show");sheet.classList.remove("tall");FS=null;}
+function closeModal(){modal.classList.remove("show");sheet.classList.remove("tall");FS=null;JL.q="";JL.mode=null;JL.sel.clear();JL.armed=0;JL.note=null;}
 modal.addEventListener("click",e=>{if(e.target===modal)closeModal()});
 
 /* ---------- photo viewer: tap any thumbnail to see it big (swipe / arrows between the photos in that group) ---------- */
@@ -1905,40 +1928,161 @@ async function deleteJob(id){
   else toast(blank?"Job deleted. That was the last one, so a blank job is open":"Job deleted",blank?3200:1600);
   return true;
 }
-async function openJobs(){
-  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
-  const list=(await loadJobsIndex()).sort((a,b)=>b.updated-a.updated);
-  const rows=list.map(j=>{
-    const active=j.id===STATE.id;
-    // headline = the full address, then a row of small tags, then who it's for and who did it, then the counts
-    const title=addrTitle(streetJoin(j.streetno,j.address),j.suburb)||"(no address yet)";
-    const chip=dayChip(j.date,j.updated);
-    const tags=(chip?`<span class="datechip">${escv(chip)}</span>`:"")+(j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"")+(j.sent?`<span class="nowtag">${j.updated-j.sent>5000?"Changed since sent":"Sent "+fmtTime(j.sent)}</span>`:"")+(active?'<span class="nowtag">current</span>':"");
-    const who=[j.client,j.inspector?"inspected by "+j.inspector:""].filter(Boolean).join(" · ");
-    const meta=`${j.find} finding${j.find===1?'':'s'} · ${j.photos} photo${j.photos===1?'':'s'} · ${timeAgo(j.updated)}`;
-    return `<div class="jobrow${active?' active':''}">
-      <button class="jobopen" data-openjob="${escv(j.id)}"><span class="jobaddr">${escv(title)}</span>${tags?`<span class="jobchips">${tags}</span>`:""}${who?`<span class="jobwho">${escv(who)}</span>`:""}<span class="jobmeta">${escv(meta)}</span></button>
+/* The Jobs sheet: one search box over both lists (on this phone, and sent in), and a Select mode to tick several and delete them in one go.
+   JL.q = what's typed, JL.rows = the local jobs with a lower-case search line each (built once per open), JL.mode = which list is being ticked ("local", "team" or null),
+   JL.sel = ticked ids, JL.armed = the first-tap token of Delete selected (4 second window), JL.note = failures from the last bulk delete. */
+const JL={q:"",rows:[],mode:null,sel:new Set(),armed:0,seq:0,busy:false,msg:"",note:null,t:0};
+function jobWords(q){return String(q||"").toLowerCase().replace(/,/g," ").split(/\s+/).filter(Boolean);}
+function jobMatch(hay,words){for(let i=0;i<words.length;i++)if(hay.indexOf(words[i])<0)return false;return true;}
+// older index entries have no streetno, client or date, so every field is optional here
+function localHay(j){return [streetJoin(j.streetno,j.address),j.suburb,j.client,j.inspector].map(x=>String(x==null?"":x)).join(" ").toLowerCase();}
+function teamHay(t){const s=t.s||{};return [s.address,s.suburb,s.client,t.who,s.inspector].map(x=>String(x==null?"":x)).join(" ").toLowerCase();}
+function shownLocal(){const w=jobWords(JL.q);return w.length?JL.rows.filter(r=>jobMatch(r.h,w)):JL.rows;}
+function shownTeam(){const w=jobWords(JL.q);return w.length?TEAM.filter(t=>jobMatch(teamHay(t),w)):TEAM;}
+function localTitle(j){return addrTitle(streetJoin(j.streetno,j.address),j.suburb)||"(no address yet)";}
+function localRow(j,pick){
+  const active=j.id===STATE.id;
+  // headline = the full address, then a row of small tags, then who it's for and who did it, then the counts
+  const title=localTitle(j);
+  const chip=dayChip(j.date,j.updated);
+  const tags=(chip?`<span class="datechip">${escv(chip)}</span>`:"")+(j.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"")+(j.sent?`<span class="nowtag">${j.updated-j.sent>5000?"Changed since sent":"Sent "+fmtTime(j.sent)}</span>`:"")+(active?'<span class="nowtag">current</span>':"");
+  const who=[j.client,j.inspector?"inspected by "+j.inspector:""].filter(Boolean).join(" · ");
+  const meta=`${j.find} finding${j.find===1?'':'s'} · ${j.photos} photo${j.photos===1?'':'s'} · ${timeAgo(j.updated)}`;
+  const inner=`<span class="jobaddr">${escv(title)}</span>${tags?`<span class="jobchips">${tags}</span>`:""}${who?`<span class="jobwho">${escv(who)}</span>`:""}<span class="jobmeta">${escv(meta)}</span>`;
+  if(pick){const on=JL.sel.has(j.id);return `<div class="jobrow pick${on?' on':''}"><button class="jobopen" type="button" data-pick="${escv(j.id)}" aria-pressed="${on}"><span class="stick"></span>${inner}</button></div>`;}
+  return `<div class="jobrow${active?' active':''}">
+      <button class="jobopen" data-openjob="${escv(j.id)}">${inner}</button>
       <button class="jobdel" data-deljob="${escv(j.id)}" aria-label="Delete job">&times;</button></div>`;
-  }).join("")||`<p style="font-size:.85rem">No saved jobs yet.</p>`;
-  sheet.innerHTML=`<h3>Your jobs</h3>
-    <p style="font-size:.85rem">Tap a job to open it. Everything's saved on this phone. Send it to the office (or Export it) so there's a backup off the device.</p>
-    <div class="fscroll"><div id="syncbox"></div><div class="joblist">${rows}</div></div>
-    <div class="acts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mImport">Import packet</button><button class="btn primary" id="mNewJob">Start new job</button></div>
-    <div class="buildstamp">Build ${escv(BUILD)}</div>`;
-  sheet.classList.add("tall");
-  modal.classList.add("show");
-  fillSyncBox();
-  document.getElementById("mCancel").onclick=closeModal;
-  document.getElementById("mImport").onclick=()=>document.getElementById("importInput").click();
-  document.getElementById("mNewJob").onclick=openNewJob;
-  sheet.querySelectorAll("[data-openjob]").forEach(b=>b.onclick=()=>switchJob(b.dataset.openjob).then(closeModal));
-  sheet.querySelectorAll("[data-deljob]").forEach(b=>b.onclick=(ev)=>{
+}
+function renderLocalJobs(){
+  const el=document.getElementById("joblist");if(!el)return;
+  const pick=JL.mode==="local",rows=shownLocal();
+  el.innerHTML=rows.map(r=>localRow(r.j,pick)).join("")||(JL.rows.length?`<span class="fnote">No jobs match</span>`:`<p style="font-size:.85rem">No saved jobs yet.</p>`);
+  el.querySelectorAll("[data-openjob]").forEach(b=>b.onclick=()=>switchJob(b.dataset.openjob).then(closeModal));
+  el.querySelectorAll("[data-deljob]").forEach(b=>b.onclick=(ev)=>{
     ev.stopPropagation();
     if(b.dataset.armed){deleteJob(b.dataset.deljob).then(openJobs);return;}
     b.dataset.armed="1";b.textContent="Delete?";b.classList.add("armed");
     setTimeout(()=>{if(b.isConnected){b.textContent="×";b.classList.remove("armed");delete b.dataset.armed;}},4000);
   });
 }
+function jobIdsShown(){return JL.mode==="team"?shownTeam().map(t=>t.id):JL.mode==="local"?shownLocal().map(r=>r.j.id):[];}
+// only ticked rows that are on screen count (a search can hide ticked ones; they aren't deleted)
+function selShown(){return jobIdsShown().filter(id=>JL.sel.has(id));}
+function selWarn(n){
+  if(JL.mode==="local")return `Delete ${n} job${n===1?"":"s"} from this device? Send or export first if you need a copy.`;
+  const un=selShown().filter(id=>{const t=TEAM.find(x=>x.id===id);return t&&t.tag!=="Opened";}).length;
+  return `Delete ${n}? This removes the reports and any photos in storage and cannot be undone.`+(un?` You haven't opened ${un===1?"1 of them":un+" of them"} on this device yet.`:"");
+}
+function drawSelBar(){
+  const bar=document.getElementById("selbar");if(!bar)return;
+  const on=!!JL.mode,acts=document.getElementById("jacts");
+  bar.hidden=!on;if(acts)acts.style.display=on?"none":"";
+  document.querySelectorAll("[data-selmode]").forEach(b=>b.textContent=JL.mode===b.dataset.selmode?"Cancel":"Select");
+  if(!on)return;
+  const shown=jobIdsShown(),n=shown.filter(id=>JL.sel.has(id)).length;
+  const all=shown.length>0&&n===shown.length;
+  const q=id=>document.getElementById(id);
+  q("selcount").textContent=JL.busy?JL.msg:n+" selected";
+  q("selall").textContent=all?"Unselect shown":"Select all shown";q("selall").disabled=JL.busy||!shown.length;
+  q("selcancel").disabled=JL.busy;
+  const del=q("seldel");del.disabled=JL.busy||!n;del.classList.toggle("armed",!!JL.armed&&!JL.busy);del.textContent=JL.armed&&!JL.busy?"Delete "+n+"?":"Delete selected";
+  const w=q("selwarn");w.hidden=!JL.armed||JL.busy;if(!w.hidden)w.textContent=selWarn(n);
+}
+function drawJobNote(){
+  const el=document.getElementById("jnote");if(!el)return;
+  const n=JL.note;
+  el.innerHTML=n?`<div class="delwarn jnote"><b>Deleted ${n.done} of ${n.total}.</b> ${n.fails.length===1?"This one":"These "+n.fails.length} didn't go:<ul>${n.fails.map(f=>`<li>${escv(f.title)}: ${escv(f.why)}</li>`).join("")}</ul><button class="selbtn" type="button" data-jnoteok>OK</button></div>`:"";
+}
+// redraw both lists and the bar from the data (one pass each; the search and the ticks never touch rows one by one)
+function applyJobSearch(){renderLocalJobs();renderTeam();drawSelBar();}
+function selStart(mode){
+  if(JL.busy)return;
+  if(JL.mode===mode){JL.mode=null;}
+  else{if(mode==="team"&&!(ME&&ME.role==="master"))return;JL.mode=mode;}
+  JL.sel.clear();JL.armed=0;applyJobSearch();
+}
+function selToggle(id,btn){
+  if(JL.busy)return;
+  const on=!JL.sel.has(id);if(on)JL.sel.add(id);else JL.sel.delete(id);
+  JL.armed=0;
+  const row=btn.closest(".jobrow");if(row)row.classList.toggle("on",on);btn.setAttribute("aria-pressed",on);
+  drawSelBar();
+}
+function selAll(){
+  if(JL.busy)return;
+  const shown=jobIdsShown(),all=shown.length>0&&shown.every(id=>JL.sel.has(id));
+  shown.forEach(id=>all?JL.sel.delete(id):JL.sel.add(id));
+  JL.armed=0;applyJobSearch();
+}
+function selCancel(){if(JL.busy)return;JL.mode=null;JL.sel.clear();JL.armed=0;applyJobSearch();}
+function selDelete(){
+  if(JL.busy)return;
+  const ids=selShown();if(!ids.length)return;
+  if(!JL.armed){const a=JL.armed=++JL.seq;drawSelBar();setTimeout(()=>{if(JL.armed===a){JL.armed=0;drawSelBar();}},4000);return}
+  return runSelDelete(ids);
+}
+// second tap: the same single-delete code, one report or job after another, then back out of select mode
+async function runSelDelete(ids){
+  const mode=JL.mode;
+  let items;
+  if(mode==="team")items=ids.map(id=>TEAM.find(t=>t.id===id)).filter(Boolean).map(t=>({id:t.id,title:addrTitle((t.s||{}).address,(t.s||{}).suburb)||"(no address)",t}));
+  else{
+    items=ids.map(id=>JL.rows.find(r=>r.j.id===id)).filter(Boolean).map(r=>({id:r.j.id,title:localTitle(r.j)}));
+    items.sort((a,b)=>(a.id===STATE.id)-(b.id===STATE.id));   // the open job goes last, so deleteJob only has to swap it once
+  }
+  JL.busy=true;JL.armed=0;
+  const fails=[];let done=0;
+  try{
+    for(let i=0;i<items.length;i++){
+      JL.msg="Deleting "+(i+1)+" of "+items.length+"…";drawSelBar();
+      try{
+        if(mode==="team")await deleteReportFor(items[i].t);
+        else if(!await deleteJob(items[i].id))throw new Error("this phone wouldn't remove it (storage problem). Nothing was removed");
+        done++;
+      }catch(err){fails.push({title:items[i].title,why:mode==="team"?delErr(err):String((err&&err.message)||err||"unknown problem").slice(0,120)});}
+    }
+  }finally{JL.busy=false;JL.msg="";}
+  JL.mode=null;JL.sel.clear();
+  JL.note=fails.length?{done,total:items.length,fails}:null;
+  toast(fails.length?"Deleted "+done+" of "+items.length+". "+fails.length+" didn't go, see the list":"Deleted "+done+(mode==="team"?" from the office copy":" from this device"),fails.length?4600:3000);
+  if(mode==="team"){updateSyncUI();applyJobSearch();drawJobNote();}
+  else await openJobs();
+}
+async function openJobs(){
+  if(STATE.id){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
+  const list=(await loadJobsIndex()).sort((a,b)=>b.updated-a.updated);
+  JL.rows=list.map(j=>({j,h:localHay(j)}));JL.mode=null;JL.sel.clear();JL.armed=0;
+  sheet.innerHTML=`<h3>Your jobs</h3>
+    <p style="font-size:.85rem">Tap a job to open it. Everything's saved on this phone. Send it to the office (or Export it) so there's a backup off the device.</p>
+    <div class="jsearch"><input type="search" id="jobq" placeholder="Address, client or inspector" aria-label="Search jobs" value="${escv(JL.q)}" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"><button class="jqx" id="jobqx" type="button" aria-label="Clear search"${JL.q?"":" hidden"}>&times;</button></div>
+    <div id="jnote"></div>
+    <div class="fscroll"><div id="syncbox"></div><div class="flab listhead"><span>On this phone</span><button class="selbtn" type="button" data-selmode="local"${list.length?"":" hidden"}>Select</button></div><div class="joblist" id="joblist"></div></div>
+    <div class="selbar" id="selbar" hidden><div class="seltop"><b id="selcount"></b><button class="btn ghost" type="button" id="selall">Select all shown</button></div><div class="delwarn" id="selwarn" hidden></div><div class="selbtns"><button class="btn ghost" type="button" id="selcancel">Cancel</button><button class="btn primary" type="button" id="seldel">Delete selected</button></div></div>
+    <div class="acts" id="jacts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mImport">Import packet</button><button class="btn primary" id="mNewJob">Start new job</button></div>
+    <div class="buildstamp">Build ${escv(BUILD)}</div>`;
+  sheet.classList.add("tall");
+  modal.classList.add("show");
+  renderLocalJobs();drawJobNote();
+  fillSyncBox();
+  document.getElementById("mCancel").onclick=closeModal;
+  document.getElementById("mImport").onclick=()=>document.getElementById("importInput").click();
+  document.getElementById("mNewJob").onclick=openNewJob;
+  const inp=document.getElementById("jobq"),x=document.getElementById("jobqx");
+  inp.oninput=()=>{JL.q=inp.value;JL.armed=0;x.hidden=!JL.q;clearTimeout(JL.t);JL.t=setTimeout(()=>{applyJobSearch();const sc=sheet.querySelector(".fscroll");if(sc)sc.scrollTop=0;},60);};
+  inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();inp.blur();}};   // Go/Search on the phone keyboard just puts the keyboard away
+  x.onclick=()=>{JL.q="";inp.value="";x.hidden=true;JL.armed=0;clearTimeout(JL.t);applyJobSearch();inp.focus();};
+  document.getElementById("selall").onclick=selAll;
+  document.getElementById("selcancel").onclick=selCancel;
+  document.getElementById("seldel").onclick=selDelete;
+}
+// the Select buttons (one per list), the ticks on rows, and the failure note's OK
+sheet.addEventListener("click",e=>{
+  const b=e.target.closest("[data-selmode],[data-pick],[data-jnoteok]");if(!b)return;
+  if(b.dataset.selmode!==undefined)selStart(b.dataset.selmode);
+  else if(b.dataset.pick!==undefined)selToggle(b.dataset.pick,b);
+  else{JL.note=null;drawJobNote();}
+});
 document.getElementById("jobsBtn").addEventListener("click",openJobs);
 document.getElementById("newBtn").addEventListener("click",openNewJob);
 
@@ -2728,7 +2872,10 @@ function updateSyncUI(){
 }
 function renderTeam(){
   const el=document.getElementById("teamlist");if(!el)return;
+  const sb=document.querySelector('[data-selmode="team"]');if(sb)sb.hidden=!TEAM.length;
   if(!TEAM.length){el.innerHTML=`<span class="fnote">Nothing sent in yet.</span>`;return}
+  const pick=JL.mode==="team"&&!!ME&&ME.role==="master",shown=shownTeam();
+  if(!shown.length){el.innerHTML=`<span class="fnote">No jobs match</span>`;return}
   // the address is the headline; a day chip and small tags under it; client and inspector as a quieter line. Rows sent before 2026-11-04 have no date, so they show the sent day.
   const row=t=>{
     const s=t.s||{},nF=s.find||0,nP=s.photos||0,id=escv(t.id);
@@ -2737,12 +2884,14 @@ function renderTeam(){
     const tags=(chip?`<span class="datechip">${escv(chip)}</span>`:"")+`<span class="nowtag${t.tag==="New"?" tagnew":""}">${t.tag}</span>`+(s.rtype==="prepurchase"?'<span class="nowtag" style="background:var(--place-bg);color:var(--place)">Pre-purchase</span>':"");
     const who=[s.client,t.who?"inspected by "+t.who:""].filter(Boolean).join(" · ");
     const meta=`${nF} finding${nF===1?"":"s"} · ${t.cleared?"photos cleared":nP+" photo"+(nP===1?"":"s")} · ${fmtTime(t.at)}`;
+    const inner=`<span class="jobaddr">${escv(title)}</span><span class="jobchips">${tags}</span>${who?`<span class="jobwho">${escv(who)}</span>`:""}<span class="jobmeta">${escv(meta)}</span>`;
+    if(pick){const on=JL.sel.has(t.id);return `<div class="teamitem"><div class="jobrow pick${on?" on":""}"><button class="jobopen teamrow" type="button" data-pick="${id}" aria-pressed="${on}"><span class="stick"></span>${inner}</button></div></div>`;}
     const btns=(!t.cleared&&nP>0?`<button class="jobdel clrbtn" type="button" data-clearph="${id}">Clear photos</button>`:"")+`<button class="jobdel clrbtn" type="button" data-delrep="${id}">Delete</button>`;
     const warn=`Delete this report from the office copy? It removes the report text${t.cleared?"":" and "+(nP?"all "+nP+" photo"+(nP===1?"":"s"):"any photos")+" in storage"}. It can't be undone. The copy in your Mac Inspection Inbox folder is separate and stays.${t.tag!=="Opened"?" You haven't opened this one on this device yet.":""}`;
-    return `<div class="teamitem"><div class="jobrow"><button class="jobopen teamrow" type="button" data-teamrep="${id}"><span class="jobaddr">${escv(title)}</span><span class="jobchips">${tags}</span>${who?`<span class="jobwho">${escv(who)}</span>`:""}<span class="jobmeta">${escv(meta)}</span></button><div class="rowbtns">${btns}</div></div><div class="delwarn" hidden>${escv(warn)}</div></div>`;
+    return `<div class="teamitem"><div class="jobrow"><button class="jobopen teamrow" type="button" data-teamrep="${id}">${inner}</button><div class="rowbtns">${btns}</div></div><div class="delwarn" hidden>${escv(warn)}</div></div>`;
   };
-  const today=new Date().toDateString(),td=TEAM.filter(t=>new Date(t.at).toDateString()===today),ea=TEAM.filter(t=>new Date(t.at).toDateString()!==today);
-  const nClear=TEAM.filter(t=>t.tag==="Opened"&&!t.cleared&&(t.s.photos||0)>0).length;
+  const today=new Date().toDateString(),td=shown.filter(t=>new Date(t.at).toDateString()===today),ea=shown.filter(t=>new Date(t.at).toDateString()!==today);
+  const nClear=pick?0:TEAM.filter(t=>t.tag==="Opened"&&!t.cleared&&(t.s.photos||0)>0).length;
   el.innerHTML=(td.length?`<div class="flab">Today</div>`+td.map(row).join(""):"")+(ea.length?`<div class="flab">Earlier</div>`+ea.map(row).join(""):"")
     +(nClear?`<button class="btn ghost" type="button" data-clearall style="margin-top:6px">Clear photos from the ${nClear} opened report${nClear===1?"":"s"}</button><div class="fnote" style="margin-top:6px">Frees space in the office copy once a report is done. The report wording stays. Only reports you've opened on this device can be cleared.</div>`:"");
 }
@@ -2813,7 +2962,7 @@ async function fillSyncBox(){
   const master=ME.role==="master";
   box.innerHTML=`<div class="syncrow"><span class="fnote">Signed in as <b>${escv(ME.name)}</b></span><button class="btn ghost" type="button" data-signout>Sign out</button></div>
     <div class="syncrow"><button class="btn ghost" type="button" data-todayjobs>Start from today's job</button><button class="btn ghost" type="button" data-sendnow>Send this job now</button></div>
-    ${master?`<div class="flab">Reports sent in (last 30 days)</div><div id="teamlist"><span class="fnote">Loading…</span></div>`:""}`;
+    ${master?`<div class="flab listhead"><span>Reports sent in (last 30 days)</span><button class="selbtn" type="button" data-selmode="team" hidden>Select</button></div><div id="teamlist"><span class="fnote">Loading…</span></div>`:""}`;
   if(master){
     try{await fetchTeam();updateSyncUI();renderTeam();}
     catch(e){const el=document.getElementById("teamlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
