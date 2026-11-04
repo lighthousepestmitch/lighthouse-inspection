@@ -37,6 +37,7 @@ label.t input{width:26px;height:26px;accent-color:var(--deep);flex:none}
 label.t.done span{text-decoration:line-through;color:var(--ink2)}
 .note{color:var(--ink2);font-size:.85rem;margin-top:6px}
 .note.hint{margin:-6px 0 0}
+.build{margin-top:auto;padding-top:8px;text-align:center;color:var(--ink2);font-size:.75rem}.build a{color:inherit;margin-left:4px}   /* quiet footer: build + whether this device opens offline */
 </style></head><body>
 <h1><img src="logo/logo-horizontal.svg" alt="Lighthouse Pest Control"></h1>
 
@@ -54,6 +55,8 @@ label.t.done span{text-decoration:line-through;color:var(--ink2)}
 </div>
 
 <button class="strip" id="eodBtn" type="button" aria-haspopup="dialog" data-master hidden><span><b>End of day check</b><small id="eodsub">4 things to tick</small></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+
+<p class="build" id="lpc-build">Build 2026-11-04a <span id="lpc-sw-status"></span></p>   <!-- bump the build when this page changes -->
 
 <script>
 /* Who is using this device? Home needs to know so the technician (Andrew) never sees Mitch's tiles.
@@ -87,6 +90,7 @@ label.t.done span{text-decoration:line-through;color:var(--ink2)}
 <div class="sheet" id="eodSheet" role="dialog" aria-label="End of day check"><button class="x" type="button" data-close aria-label="Close">&times;</button><h2>End of day check</h2><div id="eodbox"></div><div class="note">Clears itself each morning.</div></div>
 
 <script src="lpc-config.js?v=2"></script>
+<script src="lpc-sw-banner.js?v=1" defer></script>   <!-- offline opening + the "new version is ready" banner (sw.js); see tools/offline-notes.md -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
 <script>
 /* Sheets */

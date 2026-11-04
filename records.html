@@ -229,6 +229,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 
 <script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
 <script src="lpc-clients.js?v=1"></script>   <!-- the shared client auto-fill (also used by Inspection Capture). Missing = the boxes just type as before -->
+<script src="lpc-sw-banner.js?v=1" defer></script>   <!-- offline opening + the "new version is ready" banner (sw.js); see tools/offline-notes.md -->
 <!-- Pinned on purpose, same version and hash as jobbook.html and calendar.html. To upgrade: change the version, re-hash with
      curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, find a customer, log out. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
@@ -1560,6 +1561,11 @@ document.addEventListener("click",function(e){
   if(dirty()&&!confirm("Leave without saving?")){ e.preventDefault(); return; }
   LEAVING=true; setTimeout(()=>{ LEAVING=false; },3000);
 });
+/* "A new version is ready. Tap to update." (lpc-sw-banner.js) reloads the page: ask first if a record is in progress and not saved */
+window.lpcSwBeforeUpdate=function(){
+  if(dirty()&&!confirm("Update now? The record you're filling in isn't saved yet.")) return false;
+  LEAVING=true; setTimeout(()=>{ LEAVING=false; },3000); return true;
+};
 /* records.html#new opens the New tab (it is also the default; this makes the link explicit and works if the hash changes later) */
 function applyHash(){
   if((location.hash||"").toLowerCase()!=="#new") return false;

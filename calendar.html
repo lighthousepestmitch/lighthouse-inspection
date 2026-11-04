@@ -93,6 +93,7 @@ button.mi:hover,button.mi:focus-visible{background:var(--surface2)}
 .mi[aria-checked="true"] .mck{background:var(--deep);border-color:var(--deep);color:var(--deepInk)}
 .mlive{min-height:36px;font-weight:400;border-top:1px solid var(--line);border-bottom:1px solid var(--line);border-radius:0;margin:2px 0}
 .mlive .live{font-size:13px}
+.mbuild{padding:6px 12px 8px;font-size:11.5px;color:var(--ink3)}
 
 /* toolbar */
 .tb{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;padding:10px 14px}
@@ -342,6 +343,8 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .tacts a{flex:1;min-width:92px}
 .empty{text-align:center;padding:48px 20px;color:var(--ink3)}
 .empty h3{font-size:18px;color:var(--ink2);margin-bottom:5px}
+.offday{font-family:Newsreader,Georgia,serif;font-size:18px;font-weight:600;margin-left:4px}      /* the saved-jobs view (no signal) */
+.offwho{font-size:13px;color:var(--ink2);margin:0 2px 3px}
 
 /* buttons */
 .btns{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
@@ -659,6 +662,7 @@ body.isdrag .tray.barok,body.isresize .tray.barok{outline:none}
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="lpc-config.js?v=2"></script>   <!-- bump the v= number whenever lpc-config.js changes, or phones keep the old copy -->
+<script src="lpc-sw-banner.js?v=1" defer></script>   <!-- offline opening + the "new version is ready" banner (sw.js); see tools/offline-notes.md -->
 <!-- Pinned on purpose (2.117.2, the build the old @2 tag gave on 5 Oct 2026). To upgrade: change the version, re-hash with
      curl -s <url> | openssl dgst -sha384 -binary | openssl base64 -A, then test log in, week view, new/edit job, log out. -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
@@ -679,6 +683,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
+const BUILD="2026-11-04a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -1054,6 +1059,7 @@ function renderFatal(msg,canRetry){
     '<div class="btns">'+btns+'</div></div></div>',"fatal");
 }
 function renderOffline(){
+  if(offShow(S.userId||offUid()))return;      // this login's saved jobs, read only, instead of a dead end
   setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>No signal</h1><p>Can\'t reach the server. Check your signal and try again.</p>'+
     '<div class="btns"><button class="btn pri" data-act="reboot">Try again</button><button class="btn" data-act="signout">Log out</button></div></div></div>',"offline");
 }
@@ -1077,6 +1083,7 @@ function hashError(){
   }catch(e){return "";}
 }
 function renderLogin(notice,kind){
+  offClear();      // nobody is logged in: the saved jobs (client names, phones, addresses) don't stay on the device
   let last="";try{last=localStorage.getItem(EMAIL_KEY)||"";}catch(e){}
   setApp('<div class="authwrap"><div class="authcard">'+AUTH_LOGO+'<h1>Job Calendar</h1>'+
     '<p>Log in with your email and password. Your phone can remember them for you.</p><div id="lg-msg" role="alert">'+(notice?'<div class="banner '+(kind||"warn")+'" style="margin:0 0 12px">'+esc(notice)+'</div>':'')+'</div>'+
@@ -1275,6 +1282,7 @@ async function startApp(){
     offerDraft();
   }catch(e){
     S.starting=false;
+    if(netErr(e)&&offShow(S.userId))return;      // no signal: this login's saved jobs, read only
     renderFatal(friendly(e),true);
   }
 }
@@ -1287,6 +1295,7 @@ function stopApp(){
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
   S.plan=null;S.notes=null;S.noPlanTbl=false;S.noNotesTbl=false;closeDayNote();
   D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
+  offClear();      // and the saved jobs (the offline copy) go with them
   driveWipe();      // the saved drive times have client addresses in them: they don't stay on the device after a log out (this runs for a log out, a login that ran out, and a different person logging in)
   document.body.classList.remove("is-master");
 }
@@ -1299,6 +1308,81 @@ function currentRange(){
   return {from:S.date,to:S.date};
 }
 function setJobs(rows){S.jobs=rows||[];S.byId={};S.jobs.forEach(function(j){S.byId[j.id]=j;});}
+/* ----- offline copy of the jobs -----
+   Every good job fetch saves a small copy of those days on this device (localStorage), so the calendar can still show them with no signal.
+   One entry per day, each with the time it was fetched. Plain job details only (what a worker's login already gets): no prices, no email addresses,
+   no cancelled jobs. It belongs to one login: another login never sees it, and a log out (or a login that ran out) deletes it.
+   Days older than yesterday or more than 3 weeks ahead are dropped, and the whole copy is capped at OFFJ_MAX characters.
+   With no signal the calendar opens this instead of "No signal", read only: no job can be opened, moved, ticked or added from it (see onClick and renderOffJobs). */
+const OFFJ_KEY="lpc_jobs_off_v1",OFFJ_BACK=1,OFFJ_AHEAD=21,OFFJ_MAX=300000;
+function offRead(){try{const o=JSON.parse(localStorage.getItem(OFFJ_KEY)||"null");return(o&&o.v===1&&typeof o.uid==="string"&&o.days&&typeof o.days==="object")?o:null;}catch(e){return null;}}
+function offClear(){try{localStorage.removeItem(OFFJ_KEY);}catch(e){}}
+// Only the fields listed here are kept (a list of what to keep, not of what to drop), so a price or anything added to the jobs table later can't end up in it.
+function offJob(j){
+  const c=j.client;
+  return {id:j.id,job_date:j.job_date,start_time:j.start_time,duration_min:j.duration_min,staff_id:j.staff_id,status:j.status,address:j.address,notes:j.notes,
+    service_type:j.service_type,services:Array.isArray(j.services)?j.services.filter(function(e){return e&&e.type;}).map(function(e){return {type:e.type};}):[],
+    proposal_barrier:!!j.proposal_barrier,proposal_baiting:!!j.proposal_baiting,
+    client:c?{name:c.name,phone:c.phone,street:c.street,suburb:c.suburb,state:c.state,postcode:c.postcode,notes:c.notes}:null};
+}
+function dayGap(a,b){return Math.round((parseYmd(a)-parseYmd(b))/864e5);}
+function offSave(rows,range){
+  try{
+    if(!S.userId||!range)return;
+    let o=offRead();
+    if(!o||o.uid!==S.userId)o={v:1,uid:S.userId,days:{}};
+    const now=Date.now(),t=todayYmd(),lo=addDays(t,-OFFJ_BACK),hi=addDays(t,OFFJ_AHEAD),by={};
+    rows.forEach(function(j){if(j.status!=="cancelled")(by[j.job_date]=by[j.job_date]||[]).push(offJob(j));});
+    for(let d=range.from,n=0;d<=range.to&&n<14;d=addDays(d,1),n++)if(d>=lo&&d<=hi)o.days[d]={at:now,jobs:by[d]||[]};
+    Object.keys(o.days).forEach(function(d){if(d<lo||d>hi)delete o.days[d];});
+    o.savedAt=now;o.me=S.me?{name:S.me.name}:(o.me||null);
+    o.staff=S.staff.map(function(s){return {id:s.id,name:s.name,colour:s.colour};});
+    let txt=JSON.stringify(o);
+    while(txt.length>OFFJ_MAX){      // too big: let go of the day furthest from today until it fits
+      const far=Object.keys(o.days).sort(function(a,b){return Math.abs(dayGap(b,t))-Math.abs(dayGap(a,t));})[0];
+      if(!far)return;
+      delete o.days[far];txt=JSON.stringify(o);
+    }
+    localStorage.setItem(OFFJ_KEY,txt);
+  }catch(e){/* a full or blocked device: the calendar works as before, just with no offline copy */}
+}
+// The copy for this login, or null (none saved, or it is someone else's).
+function offFor(uid){const o=offRead();return(o&&uid&&o.uid===uid&&Object.keys(o.days).length)?o:null;}
+// Who the stored login belongs to, read from the saved session (still there with no signal, when the login library can't refresh it).
+function offUid(){
+  try{
+    const k=(S.sb&&S.sb.auth&&S.sb.auth.storageKey)||"";
+    const keys=k?[k]:Object.keys(localStorage).filter(function(x){return /^sb-.+-auth-token$/.test(x);});
+    for(let i=0;i<keys.length;i++){const o=JSON.parse(localStorage.getItem(keys[i])||"null");if(o&&o.user&&o.user.id)return String(o.user.id);}
+  }catch(e){}
+  return "";
+}
+// Shows the saved jobs for this login, on today (or the nearest saved day). false, and nothing shown, when there is no copy for this login.
+function offShow(uid){
+  const o=offFor(uid);if(!o)return false;
+  const t=todayYmd(),ds=Object.keys(o.days).sort();
+  S.offUid=uid;S.offDay=o.days[t]?t:(ds.filter(function(d){return d>=t;})[0]||ds[ds.length-1]);
+  S.staffById={};(o.staff||[]).forEach(function(s){S.staffById[s.id]=s;});      // (only for the card colours: startApp fills it in properly once there is signal)
+  renderOffJobs(o);
+  return true;
+}
+function offTime(ms){const d=new Date(ms),t=fmtMin(d.getHours()*60+d.getMinutes());return ymd(d)===todayYmd()?t:DOW[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()]+" "+t;}
+// The saved day as the worker's list of cards (same cards, no job id on them, so a tap opens nothing). S.screen is "offline", so the coming-back-online
+// check and the log out button work as they do on the No signal card; onClick lets only the buttons below through.
+function renderOffJobs(o){
+  const d=S.offDay,day=o.days[d],jobs=((day&&day.jobs)||[]).slice().sort(byTime);
+  const nm={};(o.staff||[]).forEach(function(s){nm[s.id]=s.name;});
+  const who={};jobs.forEach(function(j){who[j.staff_id]=1;});
+  const multi=Object.keys(who).length>1;
+  let h='<header class="top"><a class="lpchome" href="home.html" aria-label="Home"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"></a><h1>Job Calendar</h1><span class="who">'+esc((o.me&&o.me.name)||"")+'</span></header>'+
+    '<main><div class="banner warn" role="status" style="margin:12px 14px 0">Offline: showing jobs as of '+esc(offTime(day?day.at:o.savedAt))+'. Back online to change jobs. <button class="linkbtn" data-act="reboot">Try again</button></div>'+
+    '<div class="tb"><div class="grp"><button class="tbtn" data-act="offgo" data-d="-1" aria-label="Previous day">'+IC.l+'</button><button class="tbtn" data-act="offgo" data-d="1" aria-label="Next day">'+IC.r+'</button></div><span class="offday">'+esc(niceDate(d))+'</span></div>'+
+    '<div class="wrap">';
+  if(!day)h+='<div class="empty"><h3>Not saved</h3><p>This day wasn\'t saved on this device. Back online to see it.</p></div>';
+  else if(!jobs.length)h+='<div class="empty"><h3>Nothing booked</h3><p>No jobs for '+esc(niceDate(d))+'.</p></div>';
+  jobs.forEach(function(j){h+=(multi&&nm[j.staff_id]?'<div class="offwho">'+esc(nm[j.staff_id])+'</div>':"")+techCard(Object.assign({},j,{id:""}));});
+  setApp(h+'<div class="btns"><button class="btn" data-act="reboot">Try again</button><button class="btn" data-act="signout">Log out</button></div></div></main>',"offline");
+}
 async function fetchJobs(silent){
   if(S.screen!=="cal")return;
   if(S.pending>0){scheduleRefetch(500);return;}
@@ -1318,6 +1402,7 @@ async function fetchJobs(silent){
     // Master only: the prices of these jobs (and, on a refresh, the usual prices) come from their own tables and are merged into the jobs in memory. A worker never asks.
     if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null,loadPlanNotes(range)]);if(seq!==S.fetchSeq)return;}
     setJobs(rows);S.range=range;S.loaded=true;S.loadErr="";
+    offSave(rows,range);
     checkPropCols(rows);syncSheetProps();
     renderBody();
   }catch(e){
@@ -1424,7 +1509,8 @@ function menuHtml(){
       '<button type="button" class="mi" role="menuitem" data-act="svcpanel">Services</button>'+
       '<button type="button" class="mi" role="menuitem" id="mi-props" data-act="proplist"'+(S.noPropCols?" hidden":"")+'>Proposals to do</button>'+
       '<div class="mi mlive" role="presentation"><span class="live"></span></div>':"")+
-    '<button type="button" class="mi" role="menuitem" data-act="signout">Log out</button></div></div>';
+    '<button type="button" class="mi" role="menuitem" data-act="signout">Log out</button>'+
+    '<div class="mbuild" role="presentation">Build '+esc(BUILD)+'</div></div></div>';
 }
 function openMenu(){
   const m=byId("menu"),b=byId("menu-btn");if(!m||!b)return;
@@ -5238,6 +5324,7 @@ function handleAct(k,el){
   else if(k==="restart"){S.starting=false;if(S.userId)startApp();else renderLogin("","");}
   else if(k==="reload"){location.reload();}
   else if(k==="reboot"){checkSession();}
+  else if(k==="offgo"){const o=offFor(S.offUid);if(!o){renderOffline();return;}S.offDay=addDays(S.offDay,+el.getAttribute("data-d")||0);renderOffJobs(o);}
   else if(k==="draftrestore"){restoreDraft();}
   else if(k==="draftdiscard"){clearDraft();}
   else if(k==="sendlink")sendLink();
@@ -5263,6 +5350,12 @@ function leaveOk(){
 function onClick(e){
   const t=e.target;if(!t||!t.closest)return;
   if(t.closest(".lpchome")){if(!leaveOk())e.preventDefault();return;}      // (the badge is a real link to home.html: only a "no" stops it)
+  if(S.screen==="offline"){      // the saved-jobs view and the No signal card: only their own buttons work. A job can't be opened or changed from here.
+    const oa=t.closest("[data-act]");
+    if(oa)handleAct(oa.getAttribute("data-act"),oa);
+    else if(t.closest("[data-job]"))toast("Back online to change jobs.");
+    return;
+  }
   if(S.menuOpen&&!t.closest("#menu,#menu-btn")){closeMenu();return;}      // a tap away from the open menu just shuts it
   if(S.whoOpen&&!t.closest("#tbwho")){whoSet(false);return;}      // and the same for the Who popover
   if(SV){svcPanelClick(t);return;}
@@ -5506,6 +5599,7 @@ function checkSession(){
   }).catch(function(e){if(netErr(e))renderOffline();else renderLogin(friendly(e),"bad");});
 }
 function boot(){
+  window.lpcSwBeforeUpdate=leaveOk;      // lpc-sw-banner.js: tapping "A new version is ready" asks first if photos are going up or a job sheet has unsaved changes
   wireGlobal();      // first, so the buttons on the error screens below work
   const cfg=window.LPC_SUPABASE||{};
   if(!cfg.url||!cfg.anonKey){renderNotConnected();return;}            // nothing else runs until the project exists

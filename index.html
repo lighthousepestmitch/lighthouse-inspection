@@ -459,11 +459,12 @@
 
 <script src="lpc-config.js?v=2"></script>   <!-- the Supabase address + public key, same file the Job Calendar uses. Missing = the send-to-office buttons stay hidden -->
 <script src="lpc-clients.js?v=1"></script>   <!-- the shared client auto-fill (also used by Service Records). Missing = the boxes just type as before -->
+<script src="lpc-sw-banner.js?v=1" defer></script>   <!-- offline opening + the "new version is ready" banner (sw.js in the website folder); see tools/offline-notes.md -->
 <script>
 "use strict";
 
 // Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
-const BUILD="2026-11-04b";
+const BUILD="2026-11-04c";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -766,6 +767,12 @@ async function goHome(ev){
   try{if(STATE&&STATE.id){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}}catch(e){}
   location.href="home.html";
 }
+// "A new version is ready. Tap to update." (lpc-sw-banner.js) reloads the page: save the open job first, same as leaving by the badge.
+window.lpcSwBeforeUpdate=async function(){
+  clearTimeout(saveT);
+  try{if(STATE&&STATE.id){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}}catch(e){}
+  return true;
+};
 
 /* ---------- photo handling: shrink on capture ---------- */
 async function shrink(file,max=1600,q=0.72){
