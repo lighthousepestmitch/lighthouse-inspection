@@ -181,6 +181,11 @@ button.sechead[aria-expanded="true"] .chev{transform:rotate(90deg)}
 .subj{font-weight:700;color:var(--ink);margin-top:3px}
 .reply{margin-top:8px;padding-left:10px;border-left:2px solid var(--ok)}
 .hist.inrow{border-left-color:var(--ok)}
+.hd .mi svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:5px}
+.lcw{margin-right:6px;padding:1px 6px}
+.rmpanel{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0 12px}
+.rmpanel .rmfields{display:flex;gap:8px;margin:0 0 10px}
+.rmpanel .rmfields .inp{flex:1;min-width:0}
 .hist.inrow .quote{background:var(--okBg);border-color:var(--ok)}
 .lbl2{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);
   font-weight:700;margin:12px 0 6px}
@@ -306,7 +311,7 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-10-12b";
+const BUILD="2026-11-04";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -362,7 +367,95 @@ const normIv=v=>!v?null:(LEGACY[String(v).toLowerCase()]||LEGACY[v]||v);
 const monthsOf=k=>{const i=INTERVALS.find(x=>x.k===normIv(k)); return i?i.m:null;};
 function addMonths(d,m){ const x=parse(d); x.setDate(x.getDate()+Math.round(m*30.44)); return iso(x); }
 
+/* ---------- message history: the helpers ----------
+   tools/import_history.py reads Messages and Mail on the Mac and writes history_index (per client: last text or email we sent "lo"
+   with its channel "lc" and the number or address it went from "lv", last one they sent "li", and which history_N file holds the
+   messages "s"), history_N (the messages), nudges (no reply yet, due 3 months after our last message) and stoplist.
+   A message is {t, dir:"out"|"in", ch:"text"|"email"|"legacy", via, with, subj, txt, rv?, pt?, src?, how?}. t is an ISO time with the
+   Sydney offset, or only a day for the older records. Everything here is pure (no screen), so it can be tested on its own. */
+/* HIST-HELPERS-START */
+const RECENT_DAYS=30, NUDGE_MONTHS=3, NUDGE_LIST_MONTHS=12;
+const WD=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"], MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const dayOf=t=>String(t||"").slice(0,10);
+const dayNice=(t,today)=>{ const d=parse(dayOf(t));
+  return WD[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()]+(today&&d.getFullYear()!==parse(today).getFullYear()?" "+d.getFullYear():""); };
+const clockNice=t=>{ if(String(t||"").length<=10) return ""; const d=new Date(t); if(isNaN(d.getTime())) return "";
+  const h=d.getHours(); return (h%12||12)+":"+String(d.getMinutes()).padStart(2,"0")+(h<12?"am":"pm"); };
+/* one of his numbers or addresses, as he says it: "0432 181 689" */
+function fmtVia(v){ v=String(v||""); if(!v) return ""; if(v.indexOf("@")>=0) return v;
+  const d=v.replace(/\D/g,""); return d.length===10?d.slice(0,4)+" "+d.slice(4,7)+" "+d.slice(7):v; }
+const viaWords=(v,dir)=>{ v=String(v||""); if(!v) return "";
+  const who=v.indexOf("@")>=0?v:(v.replace(/\D/g,"")===MY_MOBILE?"my mobile ("+fmtVia(v)+")":fmtVia(v));
+  return (dir==="in"?"to ":"from ")+who; };
+function calMonths(day,n){ const d=parse(day), y=d.getFullYear(), m=d.getMonth()+n;      // calendar months, 31 Oct + 4 = 28 Feb
+  return iso(new Date(y,m,Math.min(d.getDate(),new Date(y,m+1,0).getDate()))); }
+const agoWords=(day,today)=>{ const n=Math.max(0,days(day,today)); return n===0?"today":n===1?"yesterday":n+" days ago"; };
+/* client id -> that client's property ids, rebuilt on every render() */
+let PIDIDX=null;
+function clientPids(cid){ if(!PIDIDX){ PIDIDX=new Map();
+    for(const p in S.props){ const c=S.props[p].c; if(!PIDIDX.has(c)) PIDIDX.set(c,[]); PIDIDX.get(c).push(p); } }
+  return PIDIDX.get(cid)||[]; }
+/* the newest text or email sent from this page for that client (a day), not a review ask and not one still unconfirmed */
+function logOut(cid){ let best=null;
+  for(const pid of clientPids(cid)) for(const e of ((S.ov[pid]||{}).log||[])){
+    if((e.ch!=="text"&&e.ch!=="email")||e.kind==="review"||e.st==="drafted") continue;
+    const d=iso(new Date(e.t)); if(!best||d>best.d) best={d,ch:e.ch}; }
+  return best; }
+/* the last thing he sent them, from anywhere: the history file, the older contacted.json day, and what went from this page since */
+function lastOutOf(cid){
+  let best=null;
+  const h=S.hidx[cid]; if(h&&h.lo) best={t:h.lo,ch:h.lc,via:h.lv||""};
+  const c=S.contacted[cid]; if(c&&(!best||dayOf(c)>dayOf(best.t))) best={t:c,ch:"legacy",via:""};
+  const m=logOut(cid); if(m&&(!best||m.d>dayOf(best.t))) best={t:m.d,ch:m.ch,via:""};
+  return best; }
+/* "Mon 2 Nov, text (0432 181 689)" */
+function lastText(cid,today){ const lo=lastOutOf(cid); if(!lo) return "";
+  const how=lo.ch==="email"?"email":lo.ch==="text"?"text":"", v=fmtVia(lo.via);
+  return dayNice(lo.t,today)+(how?", "+how:"")+(v?" ("+v+")":""); }
+/* null, or the warning when the last thing he sent them is under 30 days old: {n, ch, text:"Texted 2 days ago"} */
+function warnFor(cid,today){
+  const lo=lastOutOf(cid); if(!lo) return null;
+  const d=dayOf(lo.t), n=days(d,today); if(n>=RECENT_DAYS) return null;
+  const verb=lo.ch==="email"?"Emailed":lo.ch==="text"?"Texted":"Contacted";
+  return {n:Math.max(0,n),ch:lo.ch,text:verb+" "+agoWords(d,today)}; }
+/* the nudge for a client: the date from nudges.json (3 months after our last message, no reply), unless he changed it or turned it off
+   (S.nudge[cid] = {on:"2027-02-02"} or {off:1}). A message sent from this page since the import starts the 3 months again.
+   null when there is nothing to nudge. */
+function nudgeOf(cid){
+  const b=S.nudges[cid], ov=S.nudge[cid]||{};
+  let lo=b?dayOf(b.lo):null, def=b?b.due:null, ch=b?b.ch:null;
+  const m=logOut(cid);
+  if(m&&(!lo||m.d>lo)){ lo=m.d; ch=m.ch; def=calMonths(m.d,NUDGE_MONTHS); }
+  if(ov.off) return {off:true,lo,ch,def};
+  const due=ov.on||def; if(!due) return null;
+  return {due,lo,ch,def,custom:!!ov.on}; }
+/* oldest to newest in, newest first out, each message we sent marked replied when something from them sits before our next one */
+function threadView(es){ const out=[]; let sawIn=false;
+  for(let i=es.length-1;i>=0;i--){ const e=Object.assign({},es[i]);
+    if(e.dir==="in") sawIn=true; else { e.replied=sawIn; sawIn=false; }
+    out.push(e); }
+  return out; }
+/* Work reminders (the Mac's reminders page). Filters only, no names or numbers in the address. */
+const REMINDERS_BASE="http://127.0.0.1:8952/";
+function remindersUrl(rm){
+  const q=[], add=(k,v)=>q.push(k+"="+encodeURIComponent(v));
+  if(rm.mode==="years"){ add("mode","between"); add("years",rm.y1+"-"+rm.y2); }
+  else if(rm.mode==="dates"){ add("mode","between"); add("from",rm.d1); add("to",rm.d2); }
+  else add("mode",rm.mode);                                   // due, next14, recent (last 60 days), new (last 90 days)
+  return REMINDERS_BASE+"?"+q.join("&"); }
+function remindersProblem(rm){
+  const dt=/^\d{4}-\d{2}-\d{2}$/;
+  if(rm.mode==="years"){ const a=+rm.y1, b=+rm.y2;
+    if(!(a>=1990&&a<=2100&&b>=1990&&b<=2100)) return "Put in two years, like 2019 and 2022.";
+    if(a>b) return "The first year has to be the earlier one."; }
+  if(rm.mode==="dates"){
+    if(!dt.test(rm.d1)||!dt.test(rm.d2)) return "Pick both dates.";
+    if(rm.d1>rm.d2) return "The first date has to be the earlier one."; }
+  return ""; }
+/* HIST-HELPERS-END */
+
 const S={ready:false,clients:{},props:{},jobs:{},due:[],contacted:{},settings:null,sync:null,
+  hidx:{},hist:{},histP:{},nudges:{},nudge:{},stop:{},rm:{mode:"due",y1:"",y2:"",d1:"",d2:""},rmOpen:false,   // message history (index, shards loaded on demand), nudge dates, stop list, the Work reminders picker
   ov:{},bookings:{},gone:{},camp:{},dncBack:{},rcAll:false,rq2:"",asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[],
   fopen:{},fseed:false,seeded:false,alertsOpen:false};   // fopen/fseed: sections opened by a tile or chip filter. seeded: the first-time default has been applied. alertsOpen: the folded notices are showing
 
@@ -391,6 +484,11 @@ const PRIVATE_RE=/^(clients|properties|jobs|due|replies)_(\d+)$/;
 const ASKS_NAME="review_asks";
 const CAMPAIGN_NAME="campaign";               // optional: the Oct 2026 check-in campaign record (private, like the client files)
 const CONTACTED_NAME="contacted";             // optional: when each client was last texted or emailed (any way, even outside the Job Book), tools/import_contacted.py
+const HIST_INDEX_NAME="history_index";        // optional: per client last text/email sent and received, and which history_N file holds their messages (tools/import_history.py)
+const HIST_RE=/^history_(\d+)$/;               // the message files themselves: not read at login, one is fetched when a client sheet opens
+const NUDGES_NAME="nudges";                   // optional: clients whose last message got no reply, with a nudge date 3 months on
+const STOPLIST_NAME="stoplist";               // optional: the stop list, matched to clients (hidden like do-not-contact)
+const MY_MOBILE="0432181689";
 const LEADS_NAME="leads";                     // optional: the prospecting list (business contacts), private like the rest
 const MANIFEST_NAME="jobbook_manifest";       // written last by every upload: the list of rows that belong together
 const isLocal=location.hostname==="127.0.0.1"||location.hostname==="localhost";   // the Mac, running the page from the repo folder
@@ -497,6 +595,7 @@ async function passwordLogin(){
 function wipeData(){
   A.gen++; A.starting=false;
   S.ready=false; S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={}; S.asked={}; S.contacted={};
+  S.hidx={}; S.hist={}; S.histP={}; S.nudges={}; S.stop={}; S.nudge={}; PIDIDX=null;
   S.ov={}; S.bookings={}; S.gone={}; S.camp={}; S.dncBack={}; S.stack.length=0; drawSheet();
   ["#s-fresh","#s-over","#s-soon"].forEach(id=>{ const n=$(id); if(n) n.textContent="-"; });
 }
@@ -572,13 +671,21 @@ function start(){
    contents were. An upload writes its file list (jobbook_manifest) LAST, so a half-finished upload, or a stale row
    whose delete failed, is never read as current data. No manifest row (older upload): use every row. */
 async function fetchPrivate(){
-  const r=await SB.from("jobbook_files").select("name,data");
+  /* the message files (history_N, and history_index which starts the same way) are left out of this read: they are big, and a history_N
+     is fetched alone when a client sheet opens. The small history_index comes in on its own just below. */
+  const r=await SB.from("jobbook_files").select("name,data").not("name","like","history_%");
   if(r.error){ if(missingTable(r.error)) return {empty:true}; throw r.error; }
   let rows=(r.data||[]).filter(x=>x&&x.name&&x.data);
   const mf=rows.find(x=>x.name===MANIFEST_NAME);
+  let keep=null;
   if(mf&&mf.data&&Array.isArray(mf.data.names)){
-    const keep=new Set(mf.data.names);
+    keep=new Set(mf.data.names);
     rows=rows.filter(x=>keep.has(x.name));
+  }
+  A.keep=keep;                                          // which rows belong to the current upload, for the history_N fetch later
+  if(rows.length&&(!keep||keep.has(HIST_INDEX_NAME))){  // optional: no index, or any trouble reading it, means no message history, nothing else changes
+    try{ const hi=await SB.from("jobbook_files").select("name,data").eq("name",HIST_INDEX_NAME).maybeSingle();
+      if(!hi.error&&hi.data&&hi.data.data) rows.push(hi.data); }catch(e){}
   }
   return rows.length?{rows}:{empty:true};
 }
@@ -595,12 +702,15 @@ async function loadAll(gen){
   S.sync=sync||{lastSyncedDate:S.settings.seedDataEnds};
   const got=await fetchPrivate();                       // clients, properties, jobs, due, replies, review asks
   if(gen!==A.gen) return;
-  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null, leadsF=null, campF=null, conF=null;
+  const fam={clients:[],properties:[],jobs:[],due:[],replies:[]}; let asks=null, leadsF=null, campF=null, conF=null, hiF=null, nudF=null, stopF=null;
   for(const r of (got.rows||[])){
     if(r.name===ASKS_NAME){ asks=r.data; continue; }
     if(r.name===LEADS_NAME){ leadsF=r.data; continue; }
     if(r.name===CAMPAIGN_NAME){ campF=r.data; continue; }
     if(r.name===CONTACTED_NAME){ conF=r.data; continue; }
+    if(r.name===HIST_INDEX_NAME){ hiF=r.data; continue; }
+    if(r.name===NUDGES_NAME){ nudF=r.data; continue; }
+    if(r.name===STOPLIST_NAME){ stopF=r.data; continue; }
     const m=PRIVATE_RE.exec(r.name); if(m) fam[m[1]].push([+m[2],r.data]);
   }
   if(!fam.clients.length){ renderNoData(); return; }
@@ -609,6 +719,8 @@ async function loadAll(gen){
   S.asked=(asks&&asks.rows)||{};
   S.camp=(campF&&campF.rows&&typeof campF.rows==="object"&&!Array.isArray(campF.rows))?campF.rows:{};
   S.contacted=(conF&&conF.rows&&typeof conF.rows==="object"&&!Array.isArray(conF.rows))?conF.rows:{};
+  const rowsOf=f=>(f&&f.rows&&typeof f.rows==="object"&&!Array.isArray(f.rows))?f.rows:{};
+  S.hidx=rowsOf(hiF); S.nudges=rowsOf(nudF); S.stop=rowsOf(stopF); S.hist={}; S.histP={};
   S.leads=(leadsF&&Array.isArray(leadsF.rows))?leadsF.rows:[];                           // review texts already sent, pulled off his Mac
   for(const k of PRIVATE_BASES) for(const [,d] of fam[k]){ if(!d) continue;
     if(k==="due") S.due=S.due.concat(d.rows||[]);
@@ -620,9 +732,11 @@ async function loadAll(gen){
   for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
     S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
   const mine=STORE.read();
-  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK; S.lead=mine.lead||{}; S.dncBack=mine.dncBack||{};
+  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK; S.lead=mine.lead||{}; S.dncBack=mine.dncBack||{}; S.nudge=mine.nudge||{};
   /* the campaign's do-not-contact people are hidden exactly like a deleted client (off every list), with their reason, unless he brought them back */
   for(const id in S.camp){ const c=S.camp[id]; if(c&&c.x&&S.clients[id]&&!S.gone[id]&&!S.dncBack[id]) S.gone[id]={t:(S.camp[id].e||TODAY),why:c.o||"do not contact"}; }
+  /* the stop list (stoplist.json, matched to clients by tools/import_history.py) is hidden the same way */
+  for(const id in S.stop){ const c=S.stop[id]; if(S.clients[id]&&!S.gone[id]&&!S.dncBack[id]) S.gone[id]={t:(c&&c.d)||TODAY,why:"on your stop list"+(c&&c.r?": "+c.r:"")}; }
   S.ready=true; A.screen="app"; $("#nav").hidden=false; document.body.classList.remove("locked");
   applyHashOnce(); render();
 }
@@ -641,7 +755,7 @@ function applyHashOnce(){
 /* every write goes through here: updates memory first so the screen is never a lie,
    then persists. A failed write shouts instead of failing silently. */
 function persist(){
-  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,dncBack:S.dncBack,lead:S.lead,reviewLink:S.reviewLink,at:new Date().toISOString()});
+  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,dncBack:S.dncBack,nudge:S.nudge,lead:S.lead,reviewLink:S.reviewLink,at:new Date().toISOString()});
   if(!ok) toast("Couldn't save to this device. If you're in a private window, storage is turned off.",true);
   return ok;
 }
@@ -699,6 +813,19 @@ async function localPlan(){
     if(typeof kf!=="object"||Array.isArray(kf)||!kf.rows||typeof kf.rows!=="object") throw plainErr(CONTACTED_NAME+".json doesn't look right. Nothing was uploaded.");
     names.push(CONTACTED_NAME);
   }
+  const hx=await localJson(HIST_INDEX_NAME);                // optional: only there once tools/import_history.py has been run
+  if(hx!=null){
+    if(typeof hx!=="object"||Array.isArray(hx)||!hx.rows||typeof hx.rows!=="object"||!Number.isInteger(hx.shards)||hx.shards<0||hx.shards>500)
+      throw plainErr(HIST_INDEX_NAME+".json doesn't look right. Nothing was uploaded.");
+    names.push(HIST_INDEX_NAME);
+    for(let i=0;i<hx.shards;i++) names.push("history_"+i);
+    for(const nm of [NUDGES_NAME,STOPLIST_NAME]){
+      const f=await localJson(nm);
+      if(f==null) continue;
+      if(typeof f!=="object"||Array.isArray(f)||!f.rows||typeof f.rows!=="object") throw plainErr(nm+".json doesn't look right. Nothing was uploaded.");
+      names.push(nm);
+    }
+  }
   return {names,man};
 }
 async function readLocal(names,onProgress){
@@ -739,7 +866,7 @@ async function uploadFiles(files,onProgress){
   const have=new Set(files.map(f=>f.name));
   const ex=await T("jobbook_files").select("name");
   if(ex.error) throw ex.error;
-  const stale=(ex.data||[]).map(r=>r.name).filter(n=>PRIVATE_RE.test(n)&&!have.has(n));
+  const stale=(ex.data||[]).map(r=>r.name).filter(n=>(PRIVATE_RE.test(n)||HIST_RE.test(n))&&!have.has(n));
   if(stale.length){
     const d=await T("jobbook_files").delete().in("name",stale);
     if(d.error) throw d.error;
@@ -762,7 +889,7 @@ async function keepsOrder(files){
 function uploadPanel(){
   const box=el("div","upbox");
   box.appendChild(el("div","lbl2","Upload from this Mac"));
-  box.appendChild(el("div","hint","Sends the client, job, due list, reply and review files on this Mac to the Job Book database. "
+  box.appendChild(el("div","hint","Sends the client, job, due list, reply, review and message history files on this Mac to the Job Book database. "
     +"Do this after every refresh. Nothing leaves this Mac until you tap it."));
   const st=el("div","st"); if(A.lastUpload) st.textContent=A.lastUpload;
   const acts=el("div","btns");
@@ -1030,7 +1157,7 @@ const reminders=()=>{const out=[];
 /* ---------- render ---------- */
 function render(){
   if(!S.ready) return;
-  DUEIDX=null;
+  DUEIDX=null; PIDIDX=null;
   const L=lines(), b=dueRows(L,false).reduce((a,r)=>{const k=band(r);a[k]=(a[k]||0)+1;return a;},{});
   $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-soon").textContent=b.soon||0;
   document.body.classList.toggle("nostats",S.view!=="due"&&S.view!=="todo");     // the counters show on Due only (the markup stays, render() writes to it)
@@ -1163,21 +1290,43 @@ function actionLink(href,svgp,title,after,enabled){
 function actionBtns(l){
   const c=cOf(l.pid), acts=el("div","acts");
   const num=String(c.p||"").replace(/[^\d+]/g,"");
-  const mk=(href,svgp,title,after,on,pri)=>{
+  const cid=pOf(l.pid).c, wf=warnFor(cid,TODAY);       // texted or emailed under 30 days ago: Text and Email ask first
+  const mk=(href,svgp,title,after,on,pri,guard)=>{
     if(!on){ const b=el("button","iact"); b.innerHTML=ico(svgp); b.title=title;
       b.setAttribute("aria-label",title); b.disabled=true; return b; }
     const a=document.createElement("a");
     a.className="iact"+(pri?" pri":""); a.href=href; a.innerHTML=ico(svgp);
     a.title=title; a.setAttribute("aria-label",title);
-    a.onclick=e=>{ e.stopPropagation(); try{ after(); }catch(err){ reportErr(title,err); } };
+    a.onclick=e=>{ e.stopPropagation();
+      if(guard&&wf){ e.preventDefault(); openSheet(recentSpec(cid,guard,href,after,wf)); return; }   // the real link is on Send anyway
+      try{ after(); }catch(err){ reportErr(title,err); } };
     return a;
   };
   const msg=msgFor(l);
-  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,canText(c)||!c.p?"Text "+c.n:"Landline, can't text",()=>afterSend(l,"text",msg),canText(c),true));   // text first, he texts more than rings
+  acts.appendChild(mk(smsHref(c.p,msg),SVG.msg,canText(c)||!c.p?"Text "+c.n:"Landline, can't text",()=>afterSend(l,"text",msg),canText(c),true,"text"));   // text first, he texts more than rings
   acts.appendChild(mk("tel:"+num,SVG.phone,"Ring "+c.n,()=>afterRing(l),!!c.p));
   acts.appendChild(mk(mailHref(c.e,EMAIL_SUBJECT,emailFor(l)),SVG.mail,"Email "+c.n,
-    ()=>afterSend(l,"email",emailFor(l)),!!c.e));
+    ()=>afterSend(l,"email",emailFor(l)),!!c.e,false,"email"));
   return acts;
+}
+/* He texted or emailed this client under 30 days ago (RECENT_DAYS): say so before the Messages or Mail link goes. Send anyway is the real
+   sms:/mailto: link (a direct tap, like the buttons it stands in for), so it still opens Messages or Mail with the words in it. */
+function recentSpec(cid,kind,href,after,wf){
+  const c=S.clients[cid]||{n:"them"};
+  return {title:"Contacted recently",sub:c.n,build:b=>{
+    b.appendChild(el("div","banner warn",wf.text+". Last contacted: "+lastText(cid,TODAY)+"."));
+    b.appendChild(el("div","note","Do you still want to "+(kind==="email"?"email":"text")+" them? Their messages are on their page."));
+    const row=el("div","btns");
+    const go=document.createElement("a");
+    go.className="btn pri"; go.href=href;
+    go.innerHTML=ico(kind==="email"?SVG.mail:SVG.msg)+"<span>Send anyway</span>";
+    go.onclick=()=>{ try{ after(); }catch(err){ reportErr("Send anyway",err); } setTimeout(()=>closeSheet(true),400); };   // no preventDefault, the link has to fire
+    row.appendChild(go);
+    row.appendChild(btn("Don't send",null,"",()=>closeSheet()));
+    b.appendChild(row);
+    const pids=clientPids(cid);
+    if(pids.length) b.appendChild(btn("See their messages",SVG.note,"",()=>{ closeSheet(true); if(pids.length===1) openProp(pids[0]); else openClient(cid); }));
+  }};
 }
 /* The link has already handed off to the Phone app. Come back to this. */
 function afterRing(l){
@@ -1232,6 +1381,10 @@ function rowFor(l,extra){
   if(l.lastDone) bits.push("last "+nice(l.lastDone));
   if(l.manual) bits.push("date set by you");
   tx.appendChild(el("div","mt",bits.join(" · ")));
+  const lcid=l.cid||pOf(l.pid).c, lt=lastText(lcid,TODAY);        // from history_index, the contacted file and what went from this page
+  if(lt){ const m2=el("div","mt lcl"), wf=warnFor(lcid,TODAY);
+    if(wf) m2.appendChild(el("span","pill soon lcw",wf.text));
+    m2.appendChild(document.createTextNode("Last contacted: "+lt)); tx.appendChild(m2); }
   main.appendChild(tx);
   main.appendChild(el("span","pill "+bd, extra||(l.oneoff?nice(l.lastDone):ago(l))));
   hit.appendChild(main);
@@ -1296,7 +1449,12 @@ function viewDue(m,L){
     c.onclick=()=>{setBand(k);render();}; chips.appendChild(c); });
   const gc=el("button","chip","Lapsed clients too"); gc.setAttribute("aria-pressed",String(S.grp==="all"));
   gc.onclick=()=>{S.grp=S.grp==="all"?"active":"all";render();}; chips.appendChild(gc);
+  const touch=isTouchOnly();
+  if(!touch){ const wr=el("button","chip","Work reminders"); wr.setAttribute("aria-pressed",String(S.rmOpen));
+    wr.onclick=()=>{ S.rmOpen=!S.rmOpen; render(); }; chips.appendChild(wr); }
   m.appendChild(chips);
+  if(touch) m.appendChild(el("div","hint","Work reminders run on the Mac."));
+  else if(S.rmOpen) m.appendChild(remindersPanel());
   const rows=dueRows(L,S.grp==="all");
   const one=S.band?[]:oneOffRows(L);
   const secs=[];
@@ -1314,6 +1472,34 @@ function viewDue(m,L){
   const any=secs.length>0;
   secs.forEach(([k,title,g])=>foldSection(m,k,title,g));
   if(!any){ const e=el("div","empty"); e.innerHTML="<h3>Nothing waiting</h3><p>Nobody to chase right now.</p>"; m.appendChild(e); }
+}
+/* ---------- Work reminders picker (the Mac only) ----------
+   Pick a list, tap Open work reminders, and this tab goes to the Work reminders page on this Mac (http://127.0.0.1:8952/, same tab) with the
+   filter in the address: mode=due | next14 | between | recent | new, and for between either years=2019-2022 or from=YYYY-MM-DD&to=YYYY-MM-DD.
+   Filters only, no names or numbers. That page builds the list from the files on the Mac. A phone or iPad with no mouse gets a one-line note
+   instead, because the page does not exist there. */
+const isTouchOnly=()=>{ try{ return !window.matchMedia("(any-pointer: fine)").matches; }catch(e){ return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent||""); } };
+const RM_MODES=[["due","Due now"],["next14","Next 14 days"],["years","Old clients between years"],["dates","Old clients between dates"],
+  ["new","New clients (last 90 days)"],["recent","Recent (last 60 days)"]];
+function remindersPanel(){
+  const box=el("div","rmpanel");
+  box.appendChild(el("div","lbl2","Work reminders"));
+  box.appendChild(el("div","hint","Opens your Work reminders page on this Mac with the list you pick."));
+  const seg=el("div","ivgrid");
+  RM_MODES.forEach(([k,lab])=>{ const x=el("button","iv",lab); x.setAttribute("aria-pressed",String(S.rm.mode===k));
+    x.onclick=()=>{ S.rm.mode=k; render(); }; seg.appendChild(x); });
+  box.appendChild(seg);
+  const go=document.createElement("a"); go.className="btn pri"; go.innerHTML=ico(SVG.bell)+"<span>Open work reminders</span>";
+  const sync=()=>{ go.href=remindersUrl(S.rm); };
+  const field=(k,type,ph)=>{ const i=el("input","inp"); i.type=type; i.value=S.rm[k]; i.setAttribute("aria-label",ph);
+    if(type==="number"){ i.placeholder=ph; i.min="1990"; i.max="2100"; i.setAttribute("inputmode","numeric"); }
+    i.oninput=()=>{ S.rm[k]=i.value; sync(); }; return i; };
+  if(S.rm.mode==="years"){ const f=el("div","rmfields"); f.appendChild(field("y1","number","From year")); f.appendChild(field("y2","number","To year")); box.appendChild(f); }
+  if(S.rm.mode==="dates"){ const f=el("div","rmfields"); f.appendChild(field("d1","date","From date")); f.appendChild(field("d2","date","To date")); box.appendChild(f); }
+  sync();
+  go.onclick=e=>{ const bad=remindersProblem(S.rm); if(bad){ e.preventDefault(); toast(bad,true); } };   // otherwise a plain link: same tab
+  const row=el("div","btns"); row.appendChild(go); box.appendChild(row);
+  return box;
 }
 /* a section that opens and shuts: name and count on the bar, the people underneath */
 function foldSection(host,key,title,g){
@@ -1341,7 +1527,7 @@ function foldSection(host,key,title,g){
 function batchEligible(r){
   const c=cOf(r.pid); if(!canText(c)) return false;
   const cut=Date.now()-30*DAY, cid=pOf(r.pid).c;
-  const cd=S.contacted[cid]; if(cd&&parse(cd)>cut) return false;   // texted or emailed from anywhere (Messages, Mail, the dashboard), not just from this page
+  const lo=lastOutOf(cid); if(lo&&parse(dayOf(lo.t))>cut) return false;   // texted or emailed from anywhere (the history file, contacted.json, this page), not just from this page
   // any address of this client counts, not just this row's, since one client can now have several rows
   const mine=new Set(r.sites); for(const pid in S.props) if(S.props[pid].c===cid) mine.add(pid);
   return ![...mine].some(pid=>((S.ov[pid]||{}).log||[]).some(e=>(e.ch==="text"||e.ch==="email")&&e.kind!=="review"&&Date.parse(e.t)>cut));
@@ -1469,6 +1655,8 @@ function openMsg(l,channel,firedWith,preset){
     return;
   }
   openSheet({title:(preset&&preset.title)||((channel==="email"?"Email ":"Text ")+c.n), sub:to, build:b=>{
+    const wf=(preset&&preset.kind==="review")?null:warnFor(p.c,TODAY);
+    if(wf) b.appendChild(el("div","banner warn",wf.text+". Last contacted: "+lastText(p.c,TODAY)+"."));
     b.appendChild(el("div","lbl","Message"));
     const ta=el("textarea","msgbox"); ta.value=preset?preset.msg:(channel==="email"?emailFor(l):msgFor(l)); b.appendChild(ta);
     let subj=null;
@@ -1628,7 +1816,7 @@ function deleteSpec(id){
 }
 function restoreClient(id){
   const c=S.clients[id]||{n:"them"}, was=S.gone[id], wasBack=S.dncBack[id];
-  delete S.gone[id]; if(S.camp[id]&&S.camp[id].x) S.dncBack[id]=true; closeSheet(true);
+  delete S.gone[id]; if((S.camp[id]&&S.camp[id].x)||S.stop[id]) S.dncBack[id]=true; closeSheet(true);
   if(persist()){ render(); toast(c.n+" is back."); } else { S.gone[id]=was; if(wasBack) S.dncBack[id]=wasBack; else delete S.dncBack[id]; render(); }
 }
 function deleteBtn(b,id){
@@ -1824,6 +2012,7 @@ function openProp(pid,focusSvc){
     const ra=lastReviewAsk(pid);
     if(ra) kv(b,"Review",when(ra.t)+" · asked for one");
     const cp=S.camp[p.c]; if(cp) kv(b,"Check-in campaign",campLine(cp));
+    contactKv(b,p.c);
 
     b.appendChild(el("div","lbl","Latest job and repeat"));
     const vs=visits(lines().filter(l=>l.pid===pid)).sort((a,z)=>(z.lastDone||"").localeCompare(a.lastDone||""));
@@ -1837,6 +2026,8 @@ function openProp(pid,focusSvc){
       b.appendChild(btn("Show other repeats ("+(vs.length-first.length)+" more)",null,"",()=>{ spec.showOld=true; drawSheet(); }));
 
     contactHistory(b,p.c,pid);
+    messagesBlock(b,p.c);
+    nudgeBlock(b,p.c);
 
     b.appendChild(el("div","lbl","Job history"));
     const js2=(S.jobs[pid]||[]);
@@ -1864,7 +2055,7 @@ function openProp(pid,focusSvc){
 /* one timeline: what you sent (from here) and what they sent you (off your Mac) */
 function contactHistory(b,clientId,pid){
     const log=pid?((S.ov[pid]||{}).log||[]):[];
-    const inbound=(S.replies[clientId]||[]).map(r=>({inbound:true,t:r.t,ch:r.ch,msg:r.msg,subject:r.subject}));
+    const inbound=S.hidx[clientId]?[]:(S.replies[clientId]||[]).map(r=>({inbound:true,t:r.t,ch:r.ch,msg:r.msg,subject:r.subject}));   // with a history file their messages show under Messages
     const timeline=log.map(e=>Object.assign({},e)).concat(inbound)
       .sort((a,b)=>String(b.t||"").localeCompare(String(a.t||"")));
     b.appendChild(el("div","lbl","Contact history"));
@@ -1899,6 +2090,96 @@ function contactHistory(b,clientId,pid){
       b.appendChild(h);
     });
     if(timeline.length>16) b.appendChild(el("div","note",(timeline.length-16)+" older ones not shown."));
+}
+/* ---------- messages timeline and nudges (client sheet) ----------
+   history_index (small) came in at login. A client's messages live in one history_N row of jobbook_files, fetched the first time a sheet
+   for someone in that file opens and kept for the session. No history uploaded: none of this shows and nothing errors. */
+function contactKv(b,cid){
+  const lt=lastText(cid,TODAY);
+  if(lt){ kv(b,"Last contacted",lt); const wf=warnFor(cid,TODAY);
+    if(wf){ const dd=b.lastChild.querySelector("dd"); dd.appendChild(document.createTextNode(" ")); dd.appendChild(el("span","pill soon lcw",wf.text)); } }
+  const nd=nudgeOf(cid);
+  if(nd) kv(b,"Nudge",nd.off?"Not nudging this one":"No reply, nudge on "+nice(nd.due)+(nd.custom?" (you set it)":""));
+}
+async function loadHistory(cid){
+  if(S.hist[cid]) return S.hist[cid];
+  const ix=S.hidx[cid]; if(!ix||!Number.isInteger(ix.s)) return [];
+  const name="history_"+ix.s, gen=A.gen;
+  if(A.keep&&!A.keep.has(name)) return [];                  // not part of the upload the page is using
+  if(!S.histP[name]) S.histP[name]=SB.from("jobbook_files").select("data").eq("name",name).maybeSingle().then(r=>{
+      if(r.error) throw r.error;
+      const rows=r.data&&r.data.data&&r.data.data.rows;
+      if(!rows||typeof rows!=="object") throw new Error("that history file is empty");
+      return rows; }).catch(e=>{ delete S.histP[name]; throw e; });
+  const rows=await S.histP[name];
+  if(gen!==A.gen) return [];                                // logged out while it loaded: keep nothing
+  for(const k in rows) S.hist[k]=rows[k];
+  return S.hist[cid]||[];
+}
+function msgCard(e){
+  const inb=e.dir==="in", h=el("div","hist"+(inb?" inrow":"")), hd=el("div","hd");
+  const clock=clockNice(e.t), tags=[];
+  let who;
+  if(e.ch==="legacy"){
+    const how=e.how==="email"?"email":e.how==="text"?"text":"";
+    who=(inb?"They replied":"You contacted them")+(how?" by "+how:"")+" (older record"+(e.src?", "+e.src:"")+")";
+  } else if(inb) who="They "+(e.ch==="email"?"emailed":"texted")+" you, "+viaWords(e.via,"in");
+  else who=(e.ch==="email"?"Email":"Text")+" "+viaWords(e.via,"out");
+  if(!inb){ if(e.rv) tags.push("review ask"); tags.push(e.replied?"they replied":"no reply"); }
+  hd.innerHTML='<span class="mi">'+ico(e.ch==="email"?SVG.mail:SVG.msg)+'</span>';
+  hd.appendChild(document.createTextNode(dayNice(e.t,TODAY)+(clock?", "+clock:"")+" · "+who+(tags.length?" · "+tags.join(" · "):"")));
+  h.appendChild(hd);
+  if(e.subj) h.appendChild(el("div","subj",e.subj));
+  if(e.txt) h.appendChild(el("div","quote",e.txt));
+  if(e.pt) h.appendChild(el("div","hint","Only the first lines of this one were kept."));
+  return h;
+}
+function messagesBlock(b,cid){
+  if(!S.hidx[cid]) return;                                  // no history for this client, or no history uploaded: nothing new on screen
+  b.appendChild(el("div","lbl","Messages"));
+  const host=el("div"); b.appendChild(host);
+  let all=false;
+  const draw=es=>{
+    host.innerHTML="";
+    const v=threadView(es||[]);
+    if(!v.length){ host.appendChild(el("div","note","No texts or emails on file for this one.")); return; }
+    host.appendChild(el("div","note","Every text and email between you and them that Messages and Mail have, newest first. Each one you sent says whether they replied."));
+    (all?v:v.slice(0,25)).forEach(e=>host.appendChild(msgCard(e)));
+    if(!all&&v.length>25) host.appendChild(btn("Show all "+v.length,null,"",()=>{ all=true; draw(es); }));
+  };
+  if(S.hist[cid]){ draw(S.hist[cid]); return; }
+  host.appendChild(el("div","note","Loading their messages…"));
+  loadHistory(cid).then(es=>{ if(host.isConnected) draw(es); },
+    ()=>{ if(host.isConnected){ host.innerHTML=""; host.appendChild(el("div","note","Couldn't load their messages just now. Close this and open it again.")); } });
+}
+/* The nudge date is per client and lives on this device with his other changes (S.nudge, saved by persist()). */
+async function saveNudge(cid,val){                         // {on:"yyyy-mm-dd"}, {off:1}, or null for the default
+  const before=S.nudge[cid];
+  if(val) S.nudge[cid]=val; else delete S.nudge[cid];
+  if(persist()){ render(); drawSheet(); return true; }
+  if(before) S.nudge[cid]=before; else delete S.nudge[cid];
+  render(); return false;
+}
+function nudgeBlock(b,cid){
+  const nd=nudgeOf(cid); if(!nd) return;
+  b.appendChild(el("div","lbl","Nudge again on"));
+  if(nd.off){
+    b.appendChild(el("div","note","You've turned the nudge off for this one."));
+    b.appendChild(btn("Nudge them again",SVG.bell,"",()=>saveNudge(cid,null)));
+    return;
+  }
+  b.appendChild(el("div","note","Your last message to them went on "+nice(nd.lo)+" and they haven't replied. They come up on the Recheck tab from the date below. "
+    +"It starts at "+NUDGE_MONTHS+" months after your last message, change it for this one if you like."));
+  const dr=el("div","daterow"), dp=el("input","inp"); dp.type="date"; dp.value=nd.due;
+  dr.appendChild(dp);
+  dr.appendChild(btn("Save date",SVG.cal,"pri",async()=>{
+    if(!dp.value){ toast("Pick a date first.",true); return; }
+    if(await saveNudge(cid,{on:dp.value})) toast("Nudge set for "+nice(dp.value)+"."); }));
+  b.appendChild(dr);
+  const row=el("div","btns");
+  if(nd.custom) row.appendChild(btn(nd.def?"Back to "+nice(nd.def):"Clear it",null,"",()=>saveNudge(cid,null)));
+  row.appendChild(btn("Don't nudge them",SVG.x,"",async()=>{ if(await saveNudge(cid,{off:1})) toast("Won't nudge them."); }));
+  b.appendChild(row);
 }
 /* Deleting an address (a property manager stops looking after it) hides that address only, in S.gone under
    its property id. Same rules as deleting a client: this device only, survives a refresh, Xero is untouched. */
@@ -1938,6 +2219,7 @@ function openClient(id){
     const sb=document.querySelector(".shhead .sb"); if(sb) sb.textContent=spec.sub;
     kv(b,"Phone",c.p||"-"); kv(b,"Email",c.e||"-");
     kv(b,"Address",(c.a||[]).filter(Boolean).join(", ")||"-");
+    contactKv(b,id);
     const acts=el("div","btns");
     const seed=props.length?myLine(props[0]):{pid:null};
     acts.appendChild(btn("Ring",SVG.phone,"",()=>ringUp(seed),!!c.p&&!!props.length));
@@ -1976,6 +2258,8 @@ function openClient(id){
       });
     }
     contactHistory(b,id,null);
+    messagesBlock(b,id);
+    nudgeBlock(b,id);
     deleteBtn(b,id);
   }};
   openSheet(spec);
@@ -2133,8 +2417,49 @@ function campLine(cp){
 const RECHECK_SUBJECT="Checking in";
 const recheckText=pid=>`Hey ${firstName(cOf(pid).n)}, Mitch from Lighthouse Pest here. Just checking in again to see if you'd like anything done, pest or termite related. Cheers, Mitch`;
 const recheckEmail=pid=>`Hi ${firstName(cOf(pid).n)},\n\nJust checking in again to see if you'd like anything done, pest or termite related.\n\nCheers, Mitch`;
+/* ---- nudges: they didn't reply to the last thing he sent, so they come round again (default 3 months after it, his date wins) ----
+   nudgeOf() works the date out. This list is everyone whose date has come (or is coming), beside the campaign recheck. The wording is a
+   PLACEHOLDER like the recheck wording: it opens in the usual sheet to read and edit, and nothing goes until he taps Open in Messages or Mail.
+   An old chat nobody answered (last message more than NUDGE_LIST_MONTHS months back) is left off the list; its sheet still shows the date. */
+const NUDGE_SUBJECT="Following up";
+const nudgeText=pid=>`Hey ${firstName(cOf(pid).n,cOf(pid))}, Mitch from Lighthouse Pest here. Just following up on my last message in case it got buried. No pressure at all, let me know if you'd like anything done. Cheers, Mitch`;
+const nudgeEmail=pid=>`Hi ${firstName(cOf(pid).n,cOf(pid))},\n\nJust following up on my last message in case it got buried. No pressure at all, let me know if you'd like anything done.\n\nCheers, Mitch`;
+function nudgeRows(){
+  const ids=new Set(Object.keys(S.nudges));
+  for(const id in S.nudge) if(S.nudge[id]&&S.nudge[id].on) ids.add(id);
+  const out=[];
+  for(const id of ids){
+    const c=S.clients[id]; if(!c||S.gone[id]) continue;
+    const nd=nudgeOf(id); if(!nd||nd.off) continue;
+    const cp=S.camp[id]; if(cp&&!cp.x&&cp.rc) continue;               // the campaign recheck list already carries them
+    if(!nd.custom&&nd.lo&&calMonths(nd.lo,NUDGE_LIST_MONTHS)<TODAY) continue;
+    const pids=clientPids(id); if(!pids.length) continue;
+    out.push({id,c,pid:pids[0],pids,nd});
+  }
+  return out.sort((a,b)=>a.nd.due.localeCompare(b.nd.due)||a.c.n.localeCompare(b.c.n));
+}
+function nudgeRow(r){
+  const p=pOf(r.pid), w=el("div","row rv "+(r.nd.due<=TODAY?"soon":"ok")), hit=el("button","rowhit");
+  hit.appendChild(el("div","stripe"));
+  const main=el("div","rowmain"), tx=el("div","rowtext");
+  tx.appendChild(el("div","nm",r.c.n));
+  tx.appendChild(el("div","pl",p.l||""));
+  const mt=el("div","mt","No reply to your "+(r.nd.ch==="email"?"email":r.nd.ch==="text"?"text":"message")+" on "+nice(r.nd.lo)
+    +" \u00b7 nudge "+nice(r.nd.due)+(r.nd.custom?" (you set it)":""));
+  mt.title=mt.textContent; tx.appendChild(mt);
+  main.appendChild(tx); hit.appendChild(main);
+  hit.onclick=()=>{ if(r.pids.length===1) openProp(r.pid); else openClient(r.id); };
+  w.appendChild(hit);
+  const acts=el("div","acts"), L=()=>myLine(r.pid);
+  acts.appendChild(btn("Text",SVG.msg,"pri",()=>openMsg(L(),"text",null,{msg:nudgeText(r.pid),kind:"nudge",title:"Nudge "+r.c.n}),canText(r.c)));
+  if(r.c.e) acts.appendChild(btn("Email",SVG.mail,"",()=>openMsg(L(),"email",null,{msg:nudgeEmail(r.pid),subject:NUDGE_SUBJECT,kind:"nudge",title:"Nudge "+r.c.n})));
+  acts.appendChild(btn("Later",SVG.cal,"",async()=>{ const d=calMonths(TODAY,NUDGE_MONTHS); if(await saveNudge(r.id,{on:d})) toast("Back on "+nice(d)+"."); }));
+  acts.appendChild(btn("Stop",SVG.x,"",async()=>{ if(await saveNudge(r.id,{off:1})) toast("Won't nudge "+r.c.n+"."); }));
+  w.appendChild(acts);
+  return w;
+}
 function viewRecheck(m){
-  const h=el("div","sechead"); h.appendChild(el("h2",null,"Recheck"));
+  const h=el("div","sechead"); h.appendChild(el("h2",null,"Recheck and nudge"));
   m.appendChild(h);
   const all=[];
   for(const id in S.camp){
@@ -2180,6 +2505,15 @@ function viewRecheck(m){
     const list=q?all.filter(r=>(r.c.n+" "+(pOf(r.pid).l||"")+" "+(r.c.a||[]).join(" ")).toLowerCase().includes(q)):all;
     const due=list.filter(r=>!r.skip&&r.cp.rc<=TODAY), later=list.filter(r=>!r.skip&&r.cp.rc>TODAY), skipped=list.filter(r=>r.skip);
     const cap=60;
+    const nr=nudgeRows();
+    if(nr.length){
+      const nq=q?nr.filter(r=>(r.c.n+" "+(pOf(r.pid).l||"")).toLowerCase().includes(q)):nr;
+      const nDue=nq.filter(r=>r.nd.due<=TODAY), nLater=nq.filter(r=>r.nd.due>TODAY);
+      section(host,"Didn't reply, nudge again",nDue.length,nDue.slice(0,cap).map(nudgeRow),
+        "You sent the last message and they haven't answered. Nudge date is 3 months on unless you changed it.",["person","people"]);
+      if(nDue.length>cap) host.appendChild(el("div","note",`Showing the first ${cap} of ${nDue.length}. Search to find anyone else.`));
+      if(nLater.length) section(host,"Nudge coming up",nLater.length,nLater.slice(0,q?cap:15).map(nudgeRow),null,["person","people"]);
+    }
     section(host,"Due now",due.length,due.slice(0,cap).map(row),"Nobody is due yet.",["person","people"]);
     if(due.length>cap) host.appendChild(el("div","note",`Showing the first ${cap} of ${due.length}. Search to find anyone else.`));
     section(host,"Coming up",later.length,later.slice(0,q?cap:20).map(row),null,["person","people"]);
@@ -2372,7 +2706,7 @@ function viewSync(m){
   const imp=el("input"); imp.type="file"; imp.accept="application/json"; imp.hidden=true;
   imp.onchange=async()=>{ const f=imp.files&&imp.files[0]; if(!f) return;
     try{ const o=JSON.parse(await f.text());
-      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{}; S.lead=o.lead||{};
+      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{}; S.lead=o.lead||{}; S.nudge=o.nudge||{};
       S.reviewLink=o.reviewLink||S.reviewLink; persist(); render();
       toast("Brought your changes across."); }
     catch(e){ toast("That file didn't read properly.",true); } };

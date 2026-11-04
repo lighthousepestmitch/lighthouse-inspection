@@ -23,3 +23,9 @@ jobbook-data/campaign.json
 
 # when each client was last texted or emailed, read off the Mac (customer ids and dates). Private like the rest, uploaded the same way.
 jobbook-data/contacted.json
+
+# message history read off the Mac (every text and email sent or received, by client id), the nudge dates and the stop list.
+# Private like the rest, uploaded the same way. Written by tools/import_history.py.
+jobbook-data/history_*.json
+jobbook-data/nudges.json
+jobbook-data/stoplist.json
