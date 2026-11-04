@@ -15,7 +15,7 @@
    and reloads with it switched off on that device. ?nosw=0 switches it back on. More in tools/offline-notes.md. */
 "use strict";
 
-const VERSION = "2026-11-04a";
+const VERSION = "2026-11-04b";
 const APP = "lpc-app-" + VERSION;
 const THIRD = "lpc-3p-v1";
 const WAIT_MS = 4000;
@@ -28,7 +28,8 @@ const PAGES = ["home.html", "index.html", "calendar.html", "records.html"];
 const CORE = PAGES.concat(["lpc-config.js", "lpc-clients.js", "lpc-sw-banner.js"]);
 // Saved on a best-effort basis: a failure here never stops the install, and they are saved again on the next visit with signal.
 // (The three jobbook-data files are the ones Service Records loads. The private Job Book data is never served by this site.)
-const EXTRA = ["home.webmanifest", "jobbook-data/settings.json", "jobbook-data/chemicals.json", "jobbook-data/services.json"];
+// start.html is the "How to use these tools" page linked from Home (saved best-effort, and opened network first like the four pages, see the fetch handler).
+const EXTRA = ["home.webmanifest", "start.html", "jobbook-data/settings.json", "jobbook-data/chemicals.json", "jobbook-data/services.json"];
 const OWN = CORE.concat(EXTRA);
 const IMAGES = ["logo/lpc-badge.png", "logo/logo-horizontal.svg", "logo/logo-stacked.svg", "logo/icon-32.png",
   "logo/icon-home-180.png", "logo/icon-calendar-180.png", "logo/icon-records-180.png", "logo/icon-capture-180.png"];
@@ -89,7 +90,7 @@ self.addEventListener("fetch", function (e) {
   const key = new URL(rel, BASE).href;                                // no query string
 
   if (req.mode === "navigate") {
-    if (PAGES.indexOf(rel) < 0) return;                               // Job Book, proposals, guides/, sds/ and the rest: untouched
+    if (PAGES.indexOf(rel) < 0 && rel !== "start.html") return;       // Job Book, proposals, guides/, sds/ and the rest: untouched
     if (url.searchParams.get("nosw") === "1") { e.waitUntil(switchOff()); return; }   // kill switch: straight to the network
     e.respondWith(netFirst(e, req, key, true));
   } else if (IMAGES.indexOf(rel) >= 0) {
