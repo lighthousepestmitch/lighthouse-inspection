@@ -20,7 +20,7 @@ printf '{"email": "%s"}\n' "$EMAIL" > "$HOME/.lpc-inbox.json"
 chmod 600 "$HOME/.lpc-inbox.json"
 
 echo "First pull (the last 7 days of jobs sent in)..."
-echo "If a box asks to let Python or Terminal into your Desktop folder, click Allow."
+echo "If a box asks to let Python or Terminal into your Desktop folder, click Allow. (The jobs now go in ~/Inspection Inbox, outside the Desktop, so you should not see this.)"
 /usr/bin/python3 "$HERE/pull_inbox.py" --verbose
 
 mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
@@ -38,5 +38,5 @@ EOF
 launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null || true
 launchctl bootstrap "gui/$(id -u)" "$PLIST"
 echo
-echo "Done. New jobs will appear in ~/Desktop/Inspection Inbox about 5 minutes after they are sent."
-open "$HOME/Desktop/Inspection Inbox" 2>/dev/null || true
+echo "Done. New jobs will appear in ~/Inspection Inbox about 5 minutes after they are sent."
+open "$HOME/Inspection Inbox" 2>/dev/null || true

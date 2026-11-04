@@ -7,7 +7,7 @@ What it does, each time it runs:
   1. Signs in to the office database as Mitch (same login as the Job Calendar).
   2. Looks for reports sent in over the last 7 days that it hasn't saved yet (or that were sent again with changes).
   3. For each one, downloads the photos and writes
-        ~/Desktop/Inspection Inbox/<ADDRESS> - <date> - <who sent it>/inspection_<address>_<date>.json
+        ~/Inspection Inbox/<ADDRESS> - <date> - <who sent it>/inspection_<address>_<date>.json
      in the same packet format as Finish & Export, so the Mira recipe works on it unchanged.
      The date is the Sydney date the job was sent from the field.
   4. Shows a Mac notification so you know it landed.
@@ -59,7 +59,7 @@ except Exception:  # no time zone data: fall back to the Mac's own clock zone (s
 ROOT = pathlib.Path(os.environ.get("LPC_INBOX_ROOT") or pathlib.Path.home())
 CONFIG = ROOT / ".lpc-inbox.json"
 STATE = pathlib.Path(os.environ.get("LPC_INBOX_STATE") or ROOT / ".lpc-inbox-state.json")
-INBOX = pathlib.Path(os.environ.get("LPC_INBOX_DIR") or ROOT / "Desktop" / "Inspection Inbox")
+INBOX = pathlib.Path(os.environ.get("LPC_INBOX_DIR") or ROOT / "Inspection Inbox")
 LOG = pathlib.Path(os.environ.get("LPC_INBOX_LOG") or ROOT / "Library" / "Logs" / "lpc-inbox.log")
 CFG_JS = pathlib.Path(__file__).resolve().parent.parent / "lpc-config.js"
 BUCKET = "inspection-photos"
@@ -649,7 +649,7 @@ def main():
     ap.add_argument("--days", type=int, default=7)
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--dry-run", action="store_true", help="say what would happen, write nothing")
-    ap.add_argument("--inbox", help="folder to save jobs in (default ~/Desktop/Inspection Inbox)")
+    ap.add_argument("--inbox", help="folder to save jobs in (default ~/Inspection Inbox)")
     ap.add_argument("--state", help="state file (default ~/.lpc-inbox-state.json)")
     ap.add_argument("--log", help="log file (default ~/Library/Logs/lpc-inbox.log)")
     ap.add_argument("--no-notify", action="store_true", help="log notifications instead of showing them")
