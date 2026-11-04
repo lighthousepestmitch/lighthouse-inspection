@@ -158,7 +158,8 @@ for a in CORE + LOGOS:
 refs = set(re.findall(r'(?:href|src)="([^"#]+)"', page))
 local = {r for r in refs if not r.startswith(("http:", "https:", "data:"))}
 listed = set(CORE) | set(LOGOS)
-missing = sorted(r for r in local if r not in listed)
+nav = set(re.findall(r'<a\s[^>]*href="([^"#]+)"', page))   # links people tap (like the logo back to Home) are not files to save offline
+missing = sorted(r for r in local if r not in listed and r not in nav)
 ok(not missing, "every local asset index.html uses is listed in sw.js %s" % missing)
 ok(not [r for r in local if not exists(r)], "every local asset index.html uses exists")
 mani = json.loads(read("manifest.webmanifest"))
