@@ -487,7 +487,7 @@
 "use strict";
 
 // Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
-const BUILD="2026-11-05a";
+const BUILD="2026-11-05b";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -2060,7 +2060,7 @@ async function openJobs(){
     <div class="fscroll"><div id="syncbox"></div><div class="flab listhead"><span>On this phone</span><button class="selbtn" type="button" data-selmode="local"${list.length?"":" hidden"}>Select</button></div><div class="joblist" id="joblist"></div></div>
     <div class="selbar" id="selbar" hidden><div class="seltop"><b id="selcount"></b><button class="btn ghost" type="button" id="selall">Select all shown</button></div><div class="delwarn" id="selwarn" hidden></div><div class="selbtns"><button class="btn ghost" type="button" id="selcancel">Cancel</button><button class="btn primary" type="button" id="seldel">Delete selected</button></div></div>
     <div class="acts" id="jacts"><button class="btn ghost" id="mCancel">Close</button><button class="btn ghost" id="mImport">Import packet</button><button class="btn primary" id="mNewJob">Start new job</button></div>
-    <div class="buildstamp">Build ${escv(BUILD)}</div>`;
+    <div class="buildstamp"><a href="recover.html" style="color:inherit;font-weight:700">Missing a report? Find it</a><br>Build ${escv(BUILD)}</div>`;
   sheet.classList.add("tall");
   modal.classList.add("show");
   renderLocalJobs();drawJobNote();

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en-AU"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0E4F54">
+<title>Find a lost report</title>
+<style>
+:root{--paper:#F6F7F5;--raised:#fff;--edge:#DCE1DD;--ink:#14201E;--muted:#4B5B57;--timber:#0E4F54;--soft:#DDEBEC;--ok:#E2EFE9;--okc:#276B59;--warn:#f7e7d6;--warnc:#B4551C}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:18px/1.45 "Public Sans",-apple-system,Arial,sans-serif;padding:env(safe-area-inset-top) 0 0}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 60px}h1{font:600 1.9rem/1.1 Georgia,serif;margin:8px 0 4px}
+.lead{color:var(--muted);margin:0 0 12px}.card{background:var(--raised);border:1px solid var(--edge);border-radius:15px;box-shadow:0 1px 2px rgba(20,32,30,.06);padding:14px 16px;margin:12px 0}
+.t{font-weight:700;font-size:1.15rem}.m{color:var(--muted);font-size:.95rem;margin-top:2px}.tag{display:inline-block;border-radius:99px;padding:1px 10px;font-size:.8rem;font-weight:700;margin:6px 6px 0 0;background:var(--soft);color:var(--timber)}
+.tag.warn{background:var(--warn);color:var(--warnc)}.tag.ok{background:var(--ok);color:var(--okc)}
+button,a.btn{font:inherit;font-weight:700;border-radius:12px;border:1px solid var(--timber);background:var(--timber);color:#fff;padding:12px 14px;min-height:46px;cursor:pointer;text-decoration:none;display:inline-block;margin:8px 8px 0 0}
+button.ghost,a.btn.ghost{background:#fff;color:var(--timber)}.msg{font-weight:700;margin-top:8px}.msg.err{color:var(--warnc)}.msg.good{color:var(--okc)}
+pre{white-space:pre-wrap;background:#fff;border:1px solid var(--edge);border-radius:12px;padding:10px;font-size:.8rem;max-height:240px;overflow:auto}
+</style></head><body><div class="wrap">
+<h1>Find a lost report</h1>
+<p class="lead">This looks straight at what is saved on <b>this device</b> in this app, even if Capture is not showing it. It never changes or deletes anything until you tap a button. Reports started in a different icon or in Safari are kept separately, so check there too.</p>
+<div id="app"><p class="lead">Looking...</p></div>
+<div class="card"><div class="t">Send Claude a list</div><div class="m">Copies a plain list of what is saved here (addresses, sizes, photo counts) so Claude can see what exists. No photos.</div>
+<button class="ghost" id="diag">Copy the list</button><div class="msg" id="dmsg"></div></div>
+<p class="lead"><a href="home.html">Back to Home</a></p>
+</div>
+<script>
+// Reads Capture's IndexedDB ("lpc_insp", store "kv": "jobs" = the Jobs list, "job::<id>" = each report with its photos, "activeId" = the open one).
+var DBN="lpc_insp";
+function openDb(){return new Promise(function(res,rej){var r=indexedDB.open(DBN);var made=false;
+ r.onupgradeneeded=function(){made=true;r.transaction.abort()};   // never create or change anything: if it does not exist there is nothing to find
+ r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error||new Error(made?"Nothing saved here":"Could not open storage"))};r.onblocked=function(){rej(new Error("Storage is busy"))}})}
+function allKeys(db){return new Promise(function(res,rej){var t=db.transaction("kv","readonly").objectStore("kv").getAllKeys();t.onsuccess=function(){res(t.result)};t.onerror=function(){rej(t.error)}})}
+function getKey(db,k){return new Promise(function(res,rej){var t=db.transaction("kv","readonly").objectStore("kv").get(k);t.onsuccess=function(){res(t.result)};t.onerror=function(){rej(t.error||new Error("could not read"))}})}
+function putKey(db,k,v){return new Promise(function(res,rej){var t=db.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=function(){res(true)};t.onerror=function(){rej(t.error)};t.onabort=function(){rej(t.error||new Error("could not save"))}})}
+function esc(x){return String(x==null?"":x).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+// count photos (data: images) and their size without turning the whole record into one big string
+function scan(o,acc,depth){acc=acc||{n:0,len:0};if(depth>12||o==null)return acc;
+ if(typeof o==="string"){if(o.indexOf("data:image")===0){acc.n++;acc.len+=o.length}return acc}
+ if(Array.isArray(o)){for(var i=0;i<o.length;i++)scan(o[i],acc,depth+1);return acc}
+ if(typeof o==="object"){for(var k in o)scan(o[k],acc,depth+1)}return acc}
+function metaOf(st){var secs=st.sections||{},find=0;Object.keys(secs).forEach(function(k){var s=secs[k]||{};if(s.status==="find"||s.status==="undet")find++});
+ var c=st.customer||{},ph=scan(st).n,insp=c.inspector==="Other"?(c.inspectorOther||"").trim():(c.inspector||"");
+ return {id:st.id,streetno:(c.streetno||"").trim(),address:(c.address||"").trim(),suburb:(c.suburb||"").trim(),client:(c.client||"").trim(),date:(c.date||"").trim(),calJobId:c.calJobId||"",rtype:c.rtype||"regular",inspector:insp,updated:Date.now(),sent:st.sentAt||0,find:find,photos:ph}}
+function title(st){var c=st.customer||{};var a=[c.streetno,c.address].filter(Boolean).join(" ");return [a,c.suburb].filter(Boolean).join(", ")||"(no address)"}
+var DB=null,ROWS=[];
+function mb(n){return (n/1048576).toFixed(1)+" MB"}
+function draw(info){
+ var h="";
+ if(!info.keys.length){h='<div class="card"><div class="t">Nothing saved on this device</div><div class="m">No reports are stored in this app. Try the other places: an older Inspection Capture icon, or Safari.</div></div>'}
+ else{h='<p class="lead">'+info.rows.length+' report'+(info.rows.length===1?"":"s")+' found in this app\'s storage'+(info.unreadable?' (plus '+info.unreadable+' that could not be read)':"")+'.</p>'}
+ info.rows.forEach(function(r,i){var c=r.st.customer||{};
+  h+='<div class="card"><div class="t">'+esc(title(r.st))+'</div><div class="m">'+esc(c.client||"no client name")+' · '+esc(c.date||"no date")+' · '+r.sc.n+' photos · '+mb(r.sc.len)+'</div>'+
+   '<span class="tag '+(r.listed?"ok":"warn")+'">'+(r.listed?"in the Jobs list":"NOT in the Jobs list")+'</span>'+(r.active?'<span class="tag ok">the open job</span>':'')+(r.st.sentAt?'<span class="tag">sent before</span>':'<span class="tag warn">not sent</span>')+
+   '<div><button data-open="'+i+'">Open it in Capture</button><button class="ghost" data-save="'+i+'">Save a copy as a file</button></div><div class="msg" id="m'+i+'"></div></div>'});
+ (info.bad||[]).forEach(function(b){h+='<div class="card"><div class="t">Could not read one report</div><div class="m">'+esc(b.key)+' ('+esc(b.why)+'). It may be too big to open. Tell Claude.</div></div>'});
+ document.getElementById("app").innerHTML=h}
+async function load(){var info={keys:[],rows:[],bad:[],unreadable:0};
+ try{DB=await openDb()}catch(e){document.getElementById("app").innerHTML='<div class="card"><div class="t">Nothing saved on this device</div><div class="m">'+esc(e.message)+'. Try the other places: an older Inspection Capture icon, or Safari.</div></div>';return}
+ var keys=[];try{keys=await allKeys(DB)}catch(e){keys=[]}info.keys=keys;
+ var index=[];try{index=(await getKey(DB,"jobs"))||[]}catch(e){}var active=null;try{active=await getKey(DB,"activeId")}catch(e){}
+ for(var i=0;i<keys.length;i++){var k=String(keys[i]);if(k.indexOf("job::")!==0)continue;
+  try{var st=await getKey(DB,k);if(st&&st.sections){info.rows.push({key:k,st:st,sc:scan(st),listed:index.some(function(m){return m.id===st.id}),active:st.id===active})}}
+  catch(e){info.bad.push({key:k,why:e.message||"read failed"});info.unreadable++}}
+ info.rows.sort(function(a,b){return b.sc.n-a.sc.n});ROWS=info.rows;window.INFO=info;draw(info)}
+document.getElementById("app").addEventListener("click",async function(e){
+ var o=e.target.closest("[data-open]"),s=e.target.closest("[data-save]");
+ if(o){var i=+o.dataset.open,r=ROWS[i],m=document.getElementById("m"+i);m.className="msg";m.textContent="Making it the open job...";
+  try{var idx=(await getKey(DB,"jobs"))||[];if(!idx.some(function(x){return x.id===r.st.id}))idx.push(metaOf(r.st));await putKey(DB,"jobs",idx);await putKey(DB,"activeId",r.st.id);m.className="msg good";m.textContent="Done. Opening Capture...";setTimeout(function(){location.href="index.html"},700)}
+  catch(err){m.className="msg err";m.textContent="Could not do that: "+(err.message||err)}}
+ if(s){var j=+s.dataset.save,rr=ROWS[j],mm=document.getElementById("m"+j);mm.className="msg";mm.textContent="Making the file...";
+  try{var name="recovered_"+title(rr.st).replace(/[^A-Za-z0-9]+/g,"_")+"_"+new Date().toISOString().slice(0,10)+".json";
+   var blob=new Blob([JSON.stringify(rr.st)],{type:"application/json"});var file=new File([blob],name,{type:"application/json"});
+   if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});mm.className="msg good";mm.textContent="Shared."}
+   else{var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();mm.className="msg good";mm.textContent="Saved as "+name}}
+  catch(err){mm.className="msg err";mm.textContent=(err&&err.name==="AbortError")?"Cancelled.":"Could not save: "+(err.message||err)}}});
+document.getElementById("diag").onclick=function(){var i=window.INFO||{rows:[],keys:[]},L=["WHAT IS SAVED ON THIS DEVICE (no photos)","keys in storage: "+(i.keys||[]).length,"unreadable reports: "+(i.unreadable||0),""];
+ (i.rows||[]).forEach(function(r,n){var c=r.st.customer||{};L.push((n+1)+". "+title(r.st)+" | client "+(c.client||"-")+" | date "+(c.date||"-")+" | "+r.sc.n+" photos | "+mb(r.sc.len)+" | "+(r.listed?"in Jobs list":"NOT in Jobs list")+" | "+(r.active?"open job":"not open")+" | "+(r.st.sentAt?"sent":"not sent")+" | calendar job "+(c.calJobId?"yes":"no"))});
+ (i.bad||[]).forEach(function(b){L.push("UNREADABLE: "+b.key+" "+b.why)});var t=L.join("\n"),m=document.getElementById("dmsg");
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){m.className="msg good";m.textContent="Copied. Paste it to Claude."},function(){m.className="msg";m.innerHTML="<pre>"+esc(t)+"</pre>"})};
+load();
+</script></body></html>
