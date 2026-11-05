@@ -11,7 +11,7 @@
    "short": "When",
    "body": [
     "Rodent baiting, bait station checks and bait box cleaning. Mitch's services are Rodent Treatment and Rodent Boxes (supply). Past invoices read: \"Inspect, clean and refill rodent bait boxes\", \"Rodent Baiting\", \"Rodent Baiting to ceiling\" and \"Supply refillable tamperproof rodent bait boxes\".",
-    "Rodent baiting usually comes back every quarter. That is Mitch's default, and he can change it for a client.",
+    "Rodent baiting usually comes back every quarter. That is Mitch's default, and he can change it for a client. Second-generation baits (see the Law box) must be checked at least every 35 days while they are out, so quarterly is not enough for them. Do not leave one in place for longer without ringing Mitch.",
     "We use bait only. No traps.",
     "Once you are experienced you can quote a bait box refill. Anything complex goes to Mitch. Commercial rodent jobs do not all go to Mitch, they can be shared around.",
     "The job process, the never list, PPE and the free service period are in the Every job guide."
@@ -40,8 +40,8 @@
      "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
     },
     {
-     "text": "Second-generation baits (for example brodifacoum, as in Talon GT Pro)",
-     "detail": "They are under APVMA conditions of use from March 2026. Use them only as those instructions say, and keep the printed instructions with the product. Outdoors: tamper-resistant, weather-resistant station, fixed in place, no more than 2 m from the building. No outdoor mouse baiting. No burrow baiting. Check the infestation and results at least every 35 days of continuous use. At each visit search for dead rodents and dispose of them, with gloves on."
+     "text": "Second-generation baits: Talon GT Pro, Talon XT Pro, Roban, Generation First Strike",
+     "detail": "These contain brodifacoum, difenacoum or difethialone. APVMA conditions of use apply from March 2026. Use them only as the APVMA instructions say, and give the customer the printed instructions. Never: outdoor mouse baiting, burrow baiting, or loose bait where pets, children or other animals can reach it. Outdoors: tamper-resistant, weather-resistant station, fixed in place, no more than 2 m from a building. Check the infestation and results at least every 35 days of continuous use. At every visit: search for dead rodents and dispose of them, gloves on. Selontra and Fastrac are not second-generation baits, so these conditions are not about them. Follow their labels."
     },
     {
      "text": "Roof voids and subfloors: asbestos",
@@ -85,12 +85,12 @@
    "short": "Boxes",
    "items": [
     {
-     "text": "Outside: tamper-proof boxes, always",
-     "detail": "Boxes on external walls must be attached to the wall. Existing boxes are re-used if they are safe."
+     "text": "Outside: tamper-resistant boxes, always",
+     "detail": "Attached to the wall, fixed in place, no more than 2 m from the building. Existing boxes are re-used if they are safe and tamper-resistant."
     },
     {
      "text": "Inside: you can bait inside too",
-     "detail": "Use your judgement and check what the client is happy with. Make it safe from kids, pets and other animals."
+     "detail": "Use a tamper-resistant box anywhere kids, pets or other animals can reach. Check what the client is happy with."
     },
     {
      "text": "Replace a box when it is unsafe"
@@ -102,7 +102,7 @@
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "All of these go in rodent bait stations. Names as in Mitch's product list. No rates here: follow the label. Mitch's go-to baits are Selontra and Talon GT Pro, but any of them can be used.",
+   "title": "All of these go in rodent bait stations. Names as in Mitch's product list. No rates here: follow the label. Mitch's go-to baits are Selontra and Talon GT Pro, but any of them can be used. Second-generation baits follow the APVMA conditions in the Law box.",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -114,19 +114,19 @@
      "Talon GT Pro Rodenticide Grain Block",
      "Brodifacoum (from the SDS, not in the product list)",
      "blocks",
-     "Go-to"
+     "Go-to (second-generation)"
     ],
     [
      "Talon XT Pro",
      "Brodifacoum (from the SDS, not in the product list)",
      "blocks",
-     "Can be used"
+     "Can be used (second-generation)"
     ],
     [
      "Roban Rodenticide Blocks",
      "Difenacoum",
      "blocks",
-     "Can be used"
+     "Can be used (second-generation)"
     ],
     [
      "Fastrac Blox Rodenticide",
@@ -138,7 +138,7 @@
      "Generation First Strike Single-Feed Rodenticide",
      "Difethialone",
      "baits",
-     "Can be used"
+     "Can be used (second-generation)"
     ],
     [
      "Selontra Soft Bait Rodenticide",
@@ -210,11 +210,18 @@
     },
     {
      "text": "Bait the ceiling void or cavity when the job includes it",
-     "detail": "Bait goes into the ceiling cavity. Roof void entry PPE applies. Mitch will show you where in the void on the ride-along."
+     "detail": "Roof void entry PPE applies. Second-generation bait goes only in a tamper-resistant station or where pets, children and other animals (such as possums) cannot reach. If you are not sure, ring Mitch. Mitch will show you where in the void on the ride-along."
     },
     {
      "text": "Look for dead rodents at every visit and take away the ones you can find, gloves on",
      "detail": "The APVMA instructions for second-generation baits require it. If you cannot reach one, tell Mitch."
+    },
+    {
+     "text": "Second-generation bait: check how long it has been out",
+     "detail": "Never more than 35 days of continuous use without checking the infestation and results. Book the next check inside that."
+    },
+    {
+     "text": "Second-generation bait: give the customer the printed APVMA instructions"
     },
     "Keep chemicals away from food, children and pets",
     {
@@ -238,7 +245,8 @@
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
     "Customer told what you did, and about food storage",
-    "Customer told when to expect the next baiting visit",
+    "Customer told when to expect the next baiting visit (within 35 days if second-generation bait is out)",
+    "Printed APVMA instructions given to the customer, if you used second-generation bait",
     "Service report left, or customer told it is being emailed"
    ]
   },
@@ -257,7 +265,7 @@
     },
     {
      "q": "Is the bait safe for my kids and pets?",
-     "a": "The boxes outside are tamper-proof. Inside, we put them where they are safe from kids, pets and other animals, and we check you are happy with where they go."
+     "a": "Wherever kids, pets or other animals could reach it, the bait goes in a tamper-resistant box. Outside the boxes are fixed to the wall. We check you are happy with where they go."
     },
     {
      "q": "Will you take away any dead rodents?",
