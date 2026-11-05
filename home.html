@@ -52,12 +52,13 @@ label.t.done span{text-decoration:line-through;color:var(--ink2)}
 <a class="b" href="guides/index.html" data-tile="guides"><b>Field Guides</b><span>Job steps and checklists</span></a>
 <a class="b" href="sds/index.html" data-tile="sds"><b>SDS Sheets</b><span>Safety data sheets</span></a>
 <a class="b" href="jobbook.html" data-tile="jobbook" data-master hidden><b>Job Book</b><span>Ring list, repeat work</span></a>
+<a class="b" href="https://claude.ai/artifact/D6Wx1sddfiVfnWkxAVvsca" target="_blank" rel="noopener" data-tile="rates" data-master hidden><b>Rates Calculator</b><span>Quote a job, check a job</span></a>
 </div>
 
 <button class="strip" id="eodBtn" type="button" aria-haspopup="dialog" data-master hidden><span><b>End of day check</b><small id="eodsub">4 things to tick</small></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
 
 <p class="build"><a href="recover.html" style="margin:0;font-weight:700">Missing a report? Find it</a></p>
-<p class="build" id="lpc-build">Build 2026-11-05a <span id="lpc-sw-status"></span></p>   <!-- bump the build when this page changes -->
+<p class="build" id="lpc-build">Build 2026-11-06a <span id="lpc-sw-status"></span></p>   <!-- bump the build when this page changes -->
 
 <script>
 /* Who is using this device? Home needs to know so the technician (Andrew) never sees Mitch's tiles.
@@ -70,7 +71,7 @@ label.t.done span{text-decoration:line-through;color:var(--ink2)}
 (function(){
   var KEY="lpc_role";
   var TECH=["calendar","capture","records","guides","sds"];                   // the field view, most used first
-  var MASTER=["capture","calendar","jobbook","sds","guides","records"];       // Mitch's view: the usual order, Field Guides beside SDS Sheets
+  var MASTER=["capture","calendar","jobbook","rates","sds","guides","records"];       // Mitch's view: the usual order, Field Guides beside SDS Sheets
   function role(){try{return localStorage.getItem(KEY)||"";}catch(e){return "";}}
   function apply(){
     var r=role(),m=r==="master";
