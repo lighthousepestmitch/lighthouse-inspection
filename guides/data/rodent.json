@@ -1,9 +1,9 @@
 {
  "id": "rodent",
  "title": "Rodent baiting and bait boxes",
- "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
- "updated": "2026-11-05",
- "source": "LPC Tech Onboarding Pack (PPE, never list, what you can quote); jobbook-data/chemicals.json (Rodent Treatment and Rodent Boxes products); jobbook-data/services.json (past wordings); business-context notes (quarterly default, external boxes)",
+ "subtitle": "From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "updated": "2026-11-06",
+ "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, what you can quote); jobbook-data/chemicals.json and the SDS files (Rodent Treatment and Rodent Boxes products); jobbook-data/services.json (past wordings); business-context notes (quarterly default, external boxes)",
  "sections": [
   {
    "type": "text",
@@ -12,8 +12,8 @@
    "body": [
     "Rodent baiting, bait station checks and bait box cleaning. Mitch's services are Rodent Treatment and Rodent Boxes (supply). Past invoices read: \"Inspect, clean and refill rodent bait boxes\", \"Rodent Baiting\", \"Rodent Baiting to ceiling\" and \"Supply refillable tamperproof rodent bait boxes\".",
     "Rodent baiting usually comes back every quarter. That is Mitch's default, and he can change it for a client.",
-    "Internal rodent baiting goes with a pest visit. External baiting needs tamper-proof boxes, and existing boxes are re-used. This is decided on the day. [Mitch to confirm: should a tech decide that on site, or call you?]",
-    "Once you are experienced you can quote a bait box refill. Anything complex, and commercial jobs, go to Mitch.",
+    "We use bait only. No traps.",
+    "Once you are experienced you can quote a bait box refill. Anything complex goes to Mitch. Commercial rodent jobs do not all go to Mitch, they can be shared around.",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
    ]
   },
@@ -39,45 +39,72 @@
    ]
   },
   {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Where the boxes go",
+   "short": "Boxes",
+   "items": [
+    {
+     "text": "Outside: tamper-proof boxes, always",
+     "detail": "Boxes on external walls must be attached to the wall. Existing boxes are re-used if they are safe."
+    },
+    {
+     "text": "Inside: you can bait inside too",
+     "detail": "Use your judgement and check what the client is happy with. Make it safe from kids, pets and other animals."
+    },
+    {
+     "text": "Replace a box when it is unsafe"
+    },
+    "How many boxes on a standard house, and how far apart: [Mitch to confirm: number of boxes and spacing]"
+   ]
+  },
+  {
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "All of these go in rodent bait stations. Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which bait for which situation, and which is your standard]",
+   "title": "All of these go in rodent bait stations. Names as in Mitch's product list. No rates here: follow the label. Mitch's go-to baits are Selontra and Talon GT Pro, but any of them can be used. [Mitch to confirm: you called Selontra 'first gen'. The SDS lists Selontra as cholecalciferol and Talon GT Pro as brodifacoum. Did you mean Generation First Strike, or something else?]",
    "columns": [
     "Product",
     "Active (as listed)",
-    "Comes as"
+    "Comes as",
+    "Go-to?"
    ],
    "rows": [
     [
      "Talon GT Pro Rodenticide Grain Block",
-     "Not listed",
-     "blocks"
+     "Brodifacoum (from the SDS, not in the product list)",
+     "blocks",
+     "Go-to"
     ],
     [
      "Talon XT Pro",
-     "Not listed",
-     "blocks"
+     "Brodifacoum (from the SDS, not in the product list)",
+     "blocks",
+     "Can be used"
     ],
     [
      "Roban Rodenticide Blocks",
      "Difenacoum",
-     "blocks"
+     "blocks",
+     "Can be used"
     ],
     [
      "Fastrac Blox Rodenticide",
      "Bromethalin",
-     "blocks"
+     "blocks",
+     "Can be used"
     ],
     [
      "Generation First Strike Single-Feed Rodenticide",
      "Difethialone",
-     "baits"
+     "baits",
+     "Can be used"
     ],
     [
      "Selontra Soft Bait Rodenticide",
      "Cholecalciferol",
-     "baits"
+     "baits",
+     "Go-to"
     ]
    ]
   },
@@ -105,7 +132,7 @@
     ],
     [
      "Rodent Baiting to ceiling / baiting to ceiling void / bait ceiling cavity",
-     "Some jobs put bait in the ceiling void or cavity. [Mitch to confirm: how, and where in the void]"
+     "Some jobs put bait in the ceiling cavity. [Mitch to confirm: where in the void]"
     ],
     [
      "Rodent Baiting internal only",
@@ -123,24 +150,37 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
    "items": [
     "Ask the customer where they have seen or heard rodents",
     "Gloves on before you touch a bait box or any bait",
     {
      "text": "Inspect each bait box",
-     "detail": "[Mitch to confirm: what you check and what you record for each box]"
+     "detail": "Is it attached and safe? A box that is unsafe gets replaced. Record how much bait was taken: none, some or all."
     },
-    "Clean each bait box",
     {
-     "text": "Refill each bait box",
-     "detail": "Apply per the product label. Never exceed label rates. [Mitch to confirm: how much bait goes in each box]"
+     "text": "Clean each bait box",
+     "detail": "[Mitch to confirm: how to clean the box]"
+    },
+    {
+     "text": "Refill each bait box with fresh bait",
+     "detail": "Old bait goes off and is less attractive to rodents, so it is usually replaced, whether the box was eaten out or not touched. Apply per the product label. Never exceed label rates. [Mitch to confirm: any amount or fill mark you want in each box]"
+    },
+    {
+     "text": "Old or mouldy bait: bag it or box it, take it back and give it to Mitch"
     },
     {
      "text": "Bait the ceiling void or cavity when the job includes it",
-     "detail": "Roof void entry PPE applies. [Mitch to confirm: how, and where in the void]"
+     "detail": "Bait goes into the ceiling cavity. Roof void entry PPE applies. [Mitch to confirm: where in the void]"
+    },
+    {
+     "text": "Dead rodents: we do not usually remove them",
+     "detail": "Have a look, and take one out if it is easy to find."
     },
     "Keep chemicals away from food, children and pets",
+    {
+     "text": "Tell the customer about food storage",
+     "detail": "We do not really look at how they are getting in. Sealing gaps is a job for a builder or chippy. If you can see an obvious gap, you can say so."
+    },
     "Take BEFORE and AFTER photos, and photograph any rodent evidence or damage you find",
     "Note anything you could not treat or reach, and why"
    ]
@@ -153,10 +193,40 @@
    "items": [
     "BEFORE and AFTER photos taken",
     "Every bait box on the property inspected, cleaned and refilled, or noted with the reason it was not",
+    "Bait taken recorded for each box (none, some or all)",
+    "Old or mouldy bait bagged or boxed to take back to Mitch",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and when to expect the next baiting visit [Mitch to confirm: quarterly?]",
+    "Customer told what you did, and about food storage",
+    "Customer told when to expect the next baiting visit [Mitch to confirm: quarterly?]",
     "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Will the bait get rid of them?",
+     "a": "They eat the bait, then go looking for water, and most of the time they leave. There are no guarantees."
+    },
+    {
+     "q": "How long does the bait last?",
+     "a": "As long as it lasts. It depends on how many rodents there are, which is the rodent pressure."
+    },
+    {
+     "q": "Is the bait safe for my kids and pets?",
+     "a": "The boxes outside are tamper-proof. Inside, we put them where they are safe from kids, pets and other animals, and we check you are happy with where they go."
+    },
+    {
+     "q": "Will you take away any dead rodents?",
+     "a": "We do not usually remove them unless they are easy to find. We will have a look and take it if it is easy to get to."
+    },
+    {
+     "q": "How are they getting in?",
+     "a": "That is more a job for a builder or chippy. If we can see an obvious gap, we will say so. Keep food stored away too."
+    }
    ]
   },
   {
@@ -195,24 +265,15 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. How many bait boxes go on a standard house, and where do they go (along walls, corners, how far apart)?",
-    "2. Which bait goes where (Talon GT Pro, Talon XT Pro, Roban, Fastrac, Generation First Strike, Selontra), and which is your standard?",
-    "3. How much bait goes in a box on a refill, or do you top up to a mark?",
-    "4. What do you record for each box (bait taken: none, some, all)?",
-    "5. What do you do when a box is eaten right out, or when nothing has been touched?",
-    "6. Do you use traps as well as bait? (The onboarding pack says gloves when handling traps or bait.)",
-    "7. How do you bait a ceiling void or cavity, and where in the void?",
-    "8. What happens to old or mouldy bait you take out of a box, and how do you clean the box?",
-    "9. What do you do about dead rodents you find, and who removes them?",
-    "10. How do you keep pets, kids and other animals away from bait?",
-    "11. When does a box need replacing, and when do you suggest tamper-proof boxes or more boxes?",
-    "12. Do you look at how they are getting in, and do you tell the customer about food storage or sealing gaps?",
-    "13. Which rodent jobs are commercial and go to you?",
-    "14. What do customers ask most about baiting, and what do you tell them?"
+    "How many boxes on a standard house, and how far apart",
+    "Selontra: you called it 'first gen', but the SDS says cholecalciferol. Which did you mean?",
+    "How much bait goes in each box, or a fill mark",
+    "Where in the ceiling void the bait goes",
+    "How to clean a bait box",
+    "Does the free service period apply to rodent jobs?",
+    "Is quarterly the next-visit default to tell the customer?"
    ]
   }
  ]

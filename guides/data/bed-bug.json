@@ -1,9 +1,9 @@
 {
  "id": "bed-bug",
  "title": "Bed bug treatment",
- "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
- "updated": "2026-11-05",
- "source": "LPC Tech Onboarding Pack (PPE for bed bug work, never list, what you can quote); jobbook-data/chemicals.json (Bed Bug Treatment products); jobbook-data/services.json (past wordings); Garrards technical advisory note on bedbug management found in the treatment history files",
+ "subtitle": "From Mitch's answers 6 Nov 2026, plus official health department notes where he said to look it up. Items marked in orange are still to confirm.",
+ "updated": "2026-11-06",
+ "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE for bed bug work, never list, what you can quote); jobbook-data/chemicals.json (Bed Bug Treatment products); jobbook-data/services.json (past wordings); Garrards technical advisory note on bedbug management found in the treatment history files; researched, not from Mitch: Victorian Department of Health Pesticide Safety Technical Notes 18 (bed bugs) and 19 (fleas), SA Health bird mites fact sheet, NSW Health bed bugs page, healthdirect bed bugs page, AEPMA Code of Practice for the Control of Bed Bug Infestations in Australia (4th edition)",
  "sections": [
   {
    "type": "text",
@@ -11,8 +11,10 @@
    "short": "When",
    "body": [
     "Customer thinks they have bed bugs. Mitch's service is called Bed Bug Treatment. Past invoices read: \"Bed Bug Inspection\" (with a report provided), \"Bedbug Treatment x 1 room\", \"Bedbug Treatment x 2 rooms\", and an inspection and treatment of a vehicle.",
+    "How big a bed bug job is depends on the job. There is no fixed rule by room or by house.",
+    "A vehicle is treated the same way as a room.",
+    "A written Bed Bug Inspection report is only given if the customer asks for one.",
     "A bed bug job is one visit. A follow-up visit is quoted separately. [Mitch to confirm: can a tech quote bed bug work, or does Mitch?]",
-    "[Mitch to confirm: is a job sized by room (as on past invoices) or by small or large dwelling (as in the onboarding pack)?]",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
    ]
   },
@@ -33,10 +35,66 @@
    ]
   },
   {
+   "type": "checklist",
+   "id": "prep",
+   "heading": "Before you arrive",
+   "short": "Before",
+   "title": "What the customer does before you get there",
+   "items": [
+    "Strip the beds",
+    {
+     "text": "Hot wash everything",
+     "detail": "Linen, bedding and washable clothes. The official note says wash above 60°C and tumble dry on hot for at least 30 minutes. [Mitch to confirm: the temperature and time are from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+    },
+    {
+     "text": "Clear the floor and move furniture if they can",
+     "detail": "[Mitch to confirm: do you ask for this, or only the strip and hot wash?]"
+    }
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "Bed bugs, fleas or mites?",
+   "short": "Which pest",
+   "title": "Bites alone can't tell you which it is. Find the bug or the marks it leaves. [Mitch to confirm: from Victorian Department of Health Technical Notes 18 and 19 and the SA Health bird mites fact sheet, not from Mitch]",
+   "columns": [
+    "",
+    "Bed bugs",
+    "Fleas",
+    "Bird mites"
+   ],
+   "rows": [
+    [
+     "Size and look",
+     "Flat and oval, light brown, red after a feed. Up to about 5 mm, like an apple seed.",
+     "Brown and oval, 2 to 4 mm. They jump.",
+     "Under 1 mm, eight legs, very mobile. Clear until they feed, then red to black."
+    ],
+    [
+     "Bites",
+     "Exposed skin like arms and shoulders. Sometimes in rows. Some people only react 9 to 14 days later.",
+     "Legs and feet. Red swollen lump within half an hour.",
+     "No favourite spot on the body. Itchy, swollen, raised red spots."
+    ],
+    [
+     "Where you find them",
+     "Mattress seams, bedhead, bedside furniture, skirting.",
+     "Where pets rest.",
+     "Near bird nests (eaves, roof space, wall cavities). They move inside after the young birds leave."
+    ],
+    [
+     "Marks they leave",
+     "Blood spots on sheets, dark spotting, shed skins, eggs. A sweet musty smell when there are lots.",
+     "Flea dirt: tiny dark specks that leave a red ring on damp white tissue.",
+     "Mites crawling on walls, ceilings and bedding."
+    ]
+   ]
+  },
+  {
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which product goes where]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. Mitch uses these as the job needs, and bifenthrin as well. [Mitch to confirm: which bifenthrin product for bed bugs, Country Bifenthrin 100 Low Odour or Aquastar 100SC]",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -52,6 +110,11 @@
      "Coopex Insecticidal Dusting Powder",
      "Permethrin",
      "Bulb duster"
+    ],
+    [
+     "Bifenthrin (Mitch also uses it for bed bugs)",
+     "Bifenthrin",
+     "Power spray rig (as listed for the bifenthrin products)"
     ]
    ]
   },
@@ -59,7 +122,7 @@
    "type": "table",
    "heading": "Where bed bugs hide",
    "short": "Where they hide",
-   "title": "From a Garrards advisory note in Mitch's files. [Mitch to confirm: does this match how you work?]",
+   "title": "From a Garrards advisory note in Mitch's files. Mitch's own rule is to search and treat whatever is accessible. [Mitch to confirm: do the note's steps (2 to 3 metres, take furniture apart, wrap the mattress) match how you work?]",
    "columns": [
     "Where",
     "What the note says"
@@ -113,18 +176,22 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
    "items": [
     "Ask the customer to show you the rooms and beds with the problem",
+    "Check the beds are stripped and everything is going through a hot wash",
     "Coveralls, gloves and mask on before you go in",
     "Take BEFORE photos",
     {
-     "text": "Inspect the bed and everything near it for signs",
-     "detail": "The Garrards note lists: dots of blood on the sheets, a sickly sweet smell, and dried blood in cracks around the bed, bedhead, bedside furniture and mattress. [Mitch to confirm: how you inspect]"
+     "text": "Search whatever is accessible",
+     "detail": "The bed and everything near it. The Garrards note lists dots of blood on the sheets, a sickly sweet smell, and dried blood in cracks around the bed, bedhead, bedside furniture and mattress."
     },
     {
-     "text": "Treat the harbourages you find",
-     "detail": "[Mitch to confirm: how you treat, and which of Demand Duo spray and Coopex dust goes where]"
+     "text": "Treat what you find and can get to",
+     "detail": "Demand Duo spray, Coopex dust or bifenthrin, as the job needs. Treat the cracks and hiding spots you find. Don't space spray, the fine mist can make bed bugs scatter to other rooms. Dust suits cracks and voids. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+    },
+    {
+     "text": "Mattress: use the approved chemical Mitch has",
+     "detail": "Read the label first, some products can't go on mattresses. [Mitch to confirm: which product do you use on mattresses? It is not in the products table. The label check is from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -133,8 +200,23 @@
     "Keep chemicals away from food, children and pets",
     "Note anything you could not treat or reach, and why",
     "Take AFTER photos",
-    "Before you go into the next property, change your coveralls, gloves and mask",
+    {
+     "text": "Tell the customer to leave the room alone for a bit",
+     "detail": "They can go back in once it has dried. Follow the product label. [Mitch to confirm: how long is a bit, and does it mean no vacuuming or cleaning?]"
+    },
+    {
+     "text": "Before you go into the next property, change your coveralls, gloves and mask",
+     "detail": "Bed bugs travel on luggage, shoes and clothing. The industry code says to put worn clothing and used disposable gear in sealed plastic bags and keep equipment in sealed containers. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022) and the AEPMA bed bug Code of Practice (an industry code, 4th edition), not from Mitch. What do you do with your boots, bag and gear?]"
+    },
     "Note any follow-up needed and tell Mitch"
+   ]
+  },
+  {
+   "type": "text",
+   "heading": "Follow-up visit",
+   "short": "Follow-up",
+   "body": [
+    "Plan a follow-up visit about a week after the treatment. The spray kills the bugs but not the eggs, so anything that hatches afterwards needs treating on the follow-up. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch. When do you book it, who books it, and what does the tech do on the visit?]"
    ]
   },
   {
@@ -149,9 +231,41 @@
     "Any follow-up noted and Mitch told",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what to do before and after, and what to expect [Mitch to confirm: what you tell them (the Garrards note mentions laundering linen and wrapping the mattress)]",
-    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
-    "Service report left, or customer told it is being emailed"
+    "Customer told what to do before (strip the beds, hot wash everything) and after (leave the room alone for a bit)",
+    "Customer told they can go back in once it has dried, as the product label says",
+    "Follow-up visit talked through with the customer [Mitch to confirm: timing and who books it]",
+    "Service report left, or customer told it is being emailed. Written Bed Bug Inspection report only if the customer asked for one"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Can I sleep in the bed tonight?",
+     "a": "Once it has dried, and the product label says it is OK to go back in. Then leave the room alone for a bit."
+    },
+    {
+     "q": "Will one visit get rid of them?",
+     "a": "Usually not on its own. The spray kills the bugs but not the eggs, so we come back to deal with what hatches. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+    },
+    {
+     "q": "Why do I have to hot wash everything?",
+     "a": "Heat kills bed bugs at every stage. Wash above 60°C and dry on hot for at least 30 minutes. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+    },
+    {
+     "q": "I'm still getting bitten.",
+     "a": "Some people only react to a bite days later, up to 9 to 14 days. Eggs can also hatch after the treatment, which is why we come back. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+    },
+    {
+     "q": "Can I vacuum or clean?",
+     "a": "Leave it for a bit. Too much cleaning can wipe the product off the surfaces. [Mitch to confirm: the reason is from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch. How long is a bit?]"
+    },
+    {
+     "q": "Are bed bugs dangerous?",
+     "a": "They are not known to spread disease. They can cause itching and lost sleep. If bites look infected or don't settle after a few days, see a doctor. [Mitch to confirm: from NSW Health and healthdirect, not from Mitch]"
+    }
    ]
   },
   {
@@ -190,23 +304,17 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. How do you tell it is bed bugs and not fleas, mites or something else?",
-    "2. What must the customer do before you arrive (strip beds, wash linen, clear the floor, move furniture)?",
-    "3. How far from the bed do you search and treat, and what do you pull apart (bedhead, furniture, skirting)?",
-    "4. Which product for what: Demand Duo spray or Coopex dust, and where does each go?",
-    "5. Do you treat the mattress? How?",
-    "6. How long before the customer can go back in the room or sleep in the bed?",
-    "7. When is a follow-up visit needed, how long after, and what does the tech do on it?",
-    "8. What does the customer do after (vacuum, launder, mattress covers)?",
-    "9. Is a job sized by room or by dwelling?",
-    "10. When do you give a written report (Bed Bug Inspection)?",
-    "11. A vehicle was done once. What is different about treating a vehicle?",
-    "12. How do you stop carrying bugs to the next property, beyond changing coveralls, gloves and mask?",
-    "13. What do customers ask most, and what do you tell them?"
+    "Can a tech quote bed bug work, or does Mitch?",
+    "Does the free service period apply to bed bug jobs?",
+    "Which product do you use on mattresses?",
+    "Which bifenthrin product do you use for bed bugs (Country Bifenthrin 100 Low Odour or Aquastar 100SC)?",
+    "Do you ask the customer to clear the floor and move furniture?",
+    "How long is \"leave it for a bit\" after treatment, and does it mean no vacuuming or cleaning?",
+    "Follow-up visit: when, who books it, and what does the tech do on it?",
+    "Do the Garrards note steps (2 to 3 metres, take furniture apart, wrap the mattress) match how you work?",
+    "What do you do with your boots, bag and gear between properties?"
    ]
   }
  ]

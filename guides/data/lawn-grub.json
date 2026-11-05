@@ -1,9 +1,9 @@
 {
  "id": "lawn-grub",
  "title": "Lawn grub treatment",
- "subtitle": "Draft. Only a few past jobs and no written procedure, so this one is mostly questions for Mitch.",
- "updated": "2026-11-05",
- "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Lawn Grub Treatment products); jobbook-data/services.json (past wordings)",
+ "subtitle": "Filled in 6 Nov 2026 from Australian government sources, not from Mitch. Items marked in orange are for Mitch to confirm.",
+ "updated": "2026-11-06",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Lawn Grub Treatment products); jobbook-data/services.json (past wordings); identification and checks from UNSW, Business Queensland, Tasmanian DPIPWE and DPIRD WA; spraying precautions from Better Health Channel; wind record from the NSW Pesticides Regulation (not from Mitch); identification and checks from UNSW, Business Queensland, Tasmanian DPIPWE and DPIRD WA; spraying precautions from Better Health Channel; wind record from the NSW Pesticides Regulation (not from Mitch)",
  "sections": [
   {
    "type": "text",
@@ -11,7 +11,88 @@
    "short": "When",
    "body": [
     "Customer has lawn grubs in their lawn. Mitch's service is called Lawn Grub Treatment. Past invoices read: \"Lawn grub treatment using registered insecticide\" with the lawn area in square metres, and \"Larvae Treatment, cottage only\".",
+    "In a lawn the damage usually comes from curl grubs (beetle grubs that eat the roots) or lawn armyworm (caterpillars that eat the leaves). Check which one it is before you treat. [Mitch to confirm: from UNSW and Business Queensland (written for crops and pasture), not from Mitch]",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "How to tell what is eating the lawn",
+   "short": "Identify",
+   "columns": [
+    "Pest",
+    "What it looks like",
+    "What the lawn looks like"
+   ],
+   "rows": [
+    [
+     "Curl grub (beetle grub)",
+     "Large white or cream C-shaped grub with a brown head and six legs near the head. Lives in the soil and eats the roots. [Mitch to confirm: from UNSW, not from Mitch]",
+     "Plants with eaten roots can wilt or go yellow. Dead grass pulls up easily. Birds digging at the lawn can be the first sign. [Mitch to confirm: from UNSW and DPIRD Western Australia African black beetle guidance, not from Mitch]"
+    ],
+    [
+     "African black beetle grub",
+     "A curl grub, about 25 mm when fully grown, with a brown or tan head. The adult is a glossy brown-black beetle about 14 mm. [Mitch to confirm: from Tasmanian DPIPWE African black beetle fact sheet, not from Mitch]",
+     "A real problem in newly sown lawns. The adults fly in late summer and autumn. [Mitch to confirm: from Tasmanian DPIPWE African black beetle fact sheet, not from Mitch]"
+    ],
+    [
+     "Lawn armyworm (caterpillar)",
+     "Smooth, plump caterpillar up to about 40 mm, greyish brown with pale and dark markings. Hides at the base of the grass or under soil clods in the day, feeds at night. [Mitch to confirm: from Business Queensland (written for crops and pasture), not from Mitch]",
+     "Leaves stripped and bare patches, with green-yellow pellet droppings. [Mitch to confirm: from Business Queensland (written for crops and pasture), not from Mitch]"
+    ],
+    [
+     "Not grubs at all",
+     "Dry or hungry grass can look the same. Rule these out before you blame grubs. [Mitch to confirm: from UNSW, not from Mitch]",
+     "Looks like grub damage. Grubs are unlikely to do real damage unless there are lots of them. [Mitch to confirm: from UNSW, not from Mitch]"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "check",
+   "heading": "How to check",
+   "short": "How to check",
+   "items": [
+    {
+     "text": "Rule out dry or hungry grass first",
+     "detail": "[Mitch to confirm: from UNSW, not from Mitch]"
+    },
+    {
+     "text": "Tug the dead grass",
+     "detail": "If it lifts out easily, the roots have probably been eaten. [Mitch to confirm: from DPIRD Western Australia African black beetle guidance, not from Mitch]"
+    },
+    {
+     "text": "Dig a small patch at the edge of the damage and look in the top of the soil and the roots for white C-shaped grubs",
+     "detail": "[Mitch to confirm: from Business Queensland (written for crops and pasture) and Tasmanian DPIPWE African black beetle fact sheet, not from Mitch]"
+    },
+    {
+     "text": "Look at the base of the grass and under soil clods for caterpillars, or look at dusk when they come out",
+     "detail": "[Mitch to confirm: from Business Queensland (written for crops and pasture), not from Mitch]"
+    }
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "prep",
+   "heading": "Before you spray",
+   "short": "Before you spray",
+   "items": [
+    {
+     "text": "Kids and pets off the lawn. Pet bowls and bedding moved",
+     "detail": "[Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+    },
+    {
+     "text": "Cover fish ponds, barbecues and vegie gardens near the lawn. Close doors and windows",
+     "detail": "[Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+    },
+    {
+     "text": "Rainwater tank: stop overspray getting onto the gutters and roof",
+     "detail": "[Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+    },
+    {
+     "text": "Not on a rainy or windy day",
+     "detail": "[Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch] [Mitch to confirm: Mitch's own weather limits. No source gives the numbers]"
+    }
    ]
   },
   {
@@ -60,17 +141,25 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "note": "How to check it is grubs and the spraying precautions are from official sources and are marked. How Mitch treats the lawn is still to confirm.",
    "items": [
     "Ask the customer to show you where the lawn is damaged",
     "Take BEFORE photos of the damaged areas",
+    {
+     "text": "Check it really is grubs (see How to check)",
+     "detail": "Dry or hungry grass can look the same. [Mitch to confirm: from UNSW, not from Mitch]"
+    },
     {
      "text": "Work out the lawn area in square metres",
      "detail": "Past invoices give the area in m2. [Mitch to confirm: how you measure it]"
     },
     {
+     "text": "Estimate the wind speed and direction before you start, and write it down. Note it again if the wind changes",
+     "detail": "Outdoor spraying needs this in the record, and anything else the label says about weather. [Mitch to confirm: from the NSW Pesticides Regulation 2017 (record of use), not from Mitch. Check it is still the current version]"
+    },
+    {
      "text": "Treat the lawn",
-     "detail": "[Mitch to confirm: how you apply it, and whether it is watered in]"
+     "detail": "[Mitch to confirm: how you apply it, and whether it is watered in] Do not water the garden after spraying, and check the label for how long to wait. [Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch. Mitch to say whether his lawn jobs are watered in]"
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -90,10 +179,45 @@
     "BEFORE and AFTER photos taken",
     "Lawn area treated as agreed with Mitch, and the area in square metres written on the job report",
     "Anything you could not treat or reach is noted on the job report, with the reason",
-    "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
-    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    {
+     "text": "Product, rate, area and quantity recorded on the job report, plus the wind speed and direction",
+     "detail": "The record is made within 48 hours and kept for 3 years. [Mitch to confirm: from the NSW Pesticides Regulation 2017 (record of use), not from Mitch. Check it is still the current version]"
+    },
+    "Customer told what you did and what to expect (see \"If the customer asks\" below) [Mitch to confirm: what to tell them for this pest]",
+    "Customer told when to water: follow the product label [Mitch to confirm: whether lawn jobs are watered in]",
+    "Customer given the re-entry time: follow the product label. The Every job guide says 1 to 2 hours once dry [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
     "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "What's eating my lawn?",
+     "a": "Often it's one of two things. Curl grubs are beetle grubs that live in the soil and eat the roots. Lawn armyworm are caterpillars that eat the leaves. We check which one you've got. [Mitch to confirm: from UNSW and Business Queensland (written for crops and pasture), not from Mitch]"
+    },
+    {
+     "q": "Why did the lawn go so fast?",
+     "a": "Armyworm hide at the base of the grass in the day and feed at night, so you don't see them until the patches show. [Mitch to confirm: from Business Queensland (written for crops and pasture), not from Mitch]"
+    },
+    {
+     "q": "When can the kids and the dog go back on the lawn?",
+     "a": "Keep them off while we treat. Follow the product label for when it's safe. We normally say 1 to 2 hours once it's dry. [Mitch to confirm: from Better Health Channel (Victorian Government) and the Every job guide, not from Mitch]"
+    },
+    {
+     "q": "Should I water it after?",
+     "a": "Follow the product label. Don't water straight after spraying unless the label says to. [Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch. Mitch to say whether his lawn jobs are watered in]"
+    },
+    {
+     "q": "Will the lawn grow back?",
+     "a": "It depends how much has been eaten. A good feed and water helps it recover, once the label says it's okay to water. [Mitch to confirm: from Business Queensland (written for crops and pasture), not from Mitch. It says generous nitrogen fertiliser and water help lawns recover. Check you are happy with this wording]"
+    },
+    {
+     "q": "Why did you want to move the job for rain or wind?",
+     "a": "Spraying outdoors on a rainy or windy day isn't recommended, so we pick a better day. [Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+    }
    ]
   },
   {
@@ -132,21 +256,19 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. How do you confirm it is lawn grubs (what you check, and where)?",
-    "2. Which grubs or larvae do you see most (lawn grub, army worm, curl grub, other)?",
-    "3. Which product for which job: Country Bifenthrin, Aquastar or Biflex?",
-    "4. How do you apply it (power spray rig, other), and is it watered in?",
-    "5. What does the customer do before and after (mow, water)?",
-    "6. How long until the customer, kids and pets can use the lawn?",
-    "7. What weather do you need?",
-    "8. How do you measure the lawn area?",
-    "9. Do you record wind speed, direction and other weather on the job? (The old Pest Management Certificate of Treatment form asks for it.)",
-    "10. How long until the grubs are gone and the lawn recovers, and when is a second visit needed?",
-    "11. What do customers ask most, and what do you tell them?"
+    "Which grubs or larvae does Mitch see most (lawn grub, army worm, curl grub, other)?",
+    "Which product for which job: Country Bifenthrin, Aquastar or Biflex?",
+    "How does Mitch apply it (power spray rig, other), and is it watered in?",
+    "What does the customer do before and after (mow, water)?",
+    "How long until the customer, kids and pets can use the lawn (the label rules, the Every job guide says 1 to 2 hours once dry)",
+    "What weather does Mitch need (his own limits for wind and rain)?",
+    "How does Mitch measure the lawn area?",
+    "What weather does Mitch write on his own job forms? The NSW rule says wind speed and direction for outdoor spraying",
+    "How long until the grubs are gone and the lawn recovers, and when is a second visit needed?",
+    "Does the free service period apply to this job?",
+    "What do customers ask most? The answers above are from sources, not from Mitch's own list"
    ]
   }
  ]

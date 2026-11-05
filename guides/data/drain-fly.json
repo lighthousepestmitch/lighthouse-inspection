@@ -1,9 +1,9 @@
 {
  "id": "drain-fly",
  "title": "Drain fly treatment",
- "subtitle": "Draft. Only one product and a few past jobs are written down, so this one is mostly questions for Mitch.",
- "updated": "2026-11-05",
- "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Drain Fly Treatment product); jobbook-data/services.json (past wordings)",
+ "subtitle": "Filled in 6 Nov 2026 from Australian government sources, not from Mitch. Items marked in orange are for Mitch to confirm.",
+ "updated": "2026-11-06",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Drain Fly Treatment product); jobbook-data/services.json (past wordings); what drain flies are, where they breed and customer advice from the Victorian Government pest control technical note on flies, a WA shire fly fact sheet and Better Health Channel (not from Mitch); what drain flies are, where they breed and customer advice from the Victorian Government pest control technical note on flies, a WA shire fly fact sheet and Better Health Channel (not from Mitch)",
  "sections": [
   {
    "type": "text",
@@ -11,7 +11,51 @@
    "short": "When",
    "body": [
     "Customer has drain flies. Mitch's service is called Drain Fly Treatment. Past invoices read: \"Drain fly treatment\", \"Drain fly treatment, second treatment\" and \"External fly treatment only including residual treatment to common fly activity areas around the property\".",
+    "Drain flies (also called moth flies) breed where it is damp and there is a build-up of organic gunk, like bathroom drains, open drains and septic run-off. So the fix is the breeding spot, not just the flies you can see. [Mitch to confirm: from Victorian Government pest control technical note on flies and Shire of Coolgardie fly fact sheet, not from Mitch]",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "How to tell it is drain fly",
+   "short": "Identify",
+   "columns": [
+    "What you see",
+    "What it means"
+   ],
+   "rows": [
+    [
+     "Tiny dark grey flies, 2 to 4 mm",
+     "Drain (moth) flies. The body is covered in fine hairs, and the wings are moth-like with a hairy fringe. [Mitch to confirm: from Victorian Government pest control technical note on flies, not from Mitch]"
+    ],
+    [
+     "Flies around bathrooms, open drains or septic run-off",
+     "That is where moth flies are usually found, anywhere it is damp. [Mitch to confirm: from Victorian Government pest control technical note on flies, not from Mitch]"
+    ],
+    [
+     "Small brown and yellow or brown and black flies, 2.5 to 4 mm, around fruit and veg",
+     "Not drain flies. They are vinegar (fruit) flies. They go for ripe or rotting fruit and veg. [Mitch to confirm: from Victorian Government pest control technical note on flies and Shire of Coolgardie fly fact sheet, not from Mitch]"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "look",
+   "heading": "Where to look",
+   "short": "Where to look",
+   "items": [
+    {
+     "text": "Bathrooms, and any drain or damp spot the customer says the flies are around",
+     "detail": "Locate where the larvae (the grubs) are breeding if you can, and probe for hidden spots. [Mitch to confirm: from Victorian Government pest control technical note on flies, not from Mitch]"
+    },
+    {
+     "text": "Open drains and septic run-off outside",
+     "detail": "[Mitch to confirm: from Victorian Government pest control technical note on flies, not from Mitch]"
+    },
+    {
+     "text": "Which drains have the flies",
+     "detail": "[Mitch to confirm: how you decide, and whether you check kitchen, laundry and floor drains as well as bathrooms. No source covers this]"
+    }
    ]
   },
   {
@@ -50,13 +94,21 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "note": "Where to look is from official sources and is marked. How Mitch treats the drains is still to confirm.",
    "items": [
     "Ask the customer which drains and areas have the flies",
+    {
+     "text": "Find where they are breeding",
+     "detail": "Damp spots with organic build-up. Locate the breeding spot if you can, and probe for hidden ones. [Mitch to confirm: from Victorian Government pest control technical note on flies and Shire of Coolgardie fly fact sheet, not from Mitch]"
+    },
     "Take BEFORE photos",
     {
+     "text": "Cover or move food and cooking utensils in the area you are treating",
+     "detail": "Clean the benches properly before food is prepared. [Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+    },
+    {
      "text": "Treat the drains",
-     "detail": "[Mitch to confirm: which drains, how the product goes in, and how much]"
+     "detail": "[Mitch to confirm: which drains, how Bio Plus goes in (sprayed or poured), and how much. No source covers how Mitch does it]"
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -81,8 +133,40 @@
     "Drains treated as agreed with Mitch",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Customer told what you did and what to expect (see \"If the customer asks\" below) [Mitch to confirm: what to tell them for this pest]",
+    "Customer given the re-entry time: follow the product label. The Every job guide says 1 to 2 hours once dry [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
     "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "What are these little flies?",
+     "a": "Drain flies, also called moth flies. They're tiny, dark grey and hairy, and they look a bit like a little moth. You find them where it's damp, like bathrooms and drains. [Mitch to confirm: from Victorian Government pest control technical note on flies, not from Mitch]"
+    },
+    {
+     "q": "Why do I keep getting them?",
+     "a": "They breed in the damp build-up in and around drains. New flies keep turning up until the breeding spot is dealt with, so that's what we treat. [Mitch to confirm: from Victorian Government pest control technical note on flies and Shire of Coolgardie fly fact sheet, not from Mitch]"
+    },
+    {
+     "q": "Are they the same as fruit flies?",
+     "a": "No. Fruit flies go for ripe or rotting fruit and veg. Drain flies come from damp build-up in drains. [Mitch to confirm: from Victorian Government pest control technical note on flies and Shire of Coolgardie fly fact sheet, not from Mitch]"
+    },
+    {
+     "q": "Are they harmful?",
+     "a": "Only in big numbers is there any concern, and that's an allergic reaction in some people if they breathe them in. Sorting out the breeding spot is the fix. [Mitch to confirm: from Victorian Government pest control technical note on flies, not from Mitch. Check you are happy with this wording]"
+    },
+    {
+     "q": "How do I stop them coming back?",
+     "a": "Keep the damp spots clean so gunk doesn't build up, keep bins closed and dry, and use screens on windows and doors where you can. [Mitch to confirm: from Victorian Government pest control technical note on flies and Shire of Coolgardie fly fact sheet, not from Mitch]"
+    },
+    {
+     "q": "Is it safe for the kids and pets?",
+     "a": "Keep kids and pets out of the area while we treat. Follow the product label for when it's safe to come back in. We normally say 1 to 2 hours once it's dry. [Mitch to confirm: from Better Health Channel (Victorian Government) and the Every job guide, not from Mitch]"
+    }
    ]
   },
   {
@@ -121,19 +205,19 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. How do you find which drains have the flies (kitchen, bathroom, laundry, floor wastes, outside)?",
-    "2. How do you apply Bio Plus (sprayed or poured), and how much goes in each drain?",
-    "3. Do you clean the drain first (brush, flush)?",
-    "4. What is the usual cause, and what do you tell the customer about it?",
-    "5. When is a second treatment needed, and how long after the first?",
-    "6. What is the \"external fly treatment\" job, and which products does it use?",
-    "7. How long until the flies are gone?",
-    "8. What must the customer do or not do after (running water, other drain products)?",
-    "9. What do customers ask most, and what do you tell them?"
+    "How does Mitch find which drains have the flies (kitchen, bathroom, laundry, floor wastes, outside)?",
+    "How is Bio Plus applied (sprayed or poured), and is it the only product? The product list shows a compression sprayer",
+    "Does Mitch clean the drain first (brush, flush)?",
+    "What usual cause does Mitch tell the customer about? The sources say damp organic build-up",
+    "When is a second treatment needed, and how long after the first?",
+    "What is the \"external fly treatment\" job, and which products does it use?",
+    "How long until the flies are gone?",
+    "What must the customer do or not do after (running water, other drain products)?",
+    "Re-entry time for this job (the label rules, the Every job guide says 1 to 2 hours once dry)",
+    "Does the free service period apply to this job?",
+    "What do customers ask most? The answers above are from sources, not from Mitch's own list"
    ]
   }
  ]

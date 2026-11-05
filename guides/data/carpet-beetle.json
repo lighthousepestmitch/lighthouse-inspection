@@ -1,9 +1,9 @@
 {
  "id": "carpet-beetle",
  "title": "Carpet beetle treatment",
- "subtitle": "Draft. Very few past jobs and no written procedure, so this one is mostly questions for Mitch.",
- "updated": "2026-11-05",
- "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Carpet Beetle Treatment products); jobbook-data/services.json (past wordings)",
+ "subtitle": "Filled in 6 Nov 2026 from Australian museum, CSIRO and government sources, not from Mitch. Items marked in orange are for Mitch to confirm.",
+ "updated": "2026-11-06",
+ "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Carpet Beetle Treatment products); jobbook-data/services.json (past wordings); what it looks like, where to look and customer advice from Australian Museum, Museums Victoria, WA Museum, CSIRO, Queensland Museum and Better Health Channel (not from Mitch); what it looks like, where to look and customer advice from Australian Museum, Museums Victoria, WA Museum, CSIRO, Queensland Museum and Better Health Channel (not from Mitch)",
  "sections": [
   {
    "type": "text",
@@ -11,7 +11,67 @@
    "short": "When",
    "body": [
     "Customer has carpet beetles. Mitch's service is called Carpet Beetle Treatment. There are very few past jobs, and they were written up as \"Call out\" and \"Call out inspection\". [Mitch to confirm: is it an inspection first, then a treatment?]",
+    "It is the little hairy grubs (larvae) that eat things, not the adult beetles. They go for dry animal material like wool, fur, feathers and silk, so think rugs, carpet, blankets and stored woollens. [Mitch to confirm: from Australian Museum and Museums Victoria, not from Mitch]",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "table",
+   "heading": "How to tell it is carpet beetle",
+   "short": "Identify",
+   "columns": [
+    "What you see",
+    "What it means"
+   ],
+   "rows": [
+    [
+     "Adult beetle",
+     "Tiny and rounded, up to about 3 mm, with a mottled pattern of black, orange-brown and white. [Mitch to confirm: from Museums Victoria and Australian Museum, not from Mitch]"
+    ],
+    [
+     "Grub (larva)",
+     "Small, brown and hairy, with a brush of hairs at the back end. Bigger than the adult. The hairs break off when handled and can cause an allergic reaction in some people, so keep your gloves on. [Mitch to confirm: from Museums Victoria and Australian Museum, not from Mitch]"
+    ],
+    [
+     "Shed skins",
+     "Empty, hairy grub skins left behind are a typical sign. [Mitch to confirm: from WA Museum collection care manual, not from Mitch]"
+    ],
+    [
+     "Dark specks",
+     "Dark droppings (frass) show up best on light-coloured surfaces. [Mitch to confirm: from CSIRO, not from Mitch]"
+    ],
+    [
+     "Beetles on the window sills",
+     "Adult beetles on window sills can mean there is an infestation. The adults fly towards light. [Mitch to confirm: from Australian Museum, Museums Victoria and CSIRO, not from Mitch]"
+    ],
+    [
+     "Creamy-white grub in a silk case or under webbing",
+     "Not carpet beetle. That is a clothes moth. See the Clothes moth guide. [Mitch to confirm: from Australian Museum and WA Museum, not from Mitch]"
+    ]
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "look",
+   "heading": "Where to look",
+   "short": "Where to look",
+   "items": [
+    {
+     "text": "Carpet edges, under furniture, along skirting boards and inside wardrobes and closets",
+     "detail": "Grubs hide in dark, undisturbed spots, and adults lay eggs in places like these and in air ducts. [Mitch to confirm: from Australian Museum, not from Mitch]"
+    },
+    {
+     "text": "Wool, fur, feathers, silk and anything made from animal fibre",
+     "detail": "Rugs, blankets, woollen clothes, stored items. [Mitch to confirm: from Australian Museum and WA Museum, not from Mitch]"
+    },
+    {
+     "text": "Window sills",
+     "detail": "Dead or live adult beetles. [Mitch to confirm: from Australian Museum and CSIRO, not from Mitch]"
+    },
+    {
+     "text": "Roof void, bird or insect nests, stored items",
+     "detail": "[Mitch to confirm: which of these Mitch checks, and in what order. No source covers it]"
+    }
    ]
   },
   {
@@ -55,13 +115,25 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
+   "note": "Where to look and the safety steps are from official sources and are marked. How Mitch treats it is still to confirm.",
    "items": [
     "Ask the customer to point out where they have seen the beetles or the damage",
+    {
+     "text": "Check the window sills for adult beetles",
+     "detail": "They are a clue to where the problem is. [Mitch to confirm: from Australian Museum and Museums Victoria, not from Mitch]"
+    },
     "Take BEFORE photos of the problem areas",
     {
+     "text": "Move pets, birdcages and fish tanks out of the way. Cover or remove food and personal items in the area you are treating",
+     "detail": "Many pesticides are highly toxic to birds and fish. [Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+    },
+    {
      "text": "Treat the areas Mitch has told you to",
-     "detail": "[Mitch to confirm: what to look for, what to treat, and how]"
+     "detail": "[Mitch to confirm: what to treat, which product (Astro or Coopex) goes where, and how. No source covers how Mitch does it]"
+    },
+    {
+     "text": "Keep surface sprays to out-of-the-way spots like along skirting boards, not on furniture or things people touch",
+     "detail": "[Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -82,9 +154,48 @@
     "Areas treated as agreed with Mitch",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
-    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Customer told what you did and what to expect (see \"If the customer asks\" below) [Mitch to confirm: what to tell them for this pest]",
+    {
+     "text": "Customer told to vacuum thoroughly and often, especially carpet edges and under furniture",
+     "detail": "[Mitch to confirm: from Australian Museum, not from Mitch]"
+    },
+    "Customer given the re-entry time: follow the product label. The Every job guide says 1 to 2 hours once dry [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
     "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "What are these little bugs?",
+     "a": "Carpet beetles. The beetles are tiny and round. It's the little hairy grubs that do the damage. They eat wool, fur, feathers and silk. [Mitch to confirm: from Australian Museum and Museums Victoria, not from Mitch]"
+    },
+    {
+     "q": "Where did they come from?",
+     "a": "The adult beetles live mostly outside and feed on flowers. They fly in, usually towards the light, and lay eggs somewhere dark and quiet like under furniture or skirting boards. [Mitch to confirm: from Australian Museum and CSIRO, not from Mitch]"
+    },
+    {
+     "q": "Are they dangerous?",
+     "a": "The grubs have fine hairs that break off when handled, and in some people they cause an allergic reaction. Best not to pick them up bare-handed. [Mitch to confirm: from Australian Museum, not from Mitch]"
+    },
+    {
+     "q": "What can I do to help?",
+     "a": "Vacuum thoroughly and often, especially along carpet edges and under furniture. [Mitch to confirm: from Australian Museum, not from Mitch]"
+    },
+    {
+     "q": "Will they come back?",
+     "a": "They can. The adults live outside and fly back in easily, so treating inside on its own may not keep them away for good. Regular vacuuming helps. [Mitch to confirm: from Australian Museum, not from Mitch. Check you are happy with this wording]"
+    },
+    {
+     "q": "Is it safe for the kids and pets?",
+     "a": "Keep kids and pets out of the area while we treat. Follow the product label for when it's safe to come back in. We normally say 1 to 2 hours once it's dry. [Mitch to confirm: from Better Health Channel (Victorian Government) and the Every job guide, not from Mitch]"
+    },
+    {
+     "q": "Can you fix the damage that's already there, or save my rug?",
+     "a": "Our job is the beetles. If it's a precious or badly damaged piece, a textile conservator is the one to ask before anything is done to it. [Mitch to confirm: from Queensland Museum, not from Mitch]"
+    }
    ]
   },
   {
@@ -123,19 +234,18 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. Where do you look first (carpet edges, wardrobes, skirting, roof void, bird or insect nests, stored items)?",
-    "2. How do you tell carpet beetle from clothes moth or other pests?",
-    "3. Which product goes where: Astro aerosol or Coopex dust?",
-    "4. How do you treat carpet, rugs and stored items?",
-    "5. What must the customer do before and after (wash, vacuum, bag clothes, move items)?",
-    "6. How long before the customer can go back in?",
-    "7. When is a second visit needed?",
-    "8. Is it an inspection call out first, then a treatment, or one visit?",
-    "9. What do customers ask most, and what do you tell them?"
+    "Is it an inspection call out first, then a treatment, or one visit?",
+    "Where does Mitch look first (roof void, bird or insect nests, stored items)?",
+    "Which product goes where: Astro aerosol or Coopex dust?",
+    "How does Mitch treat carpet, rugs and stored items?",
+    "Does Mitch treat outside as well? The Australian Museum says the adults live outdoors and keep flying back in",
+    "What must the customer do before and after (wash, bag clothes, move items)? The sources only cover vacuuming",
+    "Re-entry time for this job (the label rules, the Every job guide says 1 to 2 hours once dry)",
+    "When is a second visit needed, and how long until the customer stops seeing beetles?",
+    "Does the free service period apply to this job?",
+    "What do customers ask most? The answers above are from sources, not from Mitch's own list"
    ]
   }
  ]

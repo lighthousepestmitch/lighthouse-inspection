@@ -1,9 +1,9 @@
 {
  "id": "pre-purchase",
  "title": "Pre-purchase inspection",
- "subtitle": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite inspection checklist. Only what is different is here.",
- "updated": "2026-11-05",
- "source": "Termite inspection checklist guide; Inspection Capture (pre-purchase mode); LPC Tech Onboarding Pack (standards, PPE, free service period, never list); Mitch's 2025 pre-purchase inspection agreement wording; business-context notes on the pre-purchase report",
+ "subtitle": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite inspection checklist, only the differences are here. From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "updated": "2026-11-06",
+ "source": "Termite inspection checklist guide; Inspection Capture (pre-purchase mode); LPC Tech Onboarding Pack (standards, PPE, free service period, never list); Mitch's current pre-purchase inspection agreement (checked 6 Nov 2026); Mitch's answers 6 Nov 2026",
  "sections": [
   {
    "type": "text",
@@ -55,15 +55,24 @@
    "heading": "The client is a buyer",
    "short": "The buyer",
    "body": [
-    "The client is the buyer, not the owner. [Mitch to confirm: who arranges access, and who is on site: the agent, the owner or the buyer?]",
-    "In Mitch's 2025 pre-purchase agreement, the person asking for the inspection (or their agent) has to sign the Pest Inspection Agreement before the results can be issued. [Mitch to confirm: is the agreement still used, who sends it, and does a tech need to check it is signed?]"
+    "The client is the buyer, not the owner. Mitch arranges access. Who is on site varies: it can be the agent, the owner or the buyer.",
+    "Mitch sends the Pest Inspection Agreement to the client. Check it has been signed before you go. No inspection results are issued until the agreement is signed and returned. [Mitch to confirm: what a tech does if it is not signed yet]"
+   ]
+  },
+  {
+   "type": "checklist",
+   "id": "before",
+   "heading": "Before you go",
+   "short": "Before you go",
+   "items": [
+    "The client has signed the Pest Inspection Agreement Mitch sent"
    ]
   },
   {
    "type": "table",
    "heading": "Scope wording",
    "short": "Scope",
-   "title": "From Mitch's 2025 pre-purchase inspection agreement. [Mitch to confirm: still current for the RSA pre-purchase report?]",
+   "title": "From Mitch's current pre-purchase inspection agreement (the one he has used this year). The agreement itself has the full wording.",
    "columns": [
     "Point",
     "What the agreement says"
@@ -71,35 +80,39 @@
    "rows": [
     [
      "Standard",
-     "AS 4349.3-2010, Inspection of buildings, Part 3: Timber pest inspections."
+     "AS 4349.3-2010, Inspection of buildings, Part 3: Timber pest inspections. AS 3660.2 (termite management in and around existing buildings) is also named in the agreement."
     ],
     [
      "What it reports on",
-     "Subterranean and dampwood termites, borers of seasoned timber and wood decay fungi (rot), present on the day."
+     "Visible evidence of infestation or damage from subterranean termites, dampwood termites, borers of seasoned timber and wood decay fungi (rot)."
     ],
     [
      "Not covered",
-     "Other pests. Dry wood termites and European House Borer are left out."
+     "Drywood termites and European House Borer are expressly left out. Mould and mildew are not timber pests."
     ],
     [
      "How",
-     "Visual and non-invasive. Reasonable access areas only. Nothing is cut, moved, dismantled or removed."
+     "Visual and non-invasive, in areas the inspector decides have reasonable, safe access on the day. No cutting, drilling, dismantling or removing building parts. No disturbing linings or insulation. No moving heavy furniture or stored goods."
     ],
     [
      "Probing",
-     "The inspector may tap and sound timbers with a probe or screwdriver. Splinter testing is NOT done when the client is a buyer and not the owner."
+     "The inspector may probe, tap or sound exposed timbers where it is safe. Splinter testing is NOT done when the client is not the property owner, which is the case when the client is a buyer."
     ],
     [
      "Moisture meter",
-     "Used on walls backing onto wet areas such as showers. Elsewhere only if the visual inspection shows a need."
+     "Only used where visual signs call for more surface testing. [Mitch to confirm: the older wording also said walls backing onto wet areas such as showers, and elsewhere only if the visual inspection shows a need. The current agreement only has the second part. Which should a tech follow?]"
     ],
     [
      "Hidden or blocked areas",
-     "The report does not say they are free of pests, and it is not a guarantee."
+     "The inspector cannot inspect inside wall cavities, concealed framing, sealed voids, blocked areas or areas that are unsafe. The report is not a guarantee that the property is free of timber pests."
+    ],
+    [
+     "Reasonable access",
+     "Roof void: hatch 500 x 400 mm, 600 mm clearance, reachable with a 3.6 m ladder. Subfloor: opening 500 x 400 mm, 400 mm clearance under the bearer, 500 mm beneath a slab. No destructive access."
     ],
     [
      "Termite-only request",
-     "A termite-only inspection is not recommended for a pre-purchase. If the client asks only for that, it is done to AS 3660.2 and not AS 4349.3."
+     "Strongly discouraged for a pre-purchase. If the client asks for one anyway, it leaves out borers and wood decay fungi and only covers visible termite activity. [Mitch to confirm: the older line said it is then done to AS 3660.2 and not AS 4349.3. The current agreement does not say that.]"
     ]
    ]
   },
@@ -121,6 +134,25 @@
   {
    "type": "callout",
    "kind": "note",
+   "heading": "On site and after",
+   "short": "On site",
+   "items": [
+    {
+     "text": "Findings: everything goes in the report",
+     "detail": "If the client asks to talk about what you saw, speak with them."
+    },
+    {
+     "text": "The buyer gets the report within 24 hours"
+    },
+    {
+     "text": "Builder at the same time",
+     "detail": "Pre-purchase jobs do not come with a builder. Mitch can organise one for the same time. If the client asks, say so and tell Mitch."
+    }
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
    "heading": "No free service period",
    "short": "No free service period",
    "body": "An inspection has no free service period. It is an inspection only, not a guarantee. The Every job guide has the free service period for treatments."
@@ -136,7 +168,35 @@
     "Special conditions or instructions entered, or left blank because there are none",
     "Any extra tests you used are recorded in the Moisture meter and other tests card",
     "Every inaccessible area and obstruction is recorded in Capture with the specific reason",
+    "The client knows the report comes within 24 hours",
     "The job is sent to Mitch from Capture"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "What did you find?",
+     "a": "Everything goes in the report, and you will have it within 24 hours. Happy to talk it through if you would like."
+    },
+    {
+     "q": "How much is it?",
+     "a": "Mitch will confirm the cost. [Mitch to confirm: Mitch said a tech can give a rough quote and gave a figure. It is kept out of this public page on purpose, so tell the tech in person.]"
+    },
+    {
+     "q": "When do I get the report?",
+     "a": "Within 24 hours."
+    },
+    {
+     "q": "Can I get a building inspection done at the same time?",
+     "a": "Mitch can organise a builder to come at the same time. I will pass it on to Mitch."
+    },
+    {
+     "q": "Does this mean the house is free of termites?",
+     "a": "It is a visual inspection of the areas we can reach safely on the day. We can't see inside walls or blocked-off areas, so it can't guarantee the property is free of timber pests."
+    }
    ]
   },
   {
@@ -171,18 +231,13 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. Who arranges access for a pre-purchase (agent, owner or buyer), and does the buyer come along?",
-    "2. Is the Pest Inspection Agreement still used, who sends it, and does a tech need to check it is signed before going?",
-    "3. Is the 2025 agreement wording (splinter testing, moisture meter, what is left out) still right for the RSA pre-purchase report?",
-    "4. What do you tell a buyer on site about findings, and what waits for the report?",
-    "5. Can a tech quote a pre-purchase inspection, or does that go to you?",
-    "6. Do any pre-purchase jobs come with a builder (the Specialist Property Assessments builder and pest joint venture)? What does the tech do on those?",
-    "7. How soon does the buyer get the report?",
-    "8. What do buyers ask most, and what do you tell them?"
+    "What a tech does if the client has not signed the agreement before the inspection",
+    "Moisture meter: walls backing onto wet areas (older wording) or only where visual signs call for it (current agreement)",
+    "Termite-only request: the older line said AS 3660.2 and not AS 4349.3, the current agreement does not say that",
+    "Who to tell about a major safety hazard when the buyer is not there",
+    "How a tech answers a cost question: Mitch gave a rough figure, kept out of this public page"
    ]
   }
  ]

@@ -1,9 +1,9 @@
 {
  "id": "wasp",
  "title": "Wasp treatment",
- "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
- "updated": "2026-11-05",
- "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong, what you can quote); jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); past inspection report wording in the treatment history",
+ "subtitle": "From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "updated": "2026-11-06",
+ "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong, what you can quote); jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); sting first aid from ASCIA and Healthdirect guidance (not from Mitch)",
  "sections": [
   {
    "type": "text",
@@ -11,8 +11,19 @@
    "short": "When",
    "body": [
     "Customer has wasps or a wasp nest. Mitch's service is called Wasp/Bee Treatment. Past invoices read: \"Treat active wasp infestation\" and \"Treat active wasp infestation and remove accessible nests\".",
-    "Mitch sorts wasp jobs as small or accessible, and large or difficult access. Once you are experienced you can quote wasp jobs. Anything complex goes to Mitch.",
+    "The wasp you get most is the paper wasp. Mitch sorts wasp jobs as small or accessible, and large or difficult access. Once you are experienced you can quote wasp jobs. Anything complex goes to Mitch.",
+    "A second visit is done if the customer asks for it or it is needed.",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Mud daubers",
+   "short": "Mud daubers",
+   "body": [
+    "Mitch's line to customers: they do not sting, and the nest brushes off with a broom. If the customer is too scared, Mitch can remove it.",
+    "[Mitch to confirm: the Australian Museum says mud-dauber wasps can give a painful sting, though attacks are rare. Keep 'do not sting', or say 'rarely sting'? Source: Australian Museum, not from Mitch]"
    ]
   },
   {
@@ -31,29 +42,38 @@
     {
      "text": "Subfloor entry: coveralls, gloves, dust mask, torch"
     },
-    "[Mitch to confirm: any wasp-specific PPE, such as a veil or suit]"
+    "[Mitch to confirm: Mitch said 'usual' PPE for wasps. Is a veil or suit needed?]"
    ]
   },
   {
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which product for which nest]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label.",
    "columns": [
     "Product",
     "Active (as listed)",
-    "Equipment (as listed)"
+    "Equipment (as listed)",
+    "Use it for"
    ],
    "rows": [
     [
      "Wasp Force Insecticide",
      "d-Allethrin, d-Phenothrin",
-     "Aerosol (direct spray)"
+     "Aerosol (direct spray)",
+     "Small jobs that are easy to reach. The wasps drop straight away."
+    ],
+    [
+     "Bifenthrin: Country Bifenthrin 100 Low Odour Termiticide & Insecticide, or Aquastar 100SC Termiticide & Insecticide",
+     "Bifenthrin 100 g/L",
+     "Power spray rig (Mitch: hose and pump)",
+     "High or large jobs. About 48 hours for the nest to clear. [Mitch to confirm: which of the two for wasps. Neither is on the product list for the Wasp/Bee Treatment service yet]"
     ],
     [
      "Coopex Insecticidal Dusting Powder",
      "Permethrin",
-     "Bulb duster"
+     "Bulb duster",
+     "Mitch did not mention Coopex for wasps. [Mitch to confirm: is it used on wasps at all?]"
     ]
    ]
   },
@@ -63,17 +83,21 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
    "items": [
     "Ask the customer to point out where the wasps are and where the nest is",
+    "Look at the eaves and external walls first, then anywhere else the wasps are coming and going",
     "Take BEFORE photos of the nest and the area around it",
     {
      "text": "Treat the active wasp infestation",
-     "detail": "[Mitch to confirm: how you treat a nest, which product goes first, and where you work from]"
+     "detail": "Wasp Force for small, easy-access jobs. Bifenthrin through the hose and pump for high or large jobs. Any time of day is fine."
+    },
+    {
+     "text": "Take proper precautions. Use your judgement on how close you go and when to stand back",
+     "detail": "[Mitch to confirm: how to treat a nest you can't easily reach (roof void, wall, high eaves)]"
     },
     {
      "text": "Remove the nest if it is accessible",
-     "detail": "Past invoices say \"remove accessible nests\". [Mitch to confirm: do you always remove it when you can reach it?]"
+     "detail": "Past invoices say \"remove accessible nests\". [Mitch to confirm: what you do with the nest once it is down]"
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -82,6 +106,33 @@
     "Keep chemicals away from food, children and pets",
     "Note anything you could not treat or reach, and why",
     "Take AFTER photos"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "If someone is stung",
+   "short": "Stings",
+   "body": "[Mitch to confirm: this first aid is from ASCIA and Healthdirect guidance, not from Mitch]",
+   "items": [
+    {
+     "text": "Watch for a severe allergic reaction",
+     "detail": "Difficult or noisy breathing, swelling of the tongue or throat, wheeze or a cough that will not stop, a hoarse voice, dizziness or collapse. After an insect sting, tummy pain or vomiting counts too."
+    },
+    {
+     "text": "If you see any of those: lay them flat, use an adrenaline device if there is one, and call 000",
+     "detail": "Do not let them stand or walk. If breathing is hard they can sit with their legs out. If in doubt, give the adrenaline. Everyone who has a reaction like this needs to go to hospital."
+    },
+    {
+     "text": "Ordinary sting: wash with soap and water, then a cold pack wrapped in a cloth for 15 minutes",
+     "detail": "Wasps usually do not leave a sting in the skin. If one is there, scrape it out with a fingernail edge or a card. Do not squeeze it."
+    },
+    {
+     "text": "Get medical help straight away for a sting in the mouth, or on the neck or face, or lots of stings",
+     "detail": "Lots means 5 or more for a child, 10 or more for an adult."
+    },
+    "Not sure? Poisons Information Centre on 13 11 26, from anywhere in Australia",
+    "Then call Mitch and write down what happened"
    ]
   },
   {
@@ -94,9 +145,33 @@
     "Nest treated, and removed where it was accessible",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
-    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Customer told what you did and how long until the wasps are gone: Wasp Force, they drop straight away. Bifenthrin, about 48 hours for the nest to clear",
+    "Customer given the re-entry time [Mitch to confirm: is it the same as Every job (1 to 2 hours once dry), and how long should they keep away from the nest area after treatment?]",
+    "Customer knows a second visit is done if they ask for it or it is needed",
     "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "How long until the wasps are gone?",
+     "a": "With Wasp Force they drop straight away. If we use bifenthrin, it takes about 48 hours for the nest to clear."
+    },
+    {
+     "q": "Will they come back?",
+     "a": "If they do, give us a call. We will come back if you ask or if it is needed."
+    },
+    {
+     "q": "Do you take the nest away?",
+     "a": "Yes, we take it down if we can reach it."
+    },
+    {
+     "q": "Is it a mud dauber nest? Do they sting?",
+     "a": "They do not sting, and the nest brushes off with a broom. If it is worrying you, Mitch can remove it for you. [Mitch to confirm: see the mud daubers note above]"
+    }
    ]
   },
   {
@@ -116,7 +191,7 @@
     },
     {
      "text": "Someone is hurt",
-     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+     "detail": "Treat the injury first (see If someone is stung above). Call Mitch. Write down what happened."
     },
     {
      "text": "The customer complains or gets aggressive",
@@ -135,23 +210,16 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. Where do you look first for a wasp nest?",
-    "2. Which wasps do you get most (paper wasps, mud daubers, others), and does the treatment change?",
-    "3. What time of day do you treat, and why?",
-    "4. Which product for which nest: Wasp Force or Coopex?",
-    "5. How do you treat a nest you can reach, and one you can't (roof void, wall, high eaves)?",
-    "6. How close do you go to a nest, and when do you stand back?",
-    "7. Do you remove every nest you can reach, and what happens to it?",
-    "8. What PPE for wasps (veil, suit, gloves)?",
-    "9. When is a wasp job too big or too hard for a tech, so it goes to you?",
-    "10. What do you tell the customer about keeping away from the nest after treatment, and how long until the wasps are gone?",
-    "11. Do they come back, and is a second visit part of the job?",
-    "12. What does a tech do if someone is stung or reacts badly?",
-    "13. Mud daubers: you have told a customer before that they don't sting and the nests brush off with a broom. Is that what a tech should say too?"
+    "Which bifenthrin for wasps (Country Bifenthrin 100 Low Odour or Aquastar 100SC), and is Coopex used on wasps at all",
+    "Any wasp-specific PPE (veil or suit)",
+    "How to treat a nest you can't easily reach (roof void, wall, high eaves)",
+    "What you do with the nest once it is down",
+    "When a wasp job is too big or too hard for a tech and goes to Mitch",
+    "Re-entry time, and how long to keep away from the nest area after treatment",
+    "Does the free service period apply to wasp jobs?",
+    "Mud daubers: keep 'do not sting', or change it, given the Australian Museum says they can sting"
    ]
   }
  ]

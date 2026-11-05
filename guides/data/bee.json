@@ -1,9 +1,9 @@
 {
  "id": "bee",
  "title": "Bee treatment",
- "subtitle": "Draft. Only what is already written down is here. Questions for Mitch are at the bottom.",
- "updated": "2026-11-05",
- "source": "jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); LPC Tech Onboarding Pack (PPE, never list); past inspection report wording in the treatment history",
+ "subtitle": "From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "updated": "2026-11-06",
+ "source": "Mitch's answers 6 Nov 2026; jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); LPC Tech Onboarding Pack (PPE, never list); sting first aid from ASCIA and Healthdirect guidance and bee versus wasp questions from Australian Museum and CSIRO guidance (not from Mitch)",
  "sections": [
   {
    "type": "text",
@@ -11,8 +11,21 @@
    "short": "When",
    "body": [
     "Customer has bees. Mitch's service is called Wasp/Bee Treatment (wasps and bees share one service). Past invoices read: \"Treated active bee infestation\".",
-    "Bees also turn up as a finding on inspections, for example an active bee infestation in a gable, or mortar bee activity in brickwork. For an active bee infestation the report tells the customer to contact Mitch if they want it treated. [Mitch to confirm: is mortar bee a treatment job, or only an inspection finding?]",
+    "The bees Mitch treats are honey bees, usually in wall cavities, eaves and similar spots. Mitch prefers the customer uses a beekeeper, but it is up to the owner. [Mitch to confirm: any native bees other than mortar bee, do you treat them or leave them?]",
+    "Mortar bee (in brickwork) can be treated too. [Mitch to confirm: how to treat mortar bees]",
+    "Bees also turn up as a finding on inspections, for example an active bee infestation in a gable, or mortar bee activity in brickwork. For an active bee infestation the report tells the customer to contact Mitch if they want it treated.",
     "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Ask about allergies first",
+   "short": "Allergies",
+   "body": "Ask BEFORE you start. Ask the customer, and anyone else at the property, if anyone is allergic to stings.",
+   "items": [
+    "Most stings are not too bad. If someone is allergic, it means an epi-pen and hospital.",
+    "[Mitch to confirm: what you do about the job if someone at the property is allergic]"
    ]
   },
   {
@@ -23,37 +36,43 @@
    "title": "PPE on before you go in",
    "note": "Never apply chemicals without PPE. If the SDS requires it, you wear it. No exceptions.",
    "items": [
+    {
+     "text": "Bee suit for all bee treatment",
+     "detail": "Mitch's answer for bees."
+    },
     "Gloves and closed shoes at minimum",
-    "Gloves, mask and eye protection for any spray, as per the product SDS",
+    "Gloves, mask and eye protection for any spray or dust, as per the product SDS",
     {
      "text": "Roof void entry: dust mask, gloves, torch, appropriate footwear"
     },
     {
      "text": "Subfloor entry: coveralls, gloves, dust mask, torch"
-    },
-    "[Mitch to confirm: any bee-specific PPE, such as a veil or suit]"
+    }
    ]
   },
   {
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: same two products for bees as for wasps, and which for what]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label.",
    "columns": [
     "Product",
     "Active (as listed)",
-    "Equipment (as listed)"
+    "Equipment (as listed)",
+    "Use it for"
    ],
    "rows": [
     [
-     "Wasp Force Insecticide",
-     "d-Allethrin, d-Phenothrin",
-     "Aerosol (direct spray)"
-    ],
-    [
      "Coopex Insecticidal Dusting Powder",
      "Permethrin",
-     "Bulb duster"
+     "Bulb duster (Mitch: powder blower)",
+     "Usually this. Blown into the cavity with the powder blower."
+    ],
+    [
+     "Wasp Force Insecticide",
+     "d-Allethrin, d-Phenothrin",
+     "Aerosol (direct spray)",
+     "Mitch did not mention it for bees. [Mitch to confirm: is it used on bees at all?]"
     ]
    ]
   },
@@ -63,13 +82,26 @@
    "heading": "Steps",
    "short": "Steps",
    "title": "Steps",
-   "note": "Only what is already written down. Anything missing is in the questions at the bottom.",
    "items": [
+    "Ask if anyone at the property is allergic to stings, before you start",
     "Ask the customer to point out where the bees are and where they are going in and out",
     "Take BEFORE photos of the area",
+    "Suit up in the bee suit",
     {
-     "text": "Treat the active bee infestation",
-     "detail": "[Mitch to confirm: how you treat bees, which product, and where you work from]"
+     "text": "Look for a way into the cavity",
+     "detail": "Drill access holes only if it is needed and the owner allows it."
+    },
+    {
+     "text": "Treat the hive with Coopex, blown into the cavity with the powder blower",
+     "detail": "Any time of day is fine. Stand wherever you need to work, in the bee suit."
+    },
+    {
+     "text": "Keep the customer and pets away from the area while you treat",
+     "detail": "[Mitch to confirm: how far, and how you do it]"
+    },
+    {
+     "text": "Do not remove the comb or the hive",
+     "detail": "We do not remove it. A beekeeper, a builder or a chippy opens up the wall for that."
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -78,6 +110,55 @@
     "Keep chemicals away from food, children and pets",
     "Note anything you could not treat or reach, and why",
     "Take AFTER photos"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "Bee or wasp? Questions for the phone",
+   "short": "Bee or wasp",
+   "body": "[Mitch to confirm: these phone questions are from Australian Museum and CSIRO guidance, not from Mitch]",
+   "items": [
+    {
+     "text": "What does it look like?",
+     "detail": "Honey bees are furry and brownish, with dull yellow and brown bands, about 1.3 to 1.6 cm long. Wasps have fewer hairs and a narrow waist."
+    },
+    {
+     "text": "Are they carrying yellow pollen on their back legs?",
+     "detail": "Pollen bags on the back legs mean a bee."
+    },
+    {
+     "text": "Where are they going in and out, and what does the nest look like?",
+     "detail": "A papery nest of open cells hanging from an eave or branch is a paper wasp nest."
+    },
+    "Has anyone been stung, and is anyone allergic?"
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "note",
+   "heading": "If someone is stung",
+   "short": "Stings",
+   "body": "[Mitch to confirm: this first aid is from ASCIA and Healthdirect guidance, not from Mitch]",
+   "items": [
+    {
+     "text": "Watch for a severe allergic reaction",
+     "detail": "Difficult or noisy breathing, swelling of the tongue or throat, wheeze or a cough that will not stop, a hoarse voice, dizziness or collapse. After an insect sting, tummy pain or vomiting counts too."
+    },
+    {
+     "text": "If you see any of those: lay them flat, use an adrenaline device if there is one, and call 000",
+     "detail": "Do not let them stand or walk. If breathing is hard they can sit with their legs out. If in doubt, give the adrenaline. Everyone who has a reaction like this needs to go to hospital."
+    },
+    {
+     "text": "Ordinary sting: scrape out the sting, wash with soap and water, then a cold pack wrapped in a cloth for 15 minutes",
+     "detail": "A honey bee leaves its sting in the skin. Scrape it out with a fingernail edge or a card. Do not squeeze it."
+    },
+    {
+     "text": "Get medical help straight away for a sting in the mouth, or on the neck or face, or lots of stings",
+     "detail": "Lots means 5 or more for a child, 10 or more for an adult."
+    },
+    "Not sure? Poisons Information Centre on 13 11 26, from anywhere in Australia",
+    "Then call Mitch and write down what happened"
    ]
   },
   {
@@ -90,9 +171,37 @@
     "Bees treated",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and what to expect [Mitch to confirm: what to tell them for this pest]",
+    "Customer told what you did, and that we do not remove the comb or hive [Mitch to confirm: what to tell them about the comb left behind, and how long until the bees stop flying]",
+    "Customer knows whether a second visit is needed (it depends on the job and the access)",
     "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
     "Service report left, or customer told it is being emailed"
+   ]
+  },
+  {
+   "type": "qa",
+   "heading": "If the customer asks",
+   "short": "Customer asks",
+   "items": [
+    {
+     "q": "Why does it need doing now?",
+     "a": "It is best to get onto it early. If they are left, they will build a hive in the wall. That brings moisture and sugars, and it attracts cockroaches."
+    },
+    {
+     "q": "Can you take the hive or the honey out?",
+     "a": "No, we do not remove the comb or the hive. A beekeeper, a builder or a chippy opens up the wall for that."
+    },
+    {
+     "q": "Should I get a beekeeper instead?",
+     "a": "We prefer a beekeeper, but it is up to you."
+    },
+    {
+     "q": "Will you need to drill my wall?",
+     "a": "Only if we need to, to get into the cavity, and only if you allow it."
+    },
+    {
+     "q": "Will you need to come back?",
+     "a": "It depends on the job and the access. Sometimes yes, sometimes no."
+    }
    ]
   },
   {
@@ -112,7 +221,7 @@
     },
     {
      "text": "Someone is hurt",
-     "detail": "Treat the injury first. Call Mitch. Write down what happened."
+     "detail": "Treat the injury first (see If someone is stung above). Call Mitch. Write down what happened."
     },
     {
      "text": "The customer complains or gets aggressive",
@@ -131,22 +240,15 @@
   {
    "type": "callout",
    "kind": "note",
-   "heading": "Mitch to fill in",
-   "short": "Questions",
-   "title": "Answer each in one line and this guide is done",
+   "title": "Still to confirm",
    "items": [
-    "1. Which bees do you treat (honey bees, native bees), and which do you send to a beekeeper?",
-    "2. Same products as wasps (Wasp Force and Coopex), or something else for bees?",
-    "3. How do you tell bees from wasps before you go, and what do you ask on the phone?",
-    "4. How do you treat a hive in a wall, roof or eave?",
-    "5. Do you remove the comb or hive? If not, what do you tell the customer about what is left behind?",
-    "6. What PPE for bees (veil, suit, gloves)?",
-    "7. What time of day do you treat?",
-    "8. Where do you stand, and how do you keep the customer and pets away while you treat?",
-    "9. Mortar bee: do you treat it, or is it only a finding on inspections?",
-    "10. When is a second visit needed (bees still flying), and is it part of the job?",
-    "11. What does a tech do if someone is stung or reacts badly?",
-    "12. What do customers ask most about bees, and what do you tell them?"
+    "Native bees other than mortar bee: treat them or leave them?",
+    "How to treat mortar bees in brickwork",
+    "What to do about the job if someone at the property is allergic",
+    "Is Wasp Force used on bees at all, or only Coopex?",
+    "How to keep the customer and pets away while you treat",
+    "What to tell the customer about the comb left behind, and how long until the bees stop flying",
+    "Re-entry time, and whether the free service period applies to bee jobs"
    ]
   }
  ]
