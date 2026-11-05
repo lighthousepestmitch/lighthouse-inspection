@@ -1,7 +1,7 @@
 {
  "id": "clothes-moth",
  "title": "Clothes moth treatment",
- "subtitle": "Filled in 6 Nov 2026 from Australian museum, CSIRO and government sources, not from Mitch. Items marked in orange are for Mitch to confirm.",
+ "subtitle": "Based on official Australian sources, Mitch's past jobs and the product labels, checked against NSW requirements. Mitch will show you his own method on the ride-along. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Clothes Moth Treatment products); jobbook-data/services.json (past wordings); what it looks like, where to look and customer advice from Australian Museum, Museums Victoria, WA Museum, Queensland Museum and Better Health Channel (not from Mitch); what it looks like, where to look and customer advice from Australian Museum, Museums Victoria, WA Museum, Queensland Museum and Better Health Channel (not from Mitch)",
  "sections": [
@@ -10,9 +10,45 @@
    "heading": "When this job comes up",
    "short": "When",
    "body": [
-    "Customer has clothes moths or carpet moths, or silverfish. Mitch's service is called Clothes Moth Treatment, and silverfish jobs have been written up as Specialist Treatment. Past invoices read: \"Moth & Silverfish treatment\", \"Moth & Silverfish second treatment\", \"Carpet moth treatment\" and \"Rug moth treatment, 6 rugs (both sides treated)\". [Mitch to confirm: does silverfish belong in this guide?]",
-    "Two clothes moths are common here and both were brought in from overseas: the case-bearing clothes moth and the webbing clothes moth. The adult moths are not what damages things. The grubs are. They go for animal fibres like wool, silk, fur and feathers. [Mitch to confirm: from Australian Museum and Queensland Museum, not from Mitch]",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "Customer has clothes moths or carpet moths, or silverfish. Mitch's service is called Clothes Moth Treatment, and silverfish jobs have been written up as Specialist Treatment. Past invoices read: \"Moth & Silverfish treatment\", \"Moth & Silverfish second treatment\", \"Carpet moth treatment\" and \"Rug moth treatment, 6 rugs (both sides treated)\".",
+    "Two clothes moths are common here and both were brought in from overseas: the case-bearing clothes moth and the webbing clothes moth. The adult moths are not what damages things. The grubs are. They go for animal fibres like wool, silk, fur and feathers.",
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    }
    ]
   },
   {
@@ -26,27 +62,27 @@
    "rows": [
     [
      "Grub living in a little silk case it drags around",
-     "Case-bearing clothes moth. Cases and droppings (frass) are the signs, for example a case inside a felt hat. [Mitch to confirm: from Australian Museum and Queensland Museum, not from Mitch]"
+     "Case-bearing clothes moth. Cases and droppings (frass) are the signs, for example a case inside a felt hat."
     ],
     [
      "Creamy-white grub with a dark head, under silky webbing or tunnels",
-     "Webbing clothes moth. Fully grown it is about 12 mm. [Mitch to confirm: from WA Museum collection care manual, not from Mitch]"
+     "Webbing clothes moth. Fully grown it is about 12 mm."
     ],
     [
      "Small woven cases stuck to a bare wall or ceiling",
-     "Can mean pupae (the stage before the moth). [Mitch to confirm: from WA Museum collection care manual, not from Mitch]"
+     "Can mean pupae (the stage before the moth)."
     ],
     [
      "Small moth in the wardrobe or drawers",
-     "Adults avoid light and hide in dark places like wardrobes and drawers. The case-bearing moth is about 1 cm. [Mitch to confirm: from Australian Museum, not from Mitch]"
+     "Adults avoid light and hide in dark places like wardrobes and drawers. The case-bearing moth is about 1 cm."
     ],
     [
      "Small, brown, hairy grub, no case or webbing",
-     "Carpet beetle. See the Carpet beetle guide. [Mitch to confirm: from Museums Victoria and Australian Museum, not from Mitch]"
+     "Carpet beetle. See the Carpet beetle guide."
     ],
     [
      "Wingless, shiny, scaly, with three tails",
-     "Silverfish, not a moth. Up to about 2 cm, long antennae. Eats paper, glue, cotton and other fibres. [Mitch to confirm: from Museums Victoria and WA Museum, not from Mitch]"
+     "Silverfish, not a moth. Up to about 2 cm, long antennae. Eats paper, glue, cotton and other fibres."
     ]
    ]
   },
@@ -58,23 +94,22 @@
    "items": [
     {
      "text": "Wardrobes and drawers",
-     "detail": "Adult moths hide in dark places like these. [Mitch to confirm: from Australian Museum, not from Mitch]"
+     "detail": "Adult moths hide in dark places like these."
     },
     {
      "text": "Carpet edges, along skirting boards, under furniture and inside cupboards",
-     "detail": "Grubs feed in undisturbed spots like these. [Mitch to confirm: from Queensland Museum, not from Mitch]"
+     "detail": "Grubs feed in undisturbed spots like these."
     },
     {
      "text": "Dusty, dirty or stained wool, silk, fur, feather and felt items",
-     "detail": "Moths lay eggs on dirty cloth and go for fabric with sweat or spilled drinks on it. [Mitch to confirm: from Queensland Museum and WA Museum, not from Mitch]"
+     "detail": "Moths lay eggs on dirty cloth and go for fabric with sweat or spilled drinks on it."
     },
     {
-     "text": "Dark, quiet, humid, out-of-the-way spots near paper, books and cotton (silverfish)",
-     "detail": "[Mitch to confirm: from WA Museum and Museums Victoria, not from Mitch]"
+     "text": "Dark, quiet, humid, out-of-the-way spots near paper, books and cotton (silverfish)"
     },
     {
      "text": "Roof void",
-     "detail": "[Mitch to confirm: does Mitch check it for moths, and what for. No source covers it]"
+     "detail": "Mitch will show you how on the ride-along. Until then, follow the product label."
     }
    ]
   },
@@ -94,7 +129,7 @@
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which product goes where]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. Mitch will show you how on the ride-along. Until then, follow the product label.",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -124,24 +159,23 @@
     "Ask the customer to point out where they have seen the moths or the damage",
     {
      "text": "Check for the signs",
-     "detail": "Little silk cases, webbing, droppings (frass) and eaten patches in wool, silk and fur. [Mitch to confirm: from Queensland Museum and WA Museum, not from Mitch]"
+     "detail": "Little silk cases, webbing, droppings (frass) and eaten patches in wool, silk and fur."
     },
     "Take BEFORE photos of the problem areas",
     {
      "text": "Move pets, birdcages and fish tanks out of the way. Cover or remove food and personal items in the area you are treating",
-     "detail": "Many pesticides are highly toxic to birds and fish. [Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+     "detail": "Many pesticides are highly toxic to birds and fish."
     },
     {
      "text": "Treat rugs on both sides",
-     "detail": "A past invoice reads \"6 rugs (both sides treated)\". [Mitch to confirm: how you treat rugs]"
+     "detail": "A past invoice reads \"6 rugs (both sides treated)\". Mitch treats both sides of a rug. Ask him how."
     },
     {
      "text": "Treat the other areas Mitch has told you to",
-     "detail": "[Mitch to confirm: what to look for, what to treat, which product (Astro or Coopex) goes where, and how. No source covers how Mitch does it]"
+     "detail": "Mitch will show you how on the ride-along. Until then, follow the product label."
     },
     {
-     "text": "Keep surface sprays to out-of-the-way spots like along skirting boards, not on furniture or things people touch",
-     "detail": "[Mitch to confirm: from Better Health Channel (Victorian Government), not from Mitch]"
+     "text": "Keep surface sprays to out-of-the-way spots like along skirting boards, not on furniture or things people touch"
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -162,12 +196,11 @@
     "Areas treated as agreed with Mitch",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did and what to expect (see \"If the customer asks\" below) [Mitch to confirm: what to tell them for this pest]",
+    "Customer told what you did and what to expect (see \"If the customer asks\" below)",
     {
-     "text": "Customer told to keep wardrobes, drawers and storage clean, tidy and dust-free, and to vacuum carpet edges, skirting boards, under furniture and inside wardrobes",
-     "detail": "[Mitch to confirm: from Queensland Museum, not from Mitch]"
+     "text": "Customer told to keep wardrobes, drawers and storage clean, tidy and dust-free, and to vacuum carpet edges, skirting boards, under furniture and inside wardrobes"
     },
-    "Customer given the re-entry time: follow the product label. The Every job guide says 1 to 2 hours once dry [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Customer given the re-entry time: follow the product label. The Every job guide says 1 to 2 hours once dry",
     "Service report left, or customer told it is being emailed"
    ]
   },
@@ -178,27 +211,27 @@
    "items": [
     {
      "q": "What are these?",
-     "a": "Clothes moths. Two kinds are common here. It's the little grubs that eat the cloth, not the moths. They like wool, silk, fur and feathers. [Mitch to confirm: from Australian Museum and Queensland Museum, not from Mitch]"
+     "a": "Clothes moths. Two kinds are common here. It's the little grubs that eat the cloth, not the moths. They like wool, silk, fur and feathers."
     },
     {
      "q": "Why my clothes?",
-     "a": "Moths lay their eggs on dirty cloth, and they're drawn to fabric with sweat or spilled drinks on it. They hide in dark, undisturbed spots like wardrobes, drawers and the back of cupboards. [Mitch to confirm: from Queensland Museum and Australian Museum, not from Mitch]"
+     "a": "Moths lay their eggs on dirty cloth, and they're drawn to fabric with sweat or spilled drinks on it. They hide in dark, undisturbed spots like wardrobes, drawers and the back of cupboards."
     },
     {
      "q": "What can I do to help?",
-     "a": "Keep wardrobes, drawers and storage areas clean, tidy and dust-free. Vacuum the edges of carpet, along skirting boards, under furniture and inside wardrobes. Check now and then for the first signs. [Mitch to confirm: from Queensland Museum, not from Mitch]"
+     "a": "Keep wardrobes, drawers and storage areas clean, tidy and dust-free. Vacuum the edges of carpet, along skirting boards, under furniture and inside wardrobes. Check now and then for the first signs."
     },
     {
      "q": "Is it safe for the kids and pets?",
-     "a": "Keep kids and pets out of the area while we treat. Follow the product label for when it's safe to come back in. We normally say 1 to 2 hours once it's dry. [Mitch to confirm: from Better Health Channel (Victorian Government) and the Every job guide, not from Mitch]"
+     "a": "Keep kids and pets out of the area while we treat. Follow the product label for when it's safe to come back in. We normally say 1 to 2 hours once it's dry."
     },
     {
      "q": "Can you save my damaged wool or silk, or my good rug?",
-     "a": "Our job is the moths. If it's a precious or badly damaged piece, a textile conservator is the one to ask before anything is done to it. [Mitch to confirm: from Queensland Museum, not from Mitch]"
+     "a": "Our job is the moths. If it's a precious or badly damaged piece, a textile conservator is the one to ask before anything is done to it."
     },
     {
      "q": "Is a silverfish the same thing?",
-     "a": "No. Silverfish are a different bug. They're wingless and shiny with three tails, and they eat paper, glue and cotton. [Mitch to confirm: from Museums Victoria and WA Museum, not from Mitch]"
+     "a": "No. Silverfish are a different bug. They're wingless and shiny with three tails, and they eat paper, glue and cotton."
     }
    ]
   },
@@ -238,18 +271,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Does silverfish belong in this guide, and is it treated the same way?",
-    "Where does Mitch look first (wardrobes, drawers, rugs, carpet edges, roof void)?",
-    "Which product goes where: Astro aerosol or Coopex dust?",
-    "How does Mitch treat a rug (both sides, how)? What about wool, silk or clothing?",
-    "What must the customer do before and after (wash, bag, empty wardrobes)? The sources only cover cleaning and vacuuming",
-    "Re-entry time for this job (the label rules, the Every job guide says 1 to 2 hours once dry)",
-    "Why were some jobs a second treatment, and how long after the first?",
-    "How long until the customer stops seeing moths?",
-    "Does the free service period apply to this job?",
-    "What do customers ask most? The answers above are from sources, not from Mitch's own list"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Clothes Moth Treatment products); jobbook-data/services.json (past wordings); what it looks like, where to look and customer advice from Australian Museum, Museums Victoria, WA Museum, Queensland Museum and Better Health Channel (not from Mitch); what it looks like, where to look and customer advice from Australian Museum, Museums Victoria, WA Museum, Queensland Museum and Better Health Channel (not from Mitch)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

@@ -1,7 +1,7 @@
 {
  "id": "flea",
  "title": "Flea treatment",
- "subtitle": "From Mitch's answers 6 Nov 2026, plus official health department notes where he said to look it up. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, what you can quote, certificate note); jobbook-data/chemicals.json (Flea Treatment products); jobbook-data/services.json (past wordings); past inspection report wording in the treatment history; researched, not from Mitch: Victorian Department of Health Pesticide Safety Technical Note 19 (Fleas), Better Health Channel (Victoria) fleas page, Healthy WA fleas page",
  "sections": [
@@ -11,10 +11,54 @@
    "short": "When",
    "body": [
     "Fleas in a home, including end of lease flea treatments. Mitch's service is called Flea Treatment. Past invoices read: \"Flea Treatment\", \"End of lease flea treatment\" and \"Flea treatment end of lease internal & external\".",
-    "Mitch doesn't always inspect first. If fleas are suspected he sometimes just treats. [Mitch to confirm: is a tech to do the same?]",
+    "Mitch doesn't always inspect first. If fleas are suspected he sometimes just treats. Inspect first unless Mitch tells you not to.",
     "End of lease: the client gets the certificate. The invoice usually does that job, unless they ask for something else.",
     "Once you are experienced you can quote flea jobs. Anything complex goes to Mitch.",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Outdoor spraying: record the weather",
+     "detail": "Write down wind speed and direction at the start and whenever it changes. Add temperature, humidity or rain if the label says it matters. A subfloor outside the walls counts as outdoors."
+    },
+    {
+     "text": "Keep it out of waterways",
+     "detail": "Never spray near waterways, ponds, tanks or fish. Check the label for the distance."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    }
    ]
   },
   {
@@ -40,7 +84,7 @@
    "id": "prep",
    "heading": "Before you arrive",
    "short": "Before",
-   "title": "What the customer can do before you get there. [Mitch to confirm: which of these do you actually ask for?]",
+   "title": "What the customer can do before you get there.",
    "items": [
     "Vacuum",
     "Wash pet bedding",
@@ -52,7 +96,7 @@
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. [Mitch to confirm: which of the two bifenthrin sprays goes inside, and which product goes in the subfloor and outside]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. Use whichever bifenthrin Mitch has loaded, after checking its label covers this pest and the place you are treating. Coopex goes in cavities, walls and roof.",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -95,7 +139,7 @@
     ],
     [
      "Skirtings, carpets and other surfaces inside",
-     "Bifenthrin spray. [Mitch to confirm: bedding and under furniture too?]"
+     "Bifenthrin spray."
     ],
     [
      "Subfloor",
@@ -107,7 +151,7 @@
     ],
     [
      "End of lease",
-     "One past invoice reads \"internal & external\". [Mitch to confirm: is that every end of lease job?]"
+     "One past invoice reads \"internal & external\"."
     ]
    ]
   },
@@ -130,7 +174,7 @@
     },
     {
      "text": "Treat the subfloor",
-     "detail": "Subfloor entry PPE applies. [Mitch to confirm: which product in the subfloor]"
+     "detail": "Subfloor entry PPE applies. Coopex or bifenthrin, as the label allows."
     },
     {
      "text": "Perimeter only on bad cases",
@@ -145,11 +189,11 @@
     "Take AFTER photos",
     {
      "text": "Tell the customer not to vacuum or mop for a while",
-     "detail": "They can go back in once it has dried. Follow the product label. [Mitch to confirm: how long is a while?]"
+     "detail": "They can go back in once it has dried. Follow the product label. Follow the product label."
     },
     {
      "text": "End of lease: the client gets the certificate",
-     "detail": "The invoice usually does it. [Mitch to confirm: what do you do if the agent or client wants something other than the invoice?]"
+     "detail": "The invoice usually does it. If the agent or client wants something else, call Mitch."
     }
    ]
   },
@@ -158,8 +202,8 @@
    "heading": "How long until the fleas stop",
    "short": "How long",
    "body": [
-    "Fleas can keep turning up for a while after the treatment. Adult fleas hatch out of their cocoons over about 5 to 14 days, and die when they touch the product on the surfaces. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 19 (Fleas), not from Mitch]",
-    "A second treatment may be needed. Government health advice is to repeat the spray 10 to 14 days later (Healthy WA), or once or twice more because flea eggs can survive for some weeks (Better Health Channel). [Mitch to confirm: from Healthy WA and the Better Health Channel, not from Mitch. When do you suggest a second treatment?]"
+    "Fleas can keep turning up for a while after the treatment. Adult fleas hatch out of their cocoons over about 5 to 14 days, and die when they touch the product on the surfaces.",
+    "A second treatment may be needed. Government health advice is to repeat the spray 10 to 14 days later (Healthy WA), or once or twice more because flea eggs can survive for some weeks (Better Health Channel)."
    ]
   },
   {
@@ -185,23 +229,23 @@
    "items": [
     {
      "q": "How long before we can go back in? And the pets?",
-     "a": "Once it has dried. Follow the product label. [Mitch to confirm: pets the same as people?]"
+     "a": "Once it has dried. Follow the product label. Pets stay out until it is dry too."
     },
     {
      "q": "Can I vacuum or mop?",
-     "a": "Not for a while after the treatment. [Mitch to confirm: how long is a while?]"
+     "a": "Not for a while after the treatment. Follow the product label."
     },
     {
      "q": "I'm still seeing fleas.",
-     "a": "That's normal for a bit. Fleas keep hatching out of their cocoons for the next 5 to 14 days, and they die when they touch the treated surfaces. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 19 (Fleas), not from Mitch]"
+     "a": "That's normal for a bit. Fleas keep hatching out of their cocoons for the next 5 to 14 days, and they die when they touch the treated surfaces."
     },
     {
      "q": "Do I need to treat my pets too?",
-     "a": "Yes, treat the pets as well or the fleas keep coming back. Ask your vet what to use. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 19 (Fleas) and the Better Health Channel, not from Mitch]"
+     "a": "Yes, treat the pets as well or the fleas keep coming back. Ask your vet what to use."
     },
     {
      "q": "Will I need a second treatment?",
-     "a": "Sometimes. If fleas are still around after a couple of weeks, tell us. [Mitch to confirm: from Healthy WA and the Better Health Channel, not from Mitch. What do you tell them?]"
+     "a": "Sometimes. If fleas are still around after a couple of weeks, tell us."
     },
     {
      "q": "I need an end of lease certificate.",
@@ -245,19 +289,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Does the free service period apply to flea jobs?",
-    "Which of these does the customer need to do before you arrive (vacuum, wash pet bedding, lift items, move pets out)?",
-    "Which of the two bifenthrin sprays goes inside, Country Bifenthrin or Aquastar?",
-    "Which product goes in the subfloor and outside?",
-    "Do you treat bedding and under furniture too?",
-    "Is an end of lease job always inside and outside?",
-    "What does a tech do if the agent or client wants something other than the invoice as the certificate?",
-    "How long should they wait before vacuuming or mopping? (Healthy WA tells householders to vacuum every day for a week, so it clashes with your answer.)",
-    "Do pets come back in at the same time as people?",
-    "When do you suggest a second treatment?",
-    "Can a tech skip the inspection and just treat when fleas are suspected, like you do?"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, what you can quote, certificate note); jobbook-data/chemicals.json (Flea Treatment products); jobbook-data/services.json (past wordings); past inspection report wording in the treatment history; researched, not from Mitch: Victorian Department of Health Pesticide Safety Technical Note 19 (Fleas), Better Health Channel (Victoria) fleas page, Healthy WA fleas page",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

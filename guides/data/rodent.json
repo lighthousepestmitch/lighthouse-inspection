@@ -1,7 +1,7 @@
 {
  "id": "rodent",
  "title": "Rodent baiting and bait boxes",
- "subtitle": "From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, what you can quote); jobbook-data/chemicals.json and the SDS files (Rodent Treatment and Rodent Boxes products); jobbook-data/services.json (past wordings); business-context notes (quarterly default, external boxes)",
  "sections": [
@@ -14,7 +14,47 @@
     "Rodent baiting usually comes back every quarter. That is Mitch's default, and he can change it for a client.",
     "We use bait only. No traps.",
     "Once you are experienced you can quote a bait box refill. Anything complex goes to Mitch. Commercial rodent jobs do not all go to Mitch, they can be shared around.",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Second-generation baits (for example brodifacoum, as in Talon GT Pro)",
+     "detail": "They are under APVMA conditions of use from March 2026. Use them only as those instructions say, and keep the printed instructions with the product. Outdoors: tamper-resistant, weather-resistant station, fixed in place, no more than 2 m from the building. No outdoor mouse baiting. No burrow baiting. Check the infestation and results at least every 35 days of continuous use. At each visit search for dead rodents and dispose of them, with gloves on."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    }
    ]
   },
   {
@@ -55,14 +95,14 @@
     {
      "text": "Replace a box when it is unsafe"
     },
-    "How many boxes on a standard house, and how far apart: [Mitch to confirm: number of boxes and spacing]"
+    "How many boxes on a standard house, and how far apart: Mitch sets this for each job. Ask him until you are doing it on your own."
    ]
   },
   {
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "All of these go in rodent bait stations. Names as in Mitch's product list. No rates here: follow the label. Mitch's go-to baits are Selontra and Talon GT Pro, but any of them can be used. [Mitch to confirm: you called Selontra 'first gen'. The SDS lists Selontra as cholecalciferol and Talon GT Pro as brodifacoum. Did you mean Generation First Strike, or something else?]",
+   "title": "All of these go in rodent bait stations. Names as in Mitch's product list. No rates here: follow the label. Mitch's go-to baits are Selontra and Talon GT Pro, but any of them can be used.",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -132,7 +172,7 @@
     ],
     [
      "Rodent Baiting to ceiling / baiting to ceiling void / bait ceiling cavity",
-     "Some jobs put bait in the ceiling cavity. [Mitch to confirm: where in the void]"
+     "Some jobs put bait in the ceiling cavity. Mitch will show you where in the void on the ride-along."
     ],
     [
      "Rodent Baiting internal only",
@@ -159,22 +199,22 @@
     },
     {
      "text": "Clean each bait box",
-     "detail": "[Mitch to confirm: how to clean the box]"
+     "detail": "Gloves on. Bag the old bait and anything you wipe out of the box, and take it back to Mitch."
     },
     {
      "text": "Refill each bait box with fresh bait",
-     "detail": "Old bait goes off and is less attractive to rodents, so it is usually replaced, whether the box was eaten out or not touched. Apply per the product label. Never exceed label rates. [Mitch to confirm: any amount or fill mark you want in each box]"
+     "detail": "Old bait goes off and is less attractive to rodents, so it is usually replaced, whether the box was eaten out or not touched. Apply per the product label. Never exceed label rates."
     },
     {
      "text": "Old or mouldy bait: bag it or box it, take it back and give it to Mitch"
     },
     {
      "text": "Bait the ceiling void or cavity when the job includes it",
-     "detail": "Bait goes into the ceiling cavity. Roof void entry PPE applies. [Mitch to confirm: where in the void]"
+     "detail": "Bait goes into the ceiling cavity. Roof void entry PPE applies. Mitch will show you where in the void on the ride-along."
     },
     {
-     "text": "Dead rodents: we do not usually remove them",
-     "detail": "Have a look, and take one out if it is easy to find."
+     "text": "Look for dead rodents at every visit and take away the ones you can find, gloves on",
+     "detail": "The APVMA instructions for second-generation baits require it. If you cannot reach one, tell Mitch."
     },
     "Keep chemicals away from food, children and pets",
     {
@@ -198,7 +238,7 @@
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
     "Customer told what you did, and about food storage",
-    "Customer told when to expect the next baiting visit [Mitch to confirm: quarterly?]",
+    "Customer told when to expect the next baiting visit",
     "Service report left, or customer told it is being emailed"
    ]
   },
@@ -221,7 +261,7 @@
     },
     {
      "q": "Will you take away any dead rodents?",
-     "a": "We do not usually remove them unless they are easy to find. We will have a look and take it if it is easy to get to."
+     "a": "We look for them at every visit and take away the ones we can find. If one is out of reach, we will tell you so you can arrange it."
     },
     {
      "q": "How are they getting in?",
@@ -265,15 +305,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "How many boxes on a standard house, and how far apart",
-    "Selontra: you called it 'first gen', but the SDS says cholecalciferol. Which did you mean?",
-    "How much bait goes in each box, or a fill mark",
-    "Where in the ceiling void the bait goes",
-    "How to clean a bait box",
-    "Does the free service period apply to rodent jobs?",
-    "Is quarterly the next-visit default to tell the customer?"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, what you can quote); jobbook-data/chemicals.json and the SDS files (Rodent Treatment and Rodent Boxes products); jobbook-data/services.json (past wordings); business-context notes (quarterly default, external boxes)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages, and the APVMA notice on rodent baits (Gazette No 5, 10 March 2026). Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

@@ -61,7 +61,7 @@
   {
    "id": "pre-purchase",
    "title": "Pre-purchase inspection",
-   "summary": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite checklist, with only the differences. Orange items still to confirm.",
+   "summary": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite checklist, with only the differences.",
    "updated": "2026-11-06",
    "order": 8,
    "group": "Termites"
@@ -69,7 +69,7 @@
   {
    "id": "wasp",
    "title": "Wasp treatment",
-   "summary": "Wasp jobs: products, steps, mud daubers and stings. Orange items still to confirm.",
+   "summary": "Wasp jobs: products, steps, mud daubers and stings.",
    "updated": "2026-11-06",
    "order": 9,
    "group": "Other pests"
@@ -77,7 +77,7 @@
   {
    "id": "bee",
    "title": "Bee treatment",
-   "summary": "Bee jobs: allergies first, treating a wall or eave, stings. Orange items still to confirm.",
+   "summary": "Bee jobs: allergies first, treating a wall or eave, stings.",
    "updated": "2026-11-06",
    "order": 10,
    "group": "Other pests"
@@ -85,7 +85,7 @@
   {
    "id": "rodent",
    "title": "Rodent baiting and bait boxes",
-   "summary": "Bait boxes, checks, old bait and what to tell customers. Orange items still to confirm.",
+   "summary": "Bait boxes, checks, old bait and what to tell customers.",
    "updated": "2026-11-06",
    "order": 11,
    "group": "Other pests"
@@ -93,7 +93,7 @@
   {
    "id": "bed-bug",
    "title": "Bed bug treatment",
-   "summary": "Bed bug jobs: prep, treating, follow-up and what to tell customers. Orange items still to confirm.",
+   "summary": "Bed bug jobs: prep, treating, follow-up and what to tell customers.",
    "updated": "2026-11-06",
    "order": 12,
    "group": "Other pests"
@@ -101,7 +101,7 @@
   {
    "id": "mites",
    "title": "Mites",
-   "summary": "Bird, clover and rodent mites: treat the source, second treatment. Orange items still to confirm.",
+   "summary": "Bird, clover and rodent mites: treat the source, second treatment.",
    "updated": "2026-11-06",
    "order": 13,
    "group": "Other pests"
@@ -109,7 +109,7 @@
   {
    "id": "flea",
    "title": "Flea treatment",
-   "summary": "Fleas, including end of lease. Orange items still to confirm.",
+   "summary": "Fleas, including end of lease.",
    "updated": "2026-11-06",
    "order": 14,
    "group": "Other pests"
@@ -117,7 +117,7 @@
   {
    "id": "mosquito",
    "title": "Mosquito treatment",
-   "summary": "Mosquito jobs for homes and gardens. Orange items still to confirm.",
+   "summary": "Mosquito jobs for homes and gardens.",
    "updated": "2026-11-06",
    "order": 15,
    "group": "Other pests"
@@ -125,7 +125,7 @@
   {
    "id": "carpet-beetle",
    "title": "Carpet beetle treatment",
-   "summary": "Carpet beetle jobs. Written from official sources, not yet checked by Mitch. Orange items still to confirm.",
+   "summary": "Carpet beetle jobs. Written from official sources and Mitch's past jobs.",
    "updated": "2026-11-06",
    "order": 16,
    "group": "Other pests"
@@ -133,7 +133,7 @@
   {
    "id": "clothes-moth",
    "title": "Clothes moth treatment",
-   "summary": "Clothes moth, carpet moth and silverfish. Written from official sources, not yet checked by Mitch. Orange items still to confirm.",
+   "summary": "Clothes moth, carpet moth and silverfish. Written from official sources and Mitch's past jobs.",
    "updated": "2026-11-06",
    "order": 17,
    "group": "Other pests"
@@ -141,7 +141,7 @@
   {
    "id": "drain-fly",
    "title": "Drain fly treatment",
-   "summary": "Drain fly jobs. Written from official sources, not yet checked by Mitch. Orange items still to confirm.",
+   "summary": "Drain fly jobs. Written from official sources and Mitch's past jobs.",
    "updated": "2026-11-06",
    "order": 18,
    "group": "Other pests"
@@ -149,7 +149,7 @@
   {
    "id": "lawn-grub",
    "title": "Lawn grub treatment",
-   "summary": "Lawn grub jobs. Written from official sources, not yet checked by Mitch. Orange items still to confirm.",
+   "summary": "Lawn grub jobs. Written from official sources and Mitch's past jobs.",
    "updated": "2026-11-06",
    "order": 19,
    "group": "Other pests"

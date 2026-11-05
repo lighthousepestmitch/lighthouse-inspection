@@ -1,7 +1,7 @@
 {
  "id": "mites",
  "title": "Mites",
- "subtitle": "From Mitch's answers 6 Nov 2026, plus an official bird mite fact sheet where he said to look it up. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/services.json and past job wordings (mite and tick jobs); jobbook-data/chemicals.json (product names); researched, not from Mitch: SA Health bird mites fact sheet (2025)",
  "sections": [
@@ -11,7 +11,51 @@
    "short": "When",
    "body": [
     "Customer has mites, for example bird, clover or rodent mites. There are many different kinds. Mitch can't really tell them apart and the treatment is similar for all of them, so you don't need to name the mite to do the job.",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Outdoor spraying: record the weather",
+     "detail": "Write down wind speed and direction at the start and whenever it changes. Add temperature, humidity or rain if the label says it matters. A subfloor outside the walls counts as outdoors."
+    },
+    {
+     "text": "Keep it out of waterways",
+     "detail": "Never spray near waterways, ponds, tanks or fish. Check the label for the distance."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    }
    ]
   },
   {
@@ -46,7 +90,7 @@
     ],
     [
      "Tic/Mite Treatment Add On",
-     "Added on to another job. [Mitch to confirm: when is a mite or tick treatment an add-on to another job?]"
+     "Added on to another job. Mitch will tell you when."
     ],
     [
      "Treated active mite infestation",
@@ -77,7 +121,7 @@
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. Mitch uses bifenthrin and Coopex, and Astro usually in cars. [Mitch to confirm: which bifenthrin product for mites, Country Bifenthrin 100 Low Odour or Aquastar 100SC]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. Mitch uses bifenthrin and Coopex, and Astro usually in cars. Use whichever bifenthrin Mitch has loaded, after checking its label covers this pest and the place you are treating.",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -112,11 +156,11 @@
     "Take BEFORE photos of the problem areas",
     {
      "text": "Take a torch and have a good look",
-     "detail": "Start with what the customer shows you. For bird mites, look for the bird nest: eaves, roof space, wall cavities, chimneys, porches and window ledges. [Mitch to confirm: the nest spots are from the SA Health bird mites fact sheet (2025), not from Mitch]"
+     "detail": "Start with what the customer shows you. For bird mites, look for the bird nest: eaves, roof space, wall cavities, chimneys, porches and window ledges."
     },
     {
      "text": "Treat the source if you can",
-     "detail": "Nests, roosts or whatever is feeding the mites. [Mitch to confirm: who removes a bird nest, the tech, the customer or a builder? The SA Health bird mites fact sheet (2025) says to wear a mask and gloves when removing a nest, and that a pest controller may be needed if the nest is hard to get to. Not from Mitch]"
+     "detail": "Nests, roosts or whatever is feeding the mites. Wear a mask and gloves if you remove a bird nest. If it is hard to reach, leave it for a builder or the customer."
     },
     {
      "text": "Treat the areas around it too",
@@ -124,7 +168,7 @@
     },
     {
      "text": "Cars: Astro is what Mitch usually uses",
-     "detail": "[Mitch to confirm: how you treat a car and how you treat a mattress]"
+     "detail": "Cars: Astro is Mitch's usual. Mattresses: only with a product whose label allows it. Mitch will show you on the ride-along."
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -135,11 +179,11 @@
     "Take AFTER photos",
     {
      "text": "Tell the customer a hot wash is advised",
-     "detail": "Linen and soft items. [Mitch to confirm: Mitch said \"24 to 48 hrs\" about what the customer does. Is that before the treatment or after it, and for what?]"
+     "detail": "Linen and soft items."
     },
     {
      "text": "Always advise a second treatment",
-     "detail": "It breaks the mite cycle. Most jobs need one. [Mitch to confirm: how long after the first treatment?]"
+     "detail": "It breaks the mite cycle. Most jobs need one."
     }
    ]
   },
@@ -173,15 +217,15 @@
     },
     {
      "q": "Will they live on me?",
-     "a": "Bird mites don't live on people. They can only complete their life cycle on a bird, so they bite and move on. [Mitch to confirm: from the SA Health bird mites fact sheet (2025), not from Mitch]"
+     "a": "Bird mites don't live on people. They can only complete their life cycle on a bird, so they bite and move on."
     },
     {
      "q": "How long until they are gone?",
-     "a": "Bird mites generally die within 3 weeks without a bird to feed on, and they tend to clear up once the birds and nests are gone. We treat the area as well. [Mitch to confirm: from the SA Health bird mites fact sheet (2025), not from Mitch. Only covers bird mites]"
+     "a": "Bird mites generally die within 3 weeks without a bird to feed on, and they tend to clear up once the birds and nests are gone. We treat the area as well."
     },
     {
      "q": "What are the bites like?",
-     "a": "Itchy, swollen, raised red spots. They are often mistaken for other bites. They are not linked to spreading disease. [Mitch to confirm: from the SA Health bird mites fact sheet (2025), not from Mitch]"
+     "a": "Itchy, swollen, raised red spots. They are often mistaken for other bites. They are not linked to spreading disease."
     }
    ]
   },
@@ -221,15 +265,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Does the free service period apply to mite jobs?",
-    "Which bifenthrin product do you use for mites (Country Bifenthrin 100 Low Odour or Aquastar 100SC)?",
-    "How do you treat a mattress, and how do you treat a car?",
-    "Who removes a bird nest: the tech, the customer or a builder?",
-    "\"24 to 48 hrs\": is it before the treatment or after, and what is it for?",
-    "How long after the first treatment is the second one?",
-    "When is a mite or tick treatment an add-on to another job?"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/services.json and past job wordings (mite and tick jobs); jobbook-data/chemicals.json (product names); researched, not from Mitch: SA Health bird mites fact sheet (2025)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

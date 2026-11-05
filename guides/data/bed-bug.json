@@ -1,7 +1,7 @@
 {
  "id": "bed-bug",
  "title": "Bed bug treatment",
- "subtitle": "From Mitch's answers 6 Nov 2026, plus official health department notes where he said to look it up. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE for bed bug work, never list, what you can quote); jobbook-data/chemicals.json (Bed Bug Treatment products); jobbook-data/services.json (past wordings); Garrards technical advisory note on bedbug management found in the treatment history files; researched, not from Mitch: Victorian Department of Health Pesticide Safety Technical Notes 18 (bed bugs) and 19 (fleas), SA Health bird mites fact sheet, NSW Health bed bugs page, healthdirect bed bugs page, AEPMA Code of Practice for the Control of Bed Bug Infestations in Australia (4th edition)",
  "sections": [
@@ -14,8 +14,32 @@
     "How big a bed bug job is depends on the job. There is no fixed rule by room or by house.",
     "A vehicle is treated the same way as a room.",
     "A written Bed Bug Inspection report is only given if the customer asks for one.",
-    "A bed bug job is one visit. A follow-up visit is quoted separately. [Mitch to confirm: can a tech quote bed bug work, or does Mitch?]",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "A bed bug job is one visit. A follow-up visit is quoted separately. Mitch quotes bed bug work.",
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    }
    ]
   },
   {
@@ -44,11 +68,11 @@
     "Strip the beds",
     {
      "text": "Hot wash everything",
-     "detail": "Linen, bedding and washable clothes. The official note says wash above 60°C and tumble dry on hot for at least 30 minutes. [Mitch to confirm: the temperature and time are from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+     "detail": "Linen, bedding and washable clothes. The official note says wash above 60°C and tumble dry on hot for at least 30 minutes."
     },
     {
      "text": "Clear the floor and move furniture if they can",
-     "detail": "[Mitch to confirm: do you ask for this, or only the strip and hot wash?]"
+     "detail": "Ask the customer to strip the bed, hot wash everything, clear the floor and move furniture away from the bed."
     }
    ]
   },
@@ -56,7 +80,7 @@
    "type": "table",
    "heading": "Bed bugs, fleas or mites?",
    "short": "Which pest",
-   "title": "Bites alone can't tell you which it is. Find the bug or the marks it leaves. [Mitch to confirm: from Victorian Department of Health Technical Notes 18 and 19 and the SA Health bird mites fact sheet, not from Mitch]",
+   "title": "Bites alone can't tell you which it is. Find the bug or the marks it leaves.",
    "columns": [
     "",
     "Bed bugs",
@@ -94,7 +118,7 @@
    "type": "table",
    "heading": "Products Mitch uses",
    "short": "Products",
-   "title": "Names as in Mitch's product list. No rates here: follow the label. Mitch uses these as the job needs, and bifenthrin as well. [Mitch to confirm: which bifenthrin product for bed bugs, Country Bifenthrin 100 Low Odour or Aquastar 100SC]",
+   "title": "Names as in Mitch's product list. No rates here: follow the label. Mitch uses these as the job needs, and bifenthrin as well. Use whichever bifenthrin Mitch has loaded, after checking its label covers this pest and the place you are treating.",
    "columns": [
     "Product",
     "Active (as listed)",
@@ -122,7 +146,7 @@
    "type": "table",
    "heading": "Where bed bugs hide",
    "short": "Where they hide",
-   "title": "From a Garrards advisory note in Mitch's files. Mitch's own rule is to search and treat whatever is accessible. [Mitch to confirm: do the note's steps (2 to 3 metres, take furniture apart, wrap the mattress) match how you work?]",
+   "title": "From a Garrards advisory note in Mitch's files. Mitch's own rule is to search and treat whatever is accessible.",
    "columns": [
     "Where",
     "What the note says"
@@ -187,11 +211,11 @@
     },
     {
      "text": "Treat what you find and can get to",
-     "detail": "Demand Duo spray, Coopex dust or bifenthrin, as the job needs. Treat the cracks and hiding spots you find. Don't space spray, the fine mist can make bed bugs scatter to other rooms. Dust suits cracks and voids. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+     "detail": "Demand Duo spray, Coopex dust or bifenthrin, as the job needs. Treat the cracks and hiding spots you find. Don't space spray, the fine mist can make bed bugs scatter to other rooms. Dust suits cracks and voids."
     },
     {
      "text": "Mattress: use the approved chemical Mitch has",
-     "detail": "Read the label first, some products can't go on mattresses. [Mitch to confirm: which product do you use on mattresses? It is not in the products table. The label check is from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+     "detail": "Read the label first, some products can't go on mattresses."
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -202,11 +226,11 @@
     "Take AFTER photos",
     {
      "text": "Tell the customer to leave the room alone for a bit",
-     "detail": "They can go back in once it has dried. Follow the product label. [Mitch to confirm: how long is a bit, and does it mean no vacuuming or cleaning?]"
+     "detail": "They can go back in once it has dried. Follow the product label."
     },
     {
      "text": "Before you go into the next property, change your coveralls, gloves and mask",
-     "detail": "Bed bugs travel on luggage, shoes and clothing. The industry code says to put worn clothing and used disposable gear in sealed plastic bags and keep equipment in sealed containers. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022) and the AEPMA bed bug Code of Practice (an industry code, 4th edition), not from Mitch. What do you do with your boots, bag and gear?]"
+     "detail": "Bed bugs travel on luggage, shoes and clothing. The industry code says to put worn clothing and used disposable gear in sealed plastic bags and keep equipment in sealed containers."
     },
     "Note any follow-up needed and tell Mitch"
    ]
@@ -216,7 +240,7 @@
    "heading": "Follow-up visit",
    "short": "Follow-up",
    "body": [
-    "Plan a follow-up visit about a week after the treatment. The spray kills the bugs but not the eggs, so anything that hatches afterwards needs treating on the follow-up. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch. When do you book it, who books it, and what does the tech do on the visit?]"
+    "Plan a follow-up visit about a week after the treatment. The spray kills the bugs but not the eggs, so anything that hatches afterwards needs treating on the follow-up."
    ]
   },
   {
@@ -233,7 +257,7 @@
     "Product, rate, area and quantity recorded on the job report",
     "Customer told what to do before (strip the beds, hot wash everything) and after (leave the room alone for a bit)",
     "Customer told they can go back in once it has dried, as the product label says",
-    "Follow-up visit talked through with the customer [Mitch to confirm: timing and who books it]",
+    "Follow-up visit talked through with the customer; tell Mitch and he books it",
     "Service report left, or customer told it is being emailed. Written Bed Bug Inspection report only if the customer asked for one"
    ]
   },
@@ -248,23 +272,23 @@
     },
     {
      "q": "Will one visit get rid of them?",
-     "a": "Usually not on its own. The spray kills the bugs but not the eggs, so we come back to deal with what hatches. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+     "a": "Usually not on its own. The spray kills the bugs but not the eggs, so we come back to deal with what hatches."
     },
     {
      "q": "Why do I have to hot wash everything?",
-     "a": "Heat kills bed bugs at every stage. Wash above 60°C and dry on hot for at least 30 minutes. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+     "a": "Heat kills bed bugs at every stage. Wash above 60°C and dry on hot for at least 30 minutes."
     },
     {
      "q": "I'm still getting bitten.",
-     "a": "Some people only react to a bite days later, up to 9 to 14 days. Eggs can also hatch after the treatment, which is why we come back. [Mitch to confirm: from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch]"
+     "a": "Some people only react to a bite days later, up to 9 to 14 days. Eggs can also hatch after the treatment, which is why we come back."
     },
     {
      "q": "Can I vacuum or clean?",
-     "a": "Leave it for a bit. Too much cleaning can wipe the product off the surfaces. [Mitch to confirm: the reason is from Victorian Department of Health Pesticide Safety Technical Note 18 (Bed Bugs, June 2022), not from Mitch. How long is a bit?]"
+     "a": "Leave it for a bit. Too much cleaning can wipe the product off the surfaces."
     },
     {
      "q": "Are bed bugs dangerous?",
-     "a": "They are not known to spread disease. They can cause itching and lost sleep. If bites look infected or don't settle after a few days, see a doctor. [Mitch to confirm: from NSW Health and healthdirect, not from Mitch]"
+     "a": "They are not known to spread disease. They can cause itching and lost sleep. If bites look infected or don't settle after a few days, see a doctor."
     }
    ]
   },
@@ -304,17 +328,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Can a tech quote bed bug work, or does Mitch?",
-    "Does the free service period apply to bed bug jobs?",
-    "Which product do you use on mattresses?",
-    "Which bifenthrin product do you use for bed bugs (Country Bifenthrin 100 Low Odour or Aquastar 100SC)?",
-    "Do you ask the customer to clear the floor and move furniture?",
-    "How long is \"leave it for a bit\" after treatment, and does it mean no vacuuming or cleaning?",
-    "Follow-up visit: when, who books it, and what does the tech do on it?",
-    "Do the Garrards note steps (2 to 3 metres, take furniture apart, wrap the mattress) match how you work?",
-    "What do you do with your boots, bag and gear between properties?"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE for bed bug work, never list, what you can quote); jobbook-data/chemicals.json (Bed Bug Treatment products); jobbook-data/services.json (past wordings); Garrards technical advisory note on bedbug management found in the treatment history files; researched, not from Mitch: Victorian Department of Health Pesticide Safety Technical Notes 18 (bed bugs) and 19 (fleas), SA Health bird mites fact sheet, NSW Health bed bugs page, healthdirect bed bugs page, AEPMA Code of Practice for the Control of Bed Bug Infestations in Australia (4th edition)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

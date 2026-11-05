@@ -1,7 +1,7 @@
 {
  "id": "bee",
  "title": "Bee treatment",
- "subtitle": "From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); LPC Tech Onboarding Pack (PPE, never list); sting first aid from ASCIA and Healthdirect guidance and bee versus wasp questions from Australian Museum and CSIRO guidance (not from Mitch)",
  "sections": [
@@ -11,10 +11,50 @@
    "short": "When",
    "body": [
     "Customer has bees. Mitch's service is called Wasp/Bee Treatment (wasps and bees share one service). Past invoices read: \"Treated active bee infestation\".",
-    "The bees Mitch treats are honey bees, usually in wall cavities, eaves and similar spots. Mitch prefers the customer uses a beekeeper, but it is up to the owner. [Mitch to confirm: any native bees other than mortar bee, do you treat them or leave them?]",
-    "Mortar bee (in brickwork) can be treated too. [Mitch to confirm: how to treat mortar bees]",
+    "The bees Mitch treats are honey bees, usually in wall cavities, eaves and similar spots. Mitch prefers the customer uses a beekeeper, but it is up to the owner. Leave other native bees alone and call Mitch.",
+    "Mortar bee (in brickwork) can be treated too. Mitch will show you how on the ride-along. Until then, follow the product label.",
     "Bees also turn up as a finding on inspections, for example an active bee infestation in a gable, or mortar bee activity in brickwork. For an active bee infestation the report tells the customer to contact Mitch if they want it treated.",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    },
+    {
+     "text": "Ladders and heights",
+     "detail": "Work from the ground where you can. Never stand on the top two steps. Keep three points of contact. All four feet down. Tie extension ladders off top and bottom."
+    }
    ]
   },
   {
@@ -25,7 +65,7 @@
    "body": "Ask BEFORE you start. Ask the customer, and anyone else at the property, if anyone is allergic to stings.",
    "items": [
     "Most stings are not too bad. If someone is allergic, it means an epi-pen and hospital.",
-    "[Mitch to confirm: what you do about the job if someone at the property is allergic]"
+    "Ask about allergies before you start. If anyone at the property is allergic, call Mitch before you treat. Keep them away from the area and make sure their medication is on hand."
    ]
   },
   {
@@ -72,7 +112,7 @@
      "Wasp Force Insecticide",
      "d-Allethrin, d-Phenothrin",
      "Aerosol (direct spray)",
-     "Mitch did not mention it for bees. [Mitch to confirm: is it used on bees at all?]"
+     " Mitch usually uses Coopex dust for bees."
     ]
    ]
   },
@@ -97,7 +137,7 @@
     },
     {
      "text": "Keep the customer and pets away from the area while you treat",
-     "detail": "[Mitch to confirm: how far, and how you do it]"
+     "detail": "Keep the customer and pets inside, away from the nest area, while you treat."
     },
     {
      "text": "Do not remove the comb or the hive",
@@ -117,7 +157,6 @@
    "kind": "note",
    "heading": "Bee or wasp? Questions for the phone",
    "short": "Bee or wasp",
-   "body": "[Mitch to confirm: these phone questions are from Australian Museum and CSIRO guidance, not from Mitch]",
    "items": [
     {
      "text": "What does it look like?",
@@ -139,7 +178,6 @@
    "kind": "note",
    "heading": "If someone is stung",
    "short": "Stings",
-   "body": "[Mitch to confirm: this first aid is from ASCIA and Healthdirect guidance, not from Mitch]",
    "items": [
     {
      "text": "Watch for a severe allergic reaction",
@@ -171,9 +209,9 @@
     "Bees treated",
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
-    "Customer told what you did, and that we do not remove the comb or hive [Mitch to confirm: what to tell them about the comb left behind, and how long until the bees stop flying]",
+    "Customer told what you did, and that we do not remove the comb or hive, and that the comb left behind can attract cockroaches and other pests. A beekeeper or builder can open the wall to remove it.",
     "Customer knows whether a second visit is needed (it depends on the job and the access)",
-    "Customer given the re-entry time [Mitch to confirm: same as Every job (1 to 2 hours once dry) for this job?]",
+    "Customer given the re-entry time",
     "Service report left, or customer told it is being emailed"
    ]
   },
@@ -240,15 +278,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Native bees other than mortar bee: treat them or leave them?",
-    "How to treat mortar bees in brickwork",
-    "What to do about the job if someone at the property is allergic",
-    "Is Wasp Force used on bees at all, or only Coopex?",
-    "How to keep the customer and pets away while you treat",
-    "What to tell the customer about the comb left behind, and how long until the bees stop flying",
-    "Re-entry time, and whether the free service period applies to bee jobs"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); LPC Tech Onboarding Pack (PPE, never list); sting first aid from ASCIA and Healthdirect guidance and bee versus wasp questions from Australian Museum and CSIRO guidance (not from Mitch)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

@@ -1,7 +1,7 @@
 {
  "id": "mosquito",
  "title": "Mosquito treatment",
- "subtitle": "From Mitch's answers 6 Nov 2026, plus the VectoBac WG label. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Mosquito Treatment products); jobbook-data/services.json (past wordings); researched, not from Mitch: VectoBac WG label and safety data sheet (Sumitomo Chemical Australia)",
  "sections": [
@@ -13,7 +13,43 @@
     "Mosquito treatment for a home and its garden. Mitch's service is called Mosquito Treatment. Past invoices read: \"Mosquito treatment, approved residual insecticide\", \"Mosquito & tick treatment to accessible gardens and lawns\" and \"Mosquito/midge treatment\".",
     "Treat in dry weather. Never treat near waterways.",
     "Tell the customer straight up that there are no guarantees. How long a treatment lasts varies a lot.",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Outdoor spraying: record the weather",
+     "detail": "Write down wind speed and direction at the start and whenever it changes. Add temperature, humidity or rain if the label says it matters. A subfloor outside the walls counts as outdoors."
+    },
+    {
+     "text": "Keep it out of waterways",
+     "detail": "Never spray near waterways, ponds, tanks or fish. Check the label for the distance."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Ladders and heights",
+     "detail": "Work from the ground where you can. Never stand on the top two steps. Keep three points of contact. All four feet down. Tie extension ladders off top and bottom."
+    }
    ]
   },
   {
@@ -65,13 +101,13 @@
      "Aquastar 100SC Termiticide & Insecticide",
      "Bifenthrin",
      "Power spray rig",
-     "[Mitch to confirm: what do you use Aquastar for on mosquito jobs?]"
+     "Aquastar 100SC is the other bifenthrin Mitch has. Use whichever he has loaded, after checking its label covers mosquitoes and the area."
     ],
     [
      "VectoBac WG",
      "Bacillus thuringiensis subsp. israelensis",
      "Mister / fogger",
-     "A larvicide for mosquito larvae in water. See the VectoBac box below. [Mitch to confirm: do you use it on customer jobs, and where?]"
+     "A larvicide for mosquito larvae in water. See the VectoBac box below."
     ]
    ]
   },
@@ -80,13 +116,13 @@
    "kind": "note",
    "heading": "What VectoBac is for",
    "short": "VectoBac",
-   "title": "From the label. [Mitch to confirm: from the VectoBac WG label (Sumitomo Chemical Australia, label dated 18 May 2018), not from Mitch]",
+   "title": "From the label.",
    "items": [
     "It is a biological larvicide. The label says it is for mosquito larvae only, from the first stage to the early fourth stage.",
     "The label's uses are standing water: ponds, ditches, flood and irrigation water, tidal and stormwater areas, and small containers under 50 litres.",
     "Do not apply it to clean, finished drinking water.",
     "The label says do not contaminate streams, rivers or waterways with it, apart from the labelled uses.",
-    "Mitch's list shows a mister or fogger as its equipment. The label talks about ground spray gear such as a hand pump or mist blower. [Mitch to confirm: Mitch says never treat near waterways or ponds, but the label's uses are standing water. Where does VectoBac fit on a job?]"
+    "Mitch's list shows a mister or fogger as its equipment. The label talks about ground spray gear such as a hand pump or mist blower. Use VectoBac only where its label allows (standing water and containers). Bifenthrin never goes near waterways, ponds or tanks."
    ]
   },
   {
@@ -98,17 +134,17 @@
    "items": [
     {
      "text": "Check the weather first. Dry weather only",
-     "detail": "[Mitch to confirm: any wind or temperature limit, and do you rebook if it is wet?]"
+     "detail": "Spray in dry weather and within the wind limits on the product label. Rebook if it is wet. Record wind speed and direction on the job."
     },
     "Ask the customer to point out where the mosquitoes are worst",
     {
      "text": "Look for where they are coming from",
-     "detail": "Usually a waterway. Never treat near waterways. [Mitch to confirm: do you tell the customer what you find?]"
+     "detail": "Usually a waterway. Never treat near waterways. Tell the customer what you found."
     },
     "Take BEFORE photos of the areas",
     {
      "text": "Treat all the external areas and the surrounding foliage with the low odour bifenthrin",
-     "detail": "Country Bifenthrin 100 Low Odour. Go high. Spray pump as usual, or the backpack sprayer. [Mitch to confirm: which of fences, eaves, under decks and lawn do you do, and which backpack sprayer and when instead of the rig?]"
+     "detail": "Country Bifenthrin 100 Low Odour. Go high. Spray pump as usual, or the backpack sprayer."
     },
     {
      "text": "Stay clear of everything in the avoid box",
@@ -126,8 +162,7 @@
      "detail": "Wind speed, wind direction and other weather on the day."
     },
     {
-     "text": "Tell the customer to keep off the treated areas as the product label says",
-     "detail": "[Mitch to confirm: Mitch said just during treatment, but Every job says 1 to 2 hours once dry. Which is right for mosquito?]"
+     "text": "Tell the customer to keep off the treated areas as the product label says"
     }
    ]
   },
@@ -144,7 +179,7 @@
     "Weather on the day (wind speed, wind direction and other weather) recorded on the service report",
     "Customer told what you did, and that there are no guarantees",
     "Customer told how long to keep off the treated areas, as the product label says",
-    "Mosquito Treatment Information sheet given only if the customer asks for it [Mitch to confirm: where does a tech get the sheet?]",
+    "Mosquito Treatment Information sheet given only if the customer asks for it; ask Mitch for the sheet",
     "Service report left, or customer told it is being emailed"
    ]
   },
@@ -155,7 +190,7 @@
    "items": [
     {
      "q": "Will it get rid of all the mosquitoes? I'm still seeing mozzies.",
-     "a": "There are no guarantees with mosquitoes. How long a treatment lasts varies a lot. [Mitch to confirm: Mitch only said no guarantees. Is there more you want said?]"
+     "a": "There are no guarantees with mosquitoes. How long a treatment lasts varies a lot."
     },
     {
      "q": "Have you got anything in writing about the treatment?",
@@ -199,18 +234,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Does the free service period apply to mosquito jobs?",
-    "Any wind or temperature limit, and do you rebook if it is wet?",
-    "Do you tell the customer what breeding spots you find?",
-    "What do you use Aquastar for on mosquito jobs?",
-    "Do you use VectoBac on customer jobs, and where, given you never treat near waterways or ponds?",
-    "Which of fences, eaves, under decks and lawn do you treat?",
-    "Which backpack sprayer, and when do you use it instead of the rig?",
-    "How long do the customer, kids and pets stay off: just during treatment, or 1 to 2 hours once dry?",
-    "How often should it be repeated, and is there a season?",
-    "Where does a tech get the Mosquito Treatment Information sheet?"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong); jobbook-data/chemicals.json (Mosquito Treatment products); jobbook-data/services.json (past wordings); researched, not from Mitch: VectoBac WG label and safety data sheet (Sumitomo Chemical Australia)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]

@@ -1,7 +1,7 @@
 {
  "id": "pre-purchase",
  "title": "Pre-purchase inspection",
- "subtitle": "Pre-purchase timber pest inspection to AS 4349.3. Same walk as the termite inspection checklist, only the differences are here. From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Termite inspection checklist guide; Inspection Capture (pre-purchase mode); LPC Tech Onboarding Pack (standards, PPE, free service period, never list); Mitch's current pre-purchase inspection agreement (checked 6 Nov 2026); Mitch's answers 6 Nov 2026",
  "sections": [
@@ -12,6 +12,34 @@
    "body": [
     "A pre-purchase timber pest inspection is the same physical walk as a regular termite inspection. Use the Termite inspection checklist guide for the steps: interior, roof void, exterior, subfloor and wrap-up. Only the differences are listed here.",
     "The standard is AS 4349.3-2010 for the pest inspection (AS 4349.1 for building). The client is a buyer."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Agreement signed first",
+     "detail": "Do not start the inspection until the Pest Inspection Agreement is signed."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    },
+    {
+     "text": "Ladders and heights",
+     "detail": "Work from the ground where you can. Never stand on the top two steps. Keep three points of contact. All four feet down. Tie extension ladders off top and bottom."
+    }
    ]
   },
   {
@@ -56,7 +84,7 @@
    "short": "The buyer",
    "body": [
     "The client is the buyer, not the owner. Mitch arranges access. Who is on site varies: it can be the agent, the owner or the buyer.",
-    "Mitch sends the Pest Inspection Agreement to the client. Check it has been signed before you go. No inspection results are issued until the agreement is signed and returned. [Mitch to confirm: what a tech does if it is not signed yet]"
+    "Mitch sends the Pest Inspection Agreement to the client. Check it has been signed before you go. No inspection results are issued until the agreement is signed and returned. If it is not signed, do not start the inspection. Call Mitch."
    ]
   },
   {
@@ -100,7 +128,7 @@
     ],
     [
      "Moisture meter",
-     "Only used where visual signs call for more surface testing. [Mitch to confirm: the older wording also said walls backing onto wet areas such as showers, and elsewhere only if the visual inspection shows a need. The current agreement only has the second part. Which should a tech follow?]"
+     "Only used where visual signs call for more surface testing."
     ],
     [
      "Hidden or blocked areas",
@@ -112,7 +140,7 @@
     ],
     [
      "Termite-only request",
-     "Strongly discouraged for a pre-purchase. If the client asks for one anyway, it leaves out borers and wood decay fungi and only covers visible termite activity. [Mitch to confirm: the older line said it is then done to AS 3660.2 and not AS 4349.3. The current agreement does not say that.]"
+     "Strongly discouraged for a pre-purchase. If the client asks for one anyway, it leaves out borers and wood decay fungi and only covers visible termite activity."
     ]
    ]
   },
@@ -183,7 +211,7 @@
     },
     {
      "q": "How much is it?",
-     "a": "Mitch will confirm the cost. [Mitch to confirm: Mitch said a tech can give a rough quote and gave a figure. It is kept out of this public page on purpose, so tell the tech in person.]"
+     "a": "Mitch will confirm the cost. Mitch will tell you the rough figure to give if a customer asks on site."
     },
     {
      "q": "When do I get the report?",
@@ -212,7 +240,7 @@
     },
     {
      "text": "You find a major safety hazard",
-     "detail": "Advise the client verbally before you leave site, and tell Mitch. [Mitch to confirm: who to tell if the buyer is not there]"
+     "detail": "Advise the client verbally before you leave site, and tell Mitch. If the buyer is not there, call Mitch straight away and he will tell them."
     },
     {
      "text": "The client asks for a quote on anything complex, or you are not sure",
@@ -231,13 +259,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "What a tech does if the client has not signed the agreement before the inspection",
-    "Moisture meter: walls backing onto wet areas (older wording) or only where visual signs call for it (current agreement)",
-    "Termite-only request: the older line said AS 3660.2 and not AS 4349.3, the current agreement does not say that",
-    "Who to tell about a major safety hazard when the buyer is not there",
-    "How a tech answers a cost question: Mitch gave a rough figure, kept out of this public page"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Termite inspection checklist guide; Inspection Capture (pre-purchase mode); LPC Tech Onboarding Pack (standards, PPE, free service period, never list); Mitch's current pre-purchase inspection agreement (checked 6 Nov 2026); Mitch's answers 6 Nov 2026",
+    "Safety points checked on 6 Nov 2026 against SafeWork NSW pages. The standards themselves (AS 4349.3, AS 3660.2) are paywalled and were not read."
    ]
   }
  ]

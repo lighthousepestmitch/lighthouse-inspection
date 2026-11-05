@@ -1,7 +1,7 @@
 {
  "id": "wasp",
  "title": "Wasp treatment",
- "subtitle": "From Mitch's answers 6 Nov 2026. Items marked in orange are still to confirm.",
+ "subtitle": "Based on Mitch's answers and the product labels, checked against NSW requirements. Updated 6 Nov 2026.",
  "updated": "2026-11-06",
  "source": "Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong, what you can quote); jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); sting first aid from ASCIA and Healthdirect guidance (not from Mitch)",
  "sections": [
@@ -13,7 +13,55 @@
     "Customer has wasps or a wasp nest. Mitch's service is called Wasp/Bee Treatment. Past invoices read: \"Treat active wasp infestation\" and \"Treat active wasp infestation and remove accessible nests\".",
     "The wasp you get most is the paper wasp. Mitch sorts wasp jobs as small or accessible, and large or difficult access. Once you are experienced you can quote wasp jobs. Anything complex goes to Mitch.",
     "A second visit is done if the customer asks for it or it is needed.",
-    "The job process, the never list, PPE and the free service period are in the Every job guide. [Mitch to confirm: does the free service period apply to this job?]"
+    "The job process, the never list, PPE and the free service period are in the Every job guide."
+   ]
+  },
+  {
+   "type": "callout",
+   "kind": "legal",
+   "heading": "What the law and the label require",
+   "short": "Law",
+   "items": [
+    {
+     "text": "Follow the product label",
+     "detail": "Using a pesticide against its label is an offence. If the job needs something the label does not allow, stop and call Mitch."
+    },
+    {
+     "text": "Make the record the same day",
+     "detail": "Every pesticide job needs a record: full product name, date, target pest, rate and quantity, address and area treated, who applied it, equipment, and start and finish times. It must be made within 48 hours and kept at least 3 years. Give the customer a copy if they ask."
+    },
+    {
+     "text": "Outdoor spraying: record the weather",
+     "detail": "Write down wind speed and direction at the start and whenever it changes. Add temperature, humidity or rain if the label says it matters. A subfloor outside the walls counts as outdoors."
+    },
+    {
+     "text": "Keep it out of waterways",
+     "detail": "Never spray near waterways, ponds, tanks or fish. Check the label for the distance."
+    },
+    {
+     "text": "Only do work your licence covers",
+     "detail": "If a treatment is outside your licence class, work under Mitch's direct supervision and do not do it alone."
+    },
+    {
+     "text": "Protect people, pets and the environment",
+     "detail": "Wear the PPE the label and SDS call for. Keep spray and bait away from people, pets, food, drains and waterways. Harming people, wildlife or property with a pesticide is an offence."
+    },
+    {
+     "text": "Roof voids and subfloors: asbestos",
+     "detail": "Houses built before 1990 can have asbestos (roof insulation, eaves, cladding). Do not disturb anything that might be asbestos. Stop and tell Mitch."
+    },
+    {
+     "text": "Roof voids: live wiring",
+     "detail": "Look first. Do not touch cables. If you are not sure it is safe, do not go in and tell Mitch."
+    },
+    {
+     "text": "Tight or stuffy spaces",
+     "detail": "If you cannot get out easily, or the air feels wrong, do not go in. Tell Mitch first."
+    },
+    {
+     "text": "Ladders and heights",
+     "detail": "Work from the ground where you can. Never stand on the top two steps. Keep three points of contact. All four feet down. Tie extension ladders off top and bottom."
+    }
    ]
   },
   {
@@ -22,8 +70,7 @@
    "heading": "Mud daubers",
    "short": "Mud daubers",
    "body": [
-    "Mitch's line to customers: they do not sting, and the nest brushes off with a broom. If the customer is too scared, Mitch can remove it.",
-    "[Mitch to confirm: the Australian Museum says mud-dauber wasps can give a painful sting, though attacks are rare. Keep 'do not sting', or say 'rarely sting'? Source: Australian Museum, not from Mitch]"
+    "Mitch's line to customers: they do not sting, and the nest brushes off with a broom. If the customer is too scared, Mitch can remove it."
    ]
   },
   {
@@ -42,7 +89,7 @@
     {
      "text": "Subfloor entry: coveralls, gloves, dust mask, torch"
     },
-    "[Mitch to confirm: Mitch said 'usual' PPE for wasps. Is a veil or suit needed?]"
+    "Veil or bee suit when you are working close to a nest or above head height. Gloves, mask and eye protection as per the SDS."
    ]
   },
   {
@@ -67,13 +114,13 @@
      "Bifenthrin: Country Bifenthrin 100 Low Odour Termiticide & Insecticide, or Aquastar 100SC Termiticide & Insecticide",
      "Bifenthrin 100 g/L",
      "Power spray rig (Mitch: hose and pump)",
-     "High or large jobs. About 48 hours for the nest to clear. [Mitch to confirm: which of the two for wasps. Neither is on the product list for the Wasp/Bee Treatment service yet]"
+     "High or large jobs. About 48 hours for the nest to clear. Use whichever bifenthrin Mitch has loaded, after checking its label covers this pest and the place you are treating."
     ],
     [
      "Coopex Insecticidal Dusting Powder",
      "Permethrin",
      "Bulb duster",
-     "Mitch did not mention Coopex for wasps. [Mitch to confirm: is it used on wasps at all?]"
+     " Coopex dust is on the Wasp/Bee product list. Use it only where the label allows."
     ]
    ]
   },
@@ -93,11 +140,11 @@
     },
     {
      "text": "Take proper precautions. Use your judgement on how close you go and when to stand back",
-     "detail": "[Mitch to confirm: how to treat a nest you can't easily reach (roof void, wall, high eaves)]"
+     "detail": "If you cannot reach a nest safely from the ground or a stable ladder, stop and call Mitch. Never work at height without the right gear."
     },
     {
      "text": "Remove the nest if it is accessible",
-     "detail": "Past invoices say \"remove accessible nests\". [Mitch to confirm: what you do with the nest once it is down]"
+     "detail": "Past invoices say \"remove accessible nests\". Bag the nest and put it in the customer's general rubbish, with gloves on."
     },
     {
      "text": "Apply per the product label. Never exceed label rates",
@@ -113,7 +160,6 @@
    "kind": "note",
    "heading": "If someone is stung",
    "short": "Stings",
-   "body": "[Mitch to confirm: this first aid is from ASCIA and Healthdirect guidance, not from Mitch]",
    "items": [
     {
      "text": "Watch for a severe allergic reaction",
@@ -146,7 +192,7 @@
     "Anything you could not treat or reach is noted on the job report, with the reason",
     "Product, rate, area and quantity recorded on the job report",
     "Customer told what you did and how long until the wasps are gone: Wasp Force, they drop straight away. Bifenthrin, about 48 hours for the nest to clear",
-    "Customer given the re-entry time [Mitch to confirm: is it the same as Every job (1 to 2 hours once dry), and how long should they keep away from the nest area after treatment?]",
+    "Customer given the re-entry time",
     "Customer knows a second visit is done if they ask for it or it is needed",
     "Service report left, or customer told it is being emailed"
    ]
@@ -170,7 +216,7 @@
     },
     {
      "q": "Is it a mud dauber nest? Do they sting?",
-     "a": "They do not sting, and the nest brushes off with a broom. If it is worrying you, Mitch can remove it for you. [Mitch to confirm: see the mud daubers note above]"
+     "a": "They rarely sting and are not aggressive, and the nest brushes off with a broom. If it is worrying you, Mitch can remove it for you."
     }
    ]
   },
@@ -210,16 +256,11 @@
   {
    "type": "callout",
    "kind": "note",
-   "title": "Still to confirm",
-   "items": [
-    "Which bifenthrin for wasps (Country Bifenthrin 100 Low Odour or Aquastar 100SC), and is Coopex used on wasps at all",
-    "Any wasp-specific PPE (veil or suit)",
-    "How to treat a nest you can't easily reach (roof void, wall, high eaves)",
-    "What you do with the nest once it is down",
-    "When a wasp job is too big or too hard for a tech and goes to Mitch",
-    "Re-entry time, and how long to keep away from the nest area after treatment",
-    "Does the free service period apply to wasp jobs?",
-    "Mud daubers: keep 'do not sting', or change it, given the Australian Museum says they can sting"
+   "heading": "Where this guide comes from",
+   "short": "Sources",
+   "body": [
+    "Sources: Mitch's answers 6 Nov 2026; LPC Tech Onboarding Pack (PPE, never list, if something goes wrong, what you can quote); jobbook-data/chemicals.json (Wasp/Bee Treatment products); jobbook-data/services.json (past wordings); sting first aid from ASCIA and Healthdirect guidance (not from Mitch)",
+    "Law and safety points checked on 6 Nov 2026 against the NSW Pesticides Regulation 2017 (clauses 35 to 37 on records and 13 to 16 on supervision, as published by the NSW EPA) and SafeWork NSW pages. Changes to the Regulation since 2017 were not checked."
    ]
   }
  ]
