@@ -424,7 +424,8 @@ select.inp{appearance:none;-webkit-appearance:none;background-image:linear-gradi
 .pf{flex:0 0 auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--soon);background:var(--soonBg);padding:2px 8px;border-radius:5px}
 textarea.sdesc{min-height:64px}
 .svadd .inp{max-width:200px}
-#sv-total:empty,#sv-pnote:empty{display:none}
+#sv-total:empty,#sv-pnote:empty,.svnet:empty{display:none}
+.svpd .inp{text-overflow:ellipsis}
 /* a client's known job sites, tap to fill the job address */
 .sites{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:-2px 0 12px}
 .sitelbl{font-size:12.5px;color:var(--ink3);font-weight:600;margin-right:2px}
@@ -683,7 +684,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-04a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-08a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -955,15 +956,56 @@ function uuid(){
 }
 
 /* ---------- services on a job ----------
-   A job can have several services. In the form each one is {type, description, price}, with the price kept as the text in the box. The price is the master's:
-   for a worker (role "tech") it is always "" and there is no price box (see the PRICES notes at typeCols).
+   A job can have several services. In the form each one is {type, description, price, discount}, with the price and the discount kept as the text in their boxes. Both are the master's:
+   for a worker (role "tech") they are always "" and there is no price or discount box (see the PRICES notes at typeCols).
    Saved, in two places:
-   - the jobs table: jobs.services = [{type, description}] in tick order (no price in it), jobs.service_type = the names joined with " + " (for showing).
+   - the jobs table: jobs.services = [{type, description}] in tick order (no price or discount in it), jobs.service_type = the names joined with " + " (for showing).
      jobs.price is never written (a trigger keeps it empty).
-   - master only, the job_prices table (the XERO note at savePrices): price = the entered prices added up (null if none entered), lines = [{type, price}] in the same order.
+   - master only, the job_prices table (the XERO note at savePrices): price = the NET prices (each price less its discount) added up (null if none entered),
+     lines = [{type, price, discount, discountPct}] in the same order. price in a line is the full price. discount is the dollars off (a number, or null), discountPct the
+     percentage when the box was typed as one ("10%", so it shows as that again), else null. An old line with no discount keys is a line with no discount.
    In memory, a job the master loaded carries them as j._price, j._lines and j._pOk (false = the price load failed, so this job's prices must not be written over).
    A usual price is t._usual on a service type (from service_prices). None of these are ever in a patch sent to the jobs or service_types table. */
 function priceStr(p){return p==null||p===""?"":String(p);}
+// A discount box takes dollars ("50", "$50") or a percentage ("10%", "10 %"). null = blank, NaN = not valid, else {pct, amt}: pct is set when it was typed as a percentage, amt when it was typed as dollars.
+function parseDiscount(s){
+  let t=String(s==null?"":s).replace(/[$,\s]/g,"");
+  if(t==="")return null;
+  const isPct=t.charAt(t.length-1)==="%";
+  if(isPct)t=t.slice(0,-1);
+  if(!/^\d+(\.\d{1,2})?$/.test(t))return NaN;
+  return isPct?{pct:Number(t),amt:null}:{pct:null,amt:Number(t)};
+}
+// One service's price and discount, worked out from the text in its two boxes: {price, disc, pct, net, bad}.
+// price: a number, or null (blank, or not a number: the price check catches that). disc: the discount in dollars, or null. pct: the percentage if it was typed as one, else null.
+// net: the price less the discount (just the price with no discount, null with no price). bad: "" or why the discount can't be used: "fmt" (not dollars or a percentage),
+// "over" (more than the price; a percentage is of this line's price), "noprice" (no price to take it off). A bad discount counts as none. Sums are in whole cents.
+function lineCalc(priceText,discText){
+  const p=parsePrice(priceText),price=(p==null||isNaN(p))?null:p,d=parseDiscount(discText);
+  const r={price:price,disc:null,pct:null,net:price,bad:""};
+  if(d===null)return r;
+  if(typeof d==="number"){r.bad="fmt";return r;}      // NaN
+  if(d.amt===0||d.pct===0)return r;      // "0" is no discount
+  if(price==null){r.bad="noprice";return r;}
+  const pc=Math.round(price*100),dc=d.pct!=null?Math.round(pc*Math.round(d.pct*100)/10000):Math.round(d.amt*100);
+  if(dc>pc){r.bad="over";return r;}
+  if(dc===0)return r;
+  r.disc=dc/100;r.pct=d.pct;r.net=(pc-dc)/100;
+  return r;
+}
+function discMsg(bad,name){
+  return bad==="fmt"?"The discount for "+name+" needs to be dollars or a percentage, like 50 or 10%."
+    :bad==="over"?"The discount for "+name+" can't be more than its price."
+    :bad==="noprice"?"Put a price on "+name+" before giving a discount.":"";
+}
+// what the Discount box starts with for a saved line: "10%" if it was a percentage, else the dollars, else blank
+function discStr(l){
+  if(!l)return "";
+  if(l.discountPct!=null&&l.discountPct!==""&&Number(l.discountPct)>0)return String(Number(l.discountPct))+"%";
+  if(l.discount!=null&&l.discount!==""&&Number(l.discount)>0)return String(Number(l.discount));
+  return "";
+}
+function money(n){return "$"+(Math.round(n*100)/100).toFixed(2);}
 function typeDesc(name){const t=S.typesByName[name];return t&&t.xero_description?String(t.xero_description):"";}
 // What the form starts with for a job: its saved services, or, for an older job that only has service_type, that one service. Prices come from j._lines (master only).
 function loadServices(j){
@@ -978,7 +1020,7 @@ function loadServices(j){
     const out=j.services.filter(function(e){return e&&trim(e.type);}).map(function(e){
       // only a service with no wording saved at all gets the default Xero wording; wording that was cleared on purpose (saved as "") stays blank
       const l=lineFor(trim(e.type));
-      return {type:trim(e.type),description:e.description===undefined?typeDesc(trim(e.type)):String(e.description||""),price:M?priceStr(l&&l.price):""};
+      return {type:trim(e.type),description:e.description===undefined?typeDesc(trim(e.type)):String(e.description||""),price:M?priceStr(l&&l.price):"",discount:M?discStr(l):""};
     });
     // one service with no price of its own, but the job has a total: that is the service's price (don't show it blank and risk wiping it on save).
     // Only for an old-style total, where no service has a price of its own. Once any service does, the per-service prices are the truth: a service with none stays blank
@@ -987,29 +1029,39 @@ function loadServices(j){
     return out;
   }
   const st=trim(j.service_type);
-  return st?[{type:st,description:typeDesc(st),price:M?priceStr(j._price):""}]:[];
+  return st?[{type:st,description:typeDesc(st),price:M?priceStr(j._price):"",discount:""}]:[];
 }
 // the form's services as they get saved on the jobs table (blank wording as "" so it stays blank when the job is opened again). No price: that goes to job_prices.
 function canonServices(list){
   return (list||[]).map(function(e){return {type:trim(e.type),description:trim(e.description)};});
 }
-// the form's prices as they get saved to job_prices.lines: a number or null for each service, in the same order
+// the form's prices as they get saved to job_prices.lines: {type, price, discount, discountPct} for each service, in the same order (numbers or null; the keys are always there so
+// two lines compare the same whichever way they were made)
 function canonLines(list){
-  return (list||[]).map(function(e){const p=parsePrice(e.price);return {type:trim(e.type),price:(p==null||isNaN(p))?null:p};});
+  return (list||[]).map(function(e){const c=lineCalc(e.price,e.discount);return {type:trim(e.type),price:c.price,discount:c.disc,discountPct:c.pct};});
 }
+// a line's price less its discount, in dollars (a line with no discount key is just its price); null with no price
+function netOf(l){
+  if(!l||l.price==null||isNaN(l.price))return null;
+  const d=l.discount>0?l.discount:0;
+  return (Math.round(l.price*100)-Math.round(d*100))/100;
+}
+// the job total: the NET prices added up, null if no line has a price
 function sumPrice(list){
   let any=false,t=0;
-  list.forEach(function(e){if(e.price!=null&&!isNaN(e.price)){any=true;t+=e.price;}});
-  return any?Math.round(t*100)/100:null;
+  list.forEach(function(e){const n=netOf(e);if(n!=null){any=true;t+=Math.round(n*100);}});
+  return any?t/100:null;
 }
-// {price: total or null, lines: [{type, price}]} for a form's services: what job_prices holds for them
+// {price: net total or null, lines: [{type, price, discount, discountPct}]} for a form's services: what job_prices holds for them
 function pricesOf(list){const lines=canonLines(list);return {price:sumPrice(lines),lines:lines};}
 function pricesEmpty(p){return p.price==null&&p.lines.every(function(l){return l.price==null;});}
 // the row job_prices really holds for a job (j._price, j._lines), in the same shape as pricesOf()
 function storedPrices(job){
+  const num=function(v){const n=(v==null||v==="")?null:Number(v);return (n==null||isNaN(n))?null:n;};
+  const pos=function(v){const n=num(v);return n>0?n:null;};      // (a discount of 0 is no discount)
   const lines=(job&&Array.isArray(job._lines)?job._lines:[]).filter(function(l){return l&&typeof l==="object";}).map(function(l){
-    const p=(l.price==null||l.price==="")?null:Number(l.price);
-    return {type:trim(l.type),price:(p==null||isNaN(p))?null:p};
+    // an old line with no discount keys reads as no discount, so it compares equal to the same line made from the form
+    return {type:trim(l.type),price:num(l.price),discount:pos(l.discount),discountPct:pos(l.discountPct)};
   });
   const t=(job&&job._price!=null&&job._price!=="")?Number(job._price):null;
   return {price:(t==null||isNaN(t))?null:t,lines:lines};
@@ -1202,9 +1254,9 @@ function offerDraft(){
 }
 // a draft saved before jobs could have several services holds one "service" and one "price"
 function draftServices(F){
-  if(Array.isArray(F.services))return F.services.filter(function(e){return e&&trim(e.type);}).map(function(e){return {type:trim(e.type),description:String(e.description==null?"":e.description),price:S.isMaster?priceStr(e.price):""};});
+  if(Array.isArray(F.services))return F.services.filter(function(e){return e&&trim(e.type);}).map(function(e){return {type:trim(e.type),description:String(e.description==null?"":e.description),price:S.isMaster?priceStr(e.price):"",discount:S.isMaster?priceStr(e.discount):""};});
   const st=trim(F.service);
-  return st?[{type:st,description:typeDesc(st),price:S.isMaster?priceStr(F.price):""}]:[];
+  return st?[{type:st,description:typeDesc(st),price:S.isMaster?priceStr(F.price):"",discount:""}]:[];
 }
 // Puts a form (as readForm gives it) into the job sheet that has just been opened. The baseline stays as the fresh snapshot taken in
 // openSheet, so the sheet counts as changed and still asks before it closes. Used by Restore (after a logout) and by the booking bar's "More details".
@@ -2867,11 +2919,15 @@ function renderSvcList(){
 function renderSvcDetails(){
   const el=byId("sv-det");if(!el||!SH)return;
   const M=S.isMaster,lock=pricesLocked();
-  // Master: a price box and a "price to fill" tag on each ticked service, then the invoice wording. A worker gets the wording only: no price box, no tag, no total.
+  // Master: a price box, a discount box (dollars or a percentage, with the net price under them) and a "price to fill" tag on each ticked service, then the invoice wording.
+  // A worker gets the wording only: no price or discount box, no tag, no total. (The discount box has no decimal keypad: a phone's number pad has no % key.)
   el.innerHTML=SH.svc.map(function(e,i){
     return '<div class="svcard"><div class="svhead"><b>'+esc(e.type)+'</b>'+(M?'<span class="pf" id="sv-pf-'+i+'">price to fill</span>':'')+'</div>'+
-      (M?'<div class="fld"><label class="fl" for="sv-p-'+i+'">Price (ex GST)</label>'+
-      '<input class="inp" id="sv-p-'+i+'" data-sv="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(e.price)+'" placeholder="Leave blank if not sure"'+(lock?" disabled":"")+'></div>':"")+
+      (M?'<div class="g2 svpd"><div class="fld"><label class="fl" for="sv-p-'+i+'">Price (ex GST)</label>'+
+      '<input class="inp" id="sv-p-'+i+'" data-sv="p" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(e.price)+'" placeholder="Leave blank if not sure"'+(lock?" disabled":"")+'></div>'+
+      '<div class="fld"><label class="fl" for="sv-x-'+i+'">Discount ($ or %)</label>'+
+      '<input class="inp" id="sv-x-'+i+'" data-sv="x" data-i="'+i+'" type="text" autocomplete="off" value="'+esc(e.discount)+'" placeholder="50 or 10%"'+(lock?" disabled":"")+'></div></div>'+
+      '<div class="hint svnet" id="sv-n-'+i+'" role="status"></div>':"")+
       '<div class="fld"><label class="fl" for="sv-d-'+i+'">What goes on the invoice</label>'+
       '<textarea class="inp sdesc" id="sv-d-'+i+'" data-sv="d" data-i="'+i+'" autocapitalize="sentences">'+esc(e.description)+'</textarea></div></div>';
   }).join("");
@@ -2884,12 +2940,21 @@ function updateSvcMeta(){
   if(!SH)return;
   if(!S.isMaster){updateMoreRow();return;}      // a worker has no prices: nothing to count or show
   const off=S.noPriceTbl,lock=pricesLocked();      // lock: no price can be typed in (the 08 tables are missing, or this job's prices didn't load), so nothing is "to fill" either
-  let blank=0,sum=0,any=false;
+  let blank=0,sum=0,less=0,any=false;      // sum and less in whole cents: the net total, and the discounts taken off it
   SH.svc.forEach(function(e,i){
-    const isBlank=trim(e.price)==="";
+    const isBlank=trim(e.price)==="",c=lineCalc(e.price,e.discount);
     if(isBlank)blank++;
-    else{const n=parsePrice(e.price);if(n!=null&&!isNaN(n)){any=true;sum+=n;}}
+    else if(c.price!=null){any=true;sum+=Math.round(c.net*100);less+=Math.round((c.disc||0)*100);}
     const pf=byId("sv-pf-"+i);if(pf)pf.hidden=lock||!isBlank;
+    // under the price and discount boxes: the original price struck through, what came off, and the net price. A discount that can't be used says why.
+    const nt=byId("sv-n-"+i);
+    if(nt){
+      nt.className="hint svnet";
+      if(lock)nt.textContent="";
+      else if(c.bad){nt.className="hint new svnet";nt.textContent=discMsg(c.bad,e.type);}
+      else if(c.disc!=null)nt.innerHTML="<s>"+money(c.price)+"</s> less "+money(c.disc)+" = <b>"+money(c.net)+"</b>";      // (only numbers go in here, never typed text)
+      else nt.textContent="";
+    }
   });
   updateMoreRow();
   const note=byId("sv-pnote");
@@ -2901,7 +2966,7 @@ function updateSvcMeta(){
   const t=byId("sv-total");if(!t)return;
   if(lock){t.className="hint";t.textContent="";return;}
   const parts=[];
-  if(any)parts.push("Total (ex GST): $"+(Math.round(sum*100)/100).toFixed(2));
+  if(any)parts.push("Total (ex GST): "+money(sum/100)+(less?" (less "+money(less/100)+" discount)":""));
   if(blank)parts.push("Price to fill"+(blank>1?" on "+blank+" services":""));
   t.className="hint"+(blank?" new":"");
   t.textContent=parts.join(" · ");
@@ -2910,10 +2975,10 @@ function updateSvcMeta(){
 function newSvcEntry(name){
   const m=SH.svcMemo[name];
   let e;
-  if(m)e={type:name,description:m.description,price:m.price};
+  if(m)e={type:name,description:m.description,price:m.price,discount:m.discount||""};
   else{
     const t=S.typesByName[name];
-    e={type:name,description:typeDesc(name),price:(S.isMaster&&!pricesLocked()&&t&&t._usual!=null)?String(t._usual):""};      // (the usual price is the master's, from service_prices; none while the price boxes are locked, as it could never be saved)
+    e={type:name,description:typeDesc(name),price:(S.isMaster&&!pricesLocked()&&t&&t._usual!=null)?String(t._usual):"",discount:""};      // (the usual price is the master's, from service_prices; none while the price boxes are locked, as it could never be saved)
   }
   // an old job with a price but no service: the only service ticked takes that price. It stays on offer until the job saves, so a wrong tick that gets undone doesn't lose it.
   if(!SH.svc.length&&SH.legacyPrice!=null&&!SH.legacyHeld&&(!m||trim(m.price)==="")){e.price=String(SH.legacyPrice);SH.legacyHeld=name;}
@@ -2936,7 +3001,10 @@ function onSvcTick(cb){
 }
 function onSvcField(el){
   const e=SH.svc[+el.getAttribute("data-i")];if(!e)return;
-  if(el.getAttribute("data-sv")==="p"){if(S.isMaster){e.price=el.value;updateSvcMeta();}}else e.description=el.value;
+  const k=el.getAttribute("data-sv");
+  if(k==="p"){if(S.isMaster){e.price=el.value;updateSvcMeta();}}
+  else if(k==="x"){if(S.isMaster){e.discount=el.value;updateSvcMeta();}}      // the discount box (master only; a worker has none)
+  else e.description=el.value;
 }
 // The How long list: 15 minute steps. A saved length that is not on them (80 min, 2 hr 05) goes in at its place in the list, the way setDur adds one, not at the end.
 function durOptions(cur){
@@ -3125,7 +3193,7 @@ function readForm(){
     name:M?trim(val("f-name")):(SH.client?SH.client.name:""),
     phone:trim(val("f-phone")),email:trim(val("f-email")),street:trim(val("f-street")),suburb:trim(val("f-suburb")),
     state:trim(val("f-state")),postcode:trim(val("f-postcode")),address:trim(val("f-addr")),
-    services:SH.svc.map(function(e){return {type:e.type,description:e.description,price:trim(e.price)};}),
+    services:SH.svc.map(function(e){return {type:e.type,description:e.description,price:trim(e.price),discount:M?trim(e.discount):""};}),
     notes:String(val("f-notes")||"").replace(/\r\n/g,"\n"),
     cnotes:byId("f-cnotes")?String(val("f-cnotes")||"").replace(/\r\n/g,"\n"):null      // null = no notes box on this sheet (the booking bar, or the database has no clients.notes yet)
   };
@@ -4065,6 +4133,8 @@ function validate(f){
   }
   for(let i=0;S.isMaster&&i<f.services.length;i++){      // (prices are the master's: a worker's sheet has none)
     if(isNaN(parsePrice(f.services[i].price)))return flagMore("The price for "+f.services[i].type+" needs to be a number, like 250 or 250.50.");
+    const dc=lineCalc(f.services[i].price,f.services[i].discount);
+    if(dc.bad)return flagMore(discMsg(dc.bad,f.services[i].type));
   }
   if(f.email&&!looksEmail(f.email))return "That email address doesn't look right.";
   return "";
@@ -4274,8 +4344,9 @@ async function saveSheet(extra,opts){
   }
   return true;
 }
-/* XERO (not built yet): a future "make a Xero draft invoice" reads job_prices, never the jobs table: price = the job's total ex GST (null = nothing entered; a price is
-   never made up), lines = [{type, price}], one per service in the order of jobs.services; the wording for each invoice line is jobs.services[].description. jobs.price
+/* XERO (not built yet): a future "make a Xero draft invoice" reads job_prices, never the jobs table: price = the job's NET total ex GST, after discounts (null = nothing entered; a price is
+   never made up), lines = [{type, price, discount, discountPct}], one per service in the order of jobs.services (price = the full price, discount = the dollars off or null,
+   discountPct = the percentage if it was typed as one; a line with no discount keys has no discount); the wording for each invoice line is jobs.services[].description. jobs.price
    and any "price" inside jobs.services are dead (the 08 triggers keep them empty). Only the master can read job_prices, so a draft has to be made from the master's login.
    savePrices (master only): writes the job's prices to job_prices after the job itself saved. old is priceSnap() from before the job was written. It writes only when
    a price (or the list of services the prices sit on) changed, or when the stored row doesn't match the services on screen (a technician can change the services without
