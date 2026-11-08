@@ -244,7 +244,7 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
   font-size:10px;font-weight:700;line-height:12px;white-space:nowrap;overflow:hidden;box-shadow:0 1px 2px rgba(20,32,30,.14)}
 .drv .dc .ic{width:11px;height:11px;stroke-width:2.4}
 .drv.warn .dc{background:var(--overBg);border-color:var(--over);color:var(--over)}
-.drv.bar{height:3px;padding:0;background:var(--over);border-radius:2px}
+.drv.dbar{height:3px;padding:0;background:var(--over);border-radius:2px}   /* (was .bar, which is also the booking bar at the bottom: that made these marks fixed to the screen) */
 .tdrv{display:flex;align-items:center;justify-content:center;gap:6px;margin:-5px 0 8px;font-size:13.5px;font-weight:600;color:var(--ink2);text-align:center}
 .tdrv.warn{color:var(--over)}
 /* Google credit for the drive times (and under the address suggestions). On a computer the master's grid is fitted to the screen with 14px spare under it: the credit sits in that, out of the layout. */
@@ -684,7 +684,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-08a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-08b";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -2450,7 +2450,7 @@ function driveNode(p,hit,geo,m){
   d.style.left=b.style.left;d.style.width=b.style.width;
   if(txt==null){
     if(!info.warn)return null;      // no room and no warning: the tooltip is enough
-    d.className="drv warn bar";d.style.top=(geo.topB-1)+"px";      // no room for words, but a short gap still shows: a red mark on the top edge of the card
+    d.className="drv warn dbar";d.style.top=(geo.topB-1)+"px";      // no room for words, but a short gap still shows: a red mark on the top edge of the card
     return d;
   }
   d.className="drv "+(info.warn?"warn ":"")+cls;d.style.top=top+"px";
