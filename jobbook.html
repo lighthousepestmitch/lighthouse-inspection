@@ -311,7 +311,7 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-11-04";
+const BUILD="2026-11-08";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -886,11 +886,219 @@ async function keepsOrder(files){
     return sent.length===got.length&&sent.every((k,i)=>k===got[i]);
   }catch(e){ return true; }
 }
+/* ---------- Clients and addresses into the shared tables (the second half of Upload from this Mac) ----------
+   The Job Calendar and Inspection Capture search public.clients and public.client_properties, not the Job Book files, so a Job Book
+   client who isn't in those tables can't be found there. After the files go up, this adds them. Job Book (Xero) data only FILLS BLANKS:
+   a client already in the table gets a column set only where it is empty (never overwritten), and its source, notes and id are never
+   touched. Nothing is deleted. New clients go in with source 'xero'. A second tap finds nothing to do. A client with no name is skipped
+   (the table needs a name). Addresses use the table's own key (the same id the Job Book uses), and one is also skipped when the client
+   already has that street under another id, so the Calendar's own saved sites never get a twin.
+   The block between the two marker lines is what the test harness lifts out and runs on its own. */
+/* >>> client sync */
+const SYNC_CHUNK=200, SYNC_PAGE=1000, SYNC_PARALLEL=6;
+const CLIENT_COLS=["name","phone","email","street","suburb","state","postcode","interval","grp"];     // the columns that may be filled
+const SITE_COLS=["address","suburb","state","postcode"];
+const cell=v=>{ const s=String(v==null?"":v).replace(/\u0000/g,"").trim(); return s===""?null:s; };       // trimmed text, or null when empty
+const isBlank=v=>v==null||String(v).trim()==="";
+const chunksOf=(list,n)=>{ const out=[]; for(let i=0;i<list.length;i+=n) out.push(list.slice(i,i+n)); return out; };
+const addrKey=s=>String(s==null?"":s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const noPlace=s=>/^\(.*\)$/.test(String(s==null?"":s).trim());              // "(address unknown)"
+const titleCase=s=>String(s).toLowerCase().replace(/(^|[^a-z])([a-z])/g,(m,a,b)=>a+b.toUpperCase());
+const nfmt=n=>Number(n).toLocaleString("en-AU");
+const rlsErr=e=>!!e&&(e.code==="42501"||/row-level security|permission denied/i.test(String(e.message||"")));
+const rlsMsg=what=>"The database wouldn't let the Job Book "+what+". Run 44_clients_sync_policy.sql in the Supabase SQL editor, then tap Upload again.";
+
+/* a Job Book client -> a clients row, or null when it has no name or no id */
+function clientRow(id,r){
+  const cid=cell(id), name=cell(r&&r.n);
+  if(!cid||!name) return null;
+  const a=Array.isArray(r.a)?r.a:[];
+  return {id:cid,name,phone:cell(r.p),email:cell(r.e),street:cell(a[0]),suburb:cell(a[1]),state:cell(a[2]),postcode:cell(a[3]),
+    interval:cell(r.iv),grp:cell(r.g),source:"xero"};
+}
+/* the columns of an existing row that are empty (null or spaces) and that the Job Book has a value for */
+function blankFill(want,have,cols){
+  const patch={};
+  for(const c of cols) if(want[c]!=null&&isBlank(have[c])) patch[c]=want[c];
+  return patch;
+}
+/* entries = [id,row] pairs from the Job Book, have = Map of id -> the row already in the table */
+function planClients(entries,have){
+  const out={total:0,inserts:[],fills:[],same:0,noName:0,dupes:0};
+  const seen=new Set();
+  for(const [id,r] of entries){
+    out.total++;
+    const m=clientRow(id,r);
+    if(!m){ out.noName++; continue; }
+    if(seen.has(m.id)){ out.dupes++; continue; }
+    seen.add(m.id);
+    const ex=have.get(m.id);
+    if(!ex){ out.inserts.push(m); continue; }
+    const patch=blankFill(m,ex,CLIENT_COLS);
+    if(Object.keys(patch).length) out.fills.push({id:m.id,patch,was:ex}); else out.same++;
+  }
+  return out;
+}
+/* a Job Book property -> a client_properties row, or null when it has no real street address. Suburb, state and postcode come from the
+   client's own contact address and only when this site is that same street (the way 04_properties.sql was built). */
+function siteRow(pid,p,jb){
+  const id=cell(pid), cid=cell(p&&p.c), line=cell(p&&p.l);
+  if(!id||!cid||!line||noPlace(line)) return null;
+  const a=jb&&Array.isArray(jb.a)?jb.a:[];
+  const own=String(a[0]==null?"":a[0]).trim().toLowerCase()===line.toLowerCase();
+  const sub=own?cell(a[1]):null, n=Math.round(Number(p.n));
+  return {id,client_id:cid,address:line,suburb:sub==null?null:titleCase(sub),state:own?cell(a[2]):null,postcode:own?cell(a[3]):null,
+    job_count:n>0?n:0,source:"xero"};
+}
+/* have = Map of id -> existing site row, jbClients = Map of id -> Job Book client, clientIds = Set of client ids that are in the table */
+function planSites(entries,jbClients,have,clientIds){
+  const out={total:0,inserts:[],fills:[],same:0,noAddress:0,noClient:0,elsewhere:0,dupes:0};
+  const keys=new Map();                                 // the addresses each client already has in the table
+  for(const s of have.values()){
+    if(!keys.has(s.client_id)) keys.set(s.client_id,new Set());
+    keys.get(s.client_id).add(addrKey(s.address));
+  }
+  const seen=new Set();
+  for(const [pid,p] of entries){
+    out.total++;
+    const m=siteRow(pid,p,jbClients.get(cell(p&&p.c)));
+    if(!m){ out.noAddress++; continue; }
+    if(seen.has(m.id)){ out.dupes++; continue; }
+    seen.add(m.id);
+    const ex=have.get(m.id);
+    if(ex){            // fill only when it is plainly the same address, so a suburb never lands on a different street
+      const patch=isBlank(ex.address)||addrKey(ex.address)===addrKey(m.address)?blankFill(m,ex,SITE_COLS):{};
+      if(Object.keys(patch).length) out.fills.push({id:m.id,patch,was:ex}); else out.same++;
+      continue;
+    }
+    if(!clientIds.has(m.client_id)){ out.noClient++; continue; }
+    const k=keys.get(m.client_id);
+    if(k&&k.has(addrKey(m.address))){ out.elsewhere++; continue; }
+    out.inserts.push(m);
+  }
+  return out;
+}
+/* "Clients: 740 added, 31 blanks filled, 1,458 left as they were." plus anything skipped */
+const sumLine=(label,added,filled,left,extras)=>label+": "+nfmt(added)+" added, "+nfmt(filled)+" blanks filled, "+nfmt(left)+" left as they were."
+  +extras.filter(Boolean).map(x=>" "+x).join("");
+async function pool(items,n,fn){                         // n at a time; the first failure stops the rest
+  let next=0, failed=false;
+  const worker=async()=>{
+    while(!failed&&next<items.length){
+      const item=items[next++];
+      try{ await fn(item); }catch(e){ failed=true; throw e; }
+    }
+  };
+  await Promise.all(Array.from({length:Math.min(n,items.length)},worker));
+}
+/* every row of a table, a page at a time (the API hands back at most 1000 per request) */
+async function readAllRows(table,cols){
+  const out=[];
+  for(let from=0;;){
+    const r=await SB.from(table).select(cols).order("id",{ascending:true}).range(from,from+SYNC_PAGE-1);
+    if(r.error){ if(r.error.code==="PGRST103"||r.status===416) break; throw r.error; }
+    const d=r.data||[];
+    if(!d.length) break;
+    for(const x of d) out.push(x);
+    from+=d.length;
+  }
+  return out;
+}
+/* new rows, 200 at a time. ON CONFLICT DO NOTHING (ignoreDuplicates), so a row that turned up meanwhile is left alone; only the rows
+   really added come back, and those are what is counted. */
+async function addRows(table,rows,say,label){
+  const ids=[], parts=chunksOf(rows,SYNC_CHUNK);
+  for(let i=0;i<parts.length;i++){
+    say(label+": adding "+nfmt(ids.length)+" of "+nfmt(rows.length)+"…");
+    const r=await SB.from(table).upsert(parts[i],{onConflict:"id",ignoreDuplicates:true}).select("id");
+    if(r.error) throw r.error;
+    for(const x of (r.data||[])) ids.push(x.id);
+  }
+  return ids;
+}
+/* blank fills, one request per row, 200 rows at a time. Each request only matches while the filled columns still hold exactly what
+   was read (null stays null, spaces stay spaces), so a value typed in meanwhile can never be overwritten. */
+async function fillRows(table,fills,say,label){
+  let done=0, wrote=0, missed=0;
+  for(const part of chunksOf(fills,SYNC_CHUNK)){
+    say(label+": filling blanks "+nfmt(done)+" of "+nfmt(fills.length)+"…");
+    await pool(part,SYNC_PARALLEL,async f=>{
+      let q=SB.from(table).update(f.patch).eq("id",f.id);
+      for(const c of Object.keys(f.patch)) q=f.was[c]==null?q.is(c,null):q.eq(c,f.was[c]);
+      const r=await q.select("id");
+      if(r.error) throw r.error;
+      if((r.data||[]).length) wrote++; else missed++;
+    });
+    done+=part.length;
+  }
+  /* The rules can let an update through with no error and no rows changed. If every fill changed nothing, look at the first row
+     again: still blank means the rules blocked it (say so); filled by someone meanwhile means it was only a race (carry on). */
+  if(fills.length&&!wrote){
+    const f=fills[0], cols=Object.keys(f.patch);
+    const r=await SB.from(table).select("id,"+cols.join(",")).eq("id",f.id);
+    if(!r.error&&r.data&&r.data.length&&cols.every(c=>isBlank(r.data[0][c]))) throw plainErr(rlsMsg("fill in blanks (it reported no rows changed)"));
+  }
+  return {wrote,missed};
+}
+async function syncClientRows(entries,say){
+  say("Clients: reading what the database has…");
+  const have=new Map((await readAllRows("clients","id,"+CLIENT_COLS.join(",")+",source")).map(r=>[r.id,r]));
+  const plan=planClients(entries,have);
+  const ids=new Set(have.keys());
+  const added=await addRows("clients",plan.inserts,say,"Clients");
+  added.forEach(id=>ids.add(id));
+  const fil=await fillRows("clients",plan.fills,say,"Clients");
+  const left=plan.same+(plan.inserts.length-added.length);      // a "new" one that was already there by then counts as left alone
+  return {ids,line:sumLine("Clients",added.length,fil.wrote,left,[
+    plan.noName&&nfmt(plan.noName)+" skipped (no name).",
+    plan.dupes&&nfmt(plan.dupes)+" repeated ids ignored.",
+    fil.missed&&nfmt(fil.missed)+" not filled because they changed while this ran (tap Upload again)."])};
+}
+async function syncSiteRows(entries,jb,ids,say){
+  say("Addresses: reading what the database has…");
+  const have=new Map((await readAllRows("client_properties","id,client_id,"+SITE_COLS.join(","))).map(r=>[r.id,r]));
+  const plan=planSites(entries,jb,have,ids);
+  const added=await addRows("client_properties",plan.inserts,say,"Addresses");
+  const fil=await fillRows("client_properties",plan.fills,say,"Addresses");
+  const left=plan.same+(plan.inserts.length-added.length);
+  return {line:sumLine("Addresses",added.length,fil.wrote,left,[
+    plan.noAddress&&nfmt(plan.noAddress)+" skipped (no street address).",
+    plan.noClient&&nfmt(plan.noClient)+" skipped (client not in the database).",
+    plan.elsewhere&&nfmt(plan.elsewhere)+" skipped (client already has it under another id).",
+    plan.dupes&&nfmt(plan.dupes)+" repeated ids ignored.",
+    fil.missed&&nfmt(fil.missed)+" not filled because they changed while this ran (tap Upload again)."])};
+}
+const syncWhy=(e,what)=>rlsErr(e)?rlsMsg(what):(e&&e.plain?e.message:friendly(e)+" It is safe to tap Upload again.");
+/* files = what was just read from this Mac. Returns {lines,bad}; never claims success when anything stopped. A logged-out session is
+   passed up so the page can show the login. */
+async function runClientSync(files,say){
+  const rowsOf=base=>{ const re=new RegExp("^"+base+"_\\d+$"), out=[];
+    for(const f of files) if(re.test(f.name)) for(const e of Object.entries((f.data&&f.data.rows)||{})) out.push(e);
+    return out; };
+  const cEntries=rowsOf("clients"), pEntries=rowsOf("properties");
+  const jb=new Map(); for(const [id,r] of cEntries) jb.set(cell(id),r);
+  const out={lines:[],bad:false};
+  let ids;
+  try{ const c=await syncClientRows(cEntries,say); ids=c.ids; out.lines.push(c.line); }
+  catch(e){
+    if(authErr(e)) throw e;
+    out.lines.push("Clients: stopped. "+syncWhy(e,"add or change clients"),"Addresses: not tried.");
+    out.bad=true; return out;
+  }
+  try{ const s=await syncSiteRows(pEntries,jb,ids,say); out.lines.push(s.line); }
+  catch(e){
+    if(authErr(e)) throw e;
+    out.lines.push("Addresses: stopped. "+syncWhy(e,"add or change addresses")); out.bad=true;
+  }
+  return out;
+}
+/* <<< client sync */
 function uploadPanel(){
   const box=el("div","upbox");
   box.appendChild(el("div","lbl2","Upload from this Mac"));
   box.appendChild(el("div","hint","Sends the client, job, due list, reply, review and message history files on this Mac to the Job Book database. "
-    +"Do this after every refresh. Nothing leaves this Mac until you tap it."));
+    +"Do this after every refresh. Nothing leaves this Mac until you tap it. "
+    +"It then adds any clients and addresses the Job Calendar and Inspection Capture don't have yet. It only fills blanks, so nothing already there is changed."));
   const st=el("div","st"); if(A.lastUpload) st.textContent=A.lastUpload;
   const acts=el("div","btns");
   const go=btn("Upload from this Mac",SVG.tick,"pri",async()=>{
@@ -903,7 +1111,8 @@ function uploadPanel(){
       const n=plan.names.length;
       /* confirm with the file count before anything is sent */
       const ok=await new Promise(res=>{
-        st.textContent="Upload "+n+" files to the Job Book database? This replaces what is there now.";
+        st.textContent="Upload "+n+" files to the Job Book database? This replaces what is there now. "
+          +"It then adds any clients and addresses the Job Calendar is missing (blanks only, nothing overwritten).";
         const yes=btn("Upload "+n+" files",SVG.tick,"warn x2",()=>{ yes.remove(); no.remove(); res(true); });
         const no=btn("Cancel",null,"x2",()=>{ yes.remove(); no.remove(); res(false); });
         acts.appendChild(yes); acts.appendChild(no);
@@ -917,8 +1126,16 @@ function uploadPanel(){
         +String(new Date().getHours()).padStart(2,"0")+":"+String(new Date().getMinutes()).padStart(2,"0")+".";
       if(!res.ordered) A.lastUpload+=" WARNING: the database table is still the old jsonb type, which shuffles the order of each client's properties. "
         +"Run 09_jobbook_files.sql again in the Supabase SQL editor, then tap Upload again.";
-      say(A.lastUpload+" Reloading…");
-      toast(res.ordered?"Uploaded "+res.uploaded+" files.":"Uploaded, but the table needs 09_jobbook_files.sql run again. See the Setup tab.",!res.ordered);
+      /* The files are safely up. Now the clients and addresses go into the shared tables. If that part stops, the files
+         stay uploaded, the reason is shown, and the reload below still runs. */
+      const base=A.lastUpload;
+      const sy=await runClientSync(files,t=>{ if(gen!==A.gen) throw plainErr("Stopped."); say(base+"\n"+t); });
+      if(gen!==A.gen) return;
+      A.lastUpload=base+"\n"+sy.lines.join("\n");
+      say(A.lastUpload+"\nReloading…");
+      toast(!res.ordered?"Uploaded, but the table needs 09_jobbook_files.sql run again. See the Setup tab."
+        :sy.bad?"Uploaded "+res.uploaded+" files, but the client sync stopped. See the Setup tab."
+        :"Uploaded "+res.uploaded+" files and synced the clients.",!res.ordered||sy.bad);
       await loadAll(gen);
       if(gen===A.gen) say(A.lastUpload);
     }catch(e){
