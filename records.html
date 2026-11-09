@@ -692,7 +692,15 @@ function curWeather(){
   return w;
 }
 const wxOK=w=>!!w&&(w.pending||(w.beaufort&&w.conditions));
+/* The weather service only gives the weather right now, so it is only ever used for a record dated today. For a job on another day this says why
+   the wind and conditions are blank (empty text = the job is today, go ahead and fetch). Not a real date gives no note either: the record is dated today. */
+function wxDateNote(date){
+  if(!realDate(date)||date===TODAY) return "";
+  return "This job "+(date<TODAY?"was on ":"is on ")+nice(date)+". Enter the wind speed and direction for the time of the job.";
+}
 async function fetchWx(){
+  const note=wxDateNote(F.date);
+  if(note){ W.tok++; W.status=note; renderWx(); return; }      // also stops "Get weather again" putting today's weather on another day's record
   const tok=++W.tok; W.status="Getting the weather…"; W.auto=null; W.pend=null; renderWx();
   let loc=await getLoc();
   if(!loc) loc=await geocode(suburbOf(F.propId)||suburbFromAddr(F.address));     // Job Book customer, else the suburb in the address (calendar jobs and typed customers)
@@ -1022,6 +1030,7 @@ function renderForm(){
     const nw=needWx(), all=!!UI.autoOpen, fo=UI.force||{}, hasErr=F.errors.length>0;
     const showWx=all||nw, showBy=all||!!fo.by||!pool().length, showDt=all;
     h+='<button class="autorow'+(nw?' warn':'')+'" id="autorow" data-a="autotoggle"><b>'+(nw?'Weather needed':'Auto-filled ✓')+'</b><span class="sum" id="autosum">'+esc(autoSummary())+'</span><span>'+(all?'▴':'▾')+'</span></button>';
+    if(!showWx&&UI.wxNote&&!curWeather()) h+='<div class="banner warn" id="wxnote" style="margin:8px 0 0">'+esc(UI.wxNote)+'</div>';      // a job on another day: no weather was fetched, so say so
     if(showWx){
       h+='<div id="sec-wx"'+((hasErr&&nw)?' data-bad':'')+'>'+sec("Weather","needed for outdoor spraying");
       h+='<div id="wx">'+wxHTML()+'</div></div>';
@@ -1645,7 +1654,7 @@ window.addEventListener("hashchange",function(){ if(F&&applyHash()) render(); })
   S.prefs=STORE.read(); P();
   try{ const all=(await dbAll())||[]; S.records=all.filter(r=>!r.deleted); S.tomb=all.filter(r=>r.deleted); }
   catch(e){ S.records=[]; toast("Couldn't open the saved records on this device ("+(e&&e.message?e.message:"storage error")+"). New records may not save.",true); }
-  resetForm(); const fromCal=fromJob(); if(fromCal) markClean(); applyHash(); render(); if(fromCal) fetchWx();
+  resetForm(); const fromCal=fromJob(); if(fromCal) markClean(); applyHash(); render(); if(fromCal==="new"&&!wxDateNote(F.date)) fetchWx();      // today's weather only for a job that is today (a record opened again, or a job on another day, never fetches)
   custStart();
   syncRecords().then(syncPaint);
   if(pendingCount()) backfill().then(()=>renderBanner());
@@ -1653,18 +1662,36 @@ window.addEventListener("hashchange",function(){ if(F&&applyHash()) render(); })
     if(pendingCount()) backfill().then(n=>{ if(n) toast(n+" record"+(n>1?"s":"")+" updated with weather."); renderBanner(); }); });
 })();
 function resetForm_pre(){}
-/* Opened from a job on the Job Calendar (records.html?job=..&client=..&addr=..&service=..): the client, the address and
+/* a real calendar date written YYYY-MM-DD ("2026-02-30" and "2026-11-9" are not) */
+function realDate(s){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s||"")) return false;
+  const p=s.split("-").map(Number), d=new Date(p[0],p[1]-1,p[2]);
+  return d.getFullYear()===p[0]&&d.getMonth()===p[1]-1&&d.getDate()===p[2];
+}
+/* the newest saved record on this device for a calendar job, if there is one */
+function recordForJob(job){
+  return S.records.filter(r=>!r.deleted&&r.jobId===job).sort((a,b)=>String(b.savedAt||"").localeCompare(String(a.savedAt||"")))[0]||null;
+}
+/* Opened from a job on the Job Calendar (records.html?job=..&client=..&addr=..&service=..&date=..): the client, the address, the job's day and
    the job's services are filled in, so the worker (who can't search the customer list) goes straight to the treatment.
-   The "customer" is keyed by the address (histKey, the same key the Job Book route and typed customers use), so "Same as last time" works on a repeat visit to the same place. */
+   The "customer" is keyed by the address (histKey, the same key the Job Book route and typed customers use), so "Same as last time" works on a repeat visit to the same place.
+   Gives back "new" (a fresh record was filled in), "open" (this job already had a record on this device, so that one was opened) or "" (nothing to do). */
 function fromJob(){
-  let q; try{ q=new URLSearchParams(location.search); }catch(e){ return false; }
-  const job=(q.get("job")||"").trim(); if(!job) return false;
-  const client=(q.get("client")||"").trim(), addr=(q.get("addr")||"").trim(), svc=(q.get("service")||"").trim();
-  if(!client&&!addr) return false;
+  let q; try{ q=new URLSearchParams(location.search); }catch(e){ return ""; }
+  const job=(q.get("job")||"").trim(); if(!job) return "";
+  const client=(q.get("client")||"").trim(), addr=(q.get("addr")||"").trim(), svc=(q.get("service")||"").trim(), dq=(q.get("date")||"").trim();
+  /* the link has been read, so take the query off the address: a refresh then doesn't fill it in a second time (the #hash stays) */
+  try{ history.replaceState(null,"",location.pathname+location.hash); }catch(e){}
+  const have=recordForJob(job);
+  if(have){ loadForEdit(have); toast("Opened the record you already started for this job."); return "open"; }
+  if(!client&&!addr) return "";
   F.jobId=job; F.propId="addr:"+histKey(addr||client);
-  F.client=client||"(no name on the job)"; F.address=addr; F.date=TODAY; F.start=nowHM();
-  svc.split("+").map(x=>alias(x.trim())).filter(Boolean).forEach(n=>{ if(offered(n)) svcOn(n); });
-  return true;
+  F.client=client||"(no name on the job)"; F.address=addr; F.date=realDate(dq)?dq:TODAY; F.start=nowHM();
+  const note=wxDateNote(F.date); if(note){ W.status=note; UI.wxNote=note; }      // another day: no weather is fetched (see fetchWx)
+  const miss=[];
+  svc.split("+").map(x=>x.trim()).filter(Boolean).forEach(x=>{ const n=alias(x); if(n&&offered(n)) svcOn(n); else miss.push(x); });
+  if(miss.length) toast("Pick the treatment by hand: "+miss.join(", ")+(miss.length>1?" aren't":" isn't")+" in the list.",true);
+  return "new";
 }
 })();
 </script>

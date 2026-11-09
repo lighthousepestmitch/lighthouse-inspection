@@ -396,7 +396,6 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .shfoot{display:flex;gap:8px;padding:10px 16px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
 .shfoot .btn{margin:0}
 #sh-contact .btn{min-width:0;padding:11px 6px;gap:5px;font-size:14px}      /* Ring, Text, Email and Maps on one row, even on a phone */
-#sh-paper{margin-top:0}      /* Service record / Termite inspection: straight under Ring, Text, Email and Maps */
 #sh-recs:empty,#sh-toolhint:empty{display:none}
 .lbl{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);font-weight:700;margin:18px 0 8px}
 .fl{display:block;font-size:13px;color:var(--ink2);font-weight:600;margin:0 0 4px}
@@ -684,7 +683,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-08b";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-09a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -3038,7 +3037,11 @@ function sheetHtml(){
     '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
     '<div class="cnstrip" id="cn-strip" role="note" hidden></div>'+      // the client's notes (dog, gate code ...), under the title where they can't be missed
     '<div class="shbody"><div id="sh-msg" role="alert"></div>'+
-    '<div class="btns" id="sh-start" hidden><a class="btn pri" id="ln-start">Start inspection report</a></div>';
+    // the paperwork buttons sit together at the top, on every job: Service record always (the worker picks the treatment on the records page if the job has no service),
+    // Start inspection report only when a ticked service is an inspection (then it is the main button). updateLinks fills in the links and the pri colour,
+    // and the hint and the "done / not done yet" lines go with them.
+    '<div class="btns" id="sh-top"><a class="btn pri" id="ln-start" hidden>Start inspection report</a><a class="btn pri" id="ln-rec">Service record</a></div>'+
+    '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
   // 1. the job address comes first: the Google lookup, and (master) the sites of clients already on file. Picking a client's site fills the client in too.
   h+='<div class="lbl">Job address</div>'+
     '<div class="fld"><label class="fl vh" for="f-addr">Job address</label>'+
@@ -3064,11 +3067,7 @@ function sheetHtml(){
      cf("f-email","Email",'type="email" autocomplete="off" inputmode="email" autocapitalize="none"',I.email)+
      '<div class="btns" id="sh-contact">'+
        '<a class="btn" id="ln-ring">'+IC.phone+' Ring</a><a class="btn" id="ln-text">'+IC.msg+' Text</a>'+
-       '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>'+
-     // the paperwork buttons sit straight under them (they used to be at the very bottom of the sheet): Service record for a job with a non-inspection service, Termite inspection
-     // for an inspection one, both for a combo. updateLinks shows and hides them (and this row), and the hint and the "done / not done yet" lines go with them.
-     '<div class="btns" id="sh-paper" hidden><a class="btn" id="ln-rec" hidden>Service record</a></div>'+
-     '<div class="recs" id="sh-recs"></div><div class="hint" id="sh-toolhint"></div>';
+       '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>';
   // client notes: stay with the client, not the job. A strip under the title when there are some, or a "+ Client note" link.
   if(!S.noNotesCol&&(M||SH.clientId)){
     h+='<button type="button" class="linkbtn cnadd" id="cn-add" data-sh="cnadd" hidden>+ Client note</button>'+
@@ -3212,6 +3211,12 @@ function setLink(id,href){
   if(href){a.setAttribute("href",href);a.removeAttribute("aria-disabled");a.classList.remove("off");}
   else{a.removeAttribute("href");a.setAttribute("aria-disabled","true");a.classList.add("off");}
 }
+/* The Service record link for a saved job. recTypes = the job's non-inspection services (may be empty: the worker then picks the treatment on the records page).
+   date = the job's own day (YYYY-MM-DD), so the record is dated the day of the job and the page knows not to fetch today's weather for a job on another day. */
+function recordsHref(id,name,addr,recTypes,date){
+  const e=encodeURIComponent;
+  return "records.html?job="+e(id)+"&client="+e(name)+"&addr="+e(addr)+"&service="+e(recTypes.join(" + "))+"&date="+e(date||"");
+}
 function updateLinks(){
   if(!SH)return;
   if(SH.quick){quickSync();return;}      // the booking bar has no Ring/Text/Maps buttons or paperwork: it only needs its own chips and summary refreshed
@@ -3223,24 +3228,23 @@ function updateLinks(){
   setLink("ln-map",addr?"https://maps.apple.com/?q="+encodeURIComponent(addr):"");
   const id=SH.jobId,e=encodeURIComponent;
   const upl=SH.uploading||S.uploads>0;      // S.uploads also counts a batch still running from a sheet that was closed
-  // Termite inspection button: any ticked service is an inspection. Service record button: any ticked service is NOT an inspection.
-  // A combo job (say General Pest Treatment + Termite Inspection) gets both. Nothing ticked: neither.
+  // Service record button: on EVERY job (a job with no service yet still gets it: the client and address fill in and the worker picks the treatment).
+  // Its link carries only the non-inspection services (a combo of General Pest Treatment + Termite Inspection sends just the pest one).
+  // Start inspection report: only when a ticked service is an inspection, and then it is the main (pri) button and Service record is the plain one.
   const types=f.services.map(function(x){return x.type;});
   const recTypes=types.filter(function(t){return !isInspectionType(t);});
-  const hasInsp=types.some(isInspectionType),hasRec=recTypes.length>0;
-  const rec=byId("ln-rec"),stw=byId("sh-start");
+  const hasInsp=types.some(isInspectionType);
+  const rec=byId("ln-rec"),stw=byId("ln-start");
   if(stw)stw.hidden=!hasInsp;
-  if(rec)rec.hidden=!hasRec;
-  const pp=byId("sh-paper");if(pp)pp.hidden=!hasRec;
+  if(rec)rec.classList.toggle("pri",!hasInsp);
   updateProps();
   // these two leave this page in the same tab, so they stay switched off while photos are going up (they come back by themselves when it finishes)
   if(id&&!upl){
-    setLink("ln-rec",hasRec?"records.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr)+"&service="+e(recTypes.join(" + ")):"");
+    setLink("ln-rec",recordsHref(id,f.name,addr,recTypes,f.date));
     setLink("ln-start",hasInsp?"index.html?job="+e(id)+"&client="+e(f.name)+"&addr="+e(addr):"");
   }else{setLink("ln-rec","");setLink("ln-start","");}
   const hints=[];
-  if(!types.length)hints.push("Tick a service to get the record buttons.");
-  if(!id)hints.push(types.length?"Save the job first, then these open with the details filled in.":"Then save the job and they open with the details filled in.");
+  if(!id)hints.push("Save the job first, then these open with the details filled in.");
   else if(upl)hints.push("Wait for the photos to finish uploading.");
   const th=byId("sh-toolhint");if(th)th.textContent=hints.join(" ");
   const dis=!id;
