@@ -78,6 +78,11 @@
     padding:5px 9px;border-radius:8px;border:1.5px solid var(--timber);background:var(--timber-soft);color:var(--timber);cursor:pointer}
   .srcpill:active{transform:scale(.95)}
   .srcpill svg{width:14px;height:14px;stroke:currentColor;fill:none}
+  .srcpill[hidden]{display:none}
+  .srcpill.notespill{white-space:nowrap}
+  /* the read-only Notes panel (job + client notes from the Calendar): line breaks kept, long words wrap */
+  .jnote{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem;line-height:1.45;color:var(--ink);background:var(--paper);border:1px solid var(--edge);border-radius:10px;padding:11px 12px}
+  .sheet .fnote.jnasof{margin:0 0 10px}
   /* camera / library icon swap (body.lib = library mode) */
   .ic-lib{display:none}
   body.lib .ic-cam{display:none}
@@ -436,6 +441,7 @@
     </div>
     <div class="jumprow">
       <button class="srcpill" id="srcpill" type="button" aria-label="Photo source: camera or library"><svg class="ic-cam" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L8 6H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-4l-1.5-2Z"/><circle cx="12" cy="13" r="3.2"/></svg><svg class="ic-lib" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="m21 16-5-5-8 8"/></svg><span id="srclab">Camera</span></button>
+      <button class="srcpill notespill" id="notespill" type="button" data-jobnotes hidden aria-label="Read the job and client notes"><svg viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg><span>Notes</span></button>
       <nav class="jump" id="jump"></nav>
     </div>
   </div>
@@ -487,7 +493,7 @@
 "use strict";
 
 // Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
-const BUILD="2026-11-06a";
+const BUILD="2026-11-09a";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -712,7 +718,7 @@ function streetJoin(no,street){return [no,street].map(x=>String(x==null?"":x).tr
 function streetLine(c){c=c||{};return streetJoin(c.streetno,c.address);}
 function addrTitle(street,suburb){const s=String(street||"").trim(),u=String(suburb||"").trim();return s&&u?s+", "+u:(s||u);}
 function headerSub(){const c=STATE.customer||{};return addrTitle(streetLine(c),c.suburb)||subFallback();}
-function setHsub(){const h=document.getElementById("hsub");if(h)h.textContent=headerSub();}
+function setHsub(){const h=document.getElementById("hsub");if(h)h.textContent=headerSub();setNotesBtn();}
 /* Day chips ("Wed 4 Nov") for the Jobs lists. A typed report date ("4 Nov 2026") is read as a plain calendar day; a timestamp is
    turned into the Sydney day it fell on, whatever time zone the device is in. The year only shows when it isn't this year. */
 const DOW3=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON3=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -1919,6 +1925,7 @@ document.addEventListener("keydown",e=>{
   else if(e.key==="ArrowLeft")lbStep(-1);
 });
 document.getElementById("srcpill").addEventListener("click",togglePhotoSrc);
+document.querySelector("header").addEventListener("click",e=>{if(e.target.closest("[data-jobnotes]"))openJobNotes();});
 
 /* ---------- jobs (multi-inspection) ---------- */
 async function openNewJob(){
@@ -2994,7 +3001,87 @@ async function fillSyncBox(){
     catch(e){const el=document.getElementById("teamlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
   }
 }
-const JOB_COLS="id,job_date,start_time,service_type,services,address,status,staff_id,client:clients(id,name,phone,email,street,suburb,state,postcode)";
+// jobs.notes and clients.notes (dog, gate code) ride along so the Notes panel can show them. clients.notes comes from 06_lengths_notes.sql: a database
+// without it answers an error, so the fetch is asked again without it (same idea as the Calendar's S.noNotesCol) and stays off for the session.
+const JOB_COLS="id,job_date,start_time,service_type,services,address,status,staff_id,notes,client:clients(id,name,phone,email,street,suburb,state,postcode,notes)";
+const JOB_COLS_NC=JOB_COLS.replace("postcode,notes)","postcode)");
+let NO_CNOTES=false;
+function missingNotesCol(e){
+  if(!e)return false;
+  const m=String(e.message||"")+" "+String(e.details||"")+" "+String(e.hint||"");
+  return (e.code==="PGRST204"||e.code==="42703"||/could not find the .*column|column .*does not exist/i.test(m))&&/\bnotes\b/.test(m);
+}
+// make(cols) builds and sends one jobs request; it is sent a second time without the client notes if the first answer says that column isn't there
+async function fetchJobs(make){
+  let r=await make(NO_CNOTES?JOB_COLS_NC:JOB_COLS);
+  if(r&&r.error&&!NO_CNOTES&&missingNotesCol(r.error)){NO_CNOTES=true;r=await make(JOB_COLS_NC);}
+  return r;
+}
+/* ---------- read-only Notes panel: the Calendar job's notes and the client's notes ----------
+   STATE.jobRef = {notes, cnotes, at} (at = when they were read, ms). It sits at the TOP LEVEL of STATE on purpose, never inside STATE.customer, because
+   buildPacket() copies the whole customer into the exported file, the office copy and the Mira input. buildPacket() and the office summary build from named
+   fields, so jobRef never leaves the device. It is saved with the job (IndexedDB), so it opens with no signal. */
+function noteTxt(v){return typeof v==="string"?v.trim():"";}
+function jobRefFrom(j,at){      // null when there is nothing but blanks; at = when it was read (left out = now, 0 = unknown)
+  if(!j||typeof j!=="object")return null;
+  const n=noteTxt(j.notes),cn=noteTxt(j.client&&j.client.notes);
+  return (n||cn)?{notes:n,cnotes:cn,at:at==null?Date.now():(+at||0)}:null;
+}
+function jobRefHas(r){return !!(r&&(noteTxt(r.notes)||noteTxt(r.cnotes)));}
+function setJobRef(ref){if(ref)STATE.jobRef=ref;else delete STATE.jobRef;}
+// The Calendar's offline copy (localStorage lpc_jobs_off_v1): {v:1,uid,days:{"YYYY-MM-DD":{at,jobs:[{id,notes,client:{notes},...}]}},savedAt}.
+// Returns {job,at} for this job id, or null (no copy, a broken copy, or the job isn't in it). at = when the Calendar fetched that day.
+function offlineJob(jid,raw){
+  try{
+    const o=JSON.parse(raw==null?"null":raw);
+    if(!o||typeof o!=="object"||!o.days||typeof o.days!=="object")return null;
+    for(const d of Object.keys(o.days)){
+      const day=o.days[d],jobs=day&&Array.isArray(day.jobs)?day.jobs:[];
+      for(const j of jobs)if(j&&j.id===jid)return {job:j,at:+(day&&day.at)||+o.savedAt||0};
+    }
+  }catch(e){}
+  return null;
+}
+function offlineJobFromStore(jid){let raw=null;try{raw=localStorage.getItem("lpc_jobs_off_v1");}catch(e){}return offlineJob(jid,raw);}
+function jobRefAsOf(at){      // "Mon 9 Nov, 2:35 pm" in this device's time (the year only when it isn't this year); "" when unknown
+  const t=+at;if(!t)return "";
+  const d=new Date(t);if(isNaN(d.getTime()))return "";
+  const h=d.getHours();
+  return DOW3[d.getDay()]+" "+d.getDate()+" "+MON3[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"")+", "+((h%12)||12)+":"+String(d.getMinutes()).padStart(2,"0")+" "+(h<12?"am":"pm");
+}
+function jobNotesHtml(ref){
+  const n=noteTxt(ref&&ref.notes),cn=noteTxt(ref&&ref.cnotes),asof=jobRefAsOf(ref&&ref.at);
+  return `<p class="fnote jnasof">${asof?"As of "+escv(asof)+" · read only":"Read only"}</p>`
+    +(n?`<div class="jnote">${escv(n)}</div>`:`<p class="fnote">No job notes.</p>`)
+    +(cn?`<div class="flab">Client notes</div><div class="jnote">${escv(cn)}</div>`:"");
+}
+function setNotesBtn(){const b=document.getElementById("notespill");if(b)b.hidden=!jobRefHas(STATE&&STATE.jobRef);}
+function openJobNotes(){
+  const ref=STATE&&STATE.jobRef;if(!jobRefHas(ref)){setNotesBtn();return}
+  sheet.classList.add("tall");
+  sheet.innerHTML=`<h3>Job notes</h3><div class="fscroll">${jobNotesHtml(ref)}</div><div class="acts"><button class="btn ghost" id="mCancel">Close</button></div>`;
+  modal.classList.add("show");
+  document.getElementById("mCancel").onclick=closeModal;
+}
+// A report already started from this Calendar job: read the notes again (they may have changed since) when signed in. Quiet on any failure.
+async function refreshJobRef(jid){
+  try{
+    let done=false;
+    if(sbCfg()){
+      if(!ME&&sbHasSession()){try{await sbMe();}catch(e){}}
+      if(ME){
+        const sb=await sbClient();
+        const r=await fetchJobs(c=>sb.from("jobs").select(c).eq("id",jid).maybeSingle());
+        if(r&&!r.error&&r.data){if(STATE.customer&&STATE.customer.calJobId===jid){setJobRef(jobRefFrom(r.data));scheduleSave();}done=true;}
+      }
+    }
+    if(!done){      // no signal or signed out: the Calendar's offline copy, only if it is newer than what this report already holds
+      const off=offlineJobFromStore(jid);
+      if(off&&STATE.customer&&STATE.customer.calJobId===jid&&(!STATE.jobRef||off.at>(+STATE.jobRef.at||0))){setJobRef(jobRefFrom(off.job,off.at));scheduleSave();}
+    }
+  }catch(e){}
+  setNotesBtn();
+}
 function isoToday(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
 function titleCase(s){return String(s||"").toLowerCase().replace(/\b[a-z]/g,c=>c.toUpperCase());}
 // a calendar job's address is one line: "3 Oleander St, Mullumbimby NSW 2482" (or the older "37 Beech Lane Wilsons Creek"). Peel off the number, the
@@ -3028,15 +3115,15 @@ async function openTodayJobs(){
   document.getElementById("mCancel").onclick=closeModal;
   try{
     const sb=await sbClient();
-    const r=await sb.from("jobs").select(JOB_COLS)
-      .eq("job_date",isoToday()).neq("status","cancelled").order("start_time",{ascending:true,nullsFirst:false});
+    const r=await fetchJobs(c=>sb.from("jobs").select(c)
+      .eq("job_date",isoToday()).neq("status","cancelled").order("start_time",{ascending:true,nullsFirst:false}));
     if(r.error)throw r.error;
     TJ=r.data||[];
     const el=document.getElementById("tjlist");if(!el)return;
     el.innerHTML=TJ.length?TJ.map((j,i)=>`<button type="button" class="frow" data-tj="${i}"><span class="ftxt"><b>${escv((j.start_time?String(j.start_time).slice(0,5)+" ":"")+((j.client&&j.client.name)||"(no client)"))}</b><br>${escv(j.address||"(no address)")}${j.service_type?" · "+escv(j.service_type):""}</span></button>`).join(""):`<span class="fnote">Nothing booked for you today.</span>`;
   }catch(e){const el=document.getElementById("tjlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
 }
-async function startFromJob(j){
+async function startFromJob(j,at){      // at = when the notes were read, only passed when they came from the Calendar's offline copy
   // an empty job on the screen is reused, so no blank job gets left behind in the list
   const blank=!(STATE.customer&&(STATE.customer.address||STATE.customer.client))&&!Object.keys(STATE.sections||{}).length;
   if(STATE.id&&!blank){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
@@ -3047,6 +3134,7 @@ async function startFromJob(j){
   if(/pre[\s-]*purchase/i.test(svcText)){c.rtype="prepurchase";c.scope=PP_SCOPE;}
   fillInspector(c);
   STATE={id:keepId,customer:c,sections:{}};
+  setJobRef(jobRefFrom(j,at));      // top level of STATE, never inside the customer (see the Notes panel comment)
   await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();
   closeModal();render();window.scrollTo(0,0);
   setHsub();
@@ -3140,17 +3228,20 @@ async function handleLaunchParams(){
   const list=await loadJobsIndex();
   const hit=list.find(m=>m.calJobId===jid);
   if(hit){await switchJob(hit.id);
-    if(STATE.id===hit.id){toast("Opened your inspection for "+(STATE.customer.client||streetLine(STATE.customer)||"this job"),2600);return}}
+    if(STATE.id===hit.id){toast("Opened your inspection for "+(STATE.customer.client||streetLine(STATE.customer)||"this job"),2600);await refreshJobRef(jid);return}}
   for(const m of list){if(m.calJobId!==undefined)continue;const st=await dbGet("job::"+m.id);
-    if(st&&st.customer&&st.customer.calJobId===jid){await switchJob(m.id);toast("Opened your inspection for "+(st.customer.client||streetLine(st.customer)||"this job"),2600);return}}
-  // 2. signed in (the calendar login is shared): fetch the full job, client details and all
+    if(st&&st.customer&&st.customer.calJobId===jid){await switchJob(m.id);toast("Opened your inspection for "+(st.customer.client||streetLine(st.customer)||"this job"),2600);await refreshJobRef(jid);return}}
+  // 2. signed in (the calendar login is shared): fetch the full job, client details and all (and its notes)
   if(sbCfg()){
     if(!ME&&sbHasSession()){try{await sbMe();}catch(e){}}
-    if(ME){try{const sb=await sbClient();const r=await sb.from("jobs").select(JOB_COLS).eq("id",jid).maybeSingle();
-      if(r&&r.data){await startFromJob(r.data);return}}catch(e){}}
+    if(ME){try{const sb=await sbClient();const r=await fetchJobs(c=>sb.from("jobs").select(c).eq("id",jid).maybeSingle());
+      if(r&&r.data){await startFromJob(r.data);setNotesBtn();return}}catch(e){}}
   }
-  // 3. not signed in or no signal: use what the calendar put in the link (name and address)
-  await startFromJob({id:jid,address:addr,client:{name:client}});
+  // 3. not signed in or no signal: use what the calendar put in the link (name and address), plus the notes from the Calendar's offline copy if it holds this job
+  const off=offlineJobFromStore(jid),j3={id:jid,address:addr,client:{name:client}};
+  if(off){j3.notes=off.job.notes;j3.client.notes=off.job.client&&off.job.client.notes;}
+  await startFromJob(j3,off?off.at:undefined);
+  setNotesBtn();
   toast("Started. Sign in (Jobs) to fill the phone and email too",3600);
 }
 
@@ -3177,6 +3268,7 @@ async function handleLaunchParams(){
   if(!STATE.customer.date)STATE.customer.date=todayStr();
   if(db){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}
   setHsub();
+  setNotesBtn();
   applyPhotoSrc();
   render();
   try{syncBoot();}catch(e){}
