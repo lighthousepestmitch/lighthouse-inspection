@@ -2858,7 +2858,7 @@ function openSheet(job,defaults){
     init:init,addrTouched:!!(job&&job.address),baseline:"",busy:false,
     recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
     unlinked:null,renameTo:null,pendingN:0,
-    svc:svc,svcMemo:{},svcMore:false,
+    svc:svc,svcBase:svc.map(function(e){return e.type;}),svcMemo:{},svcMore:false,      // svcBase: the services the job had when the sheet opened (a worker can add to these, not take them off)
     more:moreLoad(),moreForce:!!(job&&job.status==="cancelled"),      // the More row: open or shut as last left on this device; a cancelled job opens it (Reopen is in there)
     cnOpen:false,cnTouched:false,      // the client notes box: showing, and typed in on this sheet (until then it just mirrors the client's saved notes)
     durHand:!!job,durAuto:false,durBase:null,svcTouched:false,      // job length: set by hand (a saved job's length counts as set by hand), set from the services, services ticked on this sheet
@@ -2904,18 +2904,16 @@ function svcAllNames(){
 // focus and doesn't jump. Ticked services are always in it, even past the first few.
 function renderSvcList(){
   const el=byId("sv-list");if(!el||!SH)return;
-  if(!S.isMaster){
-    el.innerHTML=SH.svc.length?'<ul class="svro">'+SH.svc.map(function(e){return '<li role="listitem">'+esc(e.type)+'</li>';}).join("")+'</ul>'
-      :'<div class="ro">No services on this job yet. Ask Mitch.</div>';
-    return;
-  }
-  const names=svcAllNames(),ticked={};SH.svc.forEach(function(e){ticked[e.type]=1;});
+  // The master ticks and unticks freely. A worker (Andrew) sees the same list and can ADD a service to a job, but the ones Mitch put on stay (locked), so a stray tap can't drop a priced service.
+  const names=svcAllNames(),ticked={},locked={};SH.svc.forEach(function(e){ticked[e.type]=1;});
+  if(!S.isMaster)(SH.svcBase||[]).forEach(function(n){locked[n]=1;});
   let h='<div class="svlist">';
   names.forEach(function(n,i){
     if(!(SH.svcMore||i<SVC_SHOW||ticked[n]))return;
-    h+='<label class="svrow'+(ticked[n]?" on":"")+'"><input type="checkbox" data-svc="'+esc(n)+'"'+(ticked[n]?" checked":"")+'><span>'+esc(n)+'</span></label>';
+    h+='<label class="svrow'+(ticked[n]?" on":"")+'"><input type="checkbox" data-svc="'+esc(n)+'"'+(ticked[n]?" checked":"")+(locked[n]?" disabled":"")+'><span>'+esc(n)+'</span></label>';
   });
   h+='</div>';
+  if(!S.isMaster)h+='<div class="hint">Tick to add a service. The ones already on the job stay.</div>';
   if(names.length>SVC_SHOW)h+='<button type="button" class="linkbtn" data-sh="svcmore" aria-expanded="'+(SH.svcMore?"true":"false")+'">'+(SH.svcMore?"Fewer services":"More services")+'</button>';
   el.innerHTML=h;
 }
@@ -3064,8 +3062,8 @@ function sheetHtml(){
     '<div class="hint" id="f-addr-hint" role="status"></div>'+
     '<div class="sites" id="f-addr-sites" hidden></div>'+
     '<div class="sites" id="f-addr-offer" hidden></div>';
-  // a worker sees the services Mitch ticked straight under the address, as a plain list (no ticking: Mitch decides the job)
-  if(!M)h+='<div class="fld"><div class="fl" id="sv-lbl">The job</div><div id="sv-list" role="list" aria-labelledby="sv-lbl"></div></div>';
+  // a worker sees the services straight under the address and can add to them (the ones Mitch ticked stay on; see renderSvcList)
+  if(!M)h+='<div class="fld"><div class="fl" id="sv-lbl">The job</div><div id="sv-list" role="group" aria-labelledby="sv-lbl"></div></div>';
   // 2. the client: name, phone, email (Ring, Text, Email and Maps are under them). The client's own street, suburb, state and postcode are in the More row.
   h+='<div class="lbl">Client</div>';
   if(M){
