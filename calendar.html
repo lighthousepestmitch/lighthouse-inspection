@@ -677,13 +677,13 @@ body.isdrag .tray.barok,body.isresize .tray.barok{outline:none}
    ===================================================================== */
 
 /* ---------- settings ---------- */
-const WORK_START=7*60, WORK_END=17*60;   // the day and week grids always show 7am to 5pm, and grow (to the hour) to take in any job outside that
+const WORK_START=6*60, WORK_END=17*60;   // the day and week grids always show 6am to 5pm, and grow (to the hour) to take in any job outside that
 const PPM_FLOOR=0.6, PPM_MAX=3;          // pixels per minute: fitted to the screen (fitPpm), but never under 0.6 so a 30 min job can still be tapped
 const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open: there the whole 7am to 5pm day fits above it on a computer, and a green spot is what gets tapped
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-09a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-12a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -714,7 +714,7 @@ const MORE_KEY="lpc_sheet_more_v1";     // the job sheet's "More" row: open or s
 const QUICK_KEY="lpc_quick_prefs_v1";   // the booking bar remembers who it was last booking for
 const QUICK_SVC=6;                      // service chips the booking bar shows before "More services"
 const QUICK_DUR=60;                     // minutes, same default as the full job sheet
-const QUICK_FIRST=6*60+30, QUICK_LAST=17*60, QUICK_STEP=30;      // time chips 6:30am to 5:00pm
+const QUICK_FIRST=6*60, QUICK_LAST=17*60, QUICK_STEP=30;      // time chips 6:00am to 5:00pm
 const NARROW="(max-width:719px)";       // phone width: below this the day view can show one person at a time
 
 /* ---------- tiny helpers ---------- */
@@ -1083,7 +1083,11 @@ function svcNames(j){
 }
 // for the cards: all the names joined, or, when that is too long for the card, the first one and how many more
 function svcLabel(j,max){
-  const n=svcNames(j),full=n.join(" + ");
+  let n=svcNames(j);
+  // "Other" shows what was typed for it ("Other: bird spikes")
+  const o=Array.isArray(j.services)?j.services.find(function(e){return e&&e.type==="Other"&&trim(e.description);}):null;
+  if(o){const t=trim(o.description),s=t.length>24?t.slice(0,23)+"…":t;n=n.map(function(x){return x==="Other"?"Other: "+s:x;});}
+  const full=n.join(" + ");
   if(n.length<2||full.length<=max)return full;
   return n[0]+" +"+(n.length-1);
 }
@@ -2983,9 +2987,19 @@ function newSvcEntry(name){
   if(!SH.svc.length&&SH.legacyPrice!=null&&!SH.legacyHeld&&(!m||trim(m.price)==="")){e.price=String(SH.legacyPrice);SH.legacyHeld=name;}
   return e;
 }
+// "Other" asks what the job is (it becomes the invoice wording). Cancel or a blank answer = not ticked. Asked before newSvcEntry so a cancelled tick never takes the old price.
+function askOther(){
+  const m=SH.svcMemo.Other,t=trim(window.prompt("What's the Other job? This is what goes on the invoice.",m&&m.description?m.description:"")||"");
+  return t||null;
+}
 function onSvcTick(cb){
   const name=cb.getAttribute("data-svc"),i=SH.svc.findIndex(function(e){return e.type===name;});
-  if(cb.checked&&i<0)SH.svc.push(newSvcEntry(name));
+  if(cb.checked&&i<0){
+    let d=null;
+    if(name==="Other"){d=askOther();if(d==null){cb.checked=false;return;}}
+    const ne=newSvcEntry(name);if(d!=null)ne.description=d;
+    SH.svc.push(ne);
+  }
   else if(!cb.checked&&i>=0){
     const gone=SH.svc[i];
     // the old price was sitting on the service that just got unticked: take it back off (if it is still the untouched old price) so the next one can have it
@@ -4126,6 +4140,7 @@ function validate(f){
     // a new job needs an address OR a client name (the address can come first and the name later), and at least one service
     if(!SH.clientId&&!f.name&&!f.address&&SH.isNew)return "Type the job address or the client's name.";
     if(SH.isNew&&!f.services.length)return "Tick at least one service.";
+    if(f.services.some(function(e){return e.type==="Other"&&!trim(e.description);}))return "Type what the Other job is (in What goes on the invoice).";
   }
   // a client-less job can't keep a phone or email, so say so instead of saving "Saved" and quietly dropping them
   if(!SH.clientId&&!f.name&&hasContact(f)){
@@ -4867,9 +4882,9 @@ function quickHtml(){
   activeStaff().forEach(function(s){h+='<button type="button" class="segb" data-sh="qwho" data-v="'+esc(s.id)+'" aria-pressed="false">'+esc(s.name)+'</button>';});
   h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
     '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
-  // More: job notes, the client's note, the day, the time, and the full job sheet (the phone and email show straight under the name)
+  // job notes sit on the front (so a note can be typed while booking); More has the client's note, the day, the time, and the full job sheet (the phone and email show straight under the name)
+  h+='<div class="fld"><label class="fl" for="f-notes">Job notes <span class="fl2">(optional)</span></label><textarea class="inp" id="f-notes" rows="2" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>';
   h+='<div class="barmore" id="q-more" hidden>'+
-    '<div class="fld"><label class="fl" for="f-notes">Job notes</label><textarea class="inp" id="f-notes" rows="2" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>'+
     (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
       '<textarea class="inp" id="f-cnotes" rows="2" placeholder="Dog, gate code, key, parking..."></textarea></div>')+
     '<div class="lbl">Day<span class="qdl" id="q-daylbl"></span></div><div class="chiprow" id="q-days" role="group" aria-label="Day">';
@@ -4903,9 +4918,8 @@ function openQuick(o){
   quickRenderSvc();
   SH.baseline=snap();
   barPlace();barMeasure();barWatch(true);
-  // on a computer the week is the view to book from; a phone keeps what it was showing. It goes back when the bar closes (unless the view was changed by hand meanwhile).
-  if(!isNarrow()&&S.view!=="week"){S.barPrevView=S.view;S.view="week";if(!SH.dayHand)SH.dayAuto=val("f-date");afterNav();}      // (the day that was on screen stays the bar's day while that week is showing. It is not a day picked by hand: go to another week and the bar's day goes with it.)
-  else renderBody();
+  // the bar leaves the view alone (Day stays Day, Week stays Week). Mitch asked 2026-11-12: it used to flip a computer to the 7-day week.
+  renderBody();
   // a phone is left alone (the keyboard would hide the calendar); on a computer the job address box is ready to type in
   try{if(window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-addr");if(n)n.focus({preventScroll:true});}}catch(e){}
 }
@@ -4980,7 +4994,12 @@ function quickSet(k,a){
 }
 function quickToggleSvc(name){
   const i=SH.svc.findIndex(function(e){return e.type===name;});
-  if(i<0)SH.svc.push(newSvcEntry(name));      // same as ticking it in the full sheet: its default price (only if one is set) and invoice wording
+  if(i<0){      // same as ticking it in the full sheet: its default price (only if one is set) and invoice wording
+    let d=null;
+    if(name==="Other"){d=askOther();if(d==null)return;}
+    const ne=newSvcEntry(name);if(d!=null)ne.description=d;
+    SH.svc.push(ne);
+  }
   else{SH.svcMemo[name]=SH.svc[i];SH.svc.splice(i,1);}
   SH.svcTouched=true;
   autoLen();

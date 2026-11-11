@@ -524,6 +524,72 @@
   "Penetrations",
   "Other"
  ],
+ "areasBySvc": {
+  "Pre-Construction Barrier": [
+   "Slab internal",
+   "Underslab",
+   "Underslab/flooring",
+   "Slab perimeter",
+   "Slab external perimeter",
+   "Slab penetrations",
+   "Slab joins",
+   "Subfloor barrier",
+   "Physical barrier (pre-con)",
+   "Ant capping",
+   "Retaining wall",
+   "External additions",
+   "Paths/driveways",
+   "Other"
+  ],
+  "Post-Construction Barrier": [
+   "Slab internal",
+   "Underslab",
+   "Underslab/flooring",
+   "Slab perimeter",
+   "Slab external perimeter",
+   "Slab penetrations",
+   "Slab joins",
+   "Subfloor barrier",
+   "Physical barrier (pre-con)",
+   "Ant capping",
+   "Retaining wall",
+   "External additions",
+   "Paths/driveways",
+   "Other"
+  ],
+  "Termite Treatment": [
+   "Slab internal",
+   "Underslab",
+   "Underslab/flooring",
+   "Slab perimeter",
+   "Slab external perimeter",
+   "Slab penetrations",
+   "Slab joins",
+   "Subfloor barrier",
+   "Physical barrier (pre-con)",
+   "Ant capping",
+   "Retaining wall",
+   "External additions",
+   "Paths/driveways",
+   "Other"
+  ],
+  "Trelona/Nemesis Baiting": [
+   "Slab internal",
+   "Underslab",
+   "Underslab/flooring",
+   "Slab perimeter",
+   "Slab external perimeter",
+   "Slab penetrations",
+   "Slab joins",
+   "Subfloor barrier",
+   "Physical barrier (pre-con)",
+   "Ant capping",
+   "Retaining wall",
+   "External additions",
+   "Paths/driveways",
+   "Other"
+  ]
+ },
  "airTypes": [
   "liquid",
   "aerosol",
@@ -588,6 +654,7 @@
   "Trelona Baiting": "Trelona/Nemesis Baiting",
   "Nemesis New": "Trelona/Nemesis Baiting",
   "Nemesis Renewal": "Trelona/Nemesis Baiting",
-  "Rodent Baiting": "Rodent Treatment"
+  "Rodent Baiting": "Rodent Treatment",
+  "CR Commercial": "Cockroach Treatment"
  }
 }

@@ -229,6 +229,7 @@ select.inp{appearance:none;-webkit-appearance:none}
     <div class="tabs">
       <button data-a="tab" data-v="new" id="t-new" aria-current="true">New</button>
       <button data-a="tab" data-v="records" id="t-records">Records</button>
+      <button data-a="tab" data-v="team" id="t-team" hidden>Team</button>
     </div>
   </div>
 </header>
@@ -247,7 +248,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-11-05r1";   // cache-buster for the data files (bump it when they change)
+const BUILD="2026-11-12r1";   // cache-buster for the data files (bump it when they change)
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -396,6 +397,7 @@ function custState(state,msg,kind){
   /* only the customer picker changes: a form that already has a customer is redrawn only while we still don't know who is
      signed in (the Applied by note changes), and never under a box being typed in (the keyboard would drop) */
   const a=document.activeElement, typing=!!(a&&a.dataset&&a.dataset.f);
+  teamTabShow();
   if(F&&(!F.propId||(ME.state!=="ready"&&state!=="boot"))&&S.tab==="new"&&!S.justSaved&&!typing) render();
 }
 function custHTML(){
@@ -935,8 +937,10 @@ const sec=(h,n)=>'<div class="sechead"><h2>'+esc(h)+'</h2>'+(n?'<span class="n">
 
 function render(){
   document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-current",b.dataset.v===S.tab?"true":"false"));
+  teamTabShow();
   const y=window.scrollY;
-  if(S.tab==="records"){ if(S.openId) renderView(); else renderList(); $("#savebar").innerHTML=""; }
+  if(S.tab==="team"&&ME.role==="master"){ renderTeam(); $("#savebar").innerHTML=""; }
+  else if(S.tab==="records"){ if(S.openId) renderView(); else renderList(); $("#savebar").innerHTML=""; }
   else if(S.justSaved&&S.openId){ renderView(); $("#savebar").innerHTML=""; }
   else renderForm();
   renderBanner(); fitBar();
@@ -1061,6 +1065,12 @@ function renderForm(){
   m.innerHTML=h;
   if(!F.propId){ renderQres(); }
 }
+/* the areas offered on one service block: that service's own list if it has one (barrier jobs), else the usual list; plus anything already ticked (old records, "Other: ...") */
+function areasFor(b){
+  const out=(((S.chem.areasBySvc||{})[b.s])||S.chem.areas).slice();
+  b.areas.forEach(a=>{ if(out.indexOf(a)<0) out.push(a); });
+  return out;
+}
 /* one service on the record: its description, products, areas and equipment */
 function blockHTML(b,i){
   const n=F.services.length, s=esc(b.s), lb=F.id?null:lastBlock(b.s);
@@ -1076,7 +1086,7 @@ function blockHTML(b,i){
   h+='</div>';
   if(lb&&!(UI.sameBlk&&UI.sameBlk[b.s])) h+='<div class="chips" style="margin-top:8px">'+chip("Same as last time for this service ("+nice(lb.date)+")",false,'data-a="sameblk" data-s="'+s+'"',"ghost")+'</div>';
   h+='<div class="lbl">Products used</div>'+productsHTML(b);
-  h+='<div class="lbl">Areas treated</div><div class="chips">'+S.chem.areas.map(a=>chip(a,b.areas.indexOf(a)>=0,'data-a="area" data-s="'+s+'" data-v="'+esc(a)+'"')).join("")+'</div>';
+  h+='<div class="lbl">Areas treated</div><div class="chips">'+areasFor(b).map(a=>chip(a,b.areas.indexOf(a)>=0,'data-a="area" data-s="'+s+'" data-v="'+esc(a)+'"')).join("")+'</div>';
   h+='<div class="eqline"><span class="small">Equipment: <b>'+esc(b.equipment.join(", ")||"none picked")+'</b></span><button class="mic" data-a="eqopen" data-s="'+s+'">'+((UI.eqOpen||{})[b.s]?"Done":"Change")+'</button></div>';
   if((UI.eqOpen||{})[b.s]){
     h+='<div class="chips" style="margin-top:8px">'+allEquip().map(a=>chip(a,b.equipment.indexOf(a)>=0,'data-a="equip" data-s="'+s+'" data-v="'+esc(a)+'"')).join("")
@@ -1361,7 +1371,7 @@ function recText(r){
   L.push("Applied by: "+r.appliedBy.name+" (licence "+licText(r.appliedBy)+"), "+r.business.phone);
   L.push("Next service: "+nextText(r.nextService));
   if(r.notes) L.push("Notes: "+r.notes);
-  L.push("Photos: "+(r.photos||[]).length+" (not included)");
+  L.push("Photos: "+((r.photos||[]).length||r.photoCount||0)+" (not included)");
   return L.join("\n");
 }
 const subjFor=r=>"Service record: "+r.address+", "+nice(r.date);
@@ -1401,6 +1411,45 @@ function renderView(){
     +'<button class="btn" data-a="print">Make PDF</button>'
     +'<button class="btn bad" data-a="del" data-id="'+esc(r.id)+'">Delete</button></div>';
   $("#main").innerHTML=h;
+}
+/* ---------- Team tab (master only): every service record in the office copy, Andrew's included. Read-only; photos stay on the phone that took them. ---------- */
+const teamTabShow=()=>{ const b=$("#t-team"); if(b) b.hidden=ME.role!=="master"; };
+S.team=null; S.teamErr=""; S.teamQ=""; S.teamOpen=null;
+async function teamLoad(){
+  S.team=null; S.teamErr=""; render();
+  try{
+    const [r,s]=await Promise.all([
+      SB.from("service_records").select("id,staff_id,data,updated_at").order("updated_at",{ascending:false}).limit(300),
+      SB.from("staff").select("id,name")]);
+    if(r.error) throw r.error;
+    const names={}; ((s&&s.data)||[]).forEach(x=>{ names[x.id]=trim(x.name); });
+    S.team=(r.data||[]).filter(x=>x.data&&!x.data.deleted&&x.data.services).map(x=>Object.assign({},x.data,{_tid:x.id,_who:trim((x.data.appliedBy||{}).name)||names[x.staff_id]||""}));
+  }catch(e){ S.teamErr=netErr(e)?"No signal. Try again when you have some.":friendly(e); }
+  if(S.tab==="team") render();
+}
+const byTeam=id=>(S.team||[]).find(r=>r._tid===id);
+function teamListHTML(){
+  const q=S.teamQ.trim().toLowerCase();
+  const list=(S.team||[]).slice().sort((a,b)=>(b.date+(b.start||"")).localeCompare(a.date+(a.start||"")))
+    .filter(r=>!q||(r.client+" "+r.address+" "+r.date+" "+nice(r.date)+" "+r._who).toLowerCase().indexOf(q)>=0);
+  if(!list.length) return '<div class="empty"><h3>No records</h3><p>'+((S.team||[]).length?'Nothing matches that search.':'Nothing in the office copy yet.')+'</p></div>';
+  return list.map(r=>'<button class="row" data-a="topen" data-id="'+esc(r._tid)+'"><span class="stripe"></span><span class="main">'
+    +'<div class="nm">'+esc(r.client)+'</div><div class="pl">'+esc(r.address)+'</div>'
+    +'<div class="mt">'+esc(nice(r.date)+"  "+(r.start||"")+"  |  "+r.services.map(x=>x.s).join(", ")+(r._who?"  |  "+r._who:""))+'</div></span></button>').join("");
+}
+function renderTeam(){
+  if(S.teamErr){ $("#main").innerHTML='<div class="banner warn" style="margin-top:14px">'+esc(S.teamErr)+'</div><div class="btns"><button class="btn" data-a="treload">Try again</button></div>'; return; }
+  if(!S.team){ $("#main").innerHTML='<div class="boot"><div><span class="spin"></span></div><div>Loading the team\'s records…</div></div>'; return; }
+  const r=S.teamOpen&&byTeam(S.teamOpen);
+  if(r){
+    let h='<div class="btns noprint" style="margin-bottom:0"><button class="btn" data-a="tback">Back to list</button></div>'+recHTML(r);
+    if(r.photoCount) h+='<div class="small noprint" style="margin-top:8px">'+r.photoCount+' photo'+(r.photoCount>1?'s':'')+' stay'+(r.photoCount>1?'':'s')+' on the phone or iPad that took '+(r.photoCount>1?'them':'it')+'.</div>';
+    h+='<div class="btns noprint"><a class="btn pri" href="'+esc(mailHref(MY_EMAIL,subjFor(r),recText(r)))+'">Email me a copy</a><button class="btn" data-a="print">Make PDF</button></div>';
+    $("#main").innerHTML=h; return;
+  }
+  S.teamOpen=null;
+  $("#main").innerHTML='<input class="inp search" id="tq" data-f="tq" placeholder="Search customer, address, date or who" value="'+esc(S.teamQ)+'" autocomplete="off">'
+    +'<div class="btns"><button class="btn" data-a="treload">Refresh</button></div><div id="tlist">'+teamListHTML()+'</div>';
 }
 function renderList(){
   const q=S.rq.trim().toLowerCase();
@@ -1490,7 +1539,12 @@ function toggleMic(btn){
 document.addEventListener("click",function(e){
   const t=e.target.closest("[data-a]"); if(!t) return;
   const a=t.dataset.a, d=t.dataset, svOf=svBlock;
-  if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); } render(); return; }
+  if(a==="tab"){ S.tab=d.v; if(d.v==="records"){ S.openId=null; S.justSaved=false; } else if(S.justSaved){ S.justSaved=false; S.openId=null; resetForm(); }
+    if(d.v==="team"){ S.teamOpen=null; teamLoad(); return; }
+    render(); return; }
+  if(a==="topen"){ S.teamOpen=d.id; render(); window.scrollTo(0,0); return; }
+  if(a==="tback"){ S.teamOpen=null; render(); return; }
+  if(a==="treload"){ teamLoad(); return; }
   if(a==="pick"){ pickProperty(d.pid); return; }
   if(a==="rpick"){ pickRecent(d.rid); return; }
   if(a==="cpick"){ const x=QMORE[+d.i]; if(x) startFor("addr:"+histKey(x.line),x.name,x.line,{isNew:false,clientId:x.p.id}); return; }
@@ -1534,7 +1588,12 @@ document.addEventListener("click",function(e){
     const np={id:"c"+Date.now().toString(36),name:name,active:($("#np-active").value||"").trim(),apvma:($("#np-apvma").value||"").trim(),
       type:$("#np-type").value,unit:($("#np-unit").value||"").trim()||"units",equip:[]};
     const b=svBlock(d.s); P().customProducts.push(np); if(b){ listAdd(b.s,np.id); addProduct(b,np.id); } savePrefs(); UI.newp=""; render(); return; }
-  if(a==="area"){ const b=svBlock(d.s); if(b){ toggle(b.areas,d.v); render(); } return; }
+  if(a==="area"){ const b=svBlock(d.s); if(b){
+    if(d.v==="Other"&&b.areas.indexOf("Other")<0){      /* ticking Other asks what it is, and keeps "Other: <text>"; Cancel or blank leaves it off */
+      const t=(window.prompt("What other area was treated?","")||"").trim(), lab="Other: "+t;
+      if(t&&b.areas.indexOf(lab)<0) b.areas.push(lab);
+    } else toggle(b.areas,d.v);
+    render(); } return; }
   if(a==="equip"){ const b=svBlock(d.s); if(b){ toggle(b.equipment,d.v); render(); } return; }
   if(a==="equipadd"){ UI.equipAdd=UI.equipAdd===d.s?"":d.s; render(); return; }
   if(a==="equipsave"){ const n=($("#neweq").value||"").trim(), b=svBlock(d.s); if(!n||!b) return;
@@ -1576,6 +1635,7 @@ document.addEventListener("input",function(e){
     const list=S.records.slice().sort((a,b)=>(b.date+(b.start||"")).localeCompare(a.date+(a.start||"")))
       .filter(r=>!q||(r.client+" "+r.address+" "+r.date+" "+nice(r.date)).toLowerCase().indexOf(q)>=0);
     $("#rlist").innerHTML=listHTML(list); }
+  else if(f==="tq"){ S.teamQ=t.value; $("#tlist").innerHTML=teamListHTML(); }
   else if(f==="aq"){ UI.aq=t.value; renderAres(); }
   else if(f==="tname"){ F.tName=t.value; if(F.tClientId&&trim(F.tName).toLowerCase()!==F.tPickName.toLowerCase()) F.tClientId=""; }      // a changed name is no longer the client picked
   else if(f==="taddr"){ F.tAddr=t.value; }
