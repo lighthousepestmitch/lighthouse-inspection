@@ -513,7 +513,7 @@ html.qa-open #toast{bottom:auto;top:calc(10px + env(safe-area-inset-top))}      
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:50;max-width:560px;margin:0 auto;background:var(--surface);border:1px solid var(--line2);border-bottom:none;
   border-radius:18px 18px 0 0;box-shadow:0 -6px 26px rgba(0,0,0,.24);display:flex;flex-direction:column;
   max-height:max(150px,calc(var(--vvh,100vh) * .45));padding-bottom:env(safe-area-inset-bottom)}      /* (never less than the top row and the buttons, 150px, so they don't hang out of the bar when the keyboard leaves little room) */
-@media(min-width:720px){.bar{max-height:min(44vh,400px)}}
+@media(min-width:720px){.bar{max-height:min(60vh,540px)}}      /* on a computer it floats over the calendar, so it can have the room it needs (the grid doesn't shrink for it) */
 html.kb-open .bar{padding-bottom:0}      /* the phone's keyboard is up: the bar sits on it, no home-bar gap */
 /* A box under the address (name, phone, email, notes) is being typed in with the keyboard up (barEditFlag): the bar takes the room above the keyboard instead of 45% of it, so the
    box and the name suggestions can be seen. The job address box (in the top row) doesn't do this: its list opens upwards over the calendar, and the bar must stay low for that. */
@@ -685,7 +685,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-12a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-14a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -1726,7 +1726,10 @@ function renderBody(){
    (the names stay put) instead of squashing the cards. Worked out again on every render, and on a resize or turning the phone. */
 // (The + button used to float over the bottom right corner, and a grid that ran under it had to end above it. It is in the top bar now, so the grid has the whole screen.)
 // The height the calendar has to fit in: the window, less the booking bar docked at the foot of it (when it is open).
-function viewH(){return window.innerHeight-(S.barH||0);}
+// On a computer or iPad (720px and up) the booking bar floats OVER the calendar: the grid keeps the size it has with no bar, and the page scrolls so any slot the bar covers can be brought
+// above it (Mitch, 2026-11-14: the calendar must not shrink when the bar opens). On a phone the bar still takes its room and the grid fits above it.
+function barTakesRoom(){return !!S.barH&&isNarrow();}
+function viewH(){return window.innerHeight-(barTakesRoom()?S.barH:0);}
 function gapUnderGrid(gw){
   if(isNarrow())return 6;      // the .dayline padding under the grid
   return 14;
@@ -1737,11 +1740,11 @@ function fitPpm(gw){
   const bar=Math.max(0,gw.offsetHeight-gw.clientHeight-2);      // a sideways scroll bar (lots of people on a small screen)
   const span=Math.max(60,S.grid.ge-S.grid.gs);
   const room=viewH()-top-hh-bar-2-gapUnderGrid(gw);
-  return Math.max(S.barH?PPM_FLOOR_BAR:PPM_FLOOR,Math.min(PPM_MAX,Math.floor(room/span*1000)/1000));
+  return Math.max(barTakesRoom()?PPM_FLOOR_BAR:PPM_FLOOR,Math.min(PPM_MAX,Math.floor(room/span*1000)/1000));
 }
 function sizeGrid(gw){
   const top=gw.getBoundingClientRect().top+(window.pageYOffset||0);
-  const room=Math.max(S.barH?120:180,Math.floor(viewH()-top-gapUnderGrid(gw)));      // 180: a phone on its side still gets a usable frame (120 with the booking bar open: the frame must not run under it)
+  const room=Math.max(barTakesRoom()?120:180,Math.floor(viewH()-top-gapUnderGrid(gw)));      // 180: a phone on its side still gets a usable frame (120 with the booking bar open: the frame must not run under it)
   gw.style.height="";
   // it fits: the frame is just as tall as the grid. The floor was hit: the frame fills the screen and the grid scrolls inside it.
   if(gw.offsetHeight>room+1)gw.style.height=room+"px";
@@ -2727,7 +2730,8 @@ function tick(){
   // the 4pm row at the bottom of a phone must not slide the page (and the drop) along.
   const gr=gw?gw.getBoundingClientRect():null;
   const pgUp=DR.ly<48&&window.pageYOffset>0&&(!gr||gr.top<0||DR.ly<gr.top);
-  const pgDown=DR.ly>viewH()-48&&(!gr||gr.bottom>viewH()+1);
+  const visB=window.innerHeight-(S.barH||0);      // (the part of the screen not under the booking bar)
+  const pgDown=DR.ly>visB-48&&(!gr||gr.bottom>visB+1);
   if(pgUp||pgDown){
     if(!DR.pageT)DR.pageT=Date.now();
     if(Date.now()-DR.pageT>300){if(pgUp)window.scrollBy(0,-12);else window.scrollBy(0,12);}
@@ -4914,7 +4918,7 @@ function quickHtml(){
   h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
     '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
   // job notes sit on the front (so a note can be typed while booking); More has the client's note, the day, the time, and the full job sheet (the phone and email show straight under the name)
-  h+='<div class="fld" style="margin-top:6px"><label class="vh" for="f-notes">Job notes</label><textarea class="inp" id="f-notes" rows="1" style="min-height:48px;height:48px;resize:none" autocapitalize="sentences" placeholder="Job notes (optional): anything to remember about this job"></textarea></div>';      // one slim line, no label: the bar takes room from the calendar (a plain textarea.inp is 110px tall, which is what made the bar too tall)
+  h+='<div class="fld" style="margin-top:6px"><label class="fl" for="f-notes">Job notes <span class="fl2">(optional)</span></label><textarea class="inp" id="f-notes" rows="2" style="min-height:76px" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>';
   h+='<div class="barmore" id="q-more" hidden>'+
     (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
       '<textarea class="inp" id="f-cnotes" rows="2" placeholder="Dog, gate code, key, parking..."></textarea></div>')+
@@ -5342,7 +5346,7 @@ function barMeasure(){
   if(b&&SH&&SH.bar){
     const head=$(".barhead",b),inner=byId("q-inner"),foot=$(".barfoot",b);
     const nat=(head?head.offsetHeight:0)+(inner?inner.offsetHeight:0)+4+(foot?foot.offsetHeight:0)+(parseFloat(getComputedStyle(b).paddingBottom)||0)+1;
-    const cap=isNarrow()?Math.max(150,Math.floor(window.innerHeight*.45)):Math.min(Math.floor(window.innerHeight*.44),400);      // the same numbers as .bar's max-height in the CSS (the keyboard's smaller --vvh doesn't count: the calendar mustn't jump about while someone types)
+    const cap=isNarrow()?Math.max(150,Math.floor(window.innerHeight*.45)):Math.min(Math.floor(window.innerHeight*.6),540);      // the same numbers as .bar's max-height in the CSS (the keyboard's smaller --vvh doesn't count: the calendar mustn't jump about while someone types)
     h=Math.min(nat,cap);
   }
   S.barH=h;document.documentElement.style.setProperty("--barh",h+"px");
@@ -5353,7 +5357,7 @@ function barRefit(){
   barRefitT=0;
   if(!SH||!SH.bar)return;
   const old=S.barH;barMeasure();
-  if(Math.abs(S.barH-old)>2)renderBody();      // the room above the bar changed: fit the grid again
+  if(Math.abs(S.barH-old)>2&&barTakesRoom())renderBody();      // the room above the bar changed (phone only: on a computer the bar floats over the grid): fit the grid again
 }
 function barRefitSoon(){clearTimeout(barRefitT);barRefitT=setTimeout(barRefit,90);}
 function barWatch(on){
