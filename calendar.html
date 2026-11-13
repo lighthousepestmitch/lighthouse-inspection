@@ -1101,6 +1101,9 @@ function svcLabel(j,max){
   // "Other" shows what was typed for it ("Other: bird spikes")
   const o=Array.isArray(j.services)?j.services.find(function(e){return e&&e.type==="Other"&&trim(e.description);}):null;
   if(o){const t=trim(o.description),s=t.length>24?t.slice(0,23)+"…":t;n=n.map(function(x){return x==="Other"?"Other: "+s:x;});}
+  // the same service twice shows once, with how many ("General Pest Treatment x2")
+  const cnt={},uniq=[];n.forEach(function(x){if(!cnt[x]){cnt[x]=0;uniq.push(x);}cnt[x]++;});
+  n=uniq.map(function(x){return cnt[x]>1?x+" x"+cnt[x]:x;});
   const full=n.join(" + ");
   if(n.length<2||full.length<=max)return full;
   return n[0]+" +"+(n.length-1);
@@ -2937,7 +2940,11 @@ function renderSvcDetails(){
   // Master: a price box, a discount box (dollars or a percentage, with the net price under them) and a "price to fill" tag on each ticked service, then the invoice wording.
   // A worker gets the wording only: no price or discount box, no tag, no total. (The discount box has no decimal keypad: a phone's number pad has no % key.)
   el.innerHTML=SH.svc.map(function(e,i){
-    return '<div class="svcard"><div class="svhead"><b>'+esc(e.type)+'</b>'+(M?'<span class="pf" id="sv-pf-'+i+'">price to fill</span>':'')+'</div>'+
+    // the same service can be on a job more than once (two houses on one property, say): "(2 of 2)", with Add another / Remove this one under it (master)
+    const total=SH.svc.filter(function(x){return x.type===e.type;}).length,idx=SH.svc.slice(0,i).filter(function(x){return x.type===e.type;}).length;
+    const dupBtns=M?'<div class="btns" style="margin:2px 0 0"><button type="button" class="linkbtn" data-sh="svcdup" data-i="'+i+'">+ Add another '+esc(e.type)+'</button>'+
+      (idx>0?'<button type="button" class="linkbtn" data-sh="svcrm" data-i="'+i+'">Remove this one</button>':'')+'</div>':"";
+    return '<div class="svcard"><div class="svhead"><b>'+esc(e.type)+(total>1?' ('+(idx+1)+' of '+total+')':'')+'</b>'+(M?'<span class="pf" id="sv-pf-'+i+'">price to fill</span>':'')+'</div>'+
       (M?'<div class="g2 svpd" style="grid-template-columns:.65fr 1fr 1fr"><div class="fld"><label class="fl" for="sv-q-'+i+'">Qty</label>'+
       '<input class="inp" id="sv-q-'+i+'" data-sv="q" data-i="'+i+'" type="text" inputmode="decimal" autocomplete="off" value="'+esc(e.qty||"1")+'" placeholder="1"'+(lock?" disabled":"")+'></div>'+
       '<div class="fld"><label class="fl" for="sv-p-'+i+'">Price each (ex GST)</label>'+
@@ -2946,7 +2953,7 @@ function renderSvcDetails(){
       '<input class="inp" id="sv-x-'+i+'" data-sv="x" data-i="'+i+'" type="text" autocomplete="off" value="'+esc(e.discount)+'" placeholder="50 or 10%"'+(lock?" disabled":"")+'></div></div>'+
       '<div class="hint svnet" id="sv-n-'+i+'" role="status"></div>':"")+
       '<div class="fld"><label class="fl" for="sv-d-'+i+'">What goes on the invoice</label>'+
-      '<textarea class="inp sdesc" id="sv-d-'+i+'" data-sv="d" data-i="'+i+'" autocapitalize="sentences">'+esc(e.description)+'</textarea></div></div>';
+      '<textarea class="inp sdesc" id="sv-d-'+i+'" data-sv="d" data-i="'+i+'" autocapitalize="sentences">'+esc(e.description)+'</textarea></div>'+dupBtns+'</div>';
   }).join("");
   updateSvcMeta();
 }
@@ -3022,7 +3029,7 @@ function onSvcTick(cb){
     const gone=SH.svc[i];
     // the old price was sitting on the service that just got unticked: take it back off (if it is still the untouched old price) so the next one can have it
     if(SH.legacyHeld===name){SH.legacyHeld="";if(trim(gone.price)===String(SH.legacyPrice))gone.price="";}
-    SH.svcMemo[name]=gone;SH.svc.splice(i,1);
+    SH.svcMemo[name]=gone;SH.svc=SH.svc.filter(function(x){return x.type!==name;});      // (unticking takes off every copy of the service)
     if(SH.legacyPrice!=null&&!SH.legacyHeld&&SH.svc.length===1&&trim(SH.svc[0].price)===""){SH.svc[0].price=String(SH.legacyPrice);SH.legacyHeld=SH.svc[0].type;}      // one service left with no price: it is the only one now
   }
   const row=cb.closest(".svrow");if(row)row.classList.toggle("on",cb.checked);
@@ -3268,7 +3275,7 @@ function updateLinks(){
   // Its link carries only the non-inspection services (a combo of General Pest Treatment + Termite Inspection sends just the pest one).
   // Start inspection report: only when a ticked service is an inspection, and then it is the main (pri) button and Service record is the plain one.
   const types=f.services.map(function(x){return x.type;});
-  const recTypes=types.filter(function(t){return !isInspectionType(t);});
+  const recTypes=types.filter(function(t,i){return !isInspectionType(t)&&types.indexOf(t)===i;});
   const hasInsp=types.some(isInspectionType);
   const rec=byId("ln-rec"),stw=byId("ln-start");
   if(stw)stw.hidden=!hasInsp;
@@ -4198,7 +4205,7 @@ function buildJobPatch(sh,f,clientId,extra){
   const svcNew=canonServices(f.services);
   if(isNew||JSON.stringify(svcNew)!==JSON.stringify(canonServices(loadServices(j)))){
     p.services=svcNew;
-    p.service_type=svcNew.length?svcNew.map(function(e){return e.type;}).join(" + "):null;
+    p.service_type=svcNew.length?svcNew.map(function(e){return e.type;}).filter(function(t,i,a){return a.indexOf(t)===i;}).join(" + "):null;      // (each name once, even when a service is on the job twice)
   }
   // never null out an address nobody touched (a client change blanks the street boxes, but that isn't the person clearing the job address)
   const addr=nn(f.address);if(isNew||(addr!==nn(j.address)&&(addr!==null||sh.addrTouched)))p.address=addr;
@@ -5402,6 +5409,14 @@ function handleSheetAction(a,e){
   else if(k==="pickaddr"){pickAddr(+a.getAttribute("data-i"));}
   else if(k==="picksite"){pickSite(+a.getAttribute("data-i"));}
   else if(k==="useclientaddr"){useClientAddr();}
+  else if(k==="svcdup"){      // another copy of the same service (own wording, price and quantity), straight under this one; the price is copied across, a discount isn't
+    const i=+a.getAttribute("data-i"),e=SH.svc[i];
+    if(e&&S.isMaster){SH.svc.splice(i+1,0,{type:e.type,description:e.description,price:e.price,discount:"",qty:"1"});SH.svcTouched=true;renderSvcDetails();updateLinks();autoLen();}
+  }
+  else if(k==="svcrm"){      // take off one extra copy (the first copy goes by unticking the service)
+    const i=+a.getAttribute("data-i"),e=SH.svc[i];
+    if(e&&S.isMaster&&SH.svc.slice(0,i).some(function(x){return x.type===e.type;})){SH.svc.splice(i,1);SH.svcTouched=true;renderSvcDetails();updateLinks();autoLen();}
+  }
   else if(k==="svcmore"){
     SH.svcMore=!SH.svcMore;renderSvcList();
     const b=$('#sv-list [data-sh="svcmore"]');if(b){try{b.focus({preventScroll:true});}catch(x){}}
