@@ -201,6 +201,14 @@ button.mi:hover,button.mi:focus-visible{background:var(--surface2)}
 @media(hover:hover){.jc:hover .rzt:after{opacity:.6}}
 @media(pointer:coarse){.rzt{height:min(11px,30%)}.rzt:after{opacity:.3;top:1px;width:16px;margin-left:-8px;height:2px}}
 .jc.resizing .rzt:after{opacity:.8}
+/* Touch (iPad, iPhone): a finger is too wide for edge strips. The whole card is for MOVING it. Stretching is only the small grip pill in the middle of the bottom edge (press and hold it),
+   there is no top-edge stretch, and a short or narrow card has no grip at all (move it, and set its length on the job sheet). Mitch, 2026-11-14: cards always wanted to resize. */
+@media(pointer:coarse){
+  .rz{left:50%;right:auto;width:64px;margin-left:-32px;height:18px}
+  .rz:after{opacity:.55;bottom:5px;width:30px;margin-left:-15px;height:4px}
+  .rzt{display:none}
+  .jc.tiny .rz,.jc.short .rz{display:none}
+}
 body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:none;user-select:none}
 .rzlab{position:absolute;z-index:6;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
 .jc.st-done,.jm.st-done,.tcard.st-done{opacity:.6;filter:grayscale(.7)}
@@ -685,7 +693,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-14a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-14b";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -2627,7 +2635,7 @@ function armDrag(){
 function onMove(e){
   if(!DR.on||e.pointerId!==DR.pid)return;
   if(!DR.started){
-    if(Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)<8)return;     // small move threshold so a tap still opens the job
+    if(Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)<(DR.touch?14:8))return;     // small move threshold so a tap still opens the job (a finger is allowed to wobble a bit more while it waits to pick the job up)
     if(DR.touch){endDrag();return;}                              // finger moved before the hold finished: that is a scroll, leave it to the browser
     if(DR.mode==="resize")startResize();else startDrag();
   }
