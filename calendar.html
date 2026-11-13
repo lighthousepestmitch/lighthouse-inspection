@@ -4914,7 +4914,7 @@ function quickHtml(){
   h+='<button type="button" class="segb" data-sh="qwho" data-v="later" aria-pressed="false" title="Nobody yet. It goes in the Unassigned list.">Later</button></div>'+
     '<button type="button" class="linkbtn" id="q-svcmore" data-sh="qsvcmore" aria-expanded="false">More services</button></div>';
   // job notes sit on the front (so a note can be typed while booking); More has the client's note, the day, the time, and the full job sheet (the phone and email show straight under the name)
-  h+='<div class="fld"><label class="fl" for="f-notes">Job notes <span class="fl2">(optional)</span></label><textarea class="inp" id="f-notes" rows="2" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>';
+  h+='<div class="fld" style="margin-top:6px"><label class="vh" for="f-notes">Job notes</label><textarea class="inp" id="f-notes" rows="1" style="min-height:48px;height:48px;resize:none" autocapitalize="sentences" placeholder="Job notes (optional): anything to remember about this job"></textarea></div>';      // one slim line, no label: the bar takes room from the calendar (a plain textarea.inp is 110px tall, which is what made the bar too tall)
   h+='<div class="barmore" id="q-more" hidden>'+
     (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
       '<textarea class="inp" id="f-cnotes" rows="2" placeholder="Dog, gate code, key, parking..."></textarea></div>')+
