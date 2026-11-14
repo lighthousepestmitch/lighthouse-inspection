@@ -2929,7 +2929,7 @@ async function dsDrawBox(){
   let list=[];try{list=await dsList();}catch(e){}
   if(!list.length||document.getElementById("syncbox")!==box)return;
   let el=document.getElementById("draftbox");
-  if(!el){el=document.createElement("div");el.id="draftbox";box.appendChild(el);}
+  if(!el){el=document.createElement("div");el.id="draftbox";box.insertBefore(el,box.firstChild);}   // at the TOP: for Mitch the list of sent reports below it is long
   el.innerHTML='<div class="flab listhead"><span>In progress on your other devices</span></div>'+list.map(x=>{
     const s=x.summary||{},t=addrTitle(streetJoin(s.streetno,s.address),s.suburb)||s.client||"(no address yet)";
     return '<div class="syncrow"><span class="fnote"><b>'+escv(t)+'</b><br>'+escv(x.device||"Another device")+" · "+escv(fmtTime(x.updated_at))
