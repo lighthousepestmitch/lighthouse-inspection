@@ -693,7 +693,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-14b";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-15a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -2903,7 +2903,7 @@ function openSheet(job,defaults){
   renderSvcList();renderSvcDetails();
   updateClientHint();updateLinks();updateMoreRow();
   SH.baseline=snap();
-  if(SH.jobId){loadRecs();loadPhotos();}      // loadPhotos also counts photos still waiting to upload
+  if(SH.jobId){loadRecs();loadPhotos();loadDocs();}      // loadPhotos also counts photos still waiting to upload
   if(SH.clientId)loadSites(SH,SH.clientId);
   try{if(S.isMaster&&isNew&&window.matchMedia&&matchMedia("(pointer:fine)").matches){const n=byId("f-addr");if(n)n.focus();}}catch(e){}
 }
@@ -3171,7 +3171,7 @@ function sheetHtml(){
     '<input type="file" id="ph-lib" class="vh" accept="image/*" multiple>'+
     '<div class="photostat" id="ph-stat"></div>'+
     '<div class="btns" id="ph-retry-row" hidden><button type="button" class="btn sm warn" id="ph-retry" data-sh="retryphotos">Try again</button></div>'+
-    '<div class="phgrid" id="ph-grid"></div>';
+    '<div class="phgrid" id="ph-grid"></div>'+docsHtml();
   // danger
   if(M&&!SH.isNew){
     h+='<div class="danger"><div class="btns">'+
@@ -4063,6 +4063,77 @@ async function afterUploads(sh,jobId,ok,bad,unread,lastErr){
   }else if(ok>0){toast(ok+" photo"+(ok===1?"":"s")+" added.");}
   if(bad||unread)toast((bad?bad+" photo"+(bad===1?"":"s")+" didn't upload. They're kept to try again. ":"")+(unread?unread+" couldn't be read. ":"")+lastErr,true);
 }
+/* >>> job documents */
+/* Documents on a job (old reports, certificates). Stage 2b, 15 Nov 2026. The files go in the private job-photos bucket under <job id>/docs/ (the folder rule the
+   photos already use, so a worker can open them on his own jobs). The list is public.job_documents (48_job_documents.sql). Mitch adds and removes; a worker can only
+   open. A short summary of a document is written by Claude on request into job_documents.summary (and the job notes), never automatically. */
+function docsHtml(){
+  const M=S.isMaster;
+  return '<div class="lbl">Documents <span class="fl2">(old reports, certificates)</span></div>'
+    +(M?(SH&&SH.jobId?'<div class="btns"><label class="btn" for="doc-add">Add document</label></div><input type="file" id="doc-add" class="vh" accept="application/pdf,image/*" multiple>':'<div class="hint">Save the job first, then add documents.</div>'):'')
+    +'<div class="photostat" id="doc-stat"></div><div id="doc-list"></div>';
+}
+function docSafe(n){return String(n||"document").replace(/[^A-Za-z0-9._-]+/g,"_").slice(-80);}
+async function loadDocs(){
+  const id=SH&&SH.jobId;if(!id||!byId("doc-list"))return;
+  try{
+    const r=await S.sb.from("job_documents").select("id,name,path,summary,summary_at,created_at").eq("job_id",id).order("created_at",{ascending:true});
+    if(r.error){
+      if(/job_documents|schema cache|PGRST205|42P01/i.test(String(r.error.message||"")+String(r.error.code||""))){const st0=byId("doc-stat");if(st0)st0.textContent=S.isMaster?"Documents aren't set up yet (ask Claude).":"";return;}
+      throw r.error;
+    }
+    const urls={};const paths=(r.data||[]).map(function(d){return d.path;});
+    if(paths.length){const sg=await S.sb.storage.from("job-photos").createSignedUrls(paths,3600);if(!sg.error)(sg.data||[]).forEach(function(x){if(x&&x.signedUrl)urls[x.path]=x.signedUrl;});}
+    if(!SH||SH.jobId!==id)return;
+    SH.docs=(r.data||[]).map(function(d){return Object.assign({},d,{url:urls[d.path]||""});});
+    renderDocs();
+  }catch(e){const st=byId("doc-stat");if(st)st.textContent="Couldn't load the documents. "+friendly(e);}
+}
+function renderDocs(){
+  const l=byId("doc-list"),st=byId("doc-stat");if(!l||!SH)return;
+  const D=SH.docs||[];
+  l.innerHTML=D.map(function(d){
+    const when=d.created_at?new Date(d.created_at).toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"}):"";
+    const sw=d.summary_at?" on "+new Date(d.summary_at).toLocaleDateString("en-AU",{day:"numeric",month:"short"}):"";
+    return '<div class="docrow" style="border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:8px 10px;margin:6px 0">'
+      +'<div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div style="min-width:0"><b style="word-break:break-word">'+esc(d.name)+'</b><div class="hint">'+esc(when)+'</div></div>'
+      +'<div style="display:flex;gap:6px;flex:none">'+(d.url?'<a class="btn sm" href="'+esc(d.url)+'" target="_blank" rel="noopener">Open</a>':'')
+      +(S.isMaster?'<button type="button" class="btn sm warn" data-doc-del="'+esc(d.id)+'">Remove</button>':'')+'</div></div>'
+      +(d.summary?'<div class="hint" style="margin-top:6px;white-space:pre-wrap"><b>Summary</b> (written by Claude from this document'+esc(sw)+', check the original): '+esc(d.summary)+'</div>':'')+'</div>';
+  }).join("");
+  if(st)st.textContent=D.length?D.length+" document"+(D.length===1?"":"s")+" on this job.":"No documents yet.";
+}
+async function addDocs(fileList){
+  const id=SH&&SH.jobId;if(!id||!S.isMaster)return;
+  const files=[].slice.call(fileList||[]);const st=byId("doc-stat");let ok=0,bad=0;
+  for(let i=0;i<files.length;i++){
+    const f=files[i];
+    if(f.size>15*1024*1024){bad++;if(st)st.textContent=f.name+" is over 15 MB, so it was skipped.";continue;}
+    if(st)st.textContent="Adding "+(i+1)+" of "+files.length+"…";
+    try{
+      const path=id+"/docs/"+Date.now()+"-"+docSafe(f.name);
+      const up=await S.sb.storage.from("job-photos").upload(path,f,{contentType:f.type||"application/octet-stream",upsert:false});
+      if(up.error)throw up.error;
+      const ins=await S.sb.from("job_documents").insert({job_id:id,name:f.name,path:path}).select("id").single();
+      if(ins.error){try{await S.sb.storage.from("job-photos").remove([path]);}catch(x){}throw ins.error;}
+      ok++;
+    }catch(e){bad++;if(st)st.textContent="Couldn't add "+f.name+". "+friendly(e);}
+  }
+  await loadDocs();
+  if(ok&&!bad)toast(ok+" document"+(ok===1?"":"s")+" added");
+}
+async function removeDoc(did){
+  const d=((SH&&SH.docs)||[]).filter(function(x){return x.id===did;})[0];if(!d||!S.isMaster)return;
+  if(!confirm("Remove "+d.name+" from this job?"))return;
+  try{
+    const r=await S.sb.from("job_documents").delete().eq("id",did).select("id");if(r.error)throw r.error;
+    if(!r.data||!r.data.length)throw new Error("it was not removed");
+    try{await S.sb.storage.from("job-photos").remove([d.path]);}catch(x){}
+    await loadDocs();
+  }catch(e){toast("Couldn't remove it. "+friendly(e),true);}
+}
+document.addEventListener("click",function(e){const b=e.target&&e.target.closest&&e.target.closest("[data-doc-del]");if(b)removeDoc(b.getAttribute("data-doc-del"));});
+/* <<< job documents */
 async function loadPhotos(){
   const id=SH&&SH.jobId;if(!id)return;
   refreshPending();
@@ -4460,6 +4531,7 @@ async function deleteJob(){
   let paths=[];
   try{
     try{const pr=await S.sb.from("job_photos").select("path").eq("job_id",id);if(!pr.error)paths=(pr.data||[]).map(function(x){return x.path;});}catch(e){}
+    try{const dr=await S.sb.from("job_documents").select("path").eq("job_id",id);if(!dr.error)paths=paths.concat((dr.data||[]).map(function(x){return x.path;}));}catch(e){}
     const d=await S.sb.from("jobs").delete().eq("id",id).select("id");
     if(d.error)throw d.error;
     if(!d.data||!d.data.length)throw plainErr("That job wasn't deleted. It may already be gone.");
@@ -5576,6 +5648,7 @@ function onChange(e){
     if(SH.quick)quickClearMsg();
     if(SH.bar&&id==="f-date")SH.dayHand=true;
     if(e.target.getAttribute&&e.target.getAttribute("data-svc")!=null){onSvcTick(e.target);}
+    else if(id==="doc-add"){const dfiles=e.target.files;addDocs(dfiles).catch(function(){}).then(function(){try{e.target.value="";}catch(x){}});}
     else if(id==="ph-cam"||id==="ph-lib"){const files=e.target.files;addPhotos(files).catch(function(){}).then(function(){try{e.target.value="";}catch(x){}});}
     else if(id==="f-dur"&&S.isMaster&&!SH.quick){SH.durHand=true;SH.durAuto=false;updateLenHint();updateLinks();}      // a length picked by hand: the services' usual times no longer change it
     else updateLinks();

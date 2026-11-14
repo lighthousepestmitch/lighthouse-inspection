@@ -85,6 +85,7 @@ TABLES = [
     ("service_records", "id", 100),
     ("inspections", "id", 25),
     ("inspection_drafts", "id", 25),
+    ("job_documents", "id", 200),
     ("jobbook_state", "key", 200),
     ("jobbook_files", "name", 5),
     ("plan_blocks", "id", 1000),
