@@ -493,7 +493,7 @@
 "use strict";
 
 // Bump this whenever the tool changes, so Mitch can tell which copy a phone or iPad is running (shown quietly at the bottom of Jobs).
-const BUILD="2026-11-15a";
+const BUILD="2026-11-15b";
 
 /* ---------- section model (mirrors RSA STPIR regular inspection) ---------- */
 const BANK = {
@@ -2869,7 +2869,7 @@ async function dsPush(){
     const light=mapStr(dsDrop(st,failed),isDataImg,u=>REF+pathOf.get(u));
     const cust=st.customer||{};
     const body={data:{state:light,summary:{address:cust.address||"",streetno:cust.streetno||"",suburb:cust.suburb||"",client:cust.client||"",date:cust.date||"",photos:urls.length-failed.size}},
-      device:dsDevice().label,photos_pending:failed.size,status:"open"};
+      device:dsDevice().label,photos_pending:failed.size,status:st.sentAt?"sent":"open"};   // a job already sent to the office is not "in progress" on your other devices
     let rev=dsRev(id);
     if(!rev){
       const ins=await sb.from("inspection_drafts").insert(Object.assign({id,job_id:cust.calJobId||null},body)).select("rev").single();
