@@ -451,7 +451,7 @@
 
 <div class="footbar">
   <div class="wrap">
-    <div class="footinfo"><span class="savedot"></span><span id="saveinfo">Saved on this device</span></div>
+    <div class="footinfo"><span class="savedot"></span><span id="saveinfo">Saved on this device</span><span id="syncinfo" style="margin-left:.4em"></span></div>
     <button class="btn ghost" id="jobsBtn" style="position:relative">Jobs<span class="jbadge" id="jbadge" hidden></span></button>
     <button class="btn ghost" id="newBtn">New</button>
     <button class="btn primary" id="finishBtn">Finish</button>
@@ -692,10 +692,15 @@ function openDB(){return new Promise((res,rej)=>{
 });}
 function dbGet(k){return new Promise((res)=>{try{const t=db.transaction("kv","readonly").objectStore("kv").get(k);
   t.onsuccess=()=>res(t.result);t.onerror=()=>res(null)}catch(e){res(null)}});}
-function dbSet(k,v){return new Promise((res)=>{try{const t=db.transaction("kv","readwrite").objectStore("kv").put(v,k);
-  t.onsuccess=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}});}
-function dbDel(k){return new Promise((res)=>{try{const t=db.transaction("kv","readwrite").objectStore("kv").delete(k);
-  t.onsuccess=()=>res(true);t.onerror=()=>res(false)}catch(e){res(false)}});}
+/* A write counts only when its TRANSACTION completes (that is when the browser has really stored it). The request's own success fires
+   earlier, and a full-storage error arrives afterwards, so trusting it said "saved" for writes that were thrown away. */
+function dbSet(k,v){return new Promise((res)=>{try{const tx=db.transaction("kv","readwrite");tx.objectStore("kv").put(v,k);
+  tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);tx.onabort=()=>res(false)}catch(e){res(false)}});}
+function dbDel(k){return new Promise((res)=>{try{const tx=db.transaction("kv","readwrite");tx.objectStore("kv").delete(k);
+  tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);tx.onabort=()=>res(false)}catch(e){res(false)}});}
+/* like dbGet, but says whether the read itself worked: {ok:false} on an error, {ok:true,v} otherwise (v is undefined when nothing is stored) */
+function dbGetStrict(k){return new Promise((res)=>{try{const t=db.transaction("kv","readonly").objectStore("kv").get(k);
+  t.onsuccess=()=>res({ok:true,v:t.result});t.onerror=()=>res({ok:false})}catch(e){res({ok:false})}});}
 
 /* ---------- multi-job storage ---------- */
 function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
@@ -754,10 +759,32 @@ function newJobCustomer(){const c={date:todayStr()};const i=savedInspector();if(
 async function loadJobsIndex(){return (db?await dbGet("jobs"):null)||[];}
 async function saveJobsIndex(list){return await dbSet("jobs",list);}
 async function upsertJobMeta(){
-  const list=await loadJobsIndex();const m=jobMeta(STATE);
+  if(!db)return false;
+  const r=await dbGetStrict("jobs");
+  if(!r.ok)return false;      // could not read the Jobs list: never write a list built from nothing over the real one (that is how jobs drop out of the list)
+  const list=Array.isArray(r.v)?r.v:[];const m=jobMeta(STATE);
   const i=list.findIndex(j=>j.id===STATE.id);
   if(i>=0)list[i]=m;else list.unshift(m);
-  await saveJobsIndex(list);
+  return await saveJobsIndex(list);
+}
+/* Stores the open job, the "open job" pointer and its Jobs-list entry. Says what really happened:
+   "ok" (all three stored), "list" (the job is stored but the Jobs list could not be updated), "job" (the job was NOT stored). */
+async function saveJobNow(){
+  if(!STATE.id)STATE.id=genId();
+  const a=await dbSet("job::"+STATE.id,STATE);
+  if(!a)return "job";
+  const b=await dbSet("activeId",STATE.id);
+  let c=false;try{c=await upsertJobMeta();}catch(e){c=false;}
+  return (b&&c)?"ok":"list";
+}
+let saveWarned=false,saveRetryT;
+function showSaveState(st){
+  const el=document.getElementById("saveinfo");if(!el)return;
+  if(st==="ok"){el.textContent="Saved on this device";el.style.color="";el.style.fontWeight="";saveWarned=false;return;}
+  el.textContent=st==="list"?"Saved, but not in the Jobs list":"NOT SAVED on this device";
+  el.style.color="#c0392b";el.style.fontWeight="600";
+  if(!saveWarned){saveWarned=true;
+    toast(st==="list"?"This job is stored, but the Jobs list could not update. If it goes missing, open the Recover page.":"This job could NOT be saved on this device. Storage may be full or blocked. Send it to the office now, then free up space.",9000);}
 }
 function timeAgo(t){if(!t)return"";const m=Math.round((Date.now()-t)/60000);
   if(m<1)return"just now";if(m<60)return m+"m ago";const h=Math.round(m/60);if(h<24)return h+"h ago";return Math.round(h/24)+"d ago";}
@@ -782,24 +809,28 @@ function scheduleSave(){
   try{refreshConcSuggest();}catch(e){}
   document.getElementById("saveinfo").textContent="Saving…";
   saveT=setTimeout(async()=>{
-    if(!STATE.id)STATE.id=genId();
-    await dbSet("job::"+STATE.id,STATE);
-    await dbSet("activeId",STATE.id);
-    await upsertJobMeta();
-    document.getElementById("saveinfo").textContent="Saved on this device";
+    const st=await saveJobNow();
+    showSaveState(st);
+    if(st==="ok"){try{dsSchedule();}catch(e){}}
+    clearTimeout(saveRetryT);
+    if(st!=="ok")saveRetryT=setTimeout(async()=>{showSaveState(await saveJobNow());},4000);   // one retry, in case it was a passing hiccup
   },500);
 }
 
 // The LPC badge goes back to Home. Save first, because the autosave above waits half a second.
 async function goHome(ev){
   ev.preventDefault();clearTimeout(saveT);
-  try{if(STATE&&STATE.id){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}}catch(e){}
+  let st="ok";
+  try{if(STATE&&STATE.id)st=await saveJobNow();}catch(e){st="job";}
+  if(st==="job"&&!confirm("This job could not be saved on this device. Leave anyway and risk losing it?"))return;
   location.href="home.html";
 }
 // "A new version is ready. Tap to update." (lpc-sw-banner.js) reloads the page: save the open job first, same as leaving by the badge.
 window.lpcSwBeforeUpdate=async function(){
   clearTimeout(saveT);
-  try{if(STATE&&STATE.id){await dbSet("job::"+STATE.id,STATE);await dbSet("activeId",STATE.id);await upsertJobMeta();}}catch(e){}
+  let st="ok";
+  try{if(STATE&&STATE.id)st=await saveJobNow();}catch(e){st="job";}
+  if(st==="job"){toast("Update held: this job could not be saved on this device. Send it to the office first.",9000);return false;}
   return true;
 };
 
@@ -1949,6 +1980,7 @@ async function switchJob(id){
 async function deleteJob(id){
   // dbDel/dbSet say false when the phone refused (storage full, private mode...), so check before telling anyone it worked
   if(!await dbDel("job::"+id)){toast("Couldn't delete that job on this device. Nothing was removed. Try again",3800);return false;}
+  try{dsMarkDeleted(id);}catch(e){}
   const list=(await loadJobsIndex()).filter(j=>j.id!==id);
   const listOk=await saveJobsIndex(list);
   let blank=false;
@@ -2097,7 +2129,7 @@ async function openJobs(){
   sheet.classList.add("tall");
   modal.classList.add("show");
   renderLocalJobs();drawJobNote();
-  fillSyncBox();
+  Promise.resolve(fillSyncBox()).then(()=>{try{dsDrawBox();}catch(e){}});
   document.getElementById("mCancel").onclick=closeModal;
   document.getElementById("mImport").onclick=()=>document.getElementById("importInput").click();
   document.getElementById("mNewJob").onclick=openNewJob;
@@ -2777,6 +2809,167 @@ async function hashOf(s){
 function dataUrlToBlob(u){const m=u.match(/^data:([^;]+);base64,(.*)$/);const bin=atob(m[2]);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return new Blob([a],{type:m[1]});}
 function blobToDataUrl(b){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(b);});}
 
+/* >>> draft sync */
+/* Cloud copy of the open job (Stage 2, 15 Nov 2026). Local-first stays exactly as before: this only ADDS a copy in the office database so the
+   same person can carry on a job on another device (needs 47_inspection_drafts.sql). Photos go to the same folder Send uses, so Send never
+   uploads them twice. ?nosync=1 in the address switches it off on this device (?nosync=0 turns it back on). LEAN first version: if two
+   devices changed the same job, the one in use wins and says so (the other device's photos stay in storage, not lost). */
+const DS={off:false,busy:false,again:false,timer:null,retry:null,tableMissing:false,dev:null};
+function dsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function dsPut(k,v){try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v);}catch(e){}}
+try{if(/[?&]nosync=1/.test(location.search))dsPut("lpc_nosync","1");else if(/[?&]nosync=0/.test(location.search))dsPut("lpc_nosync",null);DS.off=dsGet("lpc_nosync")==="1";}catch(e){}
+const dsRev=id=>+dsGet("lpc_dsrev_"+id)||0, dsSetRev=(id,r)=>dsPut("lpc_dsrev_"+id,r?String(r):null);
+const dsIsDirty=id=>dsGet("lpc_dsdirty_"+id)==="1", dsSetDirty=(id,on)=>dsPut("lpc_dsdirty_"+id,on?"1":null);
+function dsDevice(){
+  if(DS.dev)return DS.dev;
+  const ua=navigator.userAgent||"";
+  const label=/iPad/.test(ua)?"iPad":/iPhone/.test(ua)?"iPhone":/Android/.test(ua)?"Android":/Macintosh/.test(ua)?((navigator.maxTouchPoints||0)>1?"iPad":"Mac"):"Device";
+  return DS.dev={label};
+}
+function dsCan(){return !DS.off&&!DS.tableMissing&&!!sbCfg()&&!!ME&&navigator.onLine!==false;}
+function dsSay(t,bad){const e=document.getElementById("syncinfo");if(!e)return;e.textContent=t?"· "+t:"";e.style.color=bad?"#c0392b":"";}
+const HC=new Map();
+async function dsHash(u){let h=HC.get(u);if(!h){h=await hashOf(u);HC.set(u,h);}return h;}
+// a copy of the job without the photos in `gone` (the ones that did not upload this time)
+function dsDrop(node,gone){
+  if(typeof node==="string")return node;
+  if(Array.isArray(node))return node.filter(x=>!(typeof x==="string"&&gone.has(x))).map(x=>dsDrop(x,gone));
+  if(node&&typeof node==="object"){const o={};for(const k in node)o[k]=dsDrop(node[k],gone);return o;}
+  return node;
+}
+const dsMissing=e=>/PGRST205|42P01|schema cache|does not exist/i.test(String((e&&e.message)||e||"")+String((e&&e.code)||""));
+function dsSchedule(){
+  if(!STATE||!STATE.id)return;
+  dsSetDirty(STATE.id,true);
+  clearTimeout(DS.timer);clearTimeout(DS.retry);
+  if(DS.off||DS.tableMissing||!sbCfg()||!ME)return;            // switched off, or not signed in: nothing to say
+  if(navigator.onLine===false){dsSay("Waiting for signal");return;}
+  dsSay("Syncing…");DS.timer=setTimeout(dsPush,8000);
+}
+async function dsPush(){
+  if(!dsCan())return;
+  if(DS.busy){DS.again=true;return;}
+  DS.busy=true;DS.again=false;
+  const st=STATE,id=st&&st.id;
+  if(!id){DS.busy=false;return;}
+  try{
+    const sb=await sbClient();
+    const urls=[];mapStr(st,isDataImg,u=>{if(urls.indexOf(u)<0)urls.push(u);return u;});
+    const folder=ME.id+"/"+id,have=new Set();
+    const ls=await sb.storage.from(SB_BUCKET).list(folder,{limit:1000});if(ls.error)throw ls.error;
+    (ls.data||[]).forEach(f=>have.add(f.name));
+    const pathOf=new Map(),todo=[];
+    for(const u of urls){const nm=(await dsHash(u))+(u.indexOf("data:image/png")===0?".png":".jpg");pathOf.set(u,folder+"/"+nm);if(!have.has(nm))todo.push(u);}
+    const failed=new Set();let next=0;
+    const worker=async()=>{while(next<todo.length){const u=todo[next++];
+      try{const b=dataUrlToBlob(u);const up=await sb.storage.from(SB_BUCKET).upload(pathOf.get(u),b,{contentType:b.type||"image/jpeg",upsert:false});
+        if(up.error&&!/already exists|duplicate|409/i.test(String(up.error.message||"")+String(up.error.statusCode||"")))failed.add(u);}catch(e){failed.add(u);}
+      dsSay("Syncing "+Math.min(next,todo.length)+" of "+todo.length+" photos…");}};
+    await Promise.all([worker(),worker(),worker()]);
+    const light=mapStr(dsDrop(st,failed),isDataImg,u=>REF+pathOf.get(u));
+    const cust=st.customer||{};
+    const body={data:{state:light,summary:{address:cust.address||"",streetno:cust.streetno||"",suburb:cust.suburb||"",client:cust.client||"",date:cust.date||"",photos:urls.length-failed.size}},
+      device:dsDevice().label,photos_pending:failed.size,status:"open"};
+    let rev=dsRev(id);
+    if(!rev){
+      const ins=await sb.from("inspection_drafts").insert(Object.assign({id,job_id:cust.calJobId||null},body)).select("rev").single();
+      if(ins.error){
+        if(String(ins.error.code)==="23505"||/duplicate/i.test(String(ins.error.message||""))){
+          const cur=await sb.from("inspection_drafts").select("rev").eq("id",id).maybeSingle();
+          if(cur.error||!cur.data)throw (cur.error||new Error("row-level security: that cloud copy isn't yours"));
+          rev=cur.data.rev;
+        }else throw ins.error;
+      }else{dsSetRev(id,ins.data.rev);rev=0;}
+    }
+    if(rev){
+      let up=await sb.from("inspection_drafts").update(body).eq("id",id).eq("rev",rev).select("rev,device,updated_at");
+      if(up.error)throw up.error;
+      if(!up.data||!up.data.length){
+        const cur=await sb.from("inspection_drafts").select("rev,device,updated_at").eq("id",id).maybeSingle();
+        if(cur.error)throw cur.error;
+        if(!cur.data)throw new Error("row-level security: that cloud copy isn't yours");
+        up=await sb.from("inspection_drafts").update(body).eq("id",id).eq("rev",cur.data.rev).select("rev");
+        if(up.error)throw up.error;
+        if(!up.data||!up.data.length)throw new Error("busy, will retry");
+        if(cur.data.device!==dsDevice().label)toast("Saved over changes made on "+(cur.data.device||"another device")+" at "+fmtTime(cur.data.updated_at),5200);
+      }
+      dsSetRev(id,up.data[0].rev);
+    }
+    if(!DS.again)dsSetDirty(id,false);
+    dsSay(failed.size?"Synced, "+failed.size+" photo"+(failed.size===1?"":"s")+" waiting":"Synced "+fmtTime(Date.now()));
+    if(failed.size){clearTimeout(DS.retry);DS.retry=setTimeout(dsSchedule,60000);}
+  }catch(e){
+    if(dsMissing(e)){DS.tableMissing=true;dsSay("");}
+    else{
+      const m=String((e&&e.message)||e||"");
+      dsSay(navigator.onLine===false||/failed to fetch|network|load failed/i.test(m)?"Waiting for signal":"Cloud copy didn't save",navigator.onLine!==false&&!/failed to fetch|network|load failed/i.test(m));
+      clearTimeout(DS.retry);DS.retry=setTimeout(dsSchedule,60000);
+    }
+  }
+  DS.busy=false;
+  if(DS.again){DS.again=false;dsSchedule();}
+}
+async function dsMark(id,status){            // "sent" or "deleted": best effort, never blocks anything
+  if(!dsCan()||!dsRev(id))return;
+  try{const sb=await sbClient();const r=await sb.from("inspection_drafts").update({status}).eq("id",id).select("rev");
+    if(r&&r.data&&r.data.length){if(status==="deleted"){dsSetRev(id,0);dsSetDirty(id,false);}else dsSetRev(id,r.data[0].rev);}}catch(e){}
+}
+const dsMarkSent=id=>dsMark(id,"sent"),dsMarkDeleted=id=>dsMark(id,"deleted");
+// this person's open cloud jobs that this device does not have, or that another device has saved since
+async function dsList(){
+  if(!dsCan())return [];
+  const sb=await sbClient();const since=new Date(Date.now()-30*864e5).toISOString();
+  const r=await sb.from("inspection_drafts").select("id,rev,device,updated_at,photos_pending,summary:data->summary").eq("status","open").eq("staff_id",ME.id).gte("updated_at",since).order("updated_at",{ascending:false}).limit(50);
+  if(r.error){if(dsMissing(r.error))DS.tableMissing=true;return [];}
+  const have=new Set((await loadJobsIndex()).map(j=>j.id));
+  return (r.data||[]).filter(x=>!have.has(x.id)||dsRev(x.id)!==x.rev);
+}
+async function dsDrawBox(){
+  const box=document.getElementById("syncbox");if(!box)return;
+  let list=[];try{list=await dsList();}catch(e){}
+  if(!list.length||document.getElementById("syncbox")!==box)return;
+  let el=document.getElementById("draftbox");
+  if(!el){el=document.createElement("div");el.id="draftbox";box.appendChild(el);}
+  el.innerHTML='<div class="flab listhead"><span>In progress on your other devices</span></div>'+list.map(x=>{
+    const s=x.summary||{},t=addrTitle(streetJoin(s.streetno,s.address),s.suburb)||s.client||"(no address yet)";
+    return '<div class="syncrow"><span class="fnote"><b>'+escv(t)+'</b><br>'+escv(x.device||"Another device")+" · "+escv(fmtTime(x.updated_at))
+      +(s.photos?" · "+s.photos+" photo"+(s.photos===1?"":"s"):"")+(x.photos_pending?" · "+x.photos_pending+" still uploading":"")
+      +'</span><button class="btn ghost" type="button" data-continue="'+escv(x.id)+'">Continue here</button></div>';}).join("");
+}
+async function dsContinue(id,btn){
+  const reset=()=>{if(btn){btn.disabled=false;btn.textContent="Continue here";}};
+  if(btn){btn.disabled=true;btn.textContent="Getting it…";}
+  try{
+    const sb=await sbClient();
+    const r=await sb.from("inspection_drafts").select("id,rev,data,device,updated_at,photos_pending").eq("id",id).maybeSingle();
+    if(r.error)throw r.error;
+    if(!r.data)throw new Error("That cloud copy isn't there any more");
+    const state=r.data.data&&r.data.data.state;
+    if(!state||!state.sections)throw new Error("That cloud copy is empty");
+    const local=await dbGet("job::"+id);
+    if(local&&local.sections&&dsIsDirty(id)&&!confirm("This device has changes that haven't synced yet. Replace them with the version from "+(r.data.device||"the other device")+"?")){reset();return;}
+    if(r.data.photos_pending&&!confirm((r.data.device||"The other device")+" is still uploading "+r.data.photos_pending+" photo"+(r.data.photos_pending===1?"":"s")+" for this job. Continue without them for now?")){reset();return;}
+    const refs=[];mapStr(state,isRef,u=>{if(refs.indexOf(u)<0)refs.push(u);return u;});
+    const got=new Map();let next=0,n=0;
+    const worker=async()=>{while(next<refs.length){const u=refs[next++];
+      const d=await sb.storage.from(SB_BUCKET).download(u.slice(REF.length));if(d.error)throw d.error;
+      got.set(u,await blobToDataUrl(d.data));n++;if(btn)btn.textContent="Photo "+n+" of "+refs.length+"…";}};
+    await Promise.all([worker(),worker(),worker()]);
+    const full=mapStr(state,isRef,u=>got.get(u)||u);full.id=id;
+    if(!await dbSet("job::"+id,full))throw new Error("This device wouldn't store it (storage full?)");
+    const list=await loadJobsIndex(),m=jobMeta(full),i=list.findIndex(j=>j.id===id);
+    if(i>=0)list[i]=m;else list.unshift(m);
+    await saveJobsIndex(list);
+    dsSetRev(id,r.data.rev);dsSetDirty(id,false);
+    if(STATE.id===id){STATE=full;await dbSet("activeId",id);render();setHsub();}else await switchJob(id);
+    closeModal();toast("Continuing the job from "+(r.data.device||"your other device"),3200);
+  }catch(e){reset();toast(dsMissing(e)?"Cloud copies aren't set up yet (ask Claude).":sbErr(e),4200);}
+}
+sheet.addEventListener("click",e=>{const b=e.target.closest("[data-continue]");if(b)dsContinue(b.dataset.continue,b);});
+window.addEventListener("online",()=>{try{dsSchedule();}catch(e){}});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){try{if(STATE&&STATE.id&&(dsIsDirty(STATE.id)||!dsRev(STATE.id)))dsSchedule();}catch(e){}}});
+/* <<< draft sync */
+
 /* sign in */
 function openSignIn(after){
   let last="";try{last=localStorage.getItem("lpc_sb_email")||"";}catch(e){}
@@ -2812,6 +3005,7 @@ function afterSignIn(){
   // a job still waiting on its Inspector answer (fresh device) gets the signed-in person's name
   if(ME&&!STATE.sentAt&&fillInspector(STATE.customer||(STATE.customer={}))){syncInspectorUI();scheduleSave();}
   updateSyncUI();
+  try{if(ME&&STATE&&STATE.id&&(dsIsDirty(STATE.id)||!dsRev(STATE.id)))dsSchedule();}catch(e){}
   if(ME&&ME.role==="master"){checkTeam();if(!teamTimer)teamTimer=setInterval(()=>{if(document.visibilityState==="visible"&&ME&&ME.role==="master")checkTeam();},60000);}
 }
 async function syncBoot(){
@@ -2866,6 +3060,7 @@ async function sendToOffice(){
     const r=await sb.from("inspections").upsert(row,{onConflict:"id"}).select("id,updated_at").single();
     if(r.error)throw r.error;
     if(STATE.id===sendingId){STATE.sentAt=Date.now();scheduleSave();}
+    try{dsMarkSent(sendingId);}catch(e){}
     {const seen=await getSeen();seen[sendingId]=r.data.updated_at;await dbSet("seen",seen);}
     sheet.innerHTML=`<h3>Sent</h3><p><b>${escv(addrTitle(summary.address,summary.suburb)||"(no address)")}</b><br>${nFind} finding${nFind===1?"":"s"} · ${urls.length} photo${urls.length===1?"":"s"}. ${ME.role==="master"?"It will appear in your Inspection Inbox folder on the Mac in about 5 minutes.":"It has gone to Mitch."} Send again any time if you add more.</p>
       <div class="acts">${cust.calJobId?`<a class="btn ghost" href="calendar.html">Back to calendar</a>`:""}<button class="btn primary" id="mCancel">Done</button></div>`;
@@ -3248,6 +3443,11 @@ async function handleLaunchParams(){
 /* ---------- boot ---------- */
 (async function(){
   try{ await openDB(); }catch(e){ db=null; }
+  if(!db) setTimeout(()=>toast("This browser is blocking storage, so nothing here can be saved on this device. Don't use a private window.",12000),1200);
+  // ask the browser to keep this site's storage (iPadOS and Safari can clear it under pressure), and warn when the device is nearly full
+  try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){}
+  try{ const es=navigator.storage&&navigator.storage.estimate?await navigator.storage.estimate():null;
+    if(es&&es.quota&&es.usage/es.quota>0.8) setTimeout(()=>toast("Storage on this device is "+Math.round(100*es.usage/es.quota)+"% full. Send finished jobs to the office and clear their photos.",9000),1500); }catch(e){}
   let list=await loadJobsIndex();
   // migrate the old single-job "current" store into the jobs system, once
   const legacy=db?await dbGet("current"):null;

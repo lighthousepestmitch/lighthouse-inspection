@@ -101,21 +101,35 @@ def write_json(path, obj):
 def snapshot(chat_path, root):
     os.makedirs(root, exist_ok=True); chmod(root, 0o700)
     dest = os.path.join(root, datetime.date.today().isoformat())
+    made_dir = not os.path.isdir(dest)
     os.makedirs(dest, exist_ok=True); chmod(dest, 0o700)
     out = os.path.join(dest, "chat.db")
+    tmp = out + ".new"          # copy to a side file first: a failed run (e.g. macOS says "authorization denied") must never destroy a good snapshot
     for ext in ("", "-wal", "-shm"):
-        if os.path.exists(out + ext): os.remove(out + ext)
-    src = sqlite3.connect(f"file:{chat_path}?mode=ro", uri=True)
-    dst = sqlite3.connect(out)
+        if os.path.exists(tmp + ext): os.remove(tmp + ext)
     try:
-        src.backup(dst)                                  # a consistent copy with the -wal folded in
-        dst.execute("pragma journal_mode=delete")        # one self-contained file
-        dst.commit()
-    finally:
-        dst.close(); src.close()
-    for ext in ("-wal", "-shm"):
-        if os.path.exists(out + ext): os.remove(out + ext)
-    chmod(out, 0o600)
+        src = sqlite3.connect(f"file:{chat_path}?mode=ro", uri=True)
+        try:
+            dst = sqlite3.connect(tmp)
+            try:
+                src.backup(dst)                          # a consistent copy with the -wal folded in
+                dst.execute("pragma journal_mode=delete")    # one self-contained file
+                dst.commit()
+            finally:
+                dst.close()
+        finally:
+            src.close()
+        for ext in ("-wal", "-shm"):
+            if os.path.exists(tmp + ext): os.remove(tmp + ext)
+        chmod(tmp, 0o600)
+        os.replace(tmp, out)                             # only now does it replace today's earlier snapshot, if there was one
+    except Exception:
+        for ext in ("", "-wal", "-shm"):
+            if os.path.exists(tmp + ext): os.remove(tmp + ext)
+        if made_dir:                                     # a failed run must not leave an empty dated folder that pushes a real snapshot out of the newest 5
+            try: os.rmdir(dest)
+            except OSError: pass
+        raise
     days = sorted(d for d in os.listdir(root) if re.match(r"^\d{4}-\d{2}-\d{2}$", d) and os.path.isdir(os.path.join(root, d)))
     for old in days[:-KEEP_SNAPSHOTS]: shutil.rmtree(os.path.join(root, old), ignore_errors=True)
     return out
