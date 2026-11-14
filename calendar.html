@@ -347,6 +347,8 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .taddr{font-size:16px;color:var(--ink)}
 .tsvc{font-size:15px;color:var(--ink2);font-weight:600;margin-top:2px}
 .tnote{font-size:14px;color:var(--ink2);margin-top:6px;white-space:pre-wrap;word-break:break-word}
+.tdocs{margin-top:6px;padding:6px 10px;border-radius:8px;background:rgba(40,160,90,.18);font-weight:600;font-size:14px}
+.cd{display:inline-block;margin-left:4px;padding:0 5px;border-radius:6px;background:rgba(40,160,90,.3);font-size:10px;font-weight:700;line-height:15px;vertical-align:middle}
 .tacts{display:flex;gap:8px;padding:0 14px 14px;flex-wrap:wrap}
 .tacts a{flex:1;min-width:92px}
 .empty{text-align:center;padding:48px 20px;color:var(--ink3)}
@@ -693,7 +695,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-15a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-15c";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -1484,7 +1486,7 @@ async function fetchJobs(silent){
     setJobs(rows);S.range=range;S.loaded=true;S.loadErr="";
     offSave(rows,range);
     checkPropCols(rows);syncSheetProps();
-    renderBody();
+    renderBody();loadDocCounts();
   }catch(e){
     if(seq!==S.fetchSeq)return;
     S.loadErr=friendly(e)+(S.loaded?" Showing what was loaded earlier.":"");
@@ -1784,7 +1786,7 @@ function onWinResize(){
 function stLabel(st){return st==="done"?"Done":st==="cancelled"?"Cancelled":"Booked";}
 // A client's notes (dog, gate code ...): a small ! on the job's card, and the whole note in its tooltip / screen-reader label
 function noteOf(j){return trim(j&&j.client&&j.client.notes);}
-function noteMark(j){return (noteOf(j)?'<span class="cn" aria-hidden="true">!</span>':"")+(S.isMaster&&j.invoiced?'<span class="invm" aria-hidden="true">inv</span>':"");}
+function noteMark(j){return (noteOf(j)?'<span class="cn" aria-hidden="true">!</span>':"")+(docN(j)?'<span class="cd" aria-hidden="true">doc</span>':"")+(S.isMaster&&j.invoiced?'<span class="invm" aria-hidden="true">inv</span>':"");}
 function oneLine(s,max){const t=String(s==null?"":s).replace(/\s+/g," ").trim();return t.length>max?t.slice(0,max-3)+"...":t;}
 // The small cards (the Unassigned list): time, then the address (or the client's name if there is no address), then the client's name and the services.
 function cardHtml(j,cls,style){
@@ -2157,6 +2159,7 @@ function techCard(j){
     (hasProp(j)?'<div class="tprop">'+(pr.b?'<span class="ptag big">Barrier proposal</span>':"")+(pr.t?'<span class="ptag big">Baiting proposal</span>':"")+'</div>':"")+
     (noteOf(j)?'<div class="tcn" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(noteOf(j))+'</span></div>':"")+
     (j.notes?'<div class="tnote">'+esc(j.notes)+'</div>':"")+
+    (docN(j)?'<div class="tdocs">'+docN(j)+' document'+(docN(j)===1?'':'s')+' attached. Tap the job to open '+(docN(j)===1?'it':'them')+'.</div>':"")+
     '<span class="stl '+esc(j.status)+'">'+esc(stLabel(j.status))+'</span></div><div class="tacts">';
   if(num.length>=3)h+='<a class="btn" href="tel:'+esc(num)+'">'+IC.phone+' Ring</a><a class="btn" href="sms:'+esc(num)+'">'+IC.msg+' Text</a>';
   if(addr)h+='<a class="btn" target="_blank" rel="noopener" href="https://maps.apple.com/?q='+esc(encodeURIComponent(addr))+'">'+IC.pin+' Maps</a>';
@@ -3088,7 +3091,7 @@ function sheetHtml(){
     '<div class="shhead"><div class="shttl"><h2 id="sh-title">'+esc(sheetTitle())+'</h2><div class="sb" id="sh-sub">'+esc(sheetSub())+'</div></div>'+
     '<button type="button" class="x" data-sh="close" aria-label="Close">'+IC.x+'</button></div>'+
     '<div class="cnstrip" id="cn-strip" role="note" hidden></div>'+      // the client's notes (dog, gate code ...), under the title where they can't be missed
-    '<div class="shbody"><div id="sh-msg" role="alert"></div>'+
+    '<div class="shbody"><div id="sh-msg" role="alert"></div><div id="doc-top"></div>'+
     // the paperwork buttons sit together at the top, on every job: Service record always (the worker picks the treatment on the records page if the job has no service),
     // Start inspection report only when a ticked service is an inspection (then it is the main button). updateLinks fills in the links and the pri colour,
     // and the hint and the "done / not done yet" lines go with them.
@@ -4065,42 +4068,63 @@ async function afterUploads(sh,jobId,ok,bad,unread,lastErr){
 }
 /* >>> job documents */
 /* Documents on a job (old reports, certificates). Stage 2b, 15 Nov 2026. The files go in the private job-photos bucket under <job id>/docs/ (the folder rule the
-   photos already use, so a worker can open them on his own jobs). The list is public.job_documents (48_job_documents.sql). Mitch adds and removes; a worker can only
-   open. A short summary of a document is written by Claude on request into job_documents.summary (and the job notes), never automatically. */
+   photos already use, so a worker can open them on his own jobs). The list is public.job_documents (48_job_documents.sql). Mitch adds (button, or drop a file anywhere on
+   the job sheet) and removes; a worker can only open. A short summary is written by Claude into job_documents.summary (and the job notes). A job with documents shows
+   a green line on its card and a highlighted Documents box at the very top of its sheet. */
+const docN=function(j){return (S.docCount&&j&&S.docCount[j.id])||0;};
+const docMissing=function(e){return /job_documents|schema cache|PGRST205|42P01/i.test(String((e&&e.message)||"")+String((e&&e.code)||""));};
 function docsHtml(){
   const M=S.isMaster;
   return '<div class="lbl">Documents <span class="fl2">(old reports, certificates)</span></div>'
-    +(M?(SH&&SH.jobId?'<div class="btns"><label class="btn" for="doc-add">Add document</label></div><input type="file" id="doc-add" class="vh" accept="application/pdf,image/*" multiple>':'<div class="hint">Save the job first, then add documents.</div>'):'')
+    +(M?(SH&&SH.jobId?'<div class="btns"><label class="btn" for="doc-add">Add document</label></div><input type="file" id="doc-add" class="vh" accept="application/pdf,image/*" multiple><div class="hint">Or drop a file anywhere on this job.</div>':'<div class="hint">Save the job first, then add documents.</div>'):'')
     +'<div class="photostat" id="doc-stat"></div><div id="doc-list"></div>';
 }
 function docSafe(n){return String(n||"document").replace(/[^A-Za-z0-9._-]+/g,"_").slice(-80);}
+async function loadDocCounts(){
+  try{
+    const ids=(S.jobs||[]).map(function(j){return j.id;}).filter(Boolean);
+    if(!ids.length||S.noDocTbl)return;
+    const cnt={};
+    for(let i=0;i<ids.length;i+=100){
+      const r=await S.sb.from("job_documents").select("job_id").in("job_id",ids.slice(i,i+100));
+      if(r.error){if(docMissing(r.error))S.noDocTbl=true;return;}
+      (r.data||[]).forEach(function(x){cnt[x.job_id]=(cnt[x.job_id]||0)+1;});
+    }
+    if(JSON.stringify(cnt)!==JSON.stringify(S.docCount||{})){S.docCount=cnt;renderBody();}
+  }catch(e){}
+}
 async function loadDocs(){
   const id=SH&&SH.jobId;if(!id||!byId("doc-list"))return;
   try{
     const r=await S.sb.from("job_documents").select("id,name,path,summary,summary_at,created_at").eq("job_id",id).order("created_at",{ascending:true});
     if(r.error){
-      if(/job_documents|schema cache|PGRST205|42P01/i.test(String(r.error.message||"")+String(r.error.code||""))){const st0=byId("doc-stat");if(st0)st0.textContent=S.isMaster?"Documents aren't set up yet (ask Claude).":"";return;}
+      if(docMissing(r.error)){const st0=byId("doc-stat");if(st0)st0.textContent=S.isMaster?"Documents aren't set up yet (ask Claude).":"";return;}
       throw r.error;
     }
     const urls={};const paths=(r.data||[]).map(function(d){return d.path;});
     if(paths.length){const sg=await S.sb.storage.from("job-photos").createSignedUrls(paths,3600);if(!sg.error)(sg.data||[]).forEach(function(x){if(x&&x.signedUrl)urls[x.path]=x.signedUrl;});}
     if(!SH||SH.jobId!==id)return;
     SH.docs=(r.data||[]).map(function(d){return Object.assign({},d,{url:urls[d.path]||""});});
+    const was=(S.docCount&&S.docCount[id])||0;(S.docCount=S.docCount||{})[id]=SH.docs.length;
     renderDocs();
+    if(was!==SH.docs.length)renderBody();      // the green line on the job's card
   }catch(e){const st=byId("doc-stat");if(st)st.textContent="Couldn't load the documents. "+friendly(e);}
 }
+function docRow(d,withRemove){
+  const when=d.created_at?new Date(d.created_at).toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"}):"";
+  const sw=d.summary_at?" on "+new Date(d.summary_at).toLocaleDateString("en-AU",{day:"numeric",month:"short"}):"";
+  return '<div class="docrow" style="border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:8px 10px;margin:6px 0">'
+    +'<div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div style="min-width:0"><b style="word-break:break-word">'+esc(d.name)+'</b><div class="hint">'+esc(when)+'</div></div>'
+    +'<div style="display:flex;gap:6px;flex:none">'+(d.url?'<a class="btn sm" href="'+esc(d.url)+'" target="_blank" rel="noopener">Open</a>':'')
+    +(withRemove?'<button type="button" class="btn sm warn" data-doc-del="'+esc(d.id)+'">Remove</button>':'')+'</div></div>'
+    +(d.summary?'<div class="hint" style="margin-top:6px;white-space:pre-wrap"><b>Summary</b> (written by Claude from this document'+esc(sw)+', check the original): '+esc(d.summary)+'</div>':'')+'</div>';
+}
 function renderDocs(){
-  const l=byId("doc-list"),st=byId("doc-stat");if(!l||!SH)return;
+  const l=byId("doc-list"),st=byId("doc-stat"),top=byId("doc-top");if(!l||!SH)return;
   const D=SH.docs||[];
-  l.innerHTML=D.map(function(d){
-    const when=d.created_at?new Date(d.created_at).toLocaleDateString("en-AU",{day:"numeric",month:"short",year:"numeric"}):"";
-    const sw=d.summary_at?" on "+new Date(d.summary_at).toLocaleDateString("en-AU",{day:"numeric",month:"short"}):"";
-    return '<div class="docrow" style="border:1px solid rgba(128,128,128,.35);border-radius:10px;padding:8px 10px;margin:6px 0">'
-      +'<div style="display:flex;gap:8px;align-items:center;justify-content:space-between"><div style="min-width:0"><b style="word-break:break-word">'+esc(d.name)+'</b><div class="hint">'+esc(when)+'</div></div>'
-      +'<div style="display:flex;gap:6px;flex:none">'+(d.url?'<a class="btn sm" href="'+esc(d.url)+'" target="_blank" rel="noopener">Open</a>':'')
-      +(S.isMaster?'<button type="button" class="btn sm warn" data-doc-del="'+esc(d.id)+'">Remove</button>':'')+'</div></div>'
-      +(d.summary?'<div class="hint" style="margin-top:6px;white-space:pre-wrap"><b>Summary</b> (written by Claude from this document'+esc(sw)+', check the original): '+esc(d.summary)+'</div>':'')+'</div>';
-  }).join("");
+  l.innerHTML=S.isMaster?D.map(function(d){return docRow(d,true);}).join(""):"";      // Mitch manages them here; a worker reads them in the box at the top
+  if(top)top.innerHTML=D.length?'<div class="doctop" style="border:2px solid rgba(40,160,90,.7);background:rgba(40,160,90,.1);border-radius:12px;padding:8px 10px;margin:0 0 10px"><b>'
+    +(D.length===1?"1 document on this job":D.length+" documents on this job")+'</b>'+D.map(function(d){return docRow(d,false);}).join("")+'</div>':"";
   if(st)st.textContent=D.length?D.length+" document"+(D.length===1?"":"s")+" on this job.":"No documents yet.";
 }
 async function addDocs(fileList){
@@ -4132,6 +4156,12 @@ async function removeDoc(did){
     await loadDocs();
   }catch(e){toast("Couldn't remove it. "+friendly(e),true);}
 }
+// drag and drop: a file dropped anywhere on an open, saved job sheet is added as a document (Mitch only)
+function docDropOk(e){return !!(S.isMaster&&SH&&SH.jobId&&e&&e.target&&e.target.closest&&e.target.closest(".shbody"));}
+function docOnDragOver(e){if(docDropOk(e)&&e.dataTransfer&&[].indexOf.call(e.dataTransfer.types||[],"Files")>=0)e.preventDefault();}
+function docOnDrop(e){if(!docDropOk(e)||!e.dataTransfer||!e.dataTransfer.files||!e.dataTransfer.files.length)return;e.preventDefault();addDocs(e.dataTransfer.files).catch(function(){});}
+document.addEventListener("dragover",docOnDragOver);
+document.addEventListener("drop",docOnDrop);
 document.addEventListener("click",function(e){const b=e.target&&e.target.closest&&e.target.closest("[data-doc-del]");if(b)removeDoc(b.getAttribute("data-doc-del"));});
 /* <<< job documents */
 async function loadPhotos(){
