@@ -62,7 +62,7 @@ header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepI
 
 /* tabs / nav */
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);
-  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
+  border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);
   padding-bottom:env(safe-area-inset-bottom)}
 nav.bottom button{padding:5px 2px 5px;min-height:48px;justify-content:center;display:flex;flex-direction:column;align-items:center;gap:3px;
   font-size:10.5px;font-weight:600;color:var(--ink3);letter-spacing:.02em}
@@ -273,6 +273,16 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 .row.rv .rvmore{flex:0 0 100%;display:flex;gap:8px;flex-wrap:wrap;padding:0 12px 10px 16px}
 .row.rv .rvmore[hidden]{display:none}
 .row.rv .rvmore .btn{flex:1;min-width:120px}
+.todaysum{margin:10px 2px 2px;font-weight:600;font-size:15px}
+.hint.stale{color:#b45309;font-weight:600}
+.regstar{display:inline-flex;margin:0 6px 0 0;vertical-align:-2px;opacity:.8}.regstar svg{width:14px;height:14px}
+.row.tdy .rowtext .nm,.row.tdy .rowtext .mt{white-space:normal;overflow:visible;text-overflow:clip}
+.row.tdy .rowtext .mt.facts{line-height:1.45}.fx{display:inline-block;white-space:nowrap}
+.row.tdy .iact{width:42px;height:42px}
+.facts{font-size:13px}
+.morerow{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;background:var(--card,transparent);color:inherit;font:inherit;min-height:48px}
+.morerow span{font-size:13px;opacity:.7}
+
 </style>
 </head>
 <body class="locked">
@@ -295,12 +305,10 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 </main>
 
 <nav class="bottom" id="nav" hidden>
-  <button data-go="due" aria-current="true"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Due</button>
+  <button data-go="today" aria-current="true"><svg viewBox="0 0 24 24"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>Today</button>
   <button data-go="clients"><svg viewBox="0 0 24 24"><path d="M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1"/><circle cx="9.5" cy="7" r="3.5"/><path d="M17 11h4M19 9v4"/></svg>Clients</button>
-  <button data-go="leads"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Leads</button>
   <button data-go="reviews"><svg viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></svg>Reviews</button>
-  <button data-go="recheck"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>Recheck</button>
-  <button data-go="sync"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>Setup</button>
+  <button data-go="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>More</button>
 </nav>
 <div id="sheet"></div>
 
@@ -311,7 +319,7 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-11-08";
+const BUILD="2026-11-15b";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -456,7 +464,7 @@ function remindersProblem(rm){
 
 const S={ready:false,clients:{},props:{},jobs:{},due:[],contacted:{},settings:null,sync:null,
   hidx:{},hist:{},histP:{},nudges:{},nudge:{},stop:{},rm:{mode:"due",y1:"",y2:"",d1:"",d2:""},rmOpen:false,   // message history (index, shards loaded on demand), nudge dates, stop list, the Work reminders picker
-  ov:{},bookings:{},gone:{},camp:{},dncBack:{},rcAll:false,rq2:"",asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:"due",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[],
+  ov:{},bookings:{},gone:{},camp:{},dncBack:{},rcAll:false,rq2:"",asked:{},rq:"",lead:{},leads:[],lq:"",lg:"",reviewLink:"",replies:{},view:(function(){try{return localStorage.getItem("lpc_jb_home")==="due"?"due":"today";}catch(e){return "today";}})(),reg:{},tOpen:{},tAll:{},histMade:"",band:"",q:"",grp:"active",open:{},batchN:10,cal:new Date(),calDay:null,stack:[],
   fopen:{},fseed:false,seeded:false,alertsOpen:false};   // fopen/fseed: sections opened by a tile or chip filter. seeded: the first-time default has been applied. alertsOpen: the folded notices are showing
 
 /* ---------- storage ----------
@@ -720,7 +728,7 @@ async function loadAll(gen){
   S.camp=(campF&&campF.rows&&typeof campF.rows==="object"&&!Array.isArray(campF.rows))?campF.rows:{};
   S.contacted=(conF&&conF.rows&&typeof conF.rows==="object"&&!Array.isArray(conF.rows))?conF.rows:{};
   const rowsOf=f=>(f&&f.rows&&typeof f.rows==="object"&&!Array.isArray(f.rows))?f.rows:{};
-  S.hidx=rowsOf(hiF); S.nudges=rowsOf(nudF); S.stop=rowsOf(stopF); S.hist={}; S.histP={};
+  S.hidx=rowsOf(hiF); S.histMade=(hiF&&hiF.made)||""; S.nudges=rowsOf(nudF); S.stop=rowsOf(stopF); S.hist={}; S.histP={};
   S.leads=(leadsF&&Array.isArray(leadsF.rows))?leadsF.rows:[];                           // review texts already sent, pulled off his Mac
   for(const k of PRIVATE_BASES) for(const [,d] of fam[k]){ if(!d) continue;
     if(k==="due") S.due=S.due.concat(d.rows||[]);
@@ -749,7 +757,7 @@ function applyHashOnce(){
   let h=""; try{ h=String(location.hash||""); }catch(e){ return; }
   if(!h||h.indexOf("=")>=0) return;
   const k=h.replace(/^#/,"").toLowerCase();
-  if(k==="due"||k==="reviews"||k==="clients"||k==="recheck") S.view=k;
+  if(k==="today"||k==="more"||k==="due"||k==="reviews"||k==="clients"||k==="recheck") S.view=k;
 }
 
 /* every write goes through here: updates memory first so the screen is never a lie,
@@ -1374,15 +1382,17 @@ const reminders=()=>{const out=[];
 /* ---------- render ---------- */
 function render(){
   if(!S.ready) return;
-  DUEIDX=null; PIDIDX=null;
+  DUEIDX=null; PIDIDX=null; REGIDX=null;
   const L=lines(), b=dueRows(L,false).reduce((a,r)=>{const k=band(r);a[k]=(a[k]||0)+1;return a;},{});
   $("#s-fresh").textContent=b.fresh||0; $("#s-over").textContent=b.over||0; $("#s-soon").textContent=b.soon||0;
   document.body.classList.toggle("nostats",S.view!=="due"&&S.view!=="todo");     // the counters show on Due only (the markup stays, render() writes to it)
   document.querySelectorAll("#nav button").forEach(x=>
-    x.setAttribute("aria-current", String(x.dataset.go===S.view||(S.view==="todo"&&x.dataset.go==="due"))));
+    x.setAttribute("aria-current", String(x.dataset.go===(["due","todo","leads","recheck","sync","more"].indexOf(S.view)>=0?"more":S.view))));
   const m=$("#main"); m.innerHTML="";
   try{
-    if(S.view==="due") viewDue(m,L);
+    if(S.view==="today") viewToday(m,L);
+    else if(S.view==="more") viewMore(m);
+    else if(S.view==="due") viewDue(m,L);
     else if(S.view==="todo") viewTodo(m,L);
     else if(S.view==="clients") viewClients(m);
     else if(S.view==="reviews") viewReviews(m);
@@ -1624,6 +1634,120 @@ function section(host,title,n,rows,note,unit){
 /* picking a tile or chip filter: every section it matches opens (once, per pick). Opening and closing under a filter is kept apart
    from the normal open/closed state, so coming back to Everything shows the sections the way he had left them. */
 function setBand(k){ S.band=k; S.fopen={}; S.fseed=!!k; }
+/* ---------- TODAY: the Job Book's home screen (15 Nov 2026) ----------
+   One short list instead of 13 sections: regulars to remind (10 days ahead), then everyone else who needs a text or ring now, then who is waiting to
+   hear back, what is coming up, and a catch-all. Built from the same rows as All lists (dueRows), so nothing is lost: the old Due screen is unchanged under
+   More > All lists. A regular is a client he starred or un-starred (S.reg, the star button comes in the next step), else an active client with an interval he
+   set himself in his named list (the data's own src, NOT the saved overrides, which "Did this one today" fills with defaults) or 3+ job days in 3 years. */
+const REGULAR_MIN_JOBS=3, REGULAR_LEAD_DAYS=10, DONOW_LEAD_DAYS=7, LATE_MAX_DAYS=92, WAIT_DAYS=14, SOON_DAYS=30, REPLY_DAYS=14, TODAY_SHOWN=15;
+let REGIDX=null;
+function regIndex(){
+  if(REGIDX) return REGIDX;
+  const told=new Set(), jobs=new Map(), cut=iso(new Date(Date.now()-3*365*DAY));
+  for(const d of S.due){ if(/^(your list|client confirmed)/.test(String(d.src||""))) told.add(pOf(d.p).c); }
+  for(const pid in S.jobs){ const c=pOf(pid).c; if(!c) continue;
+    let st=jobs.get(c); if(!st){ st=new Set(); jobs.set(c,st); }
+    for(const j of (S.jobs[pid]||[])) if(j&&j.d&&j.d>=cut) st.add(j.d); }
+  return REGIDX={told,jobs};
+}
+function isRegular(cid){
+  const o=S.reg&&S.reg[cid]; if(o&&o.on!==undefined) return !!o.on;
+  const c=S.clients[cid]; if(!c||(c.g!=="active"&&c.g!=="barrier")) return false;
+  const x=regIndex(); return x.told.has(cid)||((x.jobs.get(cid)||new Set()).size>=REGULAR_MIN_JOBS);
+}
+function todayInfo(r){
+  const cid=r.cid||pOf(r.pid).c, n=r.nextDue?days(TODAY,r.nextDue):null, lo=lastOutOf(cid), h=S.hidx[cid]||{};
+  const sinceOut=lo?days(dayOf(lo.t),TODAY):null;
+  const replied=!!(h.li&&(!lo||dayOf(h.li)>dayOf(lo.t))&&days(dayOf(h.li),TODAY)<=REPLY_DAYS);
+  return {cid,n,lo,replied,reg:isRegular(cid),waiting:sinceOut!==null&&sinceOut<WAIT_DAYS};
+}
+function todayGroups(rows){
+  const best=new Map();            // one row per client address: a client with several services at one address shows once, on its earliest
+  rows.forEach(r=>{ const k=(r.cid||pOf(r.pid).c)+"|"+((r.sites||[]).length>1?"multi":r.pid); const o=best.get(k);
+    if(!o||String(r.nextDue||"9")<String(o.nextDue||"9")) best.set(k,r); });
+  const g={reg:[],now:[],wait:[],soon:[],other:[]};
+  for(const r of best.values()){
+    const t=todayInfo(r), n=t.n; r._t=t;
+    let k="other";
+    if(n!==null){
+      const inReg=t.reg&&n>=-LATE_MAX_DAYS&&n<=REGULAR_LEAD_DAYS, inNow=!t.reg&&n>=-LATE_MAX_DAYS&&n<=DONOW_LEAD_DAYS;
+      if(t.waiting&&!t.replied&&(inReg||inNow)) k="wait";
+      else if(inReg) k="reg";
+      else if(inNow) k="now";
+      else if(t.replied&&n<=SOON_DAYS) k="now";                 // they wrote back: it should not sit in a quiet list
+      else if(n>(t.reg?REGULAR_LEAD_DAYS:DONOW_LEAD_DAYS)&&n<=SOON_DAYS) k="soon";
+    }
+    g[k].push(r);
+  }
+  const ord=(a,b)=>((b._t.replied?1:0)-(a._t.replied?1:0))||String(a.nextDue||"9").localeCompare(String(b.nextDue||"9"));
+  Object.keys(g).forEach(k=>g[k].sort(ord));
+  return g;
+}
+/* the existing row (address, client, due pill, Text and Ring), with its lines swapped for the same three facts on every row: Done, Contacted, Next */
+function todayRow(r){
+  const row=rowFor(r), t=r._t||todayInfo(r), c=cOf(r.pid), multi=(r.sites||[]).length>1, tx=row.querySelector(".rowtext");
+  if(tx){
+    tx.querySelectorAll(".mt").forEach(x=>x.remove());
+    const l1=el("div","mt"); l1.textContent=(multi?r.sites.length+" sites":c.n)+" · "+jobsLabel(r); tx.appendChild(l1);
+    /* three facts, each kept whole so a narrow phone wraps between them and never cuts the Next date off; the number or address he sent from is left to the client sheet */
+    const l2=el("div","mt facts");
+    ["Done "+nice(r.lastDone),"Contacted "+(t.lo?lastText(t.cid,TODAY).replace(/ \([^)]*\)$/,""):"No record"),"Next "+nice(r.nextDue)].forEach((p,i)=>{
+      if(i) l2.appendChild(document.createTextNode(" · ")); l2.appendChild(el("span","fx",p)); });
+    tx.appendChild(l2);
+    if(t.reg){ const nm=tx.querySelector(".nm"); if(nm){ const st=el("span","regstar"); st.innerHTML=ico(SVG.star); st.title="Regular client"; nm.insertBefore(st,nm.firstChild); } }
+    if(t.replied){ const l3=el("div","mt lcl"); l3.appendChild(el("span","pill soon lcw","They replied "+dayNice(S.hidx[t.cid].li,TODAY))); tx.appendChild(l3); }
+  }
+  row.classList.add("tdy");
+  const a=row.querySelector(".acts");                          // Text and Ring stay. Email stays only when there is no mobile to text. Delete lives on the client sheet.
+  if(a){ const kids=[...a.children]; if(canText(c)&&kids[2]) kids[2].remove(); if(kids[3]) kids[3].remove(); }
+  return row;
+}
+function todayGroup(host,key,title,rows,openDefault){
+  const open=S.tOpen[key]===undefined?openDefault:S.tOpen[key];
+  const h=el("button","sechead fold"); h.setAttribute("aria-expanded",String(open));
+  h.innerHTML='<span class="ttl"><span class="chev">&#9656;</span>'+esc(title)+'</span><span class="n">'+rows.length+'</span>';
+  h.onclick=()=>{ S.tOpen[key]=!open; render(); };
+  host.appendChild(h); if(!open) return;
+  const shown=S.tAll[key]?rows:rows.slice(0,TODAY_SHOWN);
+  shown.forEach(r=>host.appendChild(todayRow(r)));
+  if(rows.length>shown.length) host.appendChild(btn("Show all "+rows.length,null,"",()=>{ S.tAll[key]=true; render(); }));
+}
+function viewToday(m,L){
+  const g=todayGroups(dueRows(L,false));
+  const s=el("input","inp"); s.type="search"; s.placeholder="Search name, address or phone"; s.setAttribute("aria-label","Search clients"); s.setAttribute("enterkeyhint","search");
+  s.onkeydown=e=>{ if(e.key==="Enter"&&s.value.trim()){ S.q=s.value.trim(); S.view="clients"; window.scrollTo(0,0); render(); } };
+  m.appendChild(s);
+  const unc=unconfirmed(), rem=reminders().filter(x=>x.r.on<=TODAY), nTodo=L.filter(l=>band(l)==="todo").length;
+  if(unc.length){ const b=el("button","banner warn alertbar"); b.textContent=unc.length+" message"+(unc.length===1?"":"s")+" opened but not confirmed sent. Tap to sort them out."; b.onclick=()=>openUnconfirmed(); m.appendChild(b); }
+  if(rem.length){ const b=el("button","banner ok alertbar"); b.textContent=rem.length+" reminder"+(rem.length===1?"":"s")+" you set "+(rem.length===1?"has":"have")+" come around. Tap to open."; b.onclick=()=>openReminders(); m.appendChild(b); }
+  if(nTodo){ const b=el("button","banner warn alertbar"); b.textContent=nTodo+" job"+(nTodo===1?" has":"s have")+" no repeat set. Tap to sort them."; b.onclick=()=>{ S.view="todo"; window.scrollTo(0,0); render(); }; m.appendChild(b); }
+  m.appendChild(el("div","todaysum",g.reg.length+" regulars to remind · "+g.now.length+" to do · "+g.wait.length+" waiting to hear back"));
+  const ls=S.sync&&S.sync.lastSyncedDate, hm=S.histMade?dayOf(S.histMade):"", stale=x=>!!x&&days(x,TODAY)>3, old=stale(ls)||stale(hm);
+  m.appendChild(el("div","hint"+(old?" stale":""),"Invoices to "+nice(ls)+" · Texts and emails to "+(hm?nice(hm):"unknown")+(old?". Ask Claude to update the Job Book.":"")));
+  todayGroup(m,"reg","Regulars to remind",g.reg,true);
+  todayGroup(m,"now","Do now",g.now,true);
+  if(!g.reg.length&&!g.now.length){ const e=el("div","empty"); e.innerHTML="<h3>Nothing to do right now</h3><p>Nobody needs a text or call today.</p>"; m.appendChild(e); }
+  todayGroup(m,"wait","Waiting to hear back",g.wait,false);
+  todayGroup(m,"soon","Coming up (next 30 days)",g.soon,false);
+  todayGroup(m,"other","Everything else",g.other,false);
+  m.appendChild(el("div","note","Every client is still in More, All lists. Nothing has been taken away."));
+}
+function viewMore(m){
+  const L=lines(), nTodo=L.filter(l=>band(l)==="todo").length;
+  let home="today"; try{ home=localStorage.getItem("lpc_jb_home")==="due"?"due":"today"; }catch(e){}
+  m.appendChild(el("div","lbl2","More"));
+  const item=(title,desc,go)=>{ const b=el("button","morerow"); b.innerHTML="<b>"+esc(title)+"</b><span>"+esc(desc)+"</span>"; b.onclick=()=>{ S.view=go; if(go==="due") setBand(""); window.scrollTo(0,0); render(); }; m.appendChild(b); };
+  item("All lists","Every section, the filters, Work reminders and Text the next N (the old Due screen)","due");
+  item("Leads","Business prospects","leads");
+  item("Recheck and nudge","People who haven't replied","recheck");
+  if(nTodo) item("Need a repeat set ("+nTodo+")","Jobs with no repeat yet","todo");
+  item("Setup","Upload from this Mac, back up, log out","sync");
+  m.appendChild(el("div","lbl2","Open the Job Book on"));
+  const row=el("div","btns");
+  [["today","Today"],["due","All lists"]].forEach(([k,lab])=>{ const b=el("button","chip",lab); b.setAttribute("aria-pressed",String(home===k));
+    b.onclick=()=>{ try{ localStorage.setItem("lpc_jb_home",k); }catch(e){} render(); toast("It will open on "+lab+"."); }; row.appendChild(b); });
+  m.appendChild(row);
+}
 function viewDue(m,L){
   const unc=unconfirmed(), rem=reminders().filter(x=>x.r.on<=TODAY);
   const nTodo=L.filter(l=>band(l)==="todo").length;
