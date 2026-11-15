@@ -85,6 +85,26 @@ def extract_pdf_text(data):
     return "\n".join(parts)
 
 
+WORD = re.compile(r"\.(docx?|rtf|odt)$", re.I)
+
+
+def extract_word(data, name):
+    """Word (.doc, .docx), RTF and OpenDocument files: macOS's own textutil turns them into plain text (nothing to install)."""
+    ext = (os.path.splitext(name)[1] or ".doc").lower()
+    d = tempfile.mkdtemp(prefix="lpc-docsum-w-")
+    p = os.path.join(d, "document" + ext)
+    try:
+        with open(p, "wb") as f:
+            f.write(data)
+        r = subprocess.run(["/usr/bin/textutil", "-convert", "txt", "-stdout", p], capture_output=True, text=True, timeout=60)
+        return r.stdout if r.returncode == 0 else ""
+    finally:
+        try:
+            os.remove(p); os.rmdir(d)
+        except OSError:
+            pass
+
+
 def good_output(s):
     """The reply must be dot points of a sensible length, or we try again."""
     return bool(s) and 60 <= len(s) <= 3500 and s.lstrip().startswith("•") and s.count("•") >= 2
@@ -143,14 +163,17 @@ def save_state(s):
 def summarise_one(api, doc, ask=ask_claude, extract=extract_pdf_text, dry=False):
     """Returns the bullets saved (or printed when dry)."""
     name = doc.get("name") or "document"
-    if not re.search(r"\.pdf$", name, re.I) and not str(doc.get("path", "")).lower().endswith(".pdf"):
-        bullets = "• This isn't a PDF, so no summary was written. Open the file to read it."
+    pth = str(doc.get("path", ""))
+    is_pdf = bool(re.search(r"\.pdf$", name, re.I) or pth.lower().endswith(".pdf"))
+    is_word = bool(WORD.search(name) or WORD.search(pth))
+    if not is_pdf and not is_word:
+        bullets = "• This isn't a PDF or Word file, so no summary was written. Open the file to read it."
         text_ok = False
     else:
         data = api.download(doc["path"])
-        text = extract(data)
+        text = extract(data) if is_pdf else extract_word(data, name if WORD.search(name) else pth)
         if len(text.strip()) < 200:
-            bullets = "• This looks like a scanned PDF with no readable text, so no summary was written. Open the file to read it."
+            bullets = "• This looks like a scanned file with no readable text, so no summary was written. Open the file to read it."
             text_ok = False
         else:
             bullets = ask(text[:MAX_CHARS]); text_ok = True
