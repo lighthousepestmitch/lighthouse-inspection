@@ -279,6 +279,10 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 .row.tdy .rowtext .nm,.row.tdy .rowtext .mt{white-space:normal;overflow:visible;text-overflow:clip}
 .row.tdy .rowtext .mt.facts{line-height:1.45}.fx{display:inline-block;white-space:nowrap}
 .row.tdy .iact{width:42px;height:42px}
+@media(max-width:400px){.row.tdy .iact{width:38px;height:38px}.row.tdy .acts{gap:3px;padding:0 4px 0 2px}}
+.logline{display:flex;align-items:center;gap:10px;padding:9px 2px;font-size:14px;border-bottom:1px solid var(--line)}
+.logline input{width:20px;height:20px;flex:0 0 auto}
+.undobar{display:flex;align-items:center;gap:10px;justify-content:space-between}.undobar .btn{flex:0 0 auto;min-width:0;padding:8px 16px}
 .facts{font-size:13px}
 .morerow{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:14px;margin:8px 0;border:1px solid var(--line);border-radius:12px;background:var(--card,transparent);color:inherit;font:inherit;min-height:48px}
 .morerow span{font-size:13px;opacity:.7}
@@ -319,7 +323,7 @@ button.alertbar[aria-expanded="true"] .chev{transform:rotate(90deg)}
 <script>
 (function(){
 "use strict";
-const BUILD="2026-11-15b";
+const BUILD="2026-11-15c";
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const n=document.createElement(t);
   if(c)n.className=c; if(x!=null)n.textContent=x; return n;};
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -406,7 +410,7 @@ function clientPids(cid){ if(!PIDIDX){ PIDIDX=new Map();
 /* the newest text or email sent from this page for that client (a day), not a review ask and not one still unconfirmed */
 function logOut(cid){ let best=null;
   for(const pid of clientPids(cid)) for(const e of ((S.ov[pid]||{}).log||[])){
-    if((e.ch!=="text"&&e.ch!=="email")||e.kind==="review"||e.st==="drafted") continue;
+    if(!["text","email","call","inperson"].includes(e.ch)||e.kind==="review"||e.st==="drafted") continue;     // a ring or a chat in person counts as contact too
     const d=iso(new Date(e.t)); if(!best||d>best.d) best={d,ch:e.ch}; }
   return best; }
 /* the last thing he sent them, from anywhere: the history file, the older contacted.json day, and what went from this page since */
@@ -418,7 +422,7 @@ function lastOutOf(cid){
   return best; }
 /* "Mon 2 Nov, text (0432 181 689)" */
 function lastText(cid,today){ const lo=lastOutOf(cid); if(!lo) return "";
-  const how=lo.ch==="email"?"email":lo.ch==="text"?"text":"", v=fmtVia(lo.via);
+  const how=lo.ch==="email"?"email":lo.ch==="text"?"text":lo.ch==="call"?"call":lo.ch==="inperson"?"in person":"", v=fmtVia(lo.via);
   return dayNice(lo.t,today)+(how?", "+how:"")+(v?" ("+v+")":""); }
 /* null, or the warning when the last thing he sent them is under 30 days old: {n, ch, text:"Texted 2 days ago"} */
 function warnFor(cid,today){
@@ -604,7 +608,7 @@ function wipeData(){
   A.gen++; A.starting=false;
   S.ready=false; S.clients={}; S.props={}; S.jobs={}; S.due=[]; S.replies={}; S.asked={}; S.contacted={};
   S.hidx={}; S.hist={}; S.histP={}; S.nudges={}; S.stop={}; S.nudge={}; PIDIDX=null;
-  S.ov={}; S.bookings={}; S.gone={}; S.camp={}; S.dncBack={}; S.stack.length=0; drawSheet();
+  S.ov={}; S.bookings={}; S.gone={}; S.camp={}; S.dncBack={}; S.reg={}; S.stack.length=0; drawSheet();
   ["#s-fresh","#s-over","#s-soon"].forEach(id=>{ const n=$(id); if(n) n.textContent="-"; });
 }
 async function signOut(){
@@ -740,7 +744,7 @@ async function loadAll(gen){
   for(const id in S.clients) if(!has.has(id)){ const c=S.clients[id];
     S.props[id+"::main"]={c:id,l:(c.a||[]).filter(Boolean).slice(0,2).join(", ")||"(no address)",n:0}; }
   const mine=STORE.read();
-  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK; S.lead=mine.lead||{}; S.dncBack=mine.dncBack||{}; S.nudge=mine.nudge||{};
+  S.ov=mine.ov||{}; S.bookings=mine.bookings||{}; S.gone=mine.gone||{}; S.reviewLink=mine.reviewLink||REVIEW_LINK; S.lead=mine.lead||{}; S.dncBack=mine.dncBack||{}; S.nudge=mine.nudge||{}; S.reg=mine.reg||{};
   /* the campaign's do-not-contact people are hidden exactly like a deleted client (off every list), with their reason, unless he brought them back */
   for(const id in S.camp){ const c=S.camp[id]; if(c&&c.x&&S.clients[id]&&!S.gone[id]&&!S.dncBack[id]) S.gone[id]={t:(S.camp[id].e||TODAY),why:c.o||"do not contact"}; }
   /* the stop list (stoplist.json, matched to clients by tools/import_history.py) is hidden the same way */
@@ -763,7 +767,7 @@ function applyHashOnce(){
 /* every write goes through here: updates memory first so the screen is never a lie,
    then persists. A failed write shouts instead of failing silently. */
 function persist(){
-  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,dncBack:S.dncBack,nudge:S.nudge,lead:S.lead,reviewLink:S.reviewLink,at:new Date().toISOString()});
+  const ok=STORE.write({ov:S.ov,bookings:S.bookings,gone:S.gone,dncBack:S.dncBack,nudge:S.nudge,reg:S.reg,lead:S.lead,reviewLink:S.reviewLink,at:new Date().toISOString()});
   if(!ok) toast("Couldn't save to this device. If you're in a private window, storage is turned off.",true);
   return ok;
 }
@@ -1168,10 +1172,14 @@ function lines(){
     const o=S.ov[d.p]||{}, so=(o.svc&&o.svc[d.s])||{};
     if(so.skip||S.gone[pOf(d.p).c]||S.gone[d.p]) continue;      // a deleted client, or a deleted address (S.gone holds both)
     const interval=so.interval!==undefined?normIv(so.interval):normIv(d.iv);
-    const lastDone=so.lastDone||d.ld;
+    /* his own mark of the day it was done against the date Xero gives: his mark stays, unless a job more than SAME_JOB_DAYS newer came through
+       Xero since (then his old mark and any date he hand-picked are dropped and the invoice leads). An invoice a few days after his mark is the
+       same job (he marks it done, then invoices it), so his date stays. */
+    const stale=!!(so.lastDone&&d.ld&&days(so.lastDone,d.ld)>SAME_JOB_DAYS);
+    const lastDone=so.lastDone&&!stale?so.lastDone:(d.ld||so.lastDone);
     let nextDue;
-    if(so.nextDue!==undefined) nextDue=so.nextDue;                       // hand-picked date wins
-    else if(so.interval!==undefined) nextDue=lastDone&&monthsOf(interval)?addMonths(lastDone,monthsOf(interval)):null;
+    if(so.nextDue!==undefined&&!stale) nextDue=so.nextDue;               // hand-picked date wins
+    else if(so.interval!==undefined||(so.lastDone&&!stale)) nextDue=lastDone&&monthsOf(interval)?addMonths(lastDone,monthsOf(interval)):null;
     else nextDue=d.nd;
     // told = Mitch set this interval himself (his named-client list, one the client confirmed, or a change in the app)
     const told=so.interval!==undefined||/^(your list|client confirmed)/.test(String(d.src||""));
@@ -1639,7 +1647,7 @@ function setBand(k){ S.band=k; S.fopen={}; S.fseed=!!k; }
    hear back, what is coming up, and a catch-all. Built from the same rows as All lists (dueRows), so nothing is lost: the old Due screen is unchanged under
    More > All lists. A regular is a client he starred or un-starred (S.reg, the star button comes in the next step), else an active client with an interval he
    set himself in his named list (the data's own src, NOT the saved overrides, which "Did this one today" fills with defaults) or 3+ job days in 3 years. */
-const REGULAR_MIN_JOBS=3, REGULAR_LEAD_DAYS=10, DONOW_LEAD_DAYS=7, LATE_MAX_DAYS=92, WAIT_DAYS=14, SOON_DAYS=30, REPLY_DAYS=14, TODAY_SHOWN=15;
+const SAME_JOB_DAYS=14, BOOKED_PAST_DAYS=14, REGULAR_MIN_JOBS=3, REGULAR_LEAD_DAYS=10, DONOW_LEAD_DAYS=7, LATE_MAX_DAYS=92, WAIT_DAYS=14, SOON_DAYS=30, REPLY_DAYS=14, TODAY_SHOWN=15;
 let REGIDX=null;
 function regIndex(){
   if(REGIDX) return REGIDX;
@@ -1655,17 +1663,29 @@ function isRegular(cid){
   const c=S.clients[cid]; if(!c||(c.g!=="active"&&c.g!=="barrier")) return false;
   const x=regIndex(); return x.told.has(cid)||((x.jobs.get(cid)||new Set()).size>=REGULAR_MIN_JOBS);
 }
+/* the earliest day he said he booked this row's address in, unless a job was done on or after that day since (then the booking is used up) */
+function bookedOf(r){
+  let best=null;
+  for(const pid of new Set([r.pid].concat((r.lines||[]).map(l=>l.pid)))){
+    const b=(S.ov[pid]||{}).booked; if(!b||!b.on) continue;
+    const ld=(r.lines||[]).filter(l=>l.pid===pid).reduce((m,l)=>l.lastDone&&l.lastDone>m?l.lastDone:m,"");
+    if(ld&&ld>=b.on) continue;
+    if(!best||b.on<best) best=b.on; }
+  return best;
+}
 function todayInfo(r){
   const cid=r.cid||pOf(r.pid).c, n=r.nextDue?days(TODAY,r.nextDue):null, lo=lastOutOf(cid), h=S.hidx[cid]||{};
   const sinceOut=lo?days(dayOf(lo.t),TODAY):null;
   const replied=!!(h.li&&(!lo||dayOf(h.li)>dayOf(lo.t))&&days(dayOf(h.li),TODAY)<=REPLY_DAYS);
-  return {cid,n,lo,replied,reg:isRegular(cid),waiting:sinceOut!==null&&sinceOut<WAIT_DAYS};
+  const bk=bookedOf(r);
+  return {cid,n,lo,replied,reg:isRegular(cid),waiting:sinceOut!==null&&sinceOut<WAIT_DAYS,
+    booked:bk&&bk>=TODAY?bk:null, bookedPast:bk&&bk<TODAY&&days(bk,TODAY)<=BOOKED_PAST_DAYS?bk:null};
 }
 function todayGroups(rows){
   const best=new Map();            // one row per client address: a client with several services at one address shows once, on its earliest
   rows.forEach(r=>{ const k=(r.cid||pOf(r.pid).c)+"|"+((r.sites||[]).length>1?"multi":r.pid); const o=best.get(k);
     if(!o||String(r.nextDue||"9")<String(o.nextDue||"9")) best.set(k,r); });
-  const g={reg:[],now:[],wait:[],soon:[],other:[]};
+  const g={reg:[],now:[],book:[],wait:[],soon:[],other:[]};
   for(const r of best.values()){
     const t=todayInfo(r), n=t.n; r._t=t;
     let k="other";
@@ -1677,9 +1697,11 @@ function todayGroups(rows){
       else if(t.replied&&n<=SOON_DAYS) k="now";                 // they wrote back: it should not sit in a quiet list
       else if(n>(t.reg?REGULAR_LEAD_DAYS:DONOW_LEAD_DAYS)&&n<=SOON_DAYS) k="soon";
     }
+    if(t.booked) k="book";                                       // he booked it in: out of the to-do lists, with the date
+    else if(t.bookedPast) k="now";                               // the booked day has gone and nobody said it was done: ask
     g[k].push(r);
   }
-  const ord=(a,b)=>((b._t.replied?1:0)-(a._t.replied?1:0))||String(a.nextDue||"9").localeCompare(String(b.nextDue||"9"));
+  const ord=(a,b)=>((b._t.replied?1:0)-(a._t.replied?1:0))||String(a._t.booked||a.nextDue||"9").localeCompare(String(b._t.booked||b.nextDue||"9"));
   Object.keys(g).forEach(k=>g[k].sort(ord));
   return g;
 }
@@ -1691,7 +1713,8 @@ function todayRow(r){
     const l1=el("div","mt"); l1.textContent=(multi?r.sites.length+" sites":c.n)+" · "+jobsLabel(r); tx.appendChild(l1);
     /* three facts, each kept whole so a narrow phone wraps between them and never cuts the Next date off; the number or address he sent from is left to the client sheet */
     const l2=el("div","mt facts");
-    ["Done "+nice(r.lastDone),"Contacted "+(t.lo?lastText(t.cid,TODAY).replace(/ \([^)]*\)$/,""):"No record"),"Next "+nice(r.nextDue)].forEach((p,i)=>{
+    ["Done "+nice(r.lastDone),"Contacted "+(t.lo?lastText(t.cid,TODAY).replace(/ \([^)]*\)$/,""):"No record"),
+      t.booked?"Booked "+nice(t.booked):t.bookedPast?"Booked "+nice(t.bookedPast)+", done?":"Next "+nice(r.nextDue)].forEach((p,i)=>{
       if(i) l2.appendChild(document.createTextNode(" · ")); l2.appendChild(el("span","fx",p)); });
     tx.appendChild(l2);
     if(t.reg){ const nm=tx.querySelector(".nm"); if(nm){ const st=el("span","regstar"); st.innerHTML=ico(SVG.star); st.title="Regular client"; nm.insertBefore(st,nm.firstChild); } }
@@ -1699,7 +1722,9 @@ function todayRow(r){
   }
   row.classList.add("tdy");
   const a=row.querySelector(".acts");                          // Text and Ring stay. Email stays only when there is no mobile to text. Delete lives on the client sheet.
-  if(a){ const kids=[...a.children]; if(canText(c)&&kids[2]) kids[2].remove(); if(kids[3]) kids[3].remove(); }
+  if(a){ const kids=[...a.children]; if(canText(c)&&kids[2]) kids[2].remove(); if(kids[3]) kids[3].remove();
+    const lg=el("button","iact"); lg.innerHTML=ico(SVG.tick); lg.title="Log it"; lg.setAttribute("aria-label","Log it for "+(multi?c.n:(pOf(r.pid).l||c.n)));
+    lg.onclick=e=>{ e.stopPropagation(); openSheet(logSpec(r)); }; a.appendChild(lg); }
   return row;
 }
 function todayGroup(host,key,title,rows,openDefault){
@@ -1721,16 +1746,146 @@ function viewToday(m,L){
   if(unc.length){ const b=el("button","banner warn alertbar"); b.textContent=unc.length+" message"+(unc.length===1?"":"s")+" opened but not confirmed sent. Tap to sort them out."; b.onclick=()=>openUnconfirmed(); m.appendChild(b); }
   if(rem.length){ const b=el("button","banner ok alertbar"); b.textContent=rem.length+" reminder"+(rem.length===1?"":"s")+" you set "+(rem.length===1?"has":"have")+" come around. Tap to open."; b.onclick=()=>openReminders(); m.appendChild(b); }
   if(nTodo){ const b=el("button","banner warn alertbar"); b.textContent=nTodo+" job"+(nTodo===1?" has":"s have")+" no repeat set. Tap to sort them."; b.onclick=()=>{ S.view="todo"; window.scrollTo(0,0); render(); }; m.appendChild(b); }
-  m.appendChild(el("div","todaysum",g.reg.length+" regulars to remind · "+g.now.length+" to do · "+g.wait.length+" waiting to hear back"));
+  m.appendChild(el("div","todaysum",g.reg.length+" regulars to remind · "+g.now.length+" to do · "+(g.book.length?g.book.length+" booked · ":"")+g.wait.length+" waiting to hear back"));
   const ls=S.sync&&S.sync.lastSyncedDate, hm=S.histMade?dayOf(S.histMade):"", stale=x=>!!x&&days(x,TODAY)>3, old=stale(ls)||stale(hm);
   m.appendChild(el("div","hint"+(old?" stale":""),"Invoices to "+nice(ls)+" · Texts and emails to "+(hm?nice(hm):"unknown")+(old?". Ask Claude to update the Job Book.":"")));
   todayGroup(m,"reg","Regulars to remind",g.reg,true);
   todayGroup(m,"now","Do now",g.now,true);
   if(!g.reg.length&&!g.now.length){ const e=el("div","empty"); e.innerHTML="<h3>Nothing to do right now</h3><p>Nobody needs a text or call today.</p>"; m.appendChild(e); }
+  if(g.book.length) todayGroup(m,"book","Booked in",g.book,true);
   todayGroup(m,"wait","Waiting to hear back",g.wait,false);
   todayGroup(m,"soon","Coming up (next 30 days)",g.soon,false);
   todayGroup(m,"other","Everything else",g.other,false);
   m.appendChild(el("div","note","Every client is still in More, All lists. Nothing has been taken away."));
+}
+/* ---------- LOG IT (15 Nov 2026) ----------
+   One sheet for the three things he does: did the job, contacted them, booked it in. WHEN can be earlier than today. Saving shows an Undo for 8 seconds.
+   It never writes a repeat unless he picks one: "Did the job" only sets the day it was done, and the next date comes from the repeat already there.
+   The same sheet has the star: make someone a regular, or take them off (S.reg, his choice beats the automatic rule). */
+const plusDays=(d,n)=>{ const x=parse(d); x.setDate(x.getDate()+n); return iso(x); };
+function snapLog(pids,cid){
+  return {cid,ov:pids.map(p=>[p,JSON.parse(JSON.stringify(S.ov[p]||null))]),reg:S.reg[cid]===undefined?undefined:JSON.parse(JSON.stringify(S.reg[cid]))};
+}
+function restoreLog(s,silent){
+  s.ov.forEach(([p,o])=>{ if(o) S.ov[p]=o; else delete S.ov[p]; });
+  if(s.reg===undefined) delete S.reg[s.cid]; else S.reg[s.cid]=s.reg;
+  if(!silent&&!persist()) return false;
+  render(); return true;
+}
+let UNDO_BAR=null;
+function undoToast(msg,undo){
+  if(UNDO_BAR){ UNDO_BAR.remove(); UNDO_BAR=null; }
+  const t=el("div","banner ok undobar"); t.appendChild(el("span",null,msg));
+  const u=el("button","btn",null); u.textContent="Undo";
+  const kill=setTimeout(()=>{ t.remove(); if(UNDO_BAR===t) UNDO_BAR=null; },8000);
+  u.onclick=()=>{ clearTimeout(kill); t.remove(); UNDO_BAR=null; undo(); toast("Undone."); };
+  t.appendChild(u);
+  Object.assign(t.style,{position:"fixed",left:"14px",right:"14px",bottom:"calc(66px + env(safe-area-inset-bottom))",zIndex:99,maxWidth:"540px",margin:"0 auto",boxShadow:"0 6px 24px rgba(0,0,0,.25)"});
+  document.body.appendChild(t); UNDO_BAR=t;
+}
+function logRow(pid){                              // from a client sheet: the same facts a Today row carries
+  const ls=lines().filter(l=>l.pid===pid), v=ls.length?visits(ls).sort((a,b)=>(a.nextDue||"9").localeCompare(b.nextDue||"9"))[0]:null;
+  return {pid,cid:pOf(pid).c,lines:ls,nextDue:v&&v.nextDue,sites:[pid]};
+}
+function logSpec(r){
+  const cid=r.cid||pOf(r.pid).c, c=S.clients[cid]||cOf(r.pid);
+  const lns=(r.lines&&r.lines.length)?r.lines:lines().filter(l=>l.pid===r.pid);
+  const pids=[...new Set([r.pid].concat(lns.map(l=>l.pid)))];
+  const multi=pids.length>1, addr=multi?pids.length+" addresses":(pOf(r.pid).l||"");
+  const t=r._t||todayInfo(Object.assign({},r,{lines:lns}));
+  return {title:"Log it",sub:c.n+(addr?" · "+addr:""),build:b=>{
+    let what="done", how="text", when=t.bookedPast||TODAY;
+    const first=lns.map(l=>l.nextDue).filter(Boolean).sort()[0];
+    const ticked=new Map(lns.map((l,i)=>[i,!first||!l.nextDue||Math.abs(days(first,l.nextDue))<=45]));   // the services due together are ticked, the rest are not
+    let pickIv="";
+    const top=el("div","ivgrid"), mid=el("div"), foot=el("div");
+    const labelOf=l=>{ const f=FAM[l.svc], nm=f&&SHORT[f]?SHORT[f]:String(l.svc).replace(/ Treatment$/,"");
+      return (multi?(pOf(l.pid).l||"").split(",")[0]+": ":"")+nm+(monthsOf(l.interval)?" · "+ivShort(l.interval):" · no repeat set"); };
+    function drawTop(){
+      top.innerHTML="";
+      [["done","Did the job"],["contact","Contacted them"],["book","Booked in"]].forEach(([k,lab])=>{
+        const x=el("button","iv",lab); x.setAttribute("aria-pressed",String(what===k));
+        x.onclick=()=>{ what=k; if(k==="book"&&when<TODAY) when=TODAY; drawTop(); drawMid(); }; top.appendChild(x); });
+    }
+    function drawMid(){
+      mid.innerHTML="";
+      mid.appendChild(el("div","lbl",what==="book"?"Booked for":"When"));
+      const d=el("input","inp"); d.type="date"; d.value=when; d.onchange=()=>{ if(d.value) when=d.value; }; mid.appendChild(d);
+      const q=el("div","ivgrid");
+      (what==="book"?[["Tomorrow",1],["In a week",7],["In 2 weeks",14]]:[["Today",0],["Yesterday",-1],["2 days ago",-2]]).forEach(([lab,n])=>{
+        const x=el("button","iv",lab); x.onclick=()=>{ when=plusDays(TODAY,n); d.value=when; }; q.appendChild(x); });
+      mid.appendChild(q);
+      if(what==="done"){
+        mid.appendChild(el("div","lbl","What was done"));
+        lns.forEach((l,i)=>{ const row=el("label","logline"), cb=document.createElement("input"); cb.type="checkbox"; cb.checked=ticked.get(i);
+          cb.onchange=()=>{ ticked.set(i,cb.checked); drawMid(); }; row.appendChild(cb); row.appendChild(el("span",null,labelOf(l))); mid.appendChild(row); });
+        if(!lns.length) mid.appendChild(el("div","note","Nothing on the list for this one yet. Set a repeat from the client page first."));
+        const need=lns.filter((l,i)=>ticked.get(i)&&!monthsOf(l.interval));
+        if(need.length){ mid.appendChild(el("div","lbl","How often does it come back?"));
+          const sel=el("select","inp sel"), ph=document.createElement("option"); ph.value=""; ph.textContent="Pick one (or leave it)"; sel.appendChild(ph);
+          INTERVAL_GROUPS.filter(g=>g.label!=="Years"||need.some(l=>isBarrierSvc(l.svc))).forEach(g=>{ const og=document.createElement("optgroup"); og.label=g.label;
+            g.items.forEach(o=>{ const op=document.createElement("option"); op.value=o.k; op.textContent=o.k; if(pickIv===o.k) op.selected=true; og.appendChild(op); }); sel.appendChild(og); });
+          sel.onchange=()=>{ pickIv=sel.value; }; mid.appendChild(sel); }
+        mid.appendChild(el("div","note","The next date comes from the repeat already set. Change the repeat on the client page."));
+      }
+      if(what==="contact"){
+        mid.appendChild(el("div","lbl","How"));
+        const seg=el("div","ivgrid");
+        [["text","Text"],["email","Email"],["call","Phone call"],["inperson","In person"]].forEach(([k,lab])=>{
+          const x=el("button","iv",lab); x.setAttribute("aria-pressed",String(how===k));
+          x.onclick=()=>{ how=k; seg.querySelectorAll(".iv").forEach(y=>y.setAttribute("aria-pressed",String(y.textContent===lab))); }; seg.appendChild(x); });
+        mid.appendChild(seg);
+        mid.appendChild(el("div","note","This only puts it on the record. It does not send anything."));
+      }
+      const row=el("div","btns");
+      row.appendChild(btn("Save it",SVG.tick,"pri",()=>save()));
+      mid.appendChild(row);
+    }
+    function save(){
+      if(!when){ toast("Pick a date first.",true); return; }
+      const snap=snapLog(pids,cid), now=new Date().toISOString();
+      if(what==="done"){
+        const picked=lns.filter((l,i)=>ticked.get(i));
+        if(!picked.length){ toast("Tick what was done.",true); return; }
+        const mutate=()=>pids.forEach(p=>{
+          const o=S.ov[p]||{}, svc=Object.assign({},o.svc), mine=picked.filter(l=>l.pid===p); if(!mine.length) return;
+          mine.forEach(l=>{ const x=Object.assign({},svc[l.svc],{lastDone:when}); delete x.nextDue;
+            if(pickIv&&!monthsOf(l.interval)) x.interval=pickIv; svc[l.svc]=x; });
+          const patch={svc}; if(o.booked&&o.booked.on<=(when>TODAY?when:TODAY)) patch.booked=null;   // the booking is used up
+          S.ov[p]=Object.assign({},o,patch); });
+        commitLog(snap,mutate,"Marked as done "+(when===TODAY?"today":nice(when))+".");
+      } else if(what==="contact"){
+        const at=when===TODAY?now:new Date(when+"T12:00:00").toISOString();
+        const mutate=()=>{ const o=S.ov[r.pid]||{}; S.ov[r.pid]=Object.assign({},o,{log:[{id:uid(),t:at,ch:how,st:"sent",manual:true}].concat(o.log||[]).slice(0,40)}); };
+        commitLog(snap,mutate,"Put on the record.");
+      } else {
+        const mutate=()=>pids.forEach(p=>{ S.ov[p]=Object.assign({},S.ov[p],{booked:{on:when,at:now}}); });
+        commitLog(snap,mutate,"Booked in for "+nice(when)+".");
+      }
+    }
+    function drawFoot(){
+      foot.innerHTML="";
+      foot.appendChild(el("div","lbl","Regular client"));
+      const rb=el("button","btn"); const lab=()=>{ const on=isRegular(cid), o=S.reg[cid]; rb.innerHTML=ico(SVG.star)+"<span>"+(on?"Regular client":"Not a regular")+(o&&o.on!==undefined?" (you chose)":" (automatic)")+"</span>"; rb.setAttribute("aria-pressed",String(on)); };
+      lab();
+      rb.onclick=()=>{
+        const s2=snapLog([],cid), next=!isRegular(cid);
+        delete S.reg[cid]; const auto=isRegular(cid);                 // what the automatic rule says: choosing the same thing as it just goes back to automatic
+        if(next!==auto) S.reg[cid]={on:next};
+        if(!persist()){ restoreLog(s2,true); toast("Couldn't save to this device.",true); return; }
+        lab(); render(); undoToast(next?"Made a regular.":"Taken off the regulars.",()=>{ restoreLog(s2); lab(); });
+      };
+      foot.appendChild(rb);
+      foot.appendChild(el("div","note","Regulars sit in their own box at the top of Today from 10 days before they're due."));
+    }
+    b.appendChild(top); b.appendChild(mid); b.appendChild(foot);
+    drawTop(); drawMid(); drawFoot();
+  }};
+}
+function commitLog(snap,mutate,msg){
+  mutate(); closeSheet(true);
+  if(!persist()){ restoreLog(snap,true); toast("Couldn't save to this device.",true); render(); return; }
+  render(); undoToast(msg,()=>restoreLog(snap));
 }
 function viewMore(m){
   const L=lines(), nTodo=L.filter(l=>band(l)==="todo").length;
@@ -2339,6 +2494,7 @@ function openProp(pid,focusSvc){
     acts.appendChild(btn("Email",SVG.mail,"pri",()=>openMsg(L,"email"),!!c.e));
     b.appendChild(acts);
     const acts2=el("div","btns");
+    acts2.appendChild(btn("Log it",SVG.tick,"pri",()=>openSheet(logSpec(logRow(pid)))));
     acts2.appendChild(btn("Record contact",SVG.note,"",()=>openSheet(recordSpec({pid}))));
     acts2.appendChild(btn("Remind me later",SVG.bell,"",()=>openSheet(remindSpec({pid}))));
     acts2.appendChild(btn("Ask for a review",SVG.star,"",()=>askReview(L),canText(c)));
@@ -3047,7 +3203,7 @@ function viewSync(m){
   const imp=el("input"); imp.type="file"; imp.accept="application/json"; imp.hidden=true;
   imp.onchange=async()=>{ const f=imp.files&&imp.files[0]; if(!f) return;
     try{ const o=JSON.parse(await f.text());
-      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{}; S.lead=o.lead||{}; S.nudge=o.nudge||{};
+      S.ov=o.ov||{}; S.bookings=o.bookings||{}; S.gone=o.gone||{}; S.lead=o.lead||{}; S.nudge=o.nudge||{}; S.reg=o.reg||{};
       S.reviewLink=o.reviewLink||S.reviewLink; persist(); render();
       toast("Brought your changes across."); }
     catch(e){ toast("That file didn't read properly.",true); } };
