@@ -82,9 +82,24 @@ def check_texts(now, home=HOME):
         return {"id": "texts", "label": "Texts and emails copy", "status": "red", "detail": "Last copy was %s. Texts you delete by hand since then are not saved anywhere." % _age(now, last), "when": last.isoformat()}
     return {"id": "texts", "label": "Texts and emails copy", "status": "ok", "detail": "Last copy %s." % _age(now, last), "when": last.isoformat()}
 
+def check_drive(now, home=HOME):
+    """The copy to the Expansion drive (business-context/tools/backup_to_drive.py). Not scheduled: it runs when Mitch double-clicks
+    'Back up to drive' on the Desktop and whenever Claude does 'update the Job Book'. Red when the last good copy is over 3 days old."""
+    p = os.path.join(home, "Backups", "LAST_DRIVE_COPY.json")
+    try:
+        d = json.load(open(p)); when = datetime.datetime.fromisoformat(d["when"]).replace(tzinfo=None)
+    except Exception:
+        return {"id": "drive", "label": "Copy to Expansion drive", "status": "red", "detail": "No copy has been made yet."}
+    if not d.get("ok"):
+        why = d.get("reason") or ("Some folders didn't copy (%s)." % ", ".join((d.get("failed") or []) + (d.get("count_mismatch") or [])))
+        return {"id": "drive", "label": "Copy to Expansion drive", "status": "red", "detail": "%s Last try %s." % (why, _age(now, when)), "when": when.isoformat()}
+    if (now - when).total_seconds() > 3 * 86400:
+        return {"id": "drive", "label": "Copy to Expansion drive", "status": "red", "detail": "Last copy was %s. Plug the drive in and double-click 'Back up to drive' on the Desktop." % _age(now, when), "when": when.isoformat()}
+    return {"id": "drive", "label": "Copy to Expansion drive", "status": "ok", "detail": "Last copy %s." % _age(now, when), "when": when.isoformat()}
+
 def run(now=None, home=HOME):
     now = now or datetime.datetime.now()
-    checks = [check_backup(now, home), check_inbox(now, home), check_texts(now, home)]
+    checks = [check_backup(now, home), check_inbox(now, home), check_texts(now, home), check_drive(now, home)]
     for label, cid in (("com.lighthouse.backup-supabase", "backup"), ("au.com.lighthousepest.inspection-inbox", "inbox"), ("com.lighthouse.texts-copy", "texts")):
         if _loaded(label) is False:
             c = next(x for x in checks if x["id"] == cid); c["status"] = "red"; c["detail"] += " The scheduled job is not loaded."
