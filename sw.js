@@ -15,15 +15,15 @@
    and reloads with it switched off on that device. ?nosw=0 switches it back on. More in tools/offline-notes.md. */
 "use strict";
 
-const VERSION = "2026-11-14a";
+const VERSION = "2026-11-18a";
 const APP = "lpc-app-" + VERSION;
 const THIRD = "lpc-3p-v1";
 const WAIT_MS = 4000;
 const BASE = new URL("./", self.location.href);                       // the lighthouse-inspection/ folder
 const ROOT = BASE.pathname;
 
-// The four pages. A visit to the folder itself (no file name) is Inspection Capture, so it is saved as index.html.
-const PAGES = ["home.html", "index.html", "calendar.html", "records.html"];
+// The five pages (week.html, the Week Book, was added 2026-11-18). A visit to the folder itself (no file name) is Inspection Capture, so it is saved as index.html.
+const PAGES = ["home.html", "index.html", "calendar.html", "records.html", "week.html"];
 // The pages cannot open without these. If one fails to save, this worker does not install (the old one keeps working).
 const CORE = PAGES.concat(["lpc-config.js", "lpc-clients.js", "lpc-sw-banner.js"]);
 // Saved on a best-effort basis: a failure here never stops the install, and they are saved again on the next visit with signal.
@@ -33,7 +33,7 @@ const CORE = PAGES.concat(["lpc-config.js", "lpc-clients.js", "lpc-sw-banner.js"
 const EXTRA = ["home.webmanifest", "start.html", "recover.html", "jobbook-data/settings.json", "jobbook-data/chemicals.json", "jobbook-data/services.json"];
 const OWN = CORE.concat(EXTRA);
 const IMAGES = ["logo/lpc-badge.png", "logo/logo-horizontal.svg", "logo/logo-stacked.svg", "logo/icon-32.png",
-  "logo/icon-home-180.png", "logo/icon-calendar-180.png", "logo/icon-records-180.png", "logo/icon-capture-180.png"];
+  "logo/icon-home-180.png", "logo/icon-calendar-180.png", "logo/icon-records-180.png", "logo/icon-capture-180.png", "logo/icon-week-180.png"];
 // The login library, pinned. Saved with the same integrity hash the pages use, so it still passes their integrity and crossorigin attributes.
 const SB_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js";
 const SB_HASH = "sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF";

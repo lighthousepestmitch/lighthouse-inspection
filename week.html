@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en-AU"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E4F54"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Week Book">
+<title>Lighthouse Week Book</title>
+<link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
+<link rel="apple-touch-icon" href="logo/icon-week-180.png">
+<style>
+/* Look is a placeholder (same palette as Home and the Job Calendar). Mitch brings the design later. */
+:root{--bg:#F6F7F5;--surface:#fff;--ink:#14201E;--ink2:#4B5B57;--ink3:#7E8D88;--line:#DCE1DD;--deep:#0E4F54;--ok:#276B59;--okBg:#E2EFE9;--soon:#8C6314;--soonBg:#F8F0DC;--over:#A23C29;--overBg:#F8E8E3}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 "Public Sans",system-ui,-apple-system,sans-serif;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;padding:0;cursor:pointer}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.wrap{max-width:760px;margin:0 auto;padding:0 12px}
+/* top bar */
+.top{position:sticky;top:0;z-index:5;background:var(--deep);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 12px 8px}
+.top .in{max-width:760px;margin:0 auto}
+.r1{display:flex;align-items:center;gap:10px}
+.r1 img{width:34px;height:34px;border-radius:6px;display:block}
+.r1 h1{margin:0;font-size:1.05rem;flex:1}
+.seg{display:flex;border:1px solid rgba(255,255,255,.55);border-radius:10px;overflow:hidden}
+.seg button{min-height:40px;padding:0 12px;color:#fff;font-weight:600;font-size:.9rem}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--deep)}
+.r2{display:flex;align-items:center;gap:8px;margin-top:8px}
+.r2 .nv{min-width:48px;min-height:44px;border:1px solid rgba(255,255,255,.55);border-radius:10px;color:#fff;font-size:1.3rem;font-weight:700}
+.r2 .tdy{min-height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.55);border-radius:10px;color:#fff;font-weight:600}
+.r2 .rng{flex:1;text-align:center;font-weight:700;font-size:.95rem}
+/* banners */
+.bn{margin:10px 0 0;padding:10px 12px;border-radius:12px;background:var(--soonBg);color:var(--soon);font-size:.92rem}
+.bn.bad{background:var(--overBg);color:var(--over)}
+.bn button{font-weight:700;text-decoration:underline;margin-left:8px;min-height:36px}
+/* day cards */
+.day{margin-top:12px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:8px 10px 10px}
+.day.today{border:2px solid var(--deep)}
+.dh{display:flex;align-items:center;gap:8px;min-height:44px}
+.dh b{flex:1;font-size:1.02rem}
+.dh small{color:var(--ink2);font-size:.85rem}
+.dh .add{min-width:44px;min-height:44px;border-radius:10px;border:1px solid var(--line);font-size:1.4rem;font-weight:700;color:var(--deep)}
+.cols{display:grid;gap:6px}.cols.c2{grid-template-columns:1fr 1fr}
+.col{min-width:0}
+.ch{display:flex;align-items:center;gap:6px;font-weight:700;font-size:.82rem;color:var(--ink2);margin:2px 0 0}
+.ch i{width:10px;height:10px;border-radius:50%;display:inline-block;background:var(--sc,#7E8D88)}
+.sq{display:block;width:100%;text-align:left;margin-top:6px;min-height:52px;padding:7px 10px;border:1px solid var(--line);border-left:6px solid var(--sc,#7E8D88);border-radius:10px;background:#fff;color:var(--ink)}
+.sq .tm{display:block;font-weight:700;font-size:.92rem}
+.sq .ad{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sq .jb{display:block;color:var(--ink2);font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sq.done{opacity:.6}
+.sq.pen{border:2px dashed var(--ink2);border-left:6px dashed var(--sc,#7E8D88);background:#fff}
+.sq.todo{border-style:dashed;background:#fafaf8}
+.sq.free{border:2px dashed var(--ok);background:var(--okBg);color:var(--ok);border-left:2px dashed var(--ok);min-height:48px}
+.sq.free .ad{font-weight:500;font-size:.85rem}
+.c2 .sq{padding:6px 7px}.c2 .sq .tm{font-size:.82rem}.c2 .sq .ad,.c2 .sq .jb{font-size:.8rem}
+.nt{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.nt button{padding:6px 10px;border:1px solid var(--line);border-radius:99px;font-size:.82rem;background:var(--bg);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.emp{color:var(--ink3);font-size:.85rem;margin:6px 0 2px}
+.foot{margin:18px 0 0;text-align:center;color:var(--ink2);font-size:.78rem}
+.foot button{text-decoration:underline;color:inherit;min-height:36px;padding:0 6px}
+/* sheet */
+#shade{position:fixed;inset:0;background:rgba(20,32,30,.45);display:none;z-index:20}
+#shade.on{display:block}
+#sheet{position:fixed;left:0;right:0;bottom:0;max-height:92dvh;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:12px 14px calc(16px + env(safe-area-inset-bottom));z-index:21;display:none}
+#sheet.on{display:block}
+@media(min-width:700px){#sheet{left:50%;right:auto;width:560px;transform:translateX(-50%)}}
+.sh-h{display:flex;align-items:center;gap:8px}
+.sh-h b{flex:1;font-size:1.05rem}
+.sh-h .x{min-width:48px;min-height:48px;font-size:1.6rem;color:var(--ink2)}
+#raw{width:100%;min-height:96px;margin-top:6px;padding:10px 12px;border:1.5px solid var(--line);border-radius:12px;resize:vertical;font-size:16px}
+.lbl{margin:12px 0 4px;font-weight:700;font-size:.85rem;color:var(--ink2)}
+.rd{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rd .f{min-width:0}.rd .f.w{grid-column:1/-1}
+.rd label{display:block;font-size:.75rem;color:var(--ink2);font-weight:600;margin-bottom:2px}
+.rd input{width:100%;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
+.rd input.chk{border-color:var(--soon);background:var(--soonBg)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{min-height:44px;padding:0 14px;border:1.5px solid var(--line);border-radius:99px;font-weight:600;background:#fff}
+.chip[aria-pressed="true"]{background:var(--deep);border-color:var(--deep);color:#fff}
+.chips.scr{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.chips.scr .chip{flex:none}
+#msg{margin-top:10px;font-size:.92rem;color:var(--over);min-height:1px}
+#msg.ok{color:var(--ok)}
+.btns{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;min-height:52px;border:1.5px solid var(--deep);border-radius:12px;font-weight:700;color:var(--deep);background:#fff}
+.btn.pri{background:var(--deep);color:#fff}
+.btn.bad{border-color:var(--over);color:var(--over)}
+.btn:disabled{opacity:.5}
+.kv{display:grid;grid-template-columns:84px 1fr;gap:4px 8px;margin-top:8px}
+.kv dt{color:var(--ink2);font-size:.85rem}.kv dd{margin:0;word-break:break-word}
+#toast{position:fixed;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:30;background:var(--ink);color:#fff;border-radius:12px;padding:12px 14px;display:none;font-size:.95rem}
+#toast.on{display:flex;gap:10px;align-items:center}#toast span{flex:1}
+#toast button{color:#fff;font-weight:700;text-decoration:underline;min-height:36px}
+/* login */
+.lg{max-width:420px;margin:40px auto;padding:0 16px}
+.lg h1{margin:0 0 6px;font-size:1.3rem}.lg p{color:var(--ink2);margin:0 0 14px}
+.lg input{width:100%;min-height:50px;margin:0 0 10px;padding:0 12px;border:1.5px solid var(--line);border-radius:12px;font-size:16px}
+</style></head><body>
+<div id="app"><div class="wrap"><p style="padding:30px 0;color:#4B5B57">Opening the week...</p></div></div>
+<div id="shade"></div><div id="sheet" role="dialog" aria-modal="true"></div><div id="toast" role="status"></div>
+<script src="lpc-config.js?v=2"></script>
+<script src="lpc-sw-banner.js?v=1" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
+<script>
+/* Week Book (Mitch, 2026-11-18). A phone page: the week as simple squares (booked, pencilled, free chunks), and a one-box pencil pad.
+   Reads jobs, staff, service_types and plan_blocks; writes only pencilled (SQL 49) and, for the To do button, one job row of the same shape the
+   Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
+(function(){
+"use strict";
+var BUILD="2026-11-18a";
+var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
+var TECH_START=7*60, TECH_END=15*60+30;   // Andrew's field hours Mon to Fri (Mitch's come from his weekly plan: the "Field Work" blocks)
+var STEP=30;
+var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var LS_WHO="lpc_week_who",LS_DRAFT="lpc_week_draft";
+var FIELDS=["name","phone","email","job","address","notes"];
+var JOB_COLS="id,job_date,start_time,duration_min,staff_id,status,service_type,address,notes,client:clients(name)";
+var S={sb:null,me:null,staff:[],types:[],plan:[],jobs:[],pen:[],ws:"",who:"both",from:"",to:"",loaded:false,err:"",starting:false,draft:null};
+var SH=null,toastT=0,lastVis=0;
+
+/* ---------- small helpers ---------- */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function trim(s){return String(s==null?"":s).trim();}
+function nn(s){s=trim(s);return s?s:null;}
+function pad(n){return (n<10?"0":"")+n;}
+function ymd(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());}
+function parseYmd(s){var p=String(s).split("-");return new Date(+p[0],+p[1]-1,+p[2],12,0,0);}
+function addDays(s,n){var d=parseYmd(s);d.setDate(d.getDate()+n);return ymd(d);}
+function today(){return ymd(new Date());}
+function mondayOf(s){var d=parseYmd(s);d.setDate(d.getDate()-((d.getDay()+6)%7));return ymd(d);}
+function tm(s){if(s==null||s==="")return null;var m=/^(\d{1,2}):(\d{2})/.exec(String(s));return m?(+m[1])*60+(+m[2]):null;}
+function minToTm(m){return pad(Math.floor(m/60))+":"+pad(m%60)+":00";}
+function suf(m){return Math.floor(m/60)%24>=12?"pm":"am";}
+function hm(m){var h=Math.floor(m/60)%24;return (h%12||12)+":"+pad(m%60);}
+function fmtT(m){return hm(m)+suf(m);}
+function fmtRange(a,b){return suf(a)===suf(b)?hm(a)+"–"+hm(b)+suf(b):fmtT(a)+"–"+fmtT(b);}
+function fmtLen(m){if(m<60)return m+"m";var h=Math.round(m/30)/2;return h+"h";}
+function dayLbl(s){var d=parseYmd(s);return DOW[d.getDay()]+" "+d.getDate()+" "+MON[d.getMonth()];}
+function firstWord(s){return trim(s).split(/\s+/)[0]||"";}
+function safeColour(c){return /^#[0-9a-fA-F]{3,8}$/.test(String(c||""))?c:"#7E8D88";}
+function titleCase(s){return s===s.toLowerCase()?s.replace(/\b([a-z])/g,function(m){return m.toUpperCase();}):s;}
+
+/* ---------- the reader: one box of words in, name / phone / email / job / address / length out ----------
+   Plain code, no AI, works with no signal. It only fills what it is sure of; anything it can't place is left for Mitch to fix (unsure).
+   Order: email, phone, length, job words (taken out of the text), then what is left is split into name and address. */
+var STREET="st|street|rd|road|ave|av|avenue|dr|drive|ct|court|cres|crescent|pl|place|ln|lane|pde|parade|cl|close|way|hwy|highway|tce|terrace|blvd|boulevard|cct|circuit|esp|esplanade|sq|square|trl|trail|pwy|parkway|rise|row|grove|gr|walk|loop|lookout|ridge|view|vista";
+var STREET_RE=new RegExp("\\b(?:"+STREET+")\\b\\.?","i");
+var ALIASES=[
+  [/\bpre[\s-]?purchase(?:\s+inspection)?\b|\bppi\b|\bbuilding\s*(?:and|&)\s*pest\b|\bb\s*&\s*p\b/ig,"pre-purchase"],
+  [/\bpre[\s-]?con(?:struction)?(?:\s+barrier)?\b|\bunder\s?slab\b|\bslab\s+barrier\b/ig,"pre-construction"],
+  [/\bpost[\s-]?con(?:struction)?(?:\s+barrier)?\b/ig,"post-construction"],
+  [/\bcombo\b|\bpest\s*(?:and|&|\+)\s*termite\b|\btermite\s*(?:and|&|\+)\s*pest\b/ig,"COMBO"],
+  [/\btermite\s+(?:treatment|nest)\b|\bactive\s+termites?\b/ig,"termite treatment"],
+  [/\btermites?\s+(?:inspection|insp|check)\b|\btermites?\b|\bti\b|\bt\/i\b/ig,"termite inspection"],
+  [/\bgeneral\s*pest(?:\s*(?:treatment|control))?\b|\bpest\s*(?:treatment|control|spray)\b|\bgp\b|\bpest\b/ig,"general pest"],
+  [/\b(?:rodents?|rats?|mice|mouse)(?:\s+baiting)?\b/ig,"rodent"],
+  [/\bcock?roach(?:es)?\b|\bcockies\b|\broach(?:es)?\b/ig,"cockroach"],
+  [/\bants?\b/ig,"ant"],[/\bspiders?\b/ig,"spider"],[/\b(?:wasps?|bees?|hornets?)\b/ig,"wasp"],[/\bfleas?\b/ig,"flea"],
+  [/\bmozzies?\b|\bmosquito(?:es)?\b/ig,"mosquito"],[/\bbed\s*bugs?\b/ig,"bed bug"],[/\bnemesis\b/ig,"nemesis"],[/\btrelona\b/ig,"trelona"]
+];
+// An address on one line can run on into other words ("45 Granuaille Rd Bangalow nest out the back"). After the street word, cut at the end of a known
+// local suburb; with no known suburb, cut at the first word that is plainly not part of a place name. Returns [address, the rest].
+var SUBURBS=["west ballina","east ballina","south ballina","ballina","byron bay","byron","lennox head","lennox","bangalow","brunswick heads","brunswick","mullumbimby","mullum","ocean shores","alstonville","suffolk park","skinners shoot","wilsons creek","ewingsdale","clunes","mcleods shoot","newrybar","federal","lismore","tyagarah","broken head","possum creek","myocum","coopers shoot","tintenbar","wollongbar","knockrow","billinudgel","sunrise","goonellabah","teven","cumbalum","pimlico","brooklet","nashua","eltham","dunoon","coorabell","kyogle","tweed heads","casino","evans head","bangalow","binna burra","coolamon","montecollum","upper main arm","main arm","huonbrook","mt burrell","wooyung","yelgun","tyalgum","uki","murwillumbah","kingscliff","wardell","meerschaum vale","rous mill","rous","richmond hill","girards hill","lindendale","modanville","clunes","bexhill","whian whian","repentance creek","the pocket","nimbin","larnook","booyong","fernside","bungawalbin"].sort(function(a,b){return b.length-a.length;});
+var STOPW=/^(?:wants?|wanted|needs?|needed|about|please|can|could|would|asap|urgent|this|next|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|tues|wed|thu|thur|thurs|fri|sat|sun|morning|arvo|afternoon|after|before|prefers?|call|ring|text|dog|dogs|gate|code|key|she|he|they|has|have|is|are|with|also|nest|out|back|front|says?|said|rang|reckons?|thinks?|seen|saw|there|some|bad|big|lots?|too)$/i;
+function cutAddress(a){
+  var m=STREET_RE.exec(a),from=m?m.index+m[0].length:0,tail=a.slice(from),low=tail.toLowerCase();
+  for(var i=0;i<SUBURBS.length;i++){
+    var re=new RegExp("(?:^|[\\s,])("+SUBURBS[i].replace(/ /g,"\\s+")+")(?![A-Za-z])");var x=re.exec(low);
+    if(x){var end=from+x.index+x[0].length;return [trim(a.slice(0,end)),trim(a.slice(end).replace(/^[\s,:\-]+/,""))];}
+  }
+  var words=a.split(/(\s+)/),pos=0,seen=0;
+  for(var w=0;w<words.length;w++){
+    var tok=words[w];
+    if(/\S/.test(tok)){seen++;if(seen>3&&STOPW.test(tok.replace(/[^A-Za-z]/g,"")))return [trim(a.slice(0,pos)),trim(a.slice(pos))];}
+    pos+=tok.length;
+  }
+  return [a,""];
+}
+// the service names a keyword stands for, from the live service_types list (nothing is invented: no match = no job named)
+function namesFor(key,types){
+  function pick(pred){var a=types.filter(function(t){return pred(String(t.name).toLowerCase());});return a.length?[a[0].name]:[];}
+  if(key==="COMBO")return namesFor("general pest",types).concat(namesFor("termite inspection",types));
+  if(key==="termite inspection")return pick(function(n){return n.indexOf("termite inspection")>=0;});
+  if(key==="general pest")return pick(function(n){return n.indexOf("general pest")>=0;});
+  if(key==="ant")return pick(function(n){return /^ant\b/.test(n);});
+  if(key==="nemesis"){var a=types.filter(function(t){return /nemesis/i.test(t.name);});return a.length===1?[a[0].name]:[];}
+  return pick(function(n){return n.indexOf(key)>=0;});
+}
+function readNote(raw,types){
+  types=types||[];
+  var out={name:"",phone:"",email:"",address:"",job:"",notes:"",mins:null,unsure:{}};
+  var t=String(raw||"").replace(/\r/g,"");
+  // email
+  t=t.replace(/(?:\b(?:e-?mail)\s*[:\-]?\s*)?([A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+)/i,function(m,e){if(out.email)return m;out.email=e.toLowerCase();return " ";});
+  // phone: a mobile or landline (0 or +61, then the area digit, then 8 more digits, spaces / dashes / brackets allowed), else a local 8-digit number
+  t=t.replace(/(^|[^\d\/])((?:\b(?:ph(?:one)?|mob(?:ile)?|cell|tel)\b\.?\s*[:\-#]?\s*)?)((?:\+?61|0)[\s\-().]*[2-478](?:[\s\-().]*\d){8})(?!\d)/i,function(m,a,lab,num){
+    if(out.phone)return m;
+    var d=num.replace(/\D/g,"");if(d.indexOf("61")===0)d="0"+d.slice(2);
+    out.phone=d.charAt(1)==="4"?d.slice(0,4)+" "+d.slice(4,7)+" "+d.slice(7):d.slice(0,2)+" "+d.slice(2,6)+" "+d.slice(6);
+    return a+" ";});
+  if(!out.phone)t=t.replace(/(^|[^\d\/\-])((?:\b(?:ph(?:one)?|mob(?:ile)?|tel)\b\.?\s*[:\-#]?\s*)?)(\d{4})[\s\-]?(\d{4})(?![\d\/])/i,function(m,a,lab,x,y){out.phone=x+" "+y;return a+" ";});
+  // time needed
+  var L=null;
+  function setLen(m,full){var v=Math.round(m);if(v>=15&&v<=720){if(L==null)L=v;return " ";}return full;}
+  t=t.replace(/\bhour\s*(?:and|&)\s*a\s*half\b/i,function(m){return setLen(90,m);});
+  t=t.replace(/\bhalf\s*(?:an?\s*)?(?:hour|hr)\b/i,function(m){return setLen(30,m);});
+  t=t.replace(/\b(\d+(?:\.\d+)?)\s*(?:hrs?|hours?|h)\b/i,function(m,n){return setLen(parseFloat(n)*60,m);});
+  t=t.replace(/\b(\d{2,3})\s*(?:mins?|minutes?)\b/i,function(m,n){return setLen(parseFloat(n),m);});
+  t=t.replace(/\b(?:an|one)\s*hour\b/i,function(m){return setLen(60,m);});
+  out.mins=L;
+  // job words, taken out of the text. Only service names that really exist are used; a word with no service stays in notes.
+  var found=[],leftWords=[];
+  ALIASES.forEach(function(al){
+    t=t.replace(al[0],function(m,off){found.push({k:al[1],at:off,w:m});return " ";});
+  });
+  found.sort(function(a,b){return a.at-b.at;});
+  var jobs=[],seen={};
+  found.forEach(function(f){var n=namesFor(f.k,types);if(!n.length){leftWords.push(f.w);return;}n.forEach(function(x){if(!seen[x]){seen[x]=1;jobs.push(x);}});});
+  out.job=jobs.join(" + ");
+  // what is left: lines, then name and address
+  t=t.replace(/[;|]/g,"\n").replace(/\b(?:address|addr|job\s*at)\s*[:\-]\s*/ig,"\n");      // a label in the middle of a line starts a new line
+  var lines=t.split("\n").map(function(l){
+    l=l.replace(/\s+/g," ").trim();
+    l=l.replace(/^(?:name|client|customer|address|addr|job\s*at|re)\s*[:\-]\s*/i,"");
+    var prev;do{prev=l;
+      l=l.replace(/^[\s,:\-–—@]+|[\s,:\-–—@]+$/g,"").replace(/\s+(?:ph|phone|mob|mobile|email|e-mail|at|for|on|is|and|&|x|\+|about|approx|around|takes?|needs?)$/i,"").replace(/^(?:and|&|for|at|on)\s+/i,"");
+    }while(l!==prev);
+    return l;}).filter(Boolean);
+  var addrRe=/(?:^|[\s,])((?:(?:unit|u|apt|flat|lot|shop)\.?\s*)?\d+[a-z]?(?:\s*[\/\-,]\s*\d+[a-z]?)?\s+[A-Za-z][\s\S]*)$/i;
+  var ai=-1,pre="";
+  lines.forEach(function(l,i){var m=addrRe.exec(l);if(!m)return;if(ai<0||(STREET_RE.test(l)&&!STREET_RE.test(lines[ai])))ai=i;});
+  var nameLines=[],extra=[];
+  lines.forEach(function(l,i){
+    if(i===ai){var m=addrRe.exec(l),cut=cutAddress(trim(m[1]));out.address=cut[0];if(cut[1])extra.push(cut[1]);pre=trim(l.slice(0,l.lastIndexOf(m[1])));}      // (whatever sits in front of the street number on that line is the name; words after the suburb are other words)
+    else if(!nameLines.length)nameLines.push(l);
+    else extra.push(l);
+  });
+  if(pre.length)(nameLines.length?extra:nameLines).unshift(pre.replace(/[\s,:\-]+$/,""));
+  out.name=titleCase(trim(nameLines.join(" ")));
+  out.address=titleCase(out.address);
+  var notes=extra.concat(leftWords.length?[leftWords.join(" ")]:[]);
+  out.notes=notes.join(" / ");
+  // sure or not
+  if(!out.name||/\d/.test(out.name)||out.name.split(/\s+/).length>4||STREET_RE.test(out.name))out.unsure.name=true;
+  if(out.address&&!/\d/.test(out.address))out.unsure.address=true;
+  if(out.address&&!out.name)out.unsure.address=true;
+  if(!out.address&&lines.length&&STREET_RE.test(lines.join(" ")))out.unsure.address=true;
+  return out;
+}
+// the usual time for the services in a job string ("A + B": the first service's usual time, then each next one's add-on time or its usual time)
+function usualLen(job,types){
+  var names=trim(job).split(/\s*\+\s*/).filter(Boolean),tot=0,any=false;
+  names.forEach(function(n,i){
+    var t=types.filter(function(x){return x.name===n;})[0];if(!t)return;
+    var v=i===0?t.default_minutes:(t.addon_minutes!=null?t.addon_minutes:t.default_minutes);
+    if(v!=null){tot+=v;any=true;}
+  });
+  return any?tot:null;
+}
+
+/* ---------- free chunks ---------- */
+function mergeSpans(a){a=a.slice().sort(function(x,y){return x[0]-y[0];});var o=[];a.forEach(function(s){if(o.length&&s[0]<=o[o.length-1][1])o[o.length-1][1]=Math.max(o[o.length-1][1],s[1]);else o.push([s[0],s[1]]);});return o;}
+function subtractSpans(windows,busy){
+  var b=mergeSpans(busy),out=[];
+  windows.forEach(function(w){
+    var s=w[0];
+    b.forEach(function(x){if(x[1]<=s||x[0]>=w[1])return;if(x[0]>s)out.push([s,x[0]]);s=Math.max(s,x[1]);});
+    if(s<w[1])out.push([s,w[1]]);
+  });
+  return out;
+}
+function planApplies(b,date){
+  var n=+b.every_weeks||1;if(n<=1)return true;if(!b.anchor_date)return true;
+  var w=Math.round((parseYmd(date)-parseYmd(b.anchor_date))/(7*864e5));return ((w%n)+n)%n===0;
+}
+// the hours a person takes bookings on a date: the master's "Field Work" blocks in his weekly plan, a worker's fixed hours Mon to Fri
+function windowsFor(p,date){
+  var d=parseYmd(date),wd=((d.getDay()+6)%7)+1;
+  if(p.role==="master"){
+    return mergeSpans(S.plan.filter(function(b){return +b.weekday===wd&&/field\s*work/i.test(b.title)&&planApplies(b,date);}).map(function(b){return [tm(b.start_time),tm(b.end_time)];}));
+  }
+  return wd<=5?[[TECH_START,TECH_END]]:[];
+}
+function freeChunks(p,date,busy,nowMin){
+  if(date<today())return [];
+  var w=windowsFor(p,date);
+  if(date===today()&&nowMin!=null){var from=Math.ceil(nowMin/15)*15;w=w.map(function(x){return [Math.max(x[0],from),x[1]];}).filter(function(x){return x[1]>x[0];});}
+  return subtractSpans(w,busy).filter(function(x){return x[1]-x[0]>=MIN_CHUNK;});
+}
+
+/* ---------- data ---------- */
+function activeStaff(){return S.staff.filter(function(s){return s.active;}).sort(function(a,b){return a.role===b.role?String(a.name).localeCompare(b.name):(a.role==="master"?-1:1);});}
+function staffById(id){return S.staff.filter(function(s){return s.id===id;})[0]||null;}
+function friendly(e){
+  var m=String((e&&e.message)||e||"");
+  if(navigator.onLine===false||/fetch|network|load failed|timeout/i.test(m))return "No signal right now.";
+  return m.length>140?m.slice(0,140):m;
+}
+async function loadStatic(){
+  var r=await Promise.all([
+    S.sb.from("staff").select("id,name,role,colour,active"),
+    S.sb.from("service_types").select("id,name,sort,default_minutes,addon_minutes").order("sort",{ascending:true}),
+    S.sb.from("plan_blocks").select("weekday,start_time,end_time,title,every_weeks,anchor_date,active").eq("active",true)]);
+  r.forEach(function(x){if(x.error)throw x.error;});
+  S.staff=r[0].data||[];S.types=r[1].data||[];S.plan=r[2].data||[];
+}
+async function loadWeeks(force){
+  var need0=S.ws,need1=addDays(S.ws,6);
+  if(!force&&S.loaded&&S.from&&need0>=S.from&&need1<=S.to)return;
+  var from=addDays(S.ws,-7),to=addDays(S.ws,20);
+  var r=await Promise.all([
+    S.sb.from("jobs").select(JOB_COLS).gte("job_date",from).lte("job_date",to).neq("status","cancelled").order("job_date").order("start_time"),
+    S.sb.from("pencilled").select("*").eq("status","open").order("job_date")]);
+  if(r[0].error)throw r[0].error;if(r[1].error)throw r[1].error;
+  S.jobs=r[0].data||[];S.pen=r[1].data||[];S.from=from;S.to=to;S.loaded=true;S.err="";
+}
+async function reload(force){
+  try{await loadWeeks(force);}catch(e){S.err=friendly(e);}
+  render();
+}
+
+/* ---------- screens ---------- */
+function showLogin(msg){
+  $("app").innerHTML='<div class="lg"><h1>Week Book</h1><p>Log in with your email and password. Your phone can remember them for you.</p>'+
+    '<form id="lgf"><label class="vh" for="lg-e">Your email</label><input id="lg-e" type="email" autocomplete="username" inputmode="email" autocapitalize="none" placeholder="Your email">'+
+    '<label class="vh" for="lg-p">Password</label><input id="lg-p" type="password" autocomplete="current-password" placeholder="Password">'+
+    '<button class="btn pri" type="submit" style="width:100%">Log in</button><div id="lg-m" style="color:#A23C29;margin-top:10px">'+esc(msg||"")+'</div></form></div>';
+  $("lgf").addEventListener("submit",async function(ev){
+    ev.preventDefault();var e=trim($("lg-e").value),p=$("lg-p").value;if(!e||!p){$("lg-m").textContent="Type your email and password.";return;}
+    $("lg-m").textContent="Logging in...";
+    var r;try{r=await S.sb.auth.signInWithPassword({email:e,password:p});}catch(x){r={error:x};}
+    if(r.error){$("lg-m").textContent=/invalid/i.test(r.error.message||"")?"That email or password isn't right.":friendly(r.error);return;}
+    onSession(r.data&&r.data.session);
+  });
+}
+function showNote(title,text){$("app").innerHTML='<div class="lg"><h1>'+esc(title)+'</h1><p>'+esc(text)+'</p><p><a href="home.html">Back to Home</a></p></div>';}
+async function onSession(session){
+  if(!session){showLogin();return;}
+  if(S.starting||S.loaded)return;
+  S.starting=true;
+  try{
+    var me=await S.sb.from("staff").select("id,name,role,colour,active").eq("id",session.user.id).maybeSingle();
+    if(me.error)throw me.error;
+    if(!me.data||me.data.role!=="master"||!me.data.active){showNote("This page is for Mitch","Week Book shows every booking, so it only opens for the owner's login.");S.starting=false;return;}
+    S.me=me.data;
+    await loadStatic();
+    var w="";try{w=localStorage.getItem(LS_WHO)||"";}catch(e){}
+    S.who=(w==="both"||staffById(w))?w:"both";
+    S.ws=mondayOf(today());
+    try{var d=JSON.parse(localStorage.getItem(LS_DRAFT)||"null");if(d&&d.raw&&Date.now()-d.at<3*864e5)S.draft=d;}catch(e){}
+    await reload(true);
+  }catch(e){
+    $("app").innerHTML='<div class="lg"><h1>Week Book</h1><p>'+esc(friendly(e))+' Can\'t open the week right now.</p><button class="btn pri" data-a="retry" style="width:100%">Try again</button></div>';
+  }
+  S.starting=false;
+}
+
+function peopleShown(){
+  var act=activeStaff();
+  if(S.who==="both")return act;
+  var p=act.filter(function(s){return s.id===S.who;});
+  return p.length?p:act;
+}
+function briefAddr(a){
+  a=trim(a);if(!a)return "";
+  var p=a.split(",").map(trim).filter(Boolean),st=p[0],sub=(p[1]||"").replace(/\b(?:NSW|QLD|VIC|TAS|SA|WA|NT|ACT)\b.*$/i,"").replace(/\s+\d{4}$/,"").trim();
+  return sub?st+", "+sub:st;
+}
+function shortSvc(s){
+  return String(s||"").split(" + ").map(function(n){
+    return n.replace(/^General Pest Treatment$/,"General pest").replace(/ Inspection$/," insp.").replace(/ Treatment$/,"").replace(/-Construction Barrier$/,"-con barrier").replace(/Pre-Purchase insp\./,"Pre-purchase");
+  }).join(" + ");
+}
+function isTodo(j){return j.service_type==="To do";}
+function noteLine(s){return trim(String(s||"").split(/\r?\n/)[0]);}
+function jobSq(j){
+  var s=tm(j.start_time),b=s+(+j.duration_min||60),col=safeColour((staffById(j.staff_id)||{}).colour);
+  var cn=(j.client&&j.client.name)||"",ad=briefAddr(j.address);
+  var top=isTodo(j)?(noteLine(j.notes)||"To do"):(ad||cn||"No client"),sub=isTodo(j)?"To do":[shortSvc(j.service_type),ad?cn:""].filter(Boolean).join(" · ");
+  return '<button type="button" class="sq'+(isTodo(j)?" todo":"")+(j.status==="done"?" done":"")+'" style="--sc:'+col+'" data-a="job" data-id="'+esc(j.id)+'"><span class="tm">'+esc(fmtRange(s,b))+'</span><span class="ad">'+esc(top)+'</span><span class="jb">'+esc(sub)+'</span></button>';
+}
+function penSq(r){
+  var s=tm(r.start_time),col=safeColour((staffById(r.staff_id)||{}).colour);
+  var top=r.name||noteLine(r.raw)||"Pencilled",sub=[r.job,briefAddr(r.address)].filter(Boolean).join(" · ");
+  return '<button type="button" class="sq pen" style="--sc:'+col+'" data-a="pen" data-id="'+esc(r.id)+'"><span class="tm">'+(s==null?"Pencilled":esc(fmtRange(s,s+(+r.duration_min||60)))+" · pencilled")+'</span><span class="ad">'+esc(top)+'</span><span class="jb">'+esc(sub)+'</span></button>';
+}
+function freeSq(p,d,c){
+  return '<button type="button" class="sq free" data-a="free" data-d="'+esc(d)+'" data-s="'+esc(p.id)+'" data-x="'+c[0]+'" data-y="'+c[1]+'"><span class="tm">Free '+esc(fmtT(c[0]))+' to '+esc(fmtT(c[1]))+'</span><span class="ad">'+esc(fmtLen(c[1]-c[0]))+' · tap to pencil in</span></button>';
+}
+function colFor(p,d,nowMin){
+  var items=[],nt=[],busy=[];
+  S.jobs.forEach(function(j){
+    if(j.job_date!==d||j.staff_id!==p.id)return;var s=tm(j.start_time);
+    if(s==null){nt.push(j);return;}busy.push([s,s+(+j.duration_min||60)]);items.push({a:s,h:jobSq(j)});
+  });
+  S.pen.forEach(function(r){
+    if(r.job_date!==d||r.staff_id!==p.id)return;var s=tm(r.start_time);
+    if(s==null){nt.push(r);return;}busy.push([s,s+(+r.duration_min||60)]);items.push({a:s,h:penSq(r)});
+  });
+  freeChunks(p,d,busy,nowMin).forEach(function(c){items.push({a:c[0]-0.5,h:freeSq(p,d,c)});});
+  items.sort(function(x,y){return x.a-y.a;});
+  return {items:items,nt:nt};
+}
+function ntChip(x){
+  if(x.service_type!==undefined&&x.job_date!==undefined&&x.client!==undefined)return '<button type="button" data-a="job" data-id="'+esc(x.id)+'">'+esc(isTodo(x)?(noteLine(x.notes)||"To do"):(briefAddr(x.address)||(x.client&&x.client.name)||"Job"))+'</button>';
+  return '<button type="button" data-a="pen" data-id="'+esc(x.id)+'">'+esc("Pencilled: "+(x.name||noteLine(x.raw)||"note"))+'</button>';
+}
+function dayHtml(d,people,nowMin){
+  var dd=parseYmd(d),wd=dd.getDay(),cols=people.map(function(p){return {p:p,c:colFor(p,d,nowMin)};});
+  var un=S.jobs.filter(function(j){return j.job_date===d&&!j.staff_id;}).concat(S.pen.filter(function(r){return r.job_date===d&&!r.staff_id;}));
+  var njobs=0;cols.forEach(function(x){njobs+=S.jobs.filter(function(j){return j.job_date===d&&j.staff_id===x.p.id;}).length;});
+  var used=njobs||un.length||cols.some(function(x){return x.c.nt.length||x.c.items.some(function(i){return i.h.indexOf("pen")>=0;});});
+  if(wd===0&&!used)return "";
+  var h='<section class="day'+(d===today()?" today":"")+'" aria-label="'+esc(dayLbl(d))+'"><div class="dh"><b>'+esc(dayLbl(d))+(d===today()?" · today":"")+'</b><small>'+(njobs?njobs+(njobs===1?" job":" jobs"):"nothing booked")+'</small><button type="button" class="add" data-a="add" data-d="'+esc(d)+'" aria-label="Pencil something in on '+esc(dayLbl(d))+'">+</button></div>';
+  if(un.length)h+='<div class="nt"><span class="emp" style="margin:0">Nobody yet:</span>'+un.map(ntChip).join("")+'</div>';
+  h+='<div class="cols'+(people.length>1?" c2":"")+'">';
+  cols.forEach(function(x){
+    h+='<div class="col" style="--sc:'+safeColour(x.p.colour)+'">'+(people.length>1?'<div class="ch"><i></i>'+esc(firstWord(x.p.name))+'</div>':"");
+    if(x.c.nt.length)h+='<div class="nt">'+x.c.nt.map(ntChip).join("")+'</div>';
+    h+=x.c.items.length?x.c.items.map(function(i){return i.h;}).join(""):'<div class="emp">'+(d<today()?"Nothing":"No free time in field hours")+'</div>';
+    h+='</div>';
+  });
+  return h+'</div></section>';
+}
+function weekRange(){var a=parseYmd(S.ws),b=parseYmd(addDays(S.ws,6));return DOW[a.getDay()]+" "+a.getDate()+(a.getMonth()!==b.getMonth()?" "+MON[a.getMonth()]:"")+" to "+DOW[b.getDay()]+" "+b.getDate()+" "+MON[b.getMonth()];}
+function render(){
+  if(!S.me)return;
+  var y=window.pageYOffset,ppl=peopleShown(),now=new Date(),nowMin=now.getHours()*60+now.getMinutes();
+  var h='<div class="top"><div class="in"><div class="r1"><a href="home.html" aria-label="Back to Home"><img src="logo/lpc-badge.png" alt="LPC"></a><h1>Week Book</h1><div class="seg" role="group" aria-label="Whose time">';
+  activeStaff().forEach(function(s){h+='<button type="button" data-a="who" data-v="'+esc(s.id)+'" aria-pressed="'+(S.who===s.id?"true":"false")+'">'+esc(firstWord(s.name))+'</button>';});
+  h+='<button type="button" data-a="who" data-v="both" aria-pressed="'+(S.who==="both"?"true":"false")+'">Both</button></div></div>'+
+    '<div class="r2"><button type="button" class="nv" data-a="prev" aria-label="Previous week">‹</button><div class="rng">'+esc(weekRange())+'</div><button type="button" class="tdy" data-a="today">Today</button><button type="button" class="nv" data-a="next" aria-label="Next week">›</button></div></div></div>';
+  h+='<div class="wrap" id="wk">';
+  if(S.err)h+='<div class="bn bad">'+esc(S.err)+' <button type="button" data-a="retry">Try again</button></div>';
+  if(S.draft)h+='<div class="bn">Unsaved note from '+esc(fmtT((new Date(S.draft.at)).getHours()*60+(new Date(S.draft.at)).getMinutes()))+': '+esc(noteLine(S.draft.raw).slice(0,40))+' <button type="button" data-a="draftopen">Open</button><button type="button" data-a="draftbin">Bin it</button></div>';
+  for(var i=0;i<7;i++)h+=dayHtml(addDays(S.ws,i),ppl,nowMin);
+  h+='<p class="foot">Build '+esc(BUILD)+' · <button type="button" data-a="logout">Log out</button></p></div>';
+  $("app").innerHTML=h;
+  window.scrollTo(0,y);
+}
+
+/* ---------- sheets ---------- */
+function openSheet(html){$("sheet").innerHTML=html;$("sheet").classList.add("on");$("shade").classList.add("on");document.documentElement.style.overflow="hidden";}
+function closeSheet(){SH=null;$("sheet").classList.remove("on");$("shade").classList.remove("on");$("sheet").innerHTML="";document.documentElement.style.overflow="";}
+function toast(msg,act,label){
+  var t=$("toast");clearTimeout(toastT);
+  t.innerHTML='<span>'+esc(msg)+'</span>'+(act?'<button type="button" id="toast-a">'+esc(label||"Undo")+'</button>':"");
+  t.classList.add("on");if(act)$("toast-a").onclick=function(){t.classList.remove("on");act();};
+  toastT=setTimeout(function(){t.classList.remove("on");},act?7000:3500);
+}
+function val(id){var e=$(id);return e?e.value:"";}
+function setVal(id,v){var e=$(id);if(e&&e.value!==v)e.value=v;}
+function msg(t,ok){var m=$("msg");if(m){m.textContent=t||"";m.className=ok?"ok":"";}}
+var LAB={name:"Name",phone:"Phone",email:"Email",job:"Job",address:"Address",notes:"Other words"};
+function sheetHtml(title,editing){
+  var h='<div class="sh-h"><b>'+esc(title)+'</b><button type="button" class="x" data-a="close" aria-label="Close">×</button></div>'+
+    '<label class="vh" for="raw">Everything you know, in one go</label>'+
+    '<textarea id="raw" placeholder="Name, address, phone, email, job, time needed. All in one go." autocapitalize="sentences" spellcheck="false"></textarea>'+
+    '<div class="lbl">I read it as (fix anything wrong)</div><div class="rd">';
+  FIELDS.forEach(function(f){
+    var w=(f==="address"||f==="notes")?" w":"";
+    h+='<div class="f'+w+'"><label for="f-'+f+'">'+LAB[f]+'</label><input id="f-'+f+'" type="'+(f==="phone"?"tel":f==="email"?"email":"text")+'" autocomplete="off" autocorrect="off" autocapitalize="'+(f==="email"?"none":"words")+'" data-f="'+f+'"></div>';
+  });
+  h+='</div><div class="lbl">Starts</div><div class="chips scr" id="c-time"></div><div class="lbl">Length</div><div class="chips" id="c-len"></div><div class="lbl">Who</div><div class="chips" id="c-who"></div><div id="msg" role="alert"></div><div class="btns">';
+  if(editing)h+='<button type="button" class="btn bad" data-a="drop">Drop it</button><button type="button" class="btn pri" data-a="save">Save changes</button>';
+  else h+='<button type="button" class="btn" data-a="todo">To do</button><button type="button" class="btn pri" data-a="pencil">Pencil in</button>';
+  return h+'</div>';
+}
+function timeOptions(){
+  var len=SH.len||60,o=[];
+  if(SH.chunk){var a=SH.chunk.a,b=SH.chunk.b;o.push(a);for(var m=Math.ceil((a+1)/STEP)*STEP;m+len<=b;m+=STEP)o.push(m);}
+  else for(var q=6*60;q<=17*60;q+=STEP)o.push(q);
+  if(SH.start!=null&&o.indexOf(SH.start)<0){o.push(SH.start);o.sort(function(x,y){return x-y;});}
+  return o;
+}
+function renderTimes(){
+  var o=timeOptions();
+  if(SH.start!=null&&o.indexOf(SH.start)<0)SH.start=o[0];
+  var h=SH.chunk?"":'<button type="button" class="chip" data-a="t" data-v="" aria-pressed="'+(SH.start==null?"true":"false")+'">No time</button>';
+  o.forEach(function(m){h+='<button type="button" class="chip" data-a="t" data-v="'+m+'" aria-pressed="'+(SH.start===m?"true":"false")+'">'+esc(fmtT(m))+'</button>';});
+  $("c-time").innerHTML=h;
+  if(SH.chunk&&(SH.len||60)>SH.chunk.b-SH.chunk.a)msg("Longer than this free chunk ("+fmtLen(SH.chunk.b-SH.chunk.a)+").");else if($("msg")&&$("msg").textContent.indexOf("Longer")===0)msg("");
+}
+function renderLen(){
+  var base=[30,60,90,120,180],cur=SH.len||60,all=base.indexOf(cur)<0?base.concat([cur]).sort(function(a,b){return a-b;}):base;
+  $("c-len").innerHTML=all.map(function(m){return '<button type="button" class="chip" data-a="l" data-v="'+m+'" aria-pressed="'+(cur===m?"true":"false")+'">'+esc(fmtLen(m))+'</button>';}).join("");
+}
+function renderWho(){
+  var h=activeStaff().map(function(s){return '<button type="button" class="chip" data-a="w" data-v="'+esc(s.id)+'" aria-pressed="'+(SH.staff===s.id?"true":"false")+'">'+esc(firstWord(s.name))+'</button>';}).join("");
+  h+='<button type="button" class="chip" data-a="w" data-v="" aria-pressed="'+(!SH.staff?"true":"false")+'">Later</button>';
+  $("c-who").innerHTML=h;
+}
+function tint(f,on){var e=$("f-"+f);if(e)e.classList.toggle("chk",!!on);}
+function onRaw(){
+  if(!SH)return;
+  var r=readNote(val("raw"),S.types);
+  FIELDS.forEach(function(f){if(!SH.touched[f]){setVal("f-"+f,r[f]||"");tint(f,r.unsure[f]);}});
+  if(!SH.lenTouched){var L=r.mins||(r.job?usualLen(r.job,S.types):null);if(L){SH.len=L;renderLen();renderTimes();}}
+  saveDraft();
+}
+function saveDraft(){
+  if(!SH||SH.id)return;
+  try{var raw=trim(val("raw"));if(raw)localStorage.setItem(LS_DRAFT,JSON.stringify({raw:raw,d:SH.date,s:SH.staff,a:SH.start,len:SH.len,at:Date.now()}));else localStorage.removeItem(LS_DRAFT);}catch(e){}
+}
+function clearDraft(){S.draft=null;try{localStorage.removeItem(LS_DRAFT);}catch(e){}}
+function openNew(o){
+  SH={id:null,date:o.date,staff:o.staff||"",chunk:o.chunk||null,start:o.chunk?o.chunk.a:(o.start==null?null:o.start),len:o.len||60,touched:{},lenTouched:!!o.len,busy:false};
+  var st=staffById(SH.staff);
+  openSheet(sheetHtml("Pencil in · "+dayLbl(o.date)+(st?", "+firstWord(st.name):""),false));
+  renderTimes();renderLen();renderWho();
+  if(o.raw){setVal("raw",o.raw);onRaw();}
+  try{$("raw").focus();}catch(e){}
+}
+function openEdit(id){
+  var r=S.pen.filter(function(x){return x.id===id;})[0];if(!r)return;
+  SH={id:id,date:r.job_date,staff:r.staff_id||"",chunk:null,start:tm(r.start_time),len:r.duration_min||60,touched:{},lenTouched:true,busy:false};
+  openSheet(sheetHtml("Pencilled · "+(r.job_date?dayLbl(r.job_date):"no day"),true));
+  setVal("raw",r.raw||"");FIELDS.forEach(function(f){setVal("f-"+f,r[f]||"");});
+  renderTimes();renderLen();renderWho();
+}
+function openJob(id){
+  var j=S.jobs.filter(function(x){return x.id===id;})[0];if(!j)return;
+  var s=tm(j.start_time),st=staffById(j.staff_id),kv=[["When",dayLbl(j.job_date)+(s!=null?", "+fmtRange(s,s+(+j.duration_min||60)):", no time")],["Who",st?st.name:"Nobody yet"]];
+  if(isTodo(j))kv.push(["To do",noteLine(j.notes)||"(no note)"]);
+  else{kv.push(["Client",(j.client&&j.client.name)||"No client"],["Address",trim(j.address)||"No address"],["Job",j.service_type||""]);if(trim(j.notes))kv.push(["Notes",trim(j.notes).slice(0,300)]);}
+  kv.push(["Status",j.status==="done"?"Done":"Booked"]);
+  openSheet('<div class="sh-h"><b>Booked job</b><button type="button" class="x" data-a="close" aria-label="Close">×</button></div><dl class="kv">'+kv.map(function(x){return '<dt>'+esc(x[0])+'</dt><dd>'+esc(x[1])+'</dd>';}).join("")+'</dl><div class="btns"><button type="button" class="btn" data-a="close">Close</button></div>');
+}
+function payload(){
+  return {raw:trim(val("raw")),name:nn(val("f-name")),phone:nn(val("f-phone")),email:nn(val("f-email")),job:nn(val("f-job")),address:nn(val("f-address")),notes:nn(val("f-notes")),
+    duration_min:SH.len||60,job_date:SH.date||null,start_time:SH.start==null?null:minToTm(SH.start),staff_id:SH.staff||null};
+}
+function lock(on){SH.busy=on;Array.prototype.forEach.call(document.querySelectorAll("#sheet .btn"),function(b){b.disabled=on;});}
+async function doPencil(){
+  if(!SH||SH.busy)return;var p=payload();
+  if(!p.raw&&!p.name&&!p.phone&&!p.address){msg("Type something first.");return;}
+  lock(true);msg("Saving...",true);
+  try{
+    var r=await S.sb.from("pencilled").insert(p).select("*").single();if(r.error)throw r.error;
+    S.pen.push(r.data);clearDraft();var when=dayLbl(p.job_date)+(SH.start!=null?" "+fmtT(SH.start):"");
+    closeSheet();render();toast("Pencilled in: "+(p.name||noteLine(p.raw).slice(0,28))+", "+when);
+  }catch(e){lock(false);msg("Not saved: "+friendly(e)+" What you typed is kept. Tap Pencil in again.");}
+}
+async function doTodo(){
+  if(!SH||SH.busy)return;var p=payload();
+  if(!p.raw){msg("Type what the to do is.");return;}
+  if(!S.types.some(function(t){return t.name==="To do";})){msg("The To do service isn't set up yet.");return;}
+  lock(true);msg("Saving...",true);
+  try{
+    var row={job_date:p.job_date,start_time:p.start_time,duration_min:p.duration_min,staff_id:p.staff_id,service_type:"To do",services:[{type:"To do",description:""}],notes:p.raw,status:"booked"};
+    var r=await S.sb.from("jobs").insert(row).select(JOB_COLS).single();if(r.error)throw r.error;
+    S.jobs.push(r.data);clearDraft();closeSheet();render();toast("To do added: "+noteLine(p.raw).slice(0,30)+", "+dayLbl(p.job_date));
+  }catch(e){lock(false);msg("Not saved: "+friendly(e)+" What you typed is kept. Tap To do again.");}
+}
+async function doSave(){
+  if(!SH||SH.busy||!SH.id)return;var p=payload();
+  lock(true);msg("Saving...",true);
+  try{
+    var r=await S.sb.from("pencilled").update(p).eq("id",SH.id).select("*").single();if(r.error)throw r.error;
+    S.pen=S.pen.map(function(x){return x.id===SH.id?r.data:x;});closeSheet();render();toast("Saved");
+  }catch(e){lock(false);msg("Not saved: "+friendly(e)+" Tap Save changes again.");}
+}
+async function doDrop(){
+  if(!SH||SH.busy||!SH.id)return;var id=SH.id,old=S.pen.filter(function(x){return x.id===id;})[0];
+  lock(true);msg("Dropping...",true);
+  try{
+    var r=await S.sb.from("pencilled").update({status:"dropped"}).eq("id",id).select("id");if(r.error)throw r.error;
+    S.pen=S.pen.filter(function(x){return x.id!==id;});closeSheet();render();
+    toast("Dropped",async function(){try{var u=await S.sb.from("pencilled").update({status:"open"}).eq("id",id).select("*").single();if(u.error)throw u.error;S.pen.push(u.data);render();toast("Back on the week");}catch(e){toast("Couldn't undo: "+friendly(e));}});
+  }catch(e){lock(false);msg("Not dropped: "+friendly(e));}
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",function(ev){
+  var a=ev.target.closest&&ev.target.closest("[data-a]");if(!a)return;
+  var k=a.getAttribute("data-a"),v=a.getAttribute("data-v");
+  if(k==="prev"||k==="next"||k==="today"){
+    S.ws=k==="today"?mondayOf(today()):addDays(S.ws,k==="next"?7:-7);window.scrollTo(0,0);reload(false);
+  }else if(k==="who"){S.who=v;try{localStorage.setItem(LS_WHO,v);}catch(e){}render();}
+  else if(k==="free"){
+    var st=staffById(a.getAttribute("data-s"));
+    openNew({date:a.getAttribute("data-d"),staff:st?st.id:"",chunk:{a:+a.getAttribute("data-x"),b:+a.getAttribute("data-y")}});
+  }else if(k==="add"){
+    var def=S.who!=="both"?S.who:(S.me?S.me.id:"");openNew({date:a.getAttribute("data-d"),staff:def});
+  }else if(k==="pen")openEdit(a.getAttribute("data-id"));
+  else if(k==="job")openJob(a.getAttribute("data-id"));
+  else if(k==="close")closeSheet();
+  else if(k==="pencil")doPencil();else if(k==="todo")doTodo();else if(k==="save")doSave();else if(k==="drop")doDrop();
+  else if(k==="t"&&SH){SH.start=v===""?null:+v;renderTimes();saveDraft();}
+  else if(k==="l"&&SH){SH.len=+v;SH.lenTouched=true;renderLen();renderTimes();saveDraft();}
+  else if(k==="w"&&SH){SH.staff=v;renderWho();saveDraft();}
+  else if(k==="retry"){if(S.me)reload(true);else{S.starting=false;S.loaded=false;S.sb.auth.getSession().then(function(r){onSession(r.data&&r.data.session);});}}
+  else if(k==="draftopen"&&S.draft){var d=S.draft;openNew({date:d.d||today(),staff:d.s||"",start:d.a,len:d.len,raw:d.raw});}
+  else if(k==="draftbin"){clearDraft();render();}
+  else if(k==="logout"){S.sb.auth.signOut({scope:"local"}).then(function(){S.me=null;S.loaded=false;showLogin();});}
+});
+document.addEventListener("input",function(ev){
+  var e=ev.target;if(!SH)return;
+  if(e.id==="raw")onRaw();
+  else if(e.getAttribute&&e.getAttribute("data-f")){SH.touched[e.getAttribute("data-f")]=true;tint(e.getAttribute("data-f"),false);}
+});
+$("shade").addEventListener("click",closeSheet);
+document.addEventListener("keydown",function(e){if(e.key==="Escape"&&SH)closeSheet();});
+// swipe left / right for the next / previous week (mostly sideways, long enough, no sheet open)
+var sx=0,sy=0,st0=0;
+document.addEventListener("touchstart",function(e){if(SH||!e.touches||e.touches.length!==1)return;sx=e.touches[0].clientX;sy=e.touches[0].clientY;st0=Date.now();},{passive:true});
+document.addEventListener("touchend",function(e){
+  if(SH||!sx||!e.changedTouches)return;var dx=e.changedTouches[0].clientX-sx,dy=e.changedTouches[0].clientY-sy;sx=0;
+  if(Date.now()-st0>900||Math.abs(dx)<70||Math.abs(dx)<Math.abs(dy)*1.6||!S.me)return;
+  S.ws=addDays(S.ws,dx<0?7:-7);window.scrollTo(0,0);reload(false);
+},{passive:true});
+// coming back to the page: fetch again (jobs may have changed in the Job Calendar)
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&S.me&&!SH&&Date.now()-lastVis>8000){lastVis=Date.now();reload(true);}});
+
+window.lpcWeek={readNote:readNote,usualLen:usualLen,subtractSpans:subtractSpans,freeChunks:freeChunks,briefAddr:briefAddr,mergeSpans:mergeSpans,S:S};
+function boot(){
+  var cfg=window.LPC_SUPABASE;
+  if(!cfg||!cfg.url||!window.supabase||!window.supabase.createClient){$("app").innerHTML='<div class="lg"><h1>Week Book</h1><p>Couldn\'t load the login tools. Check you\'re online, then reload.</p></div>';return;}
+  S.sb=window.supabase.createClient(cfg.url,cfg.anonKey);
+  S.sb.auth.onAuthStateChange(function(ev,session){if(ev==="SIGNED_OUT"&&S.me===null)return;});
+  S.sb.auth.getSession().then(function(r){onSession(r.data&&r.data.session);}).catch(function(e){$("app").innerHTML='<div class="lg"><h1>Week Book</h1><p>'+esc(friendly(e))+'</p><button class="btn pri" data-a="retry" style="width:100%">Try again</button></div>';});
+}
+boot();
+})();
+</script>
+</body></html>

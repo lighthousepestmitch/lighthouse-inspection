@@ -22,6 +22,17 @@
    ]
   },
   {
+   "id": "week",
+   "name": "Week Book",
+   "does": "Free times and pencil in",
+   "url": "week.html",
+   "field": true,
+   "status": "Working",
+   "todo": [
+    "Transfer a pencilled note to the real Job Calendar"
+   ]
+  },
+  {
    "id": "jobbook",
    "name": "Job Book",
    "does": "Repeat work, ring list, leads",
