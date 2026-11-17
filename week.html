@@ -60,6 +60,10 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .fb .fr i{position:absolute;left:10px;bottom:4px;font-style:normal;font-size:.72rem;opacity:.7}
 .fb .fr.sp::after{content:"";position:absolute;left:34px;right:0;top:50%;border-top:1px dashed rgba(39,107,89,.4)}
 .fb .fr:active{background:rgba(39,107,89,.22)}
+.fb .fr .pt{position:absolute;right:8px;top:5px;max-width:58%;padding:1px 8px;border-radius:99px;background:color-mix(in srgb,var(--pc,#7E8D88) 30%,#fff);color:#2b2f2e;font-size:.7rem;font-weight:600;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fb .fr .pt.lo{top:auto;bottom:4px}
+.plan{margin:2px 0 0;font-size:.72rem;line-height:1.3;color:var(--ink2)}
+.c2 .fb .fr .pt{right:5px;font-size:.66rem;padding:1px 6px}
 .c2 .fb .fh{font-size:.75rem;padding:6px 7px 4px}.c2 .fb .fr{padding:4px 7px 0;font-size:.75rem;height:50px}.c2 .fb .fr i{left:7px}
 .c2 .sq{padding:6px 7px}.c2 .sq .tm{font-size:.82rem}.c2 .sq .ad,.c2 .sq .jb{font-size:.8rem}
 .nt{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
@@ -119,10 +123,9 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-19d";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
+var BUILD="2026-11-19e";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
-var TECH_START=7*60, DAY_END=16*60;       // Andrew's hours Mon to Fri, and the time green stops for everyone (Mitch's start comes from his weekly plan's "Field Work" blocks)
-var PERSONAL=/gym|soccer|coach|masterclass|training/i;   // plan blocks that are not bookable time
+var DAY_START=7*60, DAY_END=17*60;        // free time is green all day, 7am to 5pm Monday to Friday, for everyone (same hours as the Job Calendar's green spots). Mitch's weekly plan shows as tags on top of it.
 var STEP=30;
 var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 var LS_WHO="lpc_week_who",LS_DRAFT="lpc_week_draft";
@@ -287,19 +290,35 @@ function planApplies(b,date){
   var n=+b.every_weeks||1;if(n<=1)return true;if(!b.anchor_date)return true;
   var w=Math.round((parseYmd(date)-parseYmd(b.anchor_date))/(7*864e5));return ((w%n)+n)%n===0;
 }
-// the hours a person takes bookings on a date.
-// A worker: TECH_START to DAY_END, Mon to Fri. The master: from where his weekly plan's first "Field Work" block starts that day (so his morning admin stays protected) to DAY_END,
-// minus his personal blocks (gym, kids' soccer, coaching), so the afternoon is green too, even where the plan says admin (Mitch, 2026-11-19: "why no green in the afternoon").
+// the hours a person takes bookings on a date: all day (DAY_START to DAY_END), Mon to Fri, for everyone (Mitch, 2026-11-19: "all day green for both").
+// Mitch's weekly plan is not used to cut the green any more: it shows as tags on the hour blocks and a line under his name (planAt, planLine).
 function windowsFor(p,date){
   var d=parseYmd(date),wd=((d.getDay()+6)%7)+1;
-  if(p.role==="master"){
-    var fw=S.plan.filter(function(b){return +b.weekday===wd&&/field\s*work/i.test(b.title)&&planApplies(b,date);});
-    if(!fw.length)return [];
-    var from=Math.min.apply(null,fw.map(function(b){return tm(b.start_time);})),to=Math.max(DAY_END,Math.max.apply(null,fw.map(function(b){return tm(b.end_time);})));
-    var mine=S.plan.filter(function(b){return +b.weekday===wd&&PERSONAL.test(b.title)&&planApplies(b,date);}).map(function(b){return [tm(b.start_time),tm(b.end_time)];});
-    return subtractSpans([[from,to]],mine);
-  }
-  return wd<=5?[[TECH_START,DAY_END]]:[];
+  return wd<=5?[[DAY_START,DAY_END]]:[];
+}
+// Mitch's weekly template (plan_blocks) for a date, in time order, with short names
+function shortPlan(t){
+  t=String(t||"");
+  if(/field\s*work/i.test(t))return "Field work";
+  if(/lead\s*gen/i.test(t))return "Lead gen, admin";
+  if(/^admin/i.test(t))return "Admin";
+  if(/gym/i.test(t))return "Gym";
+  if(/soccer/i.test(t))return "Kids soccer";
+  if(/coach call/i.test(t))return "Coach call";
+  if(/masterclass|training|coaching/i.test(t))return "Training";
+  if(/restock/i.test(t))return "Restock";
+  if(/planning/i.test(t))return "Planning";
+  return t.length>16?t.slice(0,15)+"…":t;
+}
+function planFor(date){
+  var d=parseYmd(date),wd=((d.getDay()+6)%7)+1;
+  return S.plan.filter(function(b){return +b.weekday===wd&&planApplies(b,date);}).map(function(b){return {a:tm(b.start_time),b:tm(b.end_time),t:shortPlan(b.title),c:safeColour(b.colour)};}).sort(function(x,y){return x.a-y.a;});
+}
+function planAt(date,m){var l=planFor(date);for(var i=0;i<l.length;i++)if(l[i].a<=m&&m<l[i].b)return l[i];return null;}
+function hr12(m){var h=Math.floor(m/60)%24;return (h%12||12)+(m%60?":"+pad(m%60):"");}
+function planLine(date){
+  var l=planFor(date).filter(function(x){return x.b>5*60&&x.a<21*60;});      // (the small hours and the late evening are left out of the line)
+  return l.map(function(x){return hr12(x.a)+"–"+hr12(x.b)+" "+x.t;}).join(" · ");
 }
 function freeChunks(p,date,busy,nowMin){
   if(date<today())return [];
@@ -320,7 +339,7 @@ async function loadStatic(){
   var r=await Promise.all([
     S.sb.from("staff").select("id,name,role,colour,active"),
     S.sb.from("service_types").select("id,name,sort,default_minutes,addon_minutes").order("sort",{ascending:true}),
-    S.sb.from("plan_blocks").select("weekday,start_time,end_time,title,every_weeks,anchor_date,active").eq("active",true)]);
+    S.sb.from("plan_blocks").select("weekday,start_time,end_time,title,every_weeks,anchor_date,active,colour").eq("active",true)]);
   r.forEach(function(x){if(x.error)throw x.error;});
   S.staff=r[0].data||[];S.types=r[1].data||[];S.plan=r[2].data||[];
 }
@@ -411,7 +430,13 @@ function freeSq(p,d,c){
   var rows='',m=c[0];
   while(m<=c[1]-15){      // one green block per hour; the top half of a block is the hour, the bottom half is the half past
     var hr0=Math.floor(m/60)*60,next=hr0+60,low=hr0+30,hasLow=(low>m&&low<=c[1]-15);
-    rows+='<button type="button" class="fr'+(hasLow?" sp":"")+'"'+base+' data-at="'+m+'"'+(hasLow?' data-at2="'+low+'"':'')+' aria-label="Pencil in at '+esc(fmtT(m))+(hasLow?' or '+esc(fmtT(low)):'')+'"><b>'+esc(slotLbl(m))+'</b>'+(hasLow?'<i>:30</i>':'')+'</button>';
+    var pt="",mine=p.role==="master";      // Mitch's weekly plan, as a small tag on the block (a second one on the lower half if the plan changes at the half past)
+    if(mine){
+      var p1=planAt(d,m),p2=hasLow?planAt(d,low):null;
+      if(p1)pt+='<u class="pt" style="--pc:'+p1.c+'">'+esc(p1.t)+'</u>';
+      if(p2&&(!p1||p2.t!==p1.t))pt+='<u class="pt lo" style="--pc:'+p2.c+'">'+esc(p2.t)+'</u>';
+    }
+    rows+='<button type="button" class="fr'+(hasLow?" sp":"")+'"'+base+' data-at="'+m+'"'+(hasLow?' data-at2="'+low+'"':'')+' aria-label="Pencil in at '+esc(fmtT(m))+(hasLow?' or '+esc(fmtT(low)):'')+'"><b>'+esc(slotLbl(m))+'</b>'+(hasLow?'<i>:30</i>':'')+pt+'</button>';
     m=next;
   }
   return '<div class="fb"><div class="fh">Free '+esc(fmtT(c[0]))+' to '+esc(fmtT(c[1]))+' · '+esc(fmtLen(c[1]-c[0]))+'. Tap the time.</div>'+rows+'</div>';
@@ -445,6 +470,7 @@ function dayHtml(d,people,nowMin){
   h+='<div class="cols'+(people.length>1?" c2":"")+'">';
   cols.forEach(function(x){
     h+='<div class="col" style="--sc:'+safeColour(x.p.colour)+'">'+(people.length>1?'<div class="ch"><i></i>'+esc(firstWord(x.p.name))+'</div>':"");
+    if(x.p.role==="master"){var pl=planLine(d);if(pl)h+='<div class="plan">Your plan: '+esc(pl)+'</div>';}      // Mitch's weekly template, visible even when the day is fully booked
     if(x.c.nt.length)h+='<div class="nt">'+x.c.nt.map(ntChip).join("")+'</div>';
     h+=x.c.items.length?x.c.items.map(function(i){return i.h;}).join(""):'<div class="emp">'+(d<today()?"Nothing":"No free time in field hours")+'</div>';
     h+='</div>';
