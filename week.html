@@ -83,6 +83,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .chips.scr{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.chips.scr .chip{flex:none}
 #msg{margin-top:10px;font-size:.92rem;color:var(--over);min-height:1px}
 #msg.ok{color:var(--ok)}
+.hint{margin:8px 0 0;font-size:.8rem;color:var(--ink2)}
 .btns{display:flex;gap:8px;margin-top:12px}
 .btn{flex:1;min-height:52px;border:1.5px solid var(--deep);border-radius:12px;font-weight:700;color:var(--deep);background:#fff}
 .btn.pri{background:var(--deep);color:#fff}
@@ -465,9 +466,9 @@ function sheetHtml(title,editing){
     h+='<div class="f'+w+'"><label for="f-'+f+'">'+LAB[f]+'</label><input id="f-'+f+'" type="'+(f==="phone"?"tel":f==="email"?"email":"text")+'" autocomplete="off" autocorrect="off" autocapitalize="'+(f==="email"?"none":"words")+'" data-f="'+f+'"></div>';
   });
   h+='</div><div class="lbl">Starts</div><div class="chips scr" id="c-time"></div><div class="lbl">Length</div><div class="chips" id="c-len"></div><div class="lbl">Who</div><div class="chips" id="c-who"></div><div id="msg" role="alert"></div><div class="btns">';
-  if(editing)h+='<button type="button" class="btn bad" data-a="drop">Drop it</button><button type="button" class="btn pri" data-a="save">Save changes</button>';
-  else h+='<button type="button" class="btn" data-a="todo">To do</button><button type="button" class="btn pri" data-a="pencil">Pencil in</button>';
-  return h+'</div>';
+  if(editing)h+='<button type="button" class="btn bad" data-a="drop">Drop it</button><button type="button" class="btn" data-a="save">Save</button><button type="button" class="btn pri" data-a="transfer">Transfer</button>';
+  else h+='<button type="button" class="btn" data-a="todo">To do</button><button type="button" class="btn" data-a="pencil">Pencil in</button><button type="button" class="btn pri" data-a="transfer">Transfer</button>';
+  return h+'</div><p class="hint">Transfer opens the Job Calendar with this filled in and the full address looked up. You tap Book there.</p>';
 }
 function timeOptions(){
   var len=SH.len||60,o=[];
@@ -563,6 +564,19 @@ async function doSave(){
     S.pen=S.pen.map(function(x){return x.id===SH.id?r.data:x;});closeSheet();render();toast("Saved");
   }catch(e){lock(false);msg("Not saved: "+friendly(e)+" Tap Save changes again.");}
 }
+// Transfer: the note is saved first (so nothing is lost if the next page doesn't open), then the Job Calendar opens with it filled in (calendar.html, ?pencil=<id>)
+async function doTransfer(){
+  if(!SH||SH.busy)return;var p=payload();
+  if(!p.raw&&!p.name&&!p.phone&&!p.address){msg("Type something first.");return;}
+  if(!p.job_date){msg("Pick a day first.");return;}
+  lock(true);msg("Saving, then opening the Job Calendar...",true);
+  try{
+    var r=SH.id?await S.sb.from("pencilled").update(p).eq("id",SH.id).select("id").single():await S.sb.from("pencilled").insert(p).select("id").single();
+    if(r.error)throw r.error;
+    clearDraft();
+    location.href="calendar.html?pencil="+encodeURIComponent(r.data.id);
+  }catch(e){lock(false);msg("Not transferred: "+friendly(e)+" What you typed is kept. Tap Transfer again.");}
+}
 async function doDrop(){
   if(!SH||SH.busy||!SH.id)return;var id=SH.id,old=S.pen.filter(function(x){return x.id===id;})[0];
   lock(true);msg("Dropping...",true);
@@ -588,7 +602,7 @@ document.addEventListener("click",function(ev){
   }else if(k==="pen")openEdit(a.getAttribute("data-id"));
   else if(k==="job")openJob(a.getAttribute("data-id"));
   else if(k==="close")closeSheet();
-  else if(k==="pencil")doPencil();else if(k==="todo")doTodo();else if(k==="save")doSave();else if(k==="drop")doDrop();
+  else if(k==="pencil")doPencil();else if(k==="todo")doTodo();else if(k==="save")doSave();else if(k==="drop")doDrop();else if(k==="transfer")doTransfer();
   else if(k==="t"&&SH){SH.start=v===""?null:+v;renderTimes();saveDraft();}
   else if(k==="l"&&SH){SH.len=+v;SH.lenTouched=true;renderLen();renderTimes();saveDraft();}
   else if(k==="w"&&SH){SH.staff=v;renderWho();saveDraft();}

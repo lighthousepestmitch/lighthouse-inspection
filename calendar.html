@@ -1344,6 +1344,47 @@ async function restoreDraft(){
   clearDraft();
 }
 
+/* ---------- Transfer from Week Book (week.html): calendar.html?pencil=<id> ----------
+   A note pencilled in on the Week Book page (table pencilled, 49_pencilled.sql) opens here as a booking bar that is already filled in: day, time and person from the note, then the name,
+   phone, email and other words, the services it names (ticked the way a tap on the chip does it) and the length. The address is typed into the address box and looked up the normal way
+   (sites on file, then Google); Google's first suggestion is taken by renderAddrList (SH.autoPick), which fills the full street, suburb, state and postcode. Book is one tap.
+   Nothing is booked by itself. When the job is booked (saveSheet), the note is marked moved; closing the bar leaves the note open. */
+function markPencilMoved(pid,jobId){
+  S.sb.from("pencilled").update({status:"moved",moved_job_id:jobId}).eq("id",pid).select("id").then(function(r){
+    if(r.error||!r.data||!r.data.length)toast("Booked, but the pencilled note didn't clear in Week Book. Drop it there.",true);
+  },function(){toast("Booked, but the pencilled note didn't clear in Week Book. Drop it there.",true);});
+}
+async function handlePencil(){
+  let id="";
+  try{id=new URLSearchParams(location.search).get("pencil")||"";}catch(e){}
+  if(!id)return;
+  try{const u=new URL(location.href);u.searchParams.delete("pencil");history.replaceState(null,"",u.pathname+u.search+u.hash);}catch(e){}      // (a reload must not open it again)
+  try{
+    if(!S.isMaster||SH||SV)return;
+    const r=await S.sb.from("pencilled").select("*").eq("id",id).maybeSingle();
+    if(r.error||!r.data){toast("Couldn't open that pencilled note.",true);return;}
+    if(r.data.status!=="open"){toast("That pencilled note is already "+r.data.status+".",true);return;}
+    prefillFromPencil(r.data);
+  }catch(e){toast("Couldn't open that pencilled note.",true);}
+}
+function prefillFromPencil(p){
+  const date=validYmd(p.job_date)?p.job_date:todayYmd();
+  const staff=(p.staff_id&&S.staffById[p.staff_id]&&S.staffById[p.staff_id].active)?p.staff_id:"";
+  if(S.date!==date)gotoDate(date);
+  openQuick({date:date,time:p.start_time?String(p.start_time).slice(0,5):"",staff:staff,exact:true});
+  if(!SH||!SH.quick)return;
+  SH.pencilId=p.id;
+  // the services it names (the ones that exist), then the length: the services set their usual time, and a length that was written down (or picked) beats it
+  String(p.job||"").split(/\s*\+\s*/).map(trim).filter(Boolean).forEach(function(n){if(S.typesByName[n]&&n!==TODO&&!SH.svc.some(function(e){return e.type===n;}))quickToggleSvc(n);});
+  const dur=+p.duration_min;
+  if(dur>0&&parseInt(val("f-dur"),10)!==dur&&(SH.svc.length||dur!==QUICK_DUR)){setVal("f-dur",String(dur));SH.durHand=true;SH.durAuto=false;}
+  setVal("f-name",trim(p.name));setVal("f-phone",trim(p.phone));setVal("f-email",trim(p.email));setVal("f-notes",trim(p.notes));
+  if(trim(p.name))onNameInput();
+  if(trim(p.address)){SH.autoPick=true;setVal("f-addr",trim(p.address));onAddrInput();}      // (onAddrInput runs the lookup; renderAddrList takes the first Google suggestion)
+  quickSync();
+  SH.baseline=snap();      // (what came from the note is not an unsaved change: closing the bar asks nothing, and the note stays open)
+  barHint("From your pencilled note. Check it, then Book.");
+}
 async function startApp(){
   if(S.starting)return;
   S.starting=true;
@@ -1372,6 +1413,7 @@ async function startApp(){
     startPoll();
     await fetchJobs(false);
     offerDraft();
+    await handlePencil();
   }catch(e){
     S.starting=false;
     if(netErr(e)&&offShow(S.userId))return;      // no signal: this login's saved jobs, read only
@@ -1598,6 +1640,7 @@ function menuHtml(){
   return '<div class="menuwrap"><button type="button" class="mbtn'+(M?" m":"")+'" id="menu-btn" data-act="menu" aria-haspopup="menu" aria-expanded="false" aria-controls="menu" aria-label="Menu">'+IC.dots+'</button>'+
     '<div class="menu" id="menu" role="menu" hidden>'+
     (M?'<button type="button" class="mi" role="menuitemcheckbox" data-act="togglecanc" aria-checked="'+(S.showCancelled?"true":"false")+'"><span class="mck" aria-hidden="true">'+IC.tick+'</span>Show cancelled</button>'+
+      '<button type="button" class="mi" role="menuitem" data-act="weekbook">Week Book</button>'+
       '<button type="button" class="mi" role="menuitem" data-act="svcpanel">Services</button>'+
       '<button type="button" class="mi" role="menuitem" id="mi-props" data-act="proplist"'+(S.noPropCols?" hidden":"")+'>Proposals to do</button>'+
       '<div class="mi mlive" role="presentation"><span class="live"></span></div>':"")+
@@ -3845,6 +3888,19 @@ async function addrSiteSearch(q){
 // Draws the list from its two halves: the sites on file (each "<address> · <client name>"), then Google's suggestions with Google's credit.
 // The list doesn't jump under a finger: Google's rows wait (ADDR_HOLD at most) for the sites half, so the sites land above them before anything is drawn. If the sites are later than that,
 // Google's rows are already on screen and the sites go BELOW them instead of pushing them down (acGShown).
+// Which of Google's suggestions is the address that was typed (-1 = none to be sure of). Every number and every word of 4 letters or more that was typed (street-type words left
+// out: Google may say "St" for "Street") has to be in the suggestion, so "12 Smith St Lennox Head" does not take a "12 Smith St, Mullumbimby". With no suburb typed
+// ("12 Smith St") it only takes Google's answer when there is exactly one, otherwise the list stays open and Mitch taps the right one.
+function autoPickIndex(results,typed){
+  const g=[];results.forEach(function(p,i){if(p.kind!=="site")g.push(i);});
+  if(!g.length)return -1;
+  const skip=/^(?:street|road|avenue|drive|court|crescent|place|lane|parade|close|highway|terrace|boulevard|circuit|esplanade|square|trail|parkway|grove|walk|unit|shop|flat|lot)$/;
+  const toks=String(typed||"").toLowerCase().replace(/[^a-z0-9\s\/]/g," ").split(/\s+/).map(function(t){return t.indexOf("/")>=0?t.split("/").pop():t;}).filter(function(t){return t&&(/\d/.test(t)||t.length>=4)&&!skip.test(t);});
+  if(!toks.length)return -1;
+  if(toks.length<3)return g.length===1?g[0]:-1;
+  for(let k=0;k<g.length;k++){const line=String(results[g[k]].line||"").toLowerCase();if(toks.every(function(t){return line.indexOf(t)>=0;}))return g[k];}
+  return -1;
+}
 function renderAddrList(){
   const l=byId("f-addr-list");if(!l||!SH)return;
   const sites=SH.acSites||[],g=SH.acG||[];
@@ -3862,6 +3918,14 @@ function renderAddrList(){
     return;
   }
   if(SH.acGDone)addrHint(SH.acGDown?ADDR_DOWN:"");      // (still looking: the "Looking..." stays)
+  // A booking started from a pencilled note (Week Book's Transfer): once both halves of the list are in, take Google's first suggestion so the full street, suburb, state and postcode
+  // fill in by themselves. Never a client's site on file (that would swap the client and ask first). The list stays open if Google had nothing.
+  if(SH.autoPick&&SH.acGDone&&SH.acSDone){
+    SH.autoPick=false;
+    const gi=autoPickIndex(SH.acResults,val("f-addr"));
+    if(gi>=0){const sh0=SH;setTimeout(function(){if(SH===sh0)pickAddr(gi);},0);return;}
+    if(SH.acResults.some(function(p){return p.kind!=="site";}))addrHint("Not sure which one. Tap the right address.");
+  }
   l.innerHTML=SH.acResults.map(function(p,i){
     return p.kind==="site"
       ?'<button type="button" class="acitem site" role="option" data-sh="pickaddr" data-i="'+i+'"><span class="sa">'+esc(p.line)+'</span><span class="sc"> \u00b7 '+esc(p.client.name)+'</span></button>'
@@ -4460,6 +4524,7 @@ async function saveSheet(extra,opts){
       if(r.error)throw r.error;
       row=r.data;
       sh.isNew=false;sh.jobId=row.id;
+      if(sh.pencilId){markPencilMoved(sh.pencilId,row.id);sh.pencilId=null;}      // (a booking that came from a pencilled note in Week Book: the note is done)
     }else if(Object.keys(patch).length){
       const r=await colRetry(function(){return S.sb.from("jobs").update(patch).eq("id",sh.jobId).select(jobCols());});
       if(r.error)throw r.error;
@@ -5265,6 +5330,7 @@ async function quickMore(){
   if(!SH)return;
   fillSheet(F,{clientId:keep.clientId,client:keep.client,addrTouched:keep.addrTouched,job:null});
   SH.addrAuto=keep.addrAuto;SH.addrPick=keep.addrPick;SH.preferAddr=keep.preferAddr;SH.svcMemo=keep.svcMemo;
+  SH.pencilId=q.pencilId||null;      // (still the pencilled note it came from)
 }
 
 /* ----- the status line, the Book button and the green spots ----- */
@@ -5589,6 +5655,7 @@ function handleAct(k,el){
   if(k==="signout")signOut();
   else if(k==="togglecanc"){S.showCancelled=!S.showCancelled;savePrefs();const mi=$('#menu [data-act="togglecanc"]');if(mi)mi.setAttribute("aria-checked",S.showCancelled?"true":"false");renderBody();}
   else if(k==="svcpanel")openSvcPanel();
+  else if(k==="weekbook"){location.href="week.html";}
   else if(k==="proplist")openPropList();
   else if(k==="restart"){S.starting=false;if(S.userId)startApp();else renderLogin("","");}
   else if(k==="reload"){location.reload();}
