@@ -77,6 +77,9 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .rd label{display:block;font-size:.75rem;color:var(--ink2);font-weight:600;margin-bottom:2px}
 .rd input{width:100%;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
 .rd input.chk{border-color:var(--soon);background:var(--soonBg)}
+.tinrow{display:flex;align-items:center;gap:10px;margin-top:8px}
+.tinrow label{font-size:.85rem;font-weight:600;color:var(--ink2)}
+.tinrow input{min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{min-height:44px;padding:0 14px;border:1.5px solid var(--line);border-radius:99px;font-weight:600;background:#fff}
 .chip[aria-pressed="true"]{background:var(--deep);border-color:var(--deep);color:#fff}
@@ -465,7 +468,8 @@ function sheetHtml(title,editing){
     var w=(f==="address"||f==="notes")?" w":"";
     h+='<div class="f'+w+'"><label for="f-'+f+'">'+LAB[f]+'</label><input id="f-'+f+'" type="'+(f==="phone"?"tel":f==="email"?"email":"text")+'" autocomplete="off" autocorrect="off" autocapitalize="'+(f==="email"?"none":"words")+'" data-f="'+f+'"></div>';
   });
-  h+='</div><div class="lbl">Starts</div><div class="chips scr" id="c-time"></div><div class="lbl">Length</div><div class="chips" id="c-len"></div><div class="lbl">Who</div><div class="chips" id="c-who"></div><div id="msg" role="alert"></div><div class="btns">';
+  h+='</div><div class="lbl" id="t-lbl">Starts</div><div class="chips scr" id="c-time"></div>'+
+    '<div class="tinrow"><label for="t-in">Any other time</label><input id="t-in" type="time" step="300"></div><div class="lbl">Length</div><div class="chips" id="c-len"></div><div class="lbl">Who</div><div class="chips" id="c-who"></div><div id="msg" role="alert"></div><div class="btns">';
   if(editing)h+='<button type="button" class="btn bad" data-a="drop">Drop it</button><button type="button" class="btn" data-a="save">Save</button><button type="button" class="btn pri" data-a="transfer">Transfer</button>';
   else h+='<button type="button" class="btn" data-a="todo">To do</button><button type="button" class="btn" data-a="pencil">Pencil in</button><button type="button" class="btn pri" data-a="transfer">Transfer</button>';
   return h+'</div><p class="hint">Transfer opens the Job Calendar with this filled in and the full address looked up. You tap Book there.</p>';
@@ -483,7 +487,23 @@ function renderTimes(){
   var h=SH.chunk?"":'<button type="button" class="chip" data-a="t" data-v="" aria-pressed="'+(SH.start==null?"true":"false")+'">No time</button>';
   o.forEach(function(m){h+='<button type="button" class="chip" data-a="t" data-v="'+m+'" aria-pressed="'+(SH.start===m?"true":"false")+'">'+esc(fmtT(m))+'</button>';});
   $("c-time").innerHTML=h;
-  if(SH.chunk&&(SH.len||60)>SH.chunk.b-SH.chunk.a)msg("Longer than this free chunk ("+fmtLen(SH.chunk.b-SH.chunk.a)+").");else if($("msg")&&$("msg").textContent.indexOf("Longer")===0)msg("");
+  $("t-lbl").textContent="Starts"+(SH.start==null?" (no time)":" · "+fmtT(SH.start));
+  var ti=$("t-in");if(ti&&document.activeElement!==ti)ti.value=SH.start==null?"":minToTm(SH.start).slice(0,5);      // (the picker shows the time that is picked, but is left alone while it is being turned)
+  var sel=$("c-time").querySelector('[aria-pressed="true"]');if(sel&&sel.scrollIntoView){try{sel.scrollIntoView({block:"nearest",inline:"center"});}catch(e){}}
+  showWarn();
+}
+// A heads-up (not a block) when the time picked clashes with another job for that person, or is outside the free chunk that was tapped
+function showWarn(){
+  if(!SH)return;var w="",m=$("msg");
+  if(SH.start!=null){
+    var a=SH.start,b=a+(SH.len||60),clash=null;
+    function hit(date,staff,s0,dur,label){if(clash||!SH.staff||staff!==SH.staff||date!==SH.date||s0==null)return;var e0=s0+(+dur||60);if(a<e0&&b>s0)clash=fmtRange(s0,e0)+" "+label;}
+    S.jobs.forEach(function(j){hit(j.job_date,j.staff_id,tm(j.start_time),j.duration_min,isTodo(j)?"to do":(briefAddr(j.address)||(j.client&&j.client.name)||"job"));});
+    S.pen.forEach(function(r){if(r.id!==SH.id)hit(r.job_date,r.staff_id,tm(r.start_time),r.duration_min,"pencilled");});
+    if(clash)w="Clashes with "+clash+".";
+    else if(SH.chunk&&(a<SH.chunk.a||b>SH.chunk.b))w="Outside the free chunk ("+fmtT(SH.chunk.a)+" to "+fmtT(SH.chunk.b)+").";
+  }
+  if(w)msg(w);else if(m&&/^(?:Clashes|Outside|Longer)/.test(m.textContent))msg("");
 }
 function renderLen(){
   var base=[30,60,90,120,180],cur=SH.len||60,all=base.indexOf(cur)<0?base.concat([cur]).sort(function(a,b){return a-b;}):base;
@@ -605,7 +625,7 @@ document.addEventListener("click",function(ev){
   else if(k==="pencil")doPencil();else if(k==="todo")doTodo();else if(k==="save")doSave();else if(k==="drop")doDrop();else if(k==="transfer")doTransfer();
   else if(k==="t"&&SH){SH.start=v===""?null:+v;renderTimes();saveDraft();}
   else if(k==="l"&&SH){SH.len=+v;SH.lenTouched=true;renderLen();renderTimes();saveDraft();}
-  else if(k==="w"&&SH){SH.staff=v;renderWho();saveDraft();}
+  else if(k==="w"&&SH){SH.staff=v;renderWho();showWarn();saveDraft();}
   else if(k==="retry"){if(S.me)reload(true);else{S.starting=false;S.loaded=false;S.sb.auth.getSession().then(function(r){onSession(r.data&&r.data.session);});}}
   else if(k==="draftopen"&&S.draft){var d=S.draft;openNew({date:d.d||today(),staff:d.s||"",start:d.a,len:d.len,raw:d.raw});}
   else if(k==="draftbin"){clearDraft();render();}
@@ -614,6 +634,11 @@ document.addEventListener("click",function(ev){
 document.addEventListener("input",function(ev){
   var e=ev.target;if(!SH)return;
   if(e.id==="raw")onRaw();
+  else if(e.id==="t-in"){      // any time of day: the phone's own time picker
+    var tv=e.value;
+    if(/^\d{2}:\d{2}$/.test(tv)){SH.start=(+tv.slice(0,2))*60+(+tv.slice(3,5));renderTimes();saveDraft();}
+    else if(tv===""){SH.start=null;renderTimes();saveDraft();}
+  }
   else if(e.getAttribute&&e.getAttribute("data-f")){SH.touched[e.getAttribute("data-f")]=true;tint(e.getAttribute("data-f"),false);}
 });
 $("shade").addEventListener("click",closeSheet);
