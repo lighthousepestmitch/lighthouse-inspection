@@ -123,7 +123,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-19e";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
+var BUILD="2026-11-19f";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
 var DAY_START=7*60, DAY_END=17*60;        // free time is green all day, 7am to 5pm Monday to Friday, for everyone (same hours as the Job Calendar's green spots). Mitch's weekly plan shows as tags on top of it.
 var STEP=30;
@@ -472,7 +472,7 @@ function dayHtml(d,people,nowMin){
     h+='<div class="col" style="--sc:'+safeColour(x.p.colour)+'">'+(people.length>1?'<div class="ch"><i></i>'+esc(firstWord(x.p.name))+'</div>':"");
     if(x.p.role==="master"){var pl=planLine(d);if(pl)h+='<div class="plan">Your plan: '+esc(pl)+'</div>';}      // Mitch's weekly template, visible even when the day is fully booked
     if(x.c.nt.length)h+='<div class="nt">'+x.c.nt.map(ntChip).join("")+'</div>';
-    h+=x.c.items.length?x.c.items.map(function(i){return i.h;}).join(""):'<div class="emp">'+(d<today()?"Nothing":"No free time in field hours")+'</div>';
+    h+=x.c.items.length?x.c.items.map(function(i){return i.h;}).join(""):'<div class="emp">'+(d<today()?"Nothing":wd===0||wd===6?"Weekend: tap + to pencil something in.":"Fully booked.")+'</div>';
     h+='</div>';
   });
   return h+'</div></section>';
