@@ -119,9 +119,10 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-18a";
+var BUILD="2026-11-19d";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
-var TECH_START=7*60, TECH_END=15*60+30;   // Andrew's field hours Mon to Fri (Mitch's come from his weekly plan: the "Field Work" blocks)
+var TECH_START=7*60, DAY_END=16*60;       // Andrew's hours Mon to Fri, and the time green stops for everyone (Mitch's start comes from his weekly plan's "Field Work" blocks)
+var PERSONAL=/gym|soccer|coach|masterclass|training/i;   // plan blocks that are not bookable time
 var STEP=30;
 var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 var LS_WHO="lpc_week_who",LS_DRAFT="lpc_week_draft";
@@ -286,13 +287,19 @@ function planApplies(b,date){
   var n=+b.every_weeks||1;if(n<=1)return true;if(!b.anchor_date)return true;
   var w=Math.round((parseYmd(date)-parseYmd(b.anchor_date))/(7*864e5));return ((w%n)+n)%n===0;
 }
-// the hours a person takes bookings on a date: the master's "Field Work" blocks in his weekly plan, a worker's fixed hours Mon to Fri
+// the hours a person takes bookings on a date.
+// A worker: TECH_START to DAY_END, Mon to Fri. The master: from where his weekly plan's first "Field Work" block starts that day (so his morning admin stays protected) to DAY_END,
+// minus his personal blocks (gym, kids' soccer, coaching), so the afternoon is green too, even where the plan says admin (Mitch, 2026-11-19: "why no green in the afternoon").
 function windowsFor(p,date){
   var d=parseYmd(date),wd=((d.getDay()+6)%7)+1;
   if(p.role==="master"){
-    return mergeSpans(S.plan.filter(function(b){return +b.weekday===wd&&/field\s*work/i.test(b.title)&&planApplies(b,date);}).map(function(b){return [tm(b.start_time),tm(b.end_time)];}));
+    var fw=S.plan.filter(function(b){return +b.weekday===wd&&/field\s*work/i.test(b.title)&&planApplies(b,date);});
+    if(!fw.length)return [];
+    var from=Math.min.apply(null,fw.map(function(b){return tm(b.start_time);})),to=Math.max(DAY_END,Math.max.apply(null,fw.map(function(b){return tm(b.end_time);})));
+    var mine=S.plan.filter(function(b){return +b.weekday===wd&&PERSONAL.test(b.title)&&planApplies(b,date);}).map(function(b){return [tm(b.start_time),tm(b.end_time)];});
+    return subtractSpans([[from,to]],mine);
   }
-  return wd<=5?[[TECH_START,TECH_END]]:[];
+  return wd<=5?[[TECH_START,DAY_END]]:[];
 }
 function freeChunks(p,date,busy,nowMin){
   if(date<today())return [];
