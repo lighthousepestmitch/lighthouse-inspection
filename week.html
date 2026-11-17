@@ -100,6 +100,8 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .wl{position:relative;flex:1;min-width:0;border-radius:6px;background-color:var(--okBg);background-image:linear-gradient(rgba(39,107,89,.25) 1px,transparent 1px);background-size:100% var(--hh);overflow:hidden;cursor:pointer}
 .wl.off{background-color:#ECEEED;background-image:linear-gradient(rgba(0,0,0,.08) 1px,transparent 1px);cursor:default}
 .wl .wb{position:absolute;left:1px;right:1px;padding:1px 2px;border:1px solid #fff;border-radius:4px;background:var(--sc);color:#fff;font-size:.58rem;line-height:1.05;text-align:left;overflow:hidden;box-sizing:border-box}
+.wl .wb{font-weight:700;word-break:break-word}
+.wl .wb.v{writing-mode:vertical-rl;padding:3px 0;font-size:.62rem;line-height:1;white-space:nowrap;text-align:left;word-break:normal}
 .wl .wb.done{opacity:.5}
 .wl .wb.pen{background:#fff;color:var(--sc);border:1.5px dashed var(--sc)}
 .wl .wb.todo{background:#fff;color:var(--ink);border:1.5px dashed var(--ink3)}
@@ -142,7 +144,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-19g";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
+var BUILD="2026-11-19h";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
 var DAY_START=7*60, DAY_END=17*60;        // free time is green all day, 7am to 5pm Monday to Friday, for everyone (same hours as the Job Calendar's green spots). Mitch's weekly plan shows as tags on top of it.
 var STEP=30;
@@ -151,7 +153,7 @@ var LS_WHO="lpc_week_who",LS_DRAFT="lpc_week_draft";
 var FIELDS=["name","phone","email","job","address","notes"];
 var JOB_COLS="id,job_date,start_time,duration_min,staff_id,status,service_type,address,notes,client:clients(name)";
 var S={sb:null,me:null,staff:[],types:[],plan:[],jobs:[],pen:[],ws:"",who:"both",view:"days",from:"",to:"",loaded:false,err:"",starting:false,draft:null};
-var LS_VIEW="lpc_week_view",PPM=0.6;      // PPM: pixels a minute in the Week view (0.6 = 36px an hour, 7am to 5pm is 360px)
+var LS_VIEW="lpc_week_view",PPM=0.85;      // PPM: pixels a minute in the Week view (0.85 = 51px an hour, 7am to 5pm is 510px: tall enough for a suburb to read down a block)
 var SH=null,toastT=0,lastVis=0;
 
 /* ---------- small helpers ---------- */
@@ -507,21 +509,44 @@ function busyFor(p,d){
   S.pen.forEach(function(r){if(r.job_date!==d||r.staff_id!==p.id)return;var s=tm(r.start_time);if(s!=null)b.push([s,s+(+r.duration_min||60)]);});
   return b;
 }
-function blockLabel(j){
-  if(isTodo(j))return noteLine(j.notes)||"To do";
-  var a=briefAddr(j.address).split(",")[0].replace(/^[\d\/\-]+[a-z]?\s+/i,"");      // "12 Smith St, Lennox" -> "Smith St"
-  return a||(j.client&&j.client.name)||"Job";
+// The suburb of an address ("12 Smith St, Lennox Head NSW 2478" -> "Lennox Head"): the bit after the first comma, else a known local suburb found in the text, else ""
+function suburbOf(a){
+  a=trim(a);if(!a)return "";
+  var p=a.split(",").map(trim).filter(Boolean);
+  if(p.length>1){var sb=p[1].replace(/\b(?:NSW|QLD|VIC|TAS|SA|WA|NT|ACT)\b.*$/i,"").replace(/\s+\d{4}$/,"").trim();if(sb)return sb;}
+  var low=a.toLowerCase();
+  for(var i=0;i<SUBURBS.length;i++)if(new RegExp("(?:^|[\\s,])"+SUBURBS[i].replace(/ /g,"\\s+")+"(?![A-Za-z])").test(low))return titleCase(SUBURBS[i]);
+  return "";
+}
+// short enough to read sideways down a narrow lane (Both view)
+function shortSub(s){
+  var m={"mullumbimby":"Mullum","alstonville":"Alstonv","brunswick heads":"Brunswick","suffolk park":"Suffolk","ocean shores":"Ocean Sh","lennox head":"Lennox","byron bay":"Byron","wilsons creek":"Wilsons","skinners shoot":"Skinners","coopers shoot":"Coopers","mcleods shoot":"McLeods","west ballina":"W Ballina","east ballina":"E Ballina"},k=String(s).toLowerCase();
+  if(m[k])return m[k];
+  var ws=String(s).split(/\s+/),pre={south:"S",north:"N",east:"E",west:"W",mount:"Mt",upper:"Up",lower:"Lw"}[ws[0].toLowerCase()];
+  var w=(pre&&ws[1])?pre+" "+ws[1]:ws[0];      // ("South Golden Beach" reads "S Golden", not just "South")
+  return w.length>9?w.slice(0,8)+"\u2026":w;
+}
+// what a block says in the Week view: the suburb (Mitch, 2026-11-19: "details on it, could just be the suburb"); no address: the street name, the client, or the note of a To do
+function blockLabel(j,narrow){
+  if(isTodo(j)){var n=noteLine(j.notes)||"To do";return narrow?n.split(/\s+/)[0]:n;}
+  var sub=suburbOf(j.address);
+  if(!sub)sub=briefAddr(j.address).split(",")[0].replace(/^[\d\/\-]+[a-z]?\s+/i,"")||(j.client&&j.client.name)||"Job";
+  return narrow?shortSub(sub):sub;
+}
+function penLabel(r,narrow){
+  var sub=suburbOf(r.address)||r.name||noteLine(r.raw)||"Pencilled";
+  return narrow?shortSub(sub):sub;
 }
 function laneBlocks(p,d,narrow){
   var out="",col=safeColour(p.colour);
   function box(s,e,cls,id,act,label,tip){
     var a=Math.max(s,DAY_START),b=Math.min(e,DAY_END);if(b<=a)return;
-    out+='<button type="button" class="wb '+cls+'" style="top:'+Math.round((a-DAY_START)*PPM)+'px;height:'+Math.max(10,Math.round((b-a)*PPM)-1)+'px" data-a="'+act+'" data-id="'+esc(id)+'" aria-label="'+esc(tip)+'">'+(narrow?"":esc(label))+'</button>';
+    out+='<button type="button" class="wb '+(narrow?"v ":"")+cls+'" style="top:'+Math.round((a-DAY_START)*PPM)+'px;height:'+Math.max(10,Math.round((b-a)*PPM)-1)+'px" data-a="'+act+'" data-id="'+esc(id)+'" aria-label="'+esc(tip)+'">'+esc(label)+'</button>';
   }
   S.jobs.forEach(function(j){if(j.job_date!==d||j.staff_id!==p.id)return;var s=tm(j.start_time);if(s==null)return;var e=s+(+j.duration_min||60);
-    box(s,e,(isTodo(j)?"todo ":"")+(j.status==="done"?"done":""),j.id,"job",blockLabel(j),fmtRange(s,e)+" "+blockLabel(j));});
+    box(s,e,(isTodo(j)?"todo ":"")+(j.status==="done"?"done":""),j.id,"job",blockLabel(j,narrow),fmtRange(s,e)+" "+blockLabel(j));});
   S.pen.forEach(function(r){if(r.job_date!==d||r.staff_id!==p.id)return;var s=tm(r.start_time);if(s==null)return;var e=s+(+r.duration_min||60);
-    box(s,e,"pen",r.id,"pen","Pencilled","Pencilled "+fmtRange(s,e)+" "+(r.name||noteLine(r.raw)));});
+    box(s,e,"pen",r.id,"pen",penLabel(r,narrow),"Pencilled "+fmtRange(s,e)+" "+(r.name||noteLine(r.raw)));});
   return out;
 }
 function weekGridHtml(ppl,nowMin){
