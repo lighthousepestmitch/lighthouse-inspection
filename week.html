@@ -53,8 +53,14 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .sq.done{opacity:.6}
 .sq.pen{border:2px dashed var(--ink2);border-left:6px dashed var(--sc,#7E8D88);background:#fff}
 .sq.todo{border-style:dashed;background:#fafaf8}
-.sq.free{border:2px dashed var(--ok);background:var(--okBg);color:var(--ok);border-left:2px dashed var(--ok);min-height:48px}
-.sq.free .ad{font-weight:500;font-size:.85rem}
+.fb{margin-top:6px;border:2px dashed var(--ok);border-radius:10px;background:var(--okBg);overflow:hidden}
+.fb .fh{padding:7px 10px 5px;font-weight:700;font-size:.85rem;color:var(--ok)}
+.fb .fr{position:relative;display:block;width:100%;height:54px;padding:5px 10px 0;border-top:1px solid rgba(39,107,89,.45);color:var(--ok);font-size:.8rem;text-align:left}
+.fb .fr b{display:block;font-weight:700;line-height:1.1}
+.fb .fr i{position:absolute;left:10px;bottom:4px;font-style:normal;font-size:.72rem;opacity:.7}
+.fb .fr.sp::after{content:"";position:absolute;left:34px;right:0;top:50%;border-top:1px dashed rgba(39,107,89,.4)}
+.fb .fr:active{background:rgba(39,107,89,.22)}
+.c2 .fb .fh{font-size:.75rem;padding:6px 7px 4px}.c2 .fb .fr{padding:4px 7px 0;font-size:.75rem;height:50px}.c2 .fb .fr i{left:7px}
 .c2 .sq{padding:6px 7px}.c2 .sq .tm{font-size:.82rem}.c2 .sq .ad,.c2 .sq .jb{font-size:.8rem}
 .nt{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .nt button{padding:6px 10px;border:1px solid var(--line);border-radius:99px;font-size:.82rem;background:var(--bg);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -391,8 +397,17 @@ function penSq(r){
   var top=r.name||noteLine(r.raw)||"Pencilled",sub=[r.job,briefAddr(r.address)].filter(Boolean).join(" · ");
   return '<button type="button" class="sq pen" style="--sc:'+col+'" data-a="pen" data-id="'+esc(r.id)+'"><span class="tm">'+(s==null?"Pencilled":esc(fmtRange(s,s+(+r.duration_min||60)))+" · pencilled")+'</span><span class="ad">'+esc(top)+'</span><span class="jb">'+esc(sub)+'</span></button>';
 }
+// A free chunk is a green time ruler: a row for every half hour, and the row that is tapped is the start time ("tap the actual time of day", Mitch 2026-11-19)
+function slotLbl(m){if(m%60===0){var h=Math.floor(m/60)%24;return (h%12||12)+(h>=12?"pm":"am");}return m%30===0?":30":hm(m);}
 function freeSq(p,d,c){
-  return '<button type="button" class="sq free" data-a="free" data-d="'+esc(d)+'" data-s="'+esc(p.id)+'" data-x="'+c[0]+'" data-y="'+c[1]+'"><span class="tm">Free '+esc(fmtT(c[0]))+' to '+esc(fmtT(c[1]))+'</span><span class="ad">'+esc(fmtLen(c[1]-c[0]))+' · tap to pencil in</span></button>';
+  var base=' data-a="free" data-d="'+esc(d)+'" data-s="'+esc(p.id)+'" data-x="'+c[0]+'" data-y="'+c[1]+'"';
+  var rows='',m=c[0];
+  while(m<=c[1]-15){      // one green block per hour; the top half of a block is the hour, the bottom half is the half past
+    var hr0=Math.floor(m/60)*60,next=hr0+60,low=hr0+30,hasLow=(low>m&&low<=c[1]-15);
+    rows+='<button type="button" class="fr'+(hasLow?" sp":"")+'"'+base+' data-at="'+m+'"'+(hasLow?' data-at2="'+low+'"':'')+' aria-label="Pencil in at '+esc(fmtT(m))+(hasLow?' or '+esc(fmtT(low)):'')+'"><b>'+esc(slotLbl(m))+'</b>'+(hasLow?'<i>:30</i>':'')+'</button>';
+    m=next;
+  }
+  return '<div class="fb"><div class="fh">Free '+esc(fmtT(c[0]))+' to '+esc(fmtT(c[1]))+' · '+esc(fmtLen(c[1]-c[0]))+'. Tap the time.</div>'+rows+'</div>';
 }
 function colFor(p,d,nowMin){
   var items=[],nt=[],busy=[];
@@ -528,7 +543,7 @@ function saveDraft(){
 }
 function clearDraft(){S.draft=null;try{localStorage.removeItem(LS_DRAFT);}catch(e){}}
 function openNew(o){
-  SH={id:null,date:o.date,staff:o.staff||"",chunk:o.chunk||null,start:o.chunk?o.chunk.a:(o.start==null?null:o.start),len:o.len||60,touched:{},lenTouched:!!o.len,busy:false};
+  SH={id:null,date:o.date,staff:o.staff||"",chunk:o.chunk||null,start:o.start!=null?o.start:(o.chunk?o.chunk.a:null),len:o.len||60,touched:{},lenTouched:!!o.len,busy:false};
   var st=staffById(SH.staff);
   openSheet(sheetHtml("Pencil in · "+dayLbl(o.date)+(st?", "+firstWord(st.name):""),false));
   renderTimes();renderLen();renderWho();
@@ -616,7 +631,9 @@ document.addEventListener("click",function(ev){
   }else if(k==="who"){S.who=v;try{localStorage.setItem(LS_WHO,v);}catch(e){}render();}
   else if(k==="free"){
     var st=staffById(a.getAttribute("data-s"));
-    openNew({date:a.getAttribute("data-d"),staff:st?st.id:"",chunk:{a:+a.getAttribute("data-x"),b:+a.getAttribute("data-y")}});
+    var at=a.getAttribute("data-at"),at2=a.getAttribute("data-at2");
+    if(at2!=null){var rc=a.getBoundingClientRect();if(ev.clientY-rc.top>rc.height/2)at=at2;}      // (the bottom half of an hour block is the half past)
+    openNew({date:a.getAttribute("data-d"),staff:st?st.id:"",chunk:{a:+a.getAttribute("data-x"),b:+a.getAttribute("data-y")},start:at==null?null:+at});
   }else if(k==="add"){
     var def=S.who!=="both"?S.who:(S.me?S.me.id:"");openNew({date:a.getAttribute("data-d"),staff:def});
   }else if(k==="pen")openEdit(a.getAttribute("data-id"));
