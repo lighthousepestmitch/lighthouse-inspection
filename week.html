@@ -23,9 +23,10 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .top .in{max-width:760px;margin:0 auto}
 .r1{display:flex;align-items:center;gap:10px}
 .r1 img{width:34px;height:34px;border-radius:6px;display:block}
-.r1 h1{margin:0;font-size:1.05rem;flex:1}
+.r1 .sp1{flex:1}
+.r1 img{flex:none}
 .seg{display:flex;border:1px solid rgba(255,255,255,.55);border-radius:10px;overflow:hidden}
-.seg button{min-height:40px;padding:0 12px;color:#fff;font-weight:600;font-size:.9rem}
+.seg button{min-height:40px;padding:0 9px;color:#fff;font-weight:600;font-size:.85rem}
 .seg button[aria-pressed="true"]{background:#fff;color:var(--deep)}
 .r2{display:flex;align-items:center;gap:8px;margin-top:8px}
 .r2 .nv{min-width:48px;min-height:44px;border:1px solid rgba(255,255,255,.55);border-radius:10px;color:#fff;font-size:1.3rem;font-weight:700}
@@ -87,6 +88,24 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .rd label{display:block;font-size:.75rem;color:var(--ink2);font-weight:600;margin-bottom:2px}
 .rd input{width:100%;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
 .rd input.chk{border-color:var(--soon);background:var(--soonBg)}
+/* the Week view */
+.wg{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 6px 8px}
+.wgh,.wgb{display:grid;grid-template-columns:24px repeat(var(--n),minmax(0,1fr));gap:3px}
+.wgb{margin-top:4px}
+.wgh button{min-height:42px;border-radius:8px;font-weight:700;font-size:.74rem;line-height:1.15;color:var(--ink);background:var(--bg)}
+.wgh button.today{background:var(--deep);color:#fff}
+.wgut{position:relative;height:var(--h)}
+.wgut span{position:absolute;right:2px;font-size:.62rem;color:var(--ink2);transform:translateY(-50%)}
+.wc{display:flex;gap:1px;height:var(--h);min-width:0}
+.wl{position:relative;flex:1;min-width:0;border-radius:6px;background-color:var(--okBg);background-image:linear-gradient(rgba(39,107,89,.25) 1px,transparent 1px);background-size:100% var(--hh);overflow:hidden;cursor:pointer}
+.wl.off{background-color:#ECEEED;background-image:linear-gradient(rgba(0,0,0,.08) 1px,transparent 1px);cursor:default}
+.wl .wb{position:absolute;left:1px;right:1px;padding:1px 2px;border:1px solid #fff;border-radius:4px;background:var(--sc);color:#fff;font-size:.58rem;line-height:1.05;text-align:left;overflow:hidden;box-sizing:border-box}
+.wl .wb.done{opacity:.5}
+.wl .wb.pen{background:#fff;color:var(--sc);border:1.5px dashed var(--sc)}
+.wl .wb.todo{background:#fff;color:var(--ink);border:1.5px dashed var(--ink3)}
+.wl .wpast{position:absolute;left:0;right:0;top:0;background:rgba(90,90,90,.22);pointer-events:none}
+.wl .wpl{position:absolute;left:0;width:3px;pointer-events:none}
+.wleg{margin:8px 2px 0;font-size:.75rem;color:var(--ink2);line-height:1.35}
 .tinrow{display:flex;align-items:center;gap:10px;margin-top:8px}
 .tinrow label{font-size:.85rem;font-weight:600;color:var(--ink2)}
 .tinrow input{min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
@@ -123,7 +142,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-19f";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
+var BUILD="2026-11-19g";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
 var DAY_START=7*60, DAY_END=17*60;        // free time is green all day, 7am to 5pm Monday to Friday, for everyone (same hours as the Job Calendar's green spots). Mitch's weekly plan shows as tags on top of it.
 var STEP=30;
@@ -131,7 +150,8 @@ var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],MON=["Jan","Feb","Mar","Apr"
 var LS_WHO="lpc_week_who",LS_DRAFT="lpc_week_draft";
 var FIELDS=["name","phone","email","job","address","notes"];
 var JOB_COLS="id,job_date,start_time,duration_min,staff_id,status,service_type,address,notes,client:clients(name)";
-var S={sb:null,me:null,staff:[],types:[],plan:[],jobs:[],pen:[],ws:"",who:"both",from:"",to:"",loaded:false,err:"",starting:false,draft:null};
+var S={sb:null,me:null,staff:[],types:[],plan:[],jobs:[],pen:[],ws:"",who:"both",view:"days",from:"",to:"",loaded:false,err:"",starting:false,draft:null};
+var LS_VIEW="lpc_week_view",PPM=0.6;      // PPM: pixels a minute in the Week view (0.6 = 36px an hour, 7am to 5pm is 360px)
 var SH=null,toastT=0,lastVis=0;
 
 /* ---------- small helpers ---------- */
@@ -385,6 +405,7 @@ async function onSession(session){
     await loadStatic();
     var w="";try{w=localStorage.getItem(LS_WHO)||"";}catch(e){}
     S.who=(w==="both"||staffById(w))?w:"both";
+    try{S.view=localStorage.getItem(LS_VIEW)==="week"?"week":"days";}catch(e){}
     S.ws=mondayOf(today());
     try{var d=JSON.parse(localStorage.getItem(LS_DRAFT)||"null");if(d&&d.raw&&Date.now()-d.at<3*864e5)S.draft=d;}catch(e){}
     await reload(true);
@@ -465,7 +486,7 @@ function dayHtml(d,people,nowMin){
   var njobs=0;cols.forEach(function(x){njobs+=S.jobs.filter(function(j){return j.job_date===d&&j.staff_id===x.p.id;}).length;});
   var used=njobs||un.length||cols.some(function(x){return x.c.nt.length||x.c.items.some(function(i){return i.h.indexOf("pen")>=0;});});
   if(wd===0&&!used)return "";
-  var h='<section class="day'+(d===today()?" today":"")+'" aria-label="'+esc(dayLbl(d))+'"><div class="dh"><b>'+esc(dayLbl(d))+(d===today()?" · today":"")+'</b><small>'+(njobs?njobs+(njobs===1?" job":" jobs"):"nothing booked")+'</small><button type="button" class="add" data-a="add" data-d="'+esc(d)+'" aria-label="Pencil something in on '+esc(dayLbl(d))+'">+</button></div>';
+  var h='<section class="day'+(d===today()?" today":"")+'" id="d-'+esc(d)+'" aria-label="'+esc(dayLbl(d))+'"><div class="dh"><b>'+esc(dayLbl(d))+(d===today()?" · today":"")+'</b><small>'+(njobs?njobs+(njobs===1?" job":" jobs"):"nothing booked")+'</small><button type="button" class="add" data-a="add" data-d="'+esc(d)+'" aria-label="Pencil something in on '+esc(dayLbl(d))+'">+</button></div>';
   if(un.length)h+='<div class="nt"><span class="emp" style="margin:0">Nobody yet:</span>'+un.map(ntChip).join("")+'</div>';
   h+='<div class="cols'+(people.length>1?" c2":"")+'">';
   cols.forEach(function(x){
@@ -478,17 +499,72 @@ function dayHtml(d,people,nowMin){
   return h+'</div></section>';
 }
 function weekRange(){var a=parseYmd(S.ws),b=parseYmd(addDays(S.ws,6));return DOW[a.getDay()]+" "+a.getDate()+(a.getMonth()!==b.getMonth()?" "+MON[a.getMonth()]:"")+" to "+DOW[b.getDay()]+" "+b.getDate()+" "+MON[b.getMonth()];}
+/* ---------- the Week view: the whole week on one screen. Days across, 7am to 5pm down. A lane is one person's day: green = free, a solid block = booked, a dashed block = pencilled.
+   Tap green to pencil in at that time, tap a block to see it, tap a day name to open that day in the Days view. ---------- */
+function busyFor(p,d){
+  var b=[];
+  S.jobs.forEach(function(j){if(j.job_date!==d||j.staff_id!==p.id)return;var s=tm(j.start_time);if(s!=null)b.push([s,s+(+j.duration_min||60)]);});
+  S.pen.forEach(function(r){if(r.job_date!==d||r.staff_id!==p.id)return;var s=tm(r.start_time);if(s!=null)b.push([s,s+(+r.duration_min||60)]);});
+  return b;
+}
+function blockLabel(j){
+  if(isTodo(j))return noteLine(j.notes)||"To do";
+  var a=briefAddr(j.address).split(",")[0].replace(/^[\d\/\-]+[a-z]?\s+/i,"");      // "12 Smith St, Lennox" -> "Smith St"
+  return a||(j.client&&j.client.name)||"Job";
+}
+function laneBlocks(p,d,narrow){
+  var out="",col=safeColour(p.colour);
+  function box(s,e,cls,id,act,label,tip){
+    var a=Math.max(s,DAY_START),b=Math.min(e,DAY_END);if(b<=a)return;
+    out+='<button type="button" class="wb '+cls+'" style="top:'+Math.round((a-DAY_START)*PPM)+'px;height:'+Math.max(10,Math.round((b-a)*PPM)-1)+'px" data-a="'+act+'" data-id="'+esc(id)+'" aria-label="'+esc(tip)+'">'+(narrow?"":esc(label))+'</button>';
+  }
+  S.jobs.forEach(function(j){if(j.job_date!==d||j.staff_id!==p.id)return;var s=tm(j.start_time);if(s==null)return;var e=s+(+j.duration_min||60);
+    box(s,e,(isTodo(j)?"todo ":"")+(j.status==="done"?"done":""),j.id,"job",blockLabel(j),fmtRange(s,e)+" "+blockLabel(j));});
+  S.pen.forEach(function(r){if(r.job_date!==d||r.staff_id!==p.id)return;var s=tm(r.start_time);if(s==null)return;var e=s+(+r.duration_min||60);
+    box(s,e,"pen",r.id,"pen","Pencilled","Pencilled "+fmtRange(s,e)+" "+(r.name||noteLine(r.raw)));});
+  return out;
+}
+function weekGridHtml(ppl,nowMin){
+  var days=[];for(var i=0;i<7;i++){var d=addDays(S.ws,i),wd=parseYmd(d).getDay();
+    if(wd===0&&!S.jobs.some(function(j){return j.job_date===d;})&&!S.pen.some(function(r){return r.job_date===d;}))continue;days.push(d);}
+  var H=Math.round((DAY_END-DAY_START)*PPM),HH=Math.round(60*PPM),narrow=ppl.length>1,t=today();
+  var h='<div class="wg" style="--n:'+days.length+';--h:'+H+'px;--hh:'+HH+'px"><div class="wgh"><div></div>';
+  days.forEach(function(d){var dd=parseYmd(d);h+='<button type="button" class="'+(d===t?"today":"")+'" data-a="wkday" data-d="'+esc(d)+'" aria-label="Open '+esc(dayLbl(d))+'">'+DOW[dd.getDay()]+'<br>'+dd.getDate()+'</button>';});
+  h+='</div><div class="wgb"><div class="wgut">';
+  for(var m=DAY_START;m<DAY_END;m+=60)h+='<span style="top:'+Math.round((m-DAY_START)*PPM+7)+'px">'+hr12(m)+'</span>';
+  h+='</div>';
+  days.forEach(function(d){
+    var wd=parseYmd(d).getDay(),off=wd===0||wd===6||d<t;
+    h+='<div class="wc">';
+    ppl.forEach(function(p){
+      var col=safeColour(p.colour),past=(d===t&&nowMin>DAY_START)?'<i class="wpast" style="height:'+Math.min(H,Math.round((nowMin-DAY_START)*PPM))+'px"></i>':"";
+      var plan="";if(p.role==="master"&&!off)planFor(d).forEach(function(b){var a=Math.max(b.a,DAY_START),e=Math.min(b.b,DAY_END);if(e>a)plan+='<i class="wpl" style="top:'+Math.round((a-DAY_START)*PPM)+'px;height:'+Math.round((e-a)*PPM)+'px;background:'+b.c+'"></i>';});
+      h+='<div class="wl'+(off?" off":"")+'" style="--sc:'+col+'" data-a="wl" data-d="'+esc(d)+'" data-s="'+esc(p.id)+'">'+plan+past+laneBlocks(p,d,narrow)+'</div>';
+    });
+    h+='</div>';
+  });
+  h+='</div><p class="wleg"><b style="color:var(--ok)">Green</b> = free. Tap it to pencil in at that time. Solid = booked, dashed = pencilled.'+(ppl.length>1?' Left lane '+esc(firstWord(ppl[0].name))+', right lane '+esc(firstWord(ppl[1].name))+'.':'')+(ppl.some(function(p){return p.role==="master";})?' Colour stripe = your weekly plan.':'')+' Tap a day to open it.</p></div>';
+  return h;
+}
+function wlTap(a,ev){
+  var d=a.getAttribute("data-d"),p=staffById(a.getAttribute("data-s"));if(!p)return;
+  var rc=a.getBoundingClientRect(),min=Math.max(DAY_START,DAY_START+Math.floor(((ev.clientY-rc.top)/PPM)/30)*30),now=new Date();
+  var ch=freeChunks(p,d,busyFor(p,d),now.getHours()*60+now.getMinutes()).filter(function(c){return min>=c[0]&&min<c[1];})[0];
+  if(!ch)return;      // booked, in the past or a weekend: nothing to pencil in
+  openNew({date:d,staff:p.id,chunk:{a:ch[0],b:ch[1]},start:Math.max(min,ch[0])});
+}
 function render(){
   if(!S.me)return;
   var y=window.pageYOffset,ppl=peopleShown(),now=new Date(),nowMin=now.getHours()*60+now.getMinutes();
-  var h='<div class="top"><div class="in"><div class="r1"><a href="home.html" aria-label="Back to Home"><img src="logo/lpc-badge.png" alt="LPC"></a><h1>Week Book</h1><div class="seg" role="group" aria-label="Whose time">';
+  var h='<div class="top"><div class="in"><div class="r1"><a href="home.html" aria-label="Back to Home"><img src="logo/lpc-badge.png" alt="LPC"></a><div class="seg" role="group" aria-label="View"><button type="button" data-a="view" data-v="days" aria-pressed="'+(S.view==="days"?"true":"false")+'">Days</button><button type="button" data-a="view" data-v="week" aria-pressed="'+(S.view==="week"?"true":"false")+'">Week</button></div><span class="sp1"></span><div class="seg" role="group" aria-label="Whose time">';
   activeStaff().forEach(function(s){h+='<button type="button" data-a="who" data-v="'+esc(s.id)+'" aria-pressed="'+(S.who===s.id?"true":"false")+'">'+esc(firstWord(s.name))+'</button>';});
   h+='<button type="button" data-a="who" data-v="both" aria-pressed="'+(S.who==="both"?"true":"false")+'">Both</button></div></div>'+
     '<div class="r2"><button type="button" class="nv" data-a="prev" aria-label="Previous week">‹</button><div class="rng">'+esc(weekRange())+'</div><button type="button" class="tdy" data-a="today">Today</button><button type="button" class="nv" data-a="next" aria-label="Next week">›</button></div></div></div>';
   h+='<div class="wrap" id="wk">';
   if(S.err)h+='<div class="bn bad">'+esc(S.err)+' <button type="button" data-a="retry">Try again</button></div>';
   if(S.draft)h+='<div class="bn">Unsaved note from '+esc(fmtT((new Date(S.draft.at)).getHours()*60+(new Date(S.draft.at)).getMinutes()))+': '+esc(noteLine(S.draft.raw).slice(0,40))+' <button type="button" data-a="draftopen">Open</button><button type="button" data-a="draftbin">Bin it</button></div>';
-  for(var i=0;i<7;i++)h+=dayHtml(addDays(S.ws,i),ppl,nowMin);
+  if(S.view==="week")h+=weekGridHtml(ppl,nowMin);
+  else for(var i=0;i<7;i++)h+=dayHtml(addDays(S.ws,i),ppl,nowMin);
   h+='<p class="foot">Build '+esc(BUILD)+' · <button type="button" data-a="logout">Log out</button></p></div>';
   $("app").innerHTML=h;
   window.scrollTo(0,y);
@@ -662,6 +738,12 @@ document.addEventListener("click",function(ev){
   if(k==="prev"||k==="next"||k==="today"){
     S.ws=k==="today"?mondayOf(today()):addDays(S.ws,k==="next"?7:-7);window.scrollTo(0,0);reload(false);
   }else if(k==="who"){S.who=v;try{localStorage.setItem(LS_WHO,v);}catch(e){}render();}
+  else if(k==="view"){S.view=v==="week"?"week":"days";try{localStorage.setItem(LS_VIEW,S.view);}catch(e){}window.scrollTo(0,0);render();}
+  else if(k==="wkday"){
+    S.view="days";try{localStorage.setItem(LS_VIEW,"days");}catch(e){}render();
+    var card=$("d-"+a.getAttribute("data-d"));if(card)window.scrollTo(0,card.getBoundingClientRect().top+window.pageYOffset-120);
+  }
+  else if(k==="wl")wlTap(a,ev);
   else if(k==="free"){
     var st=staffById(a.getAttribute("data-s"));
     var at=a.getAttribute("data-at"),at2=a.getAttribute("data-at2");
