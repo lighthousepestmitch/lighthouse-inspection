@@ -132,7 +132,8 @@ label.t.done span{text-decoration:line-through;color:var(--ink2)}
   function say(l,s,more){line.textContent=l;sub.textContent=s;box.textContent="";var d=document.createElement("div");d.className="row";d.textContent=more||s;box.appendChild(d);box.appendChild(link());}
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
   function row(j,flag){var r=document.createElement("div");r.className="row";var b=document.createElement("b");
-    b.textContent=((j.start_time||"").slice(0,5)+" "+((j.client&&j.client.name)||"")).trim()||"Job";r.appendChild(b);
+    var todo=j.service_type==="To do",nt=String(j.notes||"").split(/\r?\n/)[0].trim();      // a To do is a note to self (no client): its note is its title
+    b.textContent=((j.start_time||"").slice(0,5)+" "+((j.client&&j.client.name)||(todo&&nt)||"")).trim()||"Job";r.appendChild(b);
     var s=document.createElement("small");s.textContent=[j.service_type,j.address].filter(Boolean).join(" · ");r.appendChild(s);
     if(flag){var f=document.createElement("div");var sp=document.createElement("span");sp.className="flag";sp.textContent=flag;f.appendChild(sp);r.appendChild(f);}return r;}
   async function go(){
@@ -143,7 +144,7 @@ label.t.done span{text-decoration:line-through;color:var(--ink2)}
       var ses=(await sb.auth.getSession()).data.session;
       if(!ses){say("Today's jobs","Sign in once on the calendar to see them here","Sign in once on the calendar and today's jobs show here.");return;}
       var now=new Date(),t=iso(now),back=new Date(now.getTime()-14*864e5);
-      var r=await sb.from("jobs").select("id,job_date,start_time,service_type,address,status,client:clients(name)")
+      var r=await sb.from("jobs").select("id,job_date,start_time,service_type,address,status,notes,client:clients(name)")
         .gte("job_date",iso(back)).lte("job_date",t).neq("status","cancelled").order("job_date").order("start_time");
       if(r.error){say("Today's jobs","Couldn't load. Open the calendar to check your sign in");return;}
       var jobs=r.data||[],today=jobs.filter(function(j){return j.job_date===t;});

@@ -212,6 +212,8 @@ button.mi:hover,button.mi:focus-visible{background:var(--surface2)}
 body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:none;user-select:none}
 .rzlab{position:absolute;z-index:6;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;white-space:nowrap}
 .jc.st-done,.jm.st-done,.tcard.st-done{opacity:.6;filter:grayscale(.7)}
+/* a To do (a note to self, 50_todo_service.sql): dashed outline on a plain card, so it can't be mistaken for a client job */
+.jc.todo,.jm.todo,.jt.todo,.tcard.todo{outline:1.5px dashed var(--ink3);outline-offset:-3px;background-image:repeating-linear-gradient(135deg,transparent 0 7px,rgba(0,0,0,.045) 7px 14px)}
 .jc.st-cancelled,.jm.st-cancelled,.tcard.st-cancelled{opacity:.55;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.05) 6px 12px)}
 .jc.st-cancelled .nm,.jm.st-cancelled .nm{text-decoration:line-through}
 .jc.dragging,.jm.dragging{opacity:.3}
@@ -726,6 +728,7 @@ const MORE_KEY="lpc_sheet_more_v1";     // the job sheet's "More" row: open or s
 const QUICK_KEY="lpc_quick_prefs_v1";   // the booking bar remembers who it was last booking for
 const QUICK_SVC=6;                      // service chips the booking bar shows before "More services"
 const QUICK_DUR=60;                     // minutes, same default as the full job sheet
+const TODO="To do";                     // a note to self on the calendar ("go look at the corkwork job"): an ordinary job whose only service is "To do", so it needs no client, address or price. The service row comes from ~/lighthouse-supabase/50_todo_service.sql.
 const QUICK_FIRST=6*60, QUICK_LAST=17*60, QUICK_STEP=30;      // time chips 6:00am to 5:00pm
 const NARROW="(max-width:719px)";       // phone width: below this the day view can show one person at a time
 
@@ -909,15 +912,22 @@ function addrLine(j,chars){
   const sh=b.street+", "+abbrSuburb(b.suburb);
   return sh.length<=chars?sh:b.street;
 }
-// The top line of a card: the address, or (no address) the client's name, or "No client".
-function mainLine(j,chars){return addrLine(j,chars)||clientNameOf(j)||"No client";}
-// The line under it: the client's name, only when the top line is the address. "" otherwise.
-function subLine(j){return (addrBits(j&&j.address).street&&clientNameOf(j))||"";}
+// A To do (Mitch, 2026-11-18): its only service is "To do". Its note is what it is called on the calendar.
+function isTodo(j){const n=j?svcNames(j):[];return n.length===1&&n[0]===TODO;}
+function todoTitle(j,max){const l=trim(String((j&&j.notes)||"").split(/\r?\n/)[0]);return max?oneLine(l,max):l;}
+function svcTodoOnly(svc){return !!svc&&svc.length>0&&svc.every(function(e){return e&&e.type===TODO;});}
+// The top line of a card: the address, or (no address) the client's name, or (a To do) its note, or "No client".
+function mainLine(j,chars){return addrLine(j,chars)||clientNameOf(j)||(isTodo(j)&&todoTitle(j,chars||60))||"No client";}
+// The line under it: the client's name, only when the top line is the address (a To do with an address: its note). "" otherwise.
+function subLine(j){return (addrBits(j&&j.address).street&&(clientNameOf(j)||(isTodo(j)&&todoTitle(j,60))))||"";}
 // The tight versions for the narrow lanes of the week view: nw = the street's name without the number ("Hayter St": a 44-70px lane has no room for a number AND a name), xn = only the
 // street name's first word ("Hayter"). Without an address it is the client's first word, as before.
 function mainTight(j,xn){
   const st=addrBits(j&&j.address).street;
-  if(!st)return firstWord(clientNameOf(j)||"No client");
+  if(!st){
+    if(!clientNameOf(j)&&isTodo(j)){const w=todoTitle(j).split(/\s+/).filter(Boolean);return (xn?w.slice(0,1):w.slice(0,2)).join(" ")||"To do";}      // (a To do: the first words of its note)
+    return firstWord(clientNameOf(j)||"No client");
+  }
   const nm=streetName(st);
   return xn?(firstWord(nm)||firstWord(st)):(nm||st);
 }
@@ -929,7 +939,7 @@ function fitChars(w){return Math.max(8,Math.floor((w-14)/6.9));}
 function propOf(j){return {b:!!(j&&j.proposal_barrier),t:!!(j&&j.proposal_baiting)};}
 function propText(j,compact){const p=propOf(j);if(p.b&&p.t)return compact?"Bar + Bait":"Barrier + Baiting";return p.b?"Barrier":p.t?"Baiting":"";}
 function hasProp(j){const p=propOf(j);return !!j&&j.status!=="cancelled"&&(p.b||p.t);}      // (a cancelled job is not lit up: nothing to quote)
-function hpCls(j){return hasProp(j)?" hp":"";}
+function hpCls(j){return (hasProp(j)?" hp":"")+(isTodo(j)?" todo":"");}      // (todo: a dashed card, so a note to self is never mistaken for a client job)
 // The marks on a card: a dot for each proposal (solid = barrier, ring = baiting), and (withWords, the timed grid cards) the words too: "Barrier", "Baiting", "Bar + Bait" or
 // "Barrier + Baiting". CSS (container queries on the card's own width, see .jc) shows the words when the card is wide enough and the dots when it is not.
 function propMarks(j,withWords){
@@ -1809,7 +1819,7 @@ function miniHtml(j,tag,extra){
 // what a screen reader says and a mouse hover shows for a job: the lot (the full address, the client, the services, the time, and a proposal to do)
 function jobTip(j){
   const s=tmToMin(j.start_time),a=trim(j.address),c=clientNameOf(j),sv=svcNames(j).join(" + ");
-  const who=[a,c].filter(Boolean);if(!who.length)who.push("No address or client name");
+  const who=[a,c].filter(Boolean);if(!who.length)who.push(isTodo(j)&&todoTitle(j,200)?todoTitle(j,200):"No address or client name");
   const when=s==null?"No start time":fmtMin(s)+" to "+fmtMin(s+j.duration_min);
   return who.concat([sv,when,stLabel(j.status)]).concat(S.isMaster&&j.invoiced?["Invoiced"]:[]).filter(Boolean).join(". ")+(hasProp(j)?". Proposal to do: "+propText(j):"")+(noteOf(j)?". Client note: "+oneLine(noteOf(j),400):"");
 }
@@ -2147,7 +2157,7 @@ function techCard(j){
   const s=tmToMin(j.start_time),c=j.client||{};
   const jaddr=trim(j.address),cname=clientNameOf(j),caddr=composeAddr(c.street,c.suburb,c.state,c.postcode);
   const addr=jaddr||caddr;      // (what Maps is given)
-  const main=jaddr||cname||"No client",second=jaddr?cname:caddr;
+  const main=jaddr||cname||(isTodo(j)&&todoTitle(j,80))||"No client",second=jaddr?cname:caddr;
   const num=String(c.phone||"").replace(/[^\d+]/g,"");
   const pr=propOf(j);
   let h='<div class="tcard st-'+esc(j.status)+hpCls(j)+'" style="--sc:'+staffColour(j.staff_id)+'">'+
@@ -4279,8 +4289,11 @@ function validate(f){
   if(S.isMaster){
     if(!validYmd(f.date))return "Pick a date for the job.";
     if(!(f.dur>0))return "Pick how long the job takes.";
-    // a new job needs an address OR a client name (the address can come first and the name later), and at least one service
-    if(!SH.clientId&&!f.name&&!f.address&&SH.isNew)return "Type the job address or the client's name.";
+    // a new job needs an address OR a client name (the address can come first and the name later), and at least one service.
+    // A To do (its only service is "To do") needs neither: it needs its note, which is what it is called on the calendar.
+    const todo=svcTodoOnly(f.services);
+    if(todo&&SH.isNew&&!trim(f.notes))return "Type what the to do is in the notes.";
+    if(!todo&&!SH.clientId&&!f.name&&!f.address&&SH.isNew)return "Type the job address or the client's name.";
     if(SH.isNew&&!f.services.length)return "Tick at least one service.";
     if(f.services.some(function(e){return e.type==="Other"&&!trim(e.description);}))return "Type what the Other job is (in What goes on the invoice).";
   }
@@ -5071,11 +5084,13 @@ function openQuick(o){
 // Service chips: the first QUICK_SVC service types (by their sort order), then the rest behind "More services". A ticked one always stays showing.
 function quickRenderSvc(){
   const el=byId("q-svc");if(!el||!SH)return;
-  const names=svcAllNames(),on={};SH.svc.forEach(function(e){on[e.type]=1;});
-  let h="";
+  const hasTodo=!!S.typesByName[TODO]||SH.svc.some(function(e){return e.type===TODO;});
+  const names=svcAllNames().filter(function(n){return n!==TODO;}),on={};SH.svc.forEach(function(e){on[e.type]=1;});
+  const chip=function(n){return '<button type="button" class="chip'+(on[n]?" on":"")+'" data-sh="qsvc" data-v="'+esc(n)+'" aria-pressed="'+(on[n]?"true":"false")+'">'+esc(n)+'</button>';};
+  let h=hasTodo?chip(TODO):"";      // To do is always first on the front row, and does not count towards the QUICK_SVC chips
   names.forEach(function(n,i){
     if(!(SH.svcMore||i<QUICK_SVC||on[n]))return;
-    h+='<button type="button" class="chip'+(on[n]?" on":"")+'" data-sh="qsvc" data-v="'+esc(n)+'" aria-pressed="'+(on[n]?"true":"false")+'">'+esc(n)+'</button>';
+    h+=chip(n);
   });
   el.innerHTML=h;
   const mb=byId("q-svcmore");
@@ -5194,18 +5209,20 @@ function quickNameBack(sh){
 async function quickSave(){
   const sh=SH;if(!sh||!sh.quick||sh.busy)return false;
   const f=readForm();
-  if(!sh.clientId&&!f.name&&!f.address){showMsg("Type the job address or the client's name.","bad");const n=byId("f-addr");if(n){try{n.focus();}catch(e){}}return false;}
   if(!sh.svc.length){showMsg("Tap at least one service.","bad");return false;}
+  if(svcTodoOnly(sh.svc)){      // a To do: its note is all it needs (validate() checks it again)
+    if(!trim(f.notes)){showMsg("Type what the to do is in Job notes.","bad");const n=byId("f-notes");if(n){try{n.focus();}catch(e){}}return false;}
+  }else if(!sh.clientId&&!f.name&&!f.address){showMsg("Type the job address or the client's name.","bad");const n=byId("f-addr");if(n){try{n.focus();}catch(e){}}return false;}
   sh.saveName=f.name;sh.saveAddr=f.address;sh.addrTyped=false;      // the name and address this booking is for: a different one in a box when the save is done was typed for the next caller (addrTyped: the address, typed or picked during the save)
   return saveSheet(null,{quick:true});
 }
-// after a good save (called from saveSheet): a toast, a clean bar for the next booking (who is kept), and a Done link to close it
+// after a good save (called from saveSheet): a toast, and the booking bar closes (Mitch, 2026-11-18: it used to stay open as a clean bar "to book another", which got in his way;
+// to book another he taps + again). The job is already in S.jobs (upsertLocal), and closing redraws the day so it shows. quickReset() and the "Booked. Book another, or Done" line are no longer used on this path.
 function quickDone(sh,opts,siteFailed,siteNote,priceMissed,priceNote){
   const j=sh.job||{},s=tmToMin(j.start_time);
-  const nm=addrLine(j,34)||trim((sh.client&&sh.client.name)||val("f-name"))||"job";      // the address first, as on the calendar
-  const msg="Booked: "+nm+", "+dayLbl(j.job_date)+(s!=null?" "+fmtMin(s):"");
-  quickReset(sh);
-  SH.booked=true;barRefresh();      // the status line says so, with a Done link, until the next tap or key
+  const nm=addrLine(j,34)||trim((sh.client&&sh.client.name)||val("f-name"))||(isTodo(j)&&todoTitle(j,34))||"job";      // the address first, as on the calendar
+  const msg=(isTodo(j)?"To do added: ":"Booked: ")+nm+", "+dayLbl(j.job_date)+(s!=null?" "+fmtMin(s):"");
+  closeSheet(true,true);
   toast(msg+(priceMissed?". "+priceNote:"")+(siteFailed?". "+siteNote:""),siteFailed||!!priceMissed);
 }
 // A clean bar: the same Who (what was picked before a green spot set it for that spot's person). The boxes are cleared in place (not rebuilt), so the
@@ -5252,7 +5269,12 @@ async function quickMore(){
 
 /* ----- the status line, the Book button and the green spots ----- */
 // a client (or a name typed for a new one) and at least one service are picked
-function barReady(){return !!SH&&!!SH.bar&&(!!SH.clientId||!!trim(val("f-name"))||!!trim(val("f-addr")))&&SH.svc.length>0;}
+// (a To do needs its note instead of a client or address)
+function barReady(){
+  if(!SH||!SH.bar||!SH.svc.length)return false;
+  if(svcTodoOnly(SH.svc))return !!trim(val("f-notes"));
+  return !!SH.clientId||!!trim(val("f-name"))||!!trim(val("f-addr"));
+}
 function barLen(){const d=parseInt(val("f-dur"),10);return d>0?d:QUICK_DUR;}
 // the time already chosen (a tap on an empty slot opened the bar, or a time chip): {staff, date, min}, or null
 function barSlot(){
@@ -5272,7 +5294,7 @@ function barRefresh(){
   let txt,cls="",html=null;
   if(SH.hint){txt=SH.hint;cls="warn";}
   else if(SH.booked&&!rdy){txt="Booked. Book another, or Done";cls="rdy";html='<span>Booked. Book another, or</span> <button type="button" class="linkbtn" data-sh="close">Done</button>';}
-  else if(!rdy)txt=(sl?slotTxt(sl)+" · ":"")+"Type an address or a name, and pick a service";
+  else if(!rdy)txt=(sl?slotTxt(sl)+" · ":"")+(SH.svc.length&&svcTodoOnly(SH.svc)?"To do: type what it is in Job notes":"Type an address or a name, and pick a service");
   else if(!S.loaded)txt=fmtLen(L);
   else{
     const sv=canonLines(SH.svc),sm=sumPrice(sv),pr=(sm!=null&&!sv.some(function(e){return e.price==null||isNaN(e.price);}))?" · $"+(Math.round(sm)===sm?sm:sm.toFixed(2)):"";      // the price when every ticked service has one

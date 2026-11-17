@@ -3313,7 +3313,7 @@ async function openTodayJobs(){
     const r=await fetchJobs(c=>sb.from("jobs").select(c)
       .eq("job_date",isoToday()).neq("status","cancelled").order("start_time",{ascending:true,nullsFirst:false}));
     if(r.error)throw r.error;
-    TJ=r.data||[];
+    TJ=(r.data||[]).filter(j=>String(j.service_type||"")!=="To do");      // a "To do" is a note to self on the Calendar (no client or address): nothing to start a report from
     const el=document.getElementById("tjlist");if(!el)return;
     el.innerHTML=TJ.length?TJ.map((j,i)=>`<button type="button" class="frow" data-tj="${i}"><span class="ftxt"><b>${escv((j.start_time?String(j.start_time).slice(0,5)+" ":"")+((j.client&&j.client.name)||"(no client)"))}</b><br>${escv(j.address||"(no address)")}${j.service_type?" · "+escv(j.service_type):""}</span></button>`).join(""):`<span class="fnote">Nothing booked for you today.</span>`;
   }catch(e){const el=document.getElementById("tjlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
