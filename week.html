@@ -102,6 +102,10 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .wl .wb{position:absolute;left:1px;right:1px;padding:1px 2px;border:1px solid #fff;border-radius:4px;background:var(--sc);color:#fff;font-size:.58rem;line-height:1.05;text-align:left;overflow:hidden;box-sizing:border-box}
 .wl .wb{font-weight:700;word-break:break-word}
 .wl .wb.v{writing-mode:vertical-rl;padding:3px 0;font-size:.62rem;line-height:1;white-space:nowrap;text-align:left;word-break:normal}
+.wl .wb .l{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wl .wb .l.s{font-weight:800}
+.wl .wb .l.d{font-weight:600;opacity:.92}
+.wl .wb.v .l{line-height:1.15}
 .wl .wb.done{opacity:.5}
 .wl .wb.pen{background:#fff;color:var(--sc);border:1.5px dashed var(--sc)}
 .wl .wb.todo{background:#fff;color:var(--ink);border:1.5px dashed var(--ink3)}
@@ -144,7 +148,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-19h";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
+var BUILD="2026-11-19j";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
 var DAY_START=7*60, DAY_END=17*60;        // free time is green all day, 7am to 5pm Monday to Friday, for everyone (same hours as the Job Calendar's green spots). Mitch's weekly plan shows as tags on top of it.
 var STEP=30;
@@ -533,6 +537,29 @@ function blockLabel(j,narrow){
   if(!sub)sub=briefAddr(j.address).split(",")[0].replace(/^[\d\/\-]+[a-z]?\s+/i,"")||(j.client&&j.client.name)||"Job";
   return narrow?shortSub(sub):sub;
 }
+// the job in a few letters for a narrow block ("Termite Inspection" -> "TI")
+function svcTiny(s){
+  var M={"termite inspection":"TI","general pest treatment":"Pest","pre-purchase inspection":"Pre-purch","pre-construction barrier":"Pre-con","post-construction barrier":"Post-con","cockroach & ant treatment":"Roach/ant","rodent treatment":"Rodent","wasp/bee treatment":"Wasp/Bee"};
+  var out=[];
+  String(s||"").split(" + ").forEach(function(n){
+    var k=trim(n).toLowerCase(),t=M[k]||trim(n).replace(/ (?:Treatment|Inspection|Renewal)$/i,"").split(/\s+/)[0];
+    if(t&&out.indexOf(t)<0)out.push(t);      // (two rodent visits on one job say "Rodent" once)
+  });
+  return out.join("+");
+}
+// the three things a block says (Mitch, 2026-11-19: "suburb, name, job type"): [suburb, client's name, the job]. A To do says its note. Narrow = Both view, so shorter words.
+function blockParts(j,narrow){
+  if(isTodo(j))return [noteLine(j.notes)||"To do","",""];
+  return [blockLabel(j,narrow),(j.client&&j.client.name)||"",narrow?svcTiny(j.service_type):shortSvc(j.service_type).split(" + ").filter(function(x,i,a){return a.indexOf(x)===i;}).join(" + ")];
+}
+function penParts(r,narrow){
+  return [penLabel(r,narrow),r.name||"",narrow?svcTiny(r.job):shortSvc(r.job)];
+}
+function partsHtml(a,narrow){
+  var sub=a[0],rest=narrow?[a[1],a[2]].filter(Boolean).join(" \u00b7 "):"";
+  if(narrow)return '<span class="l s">'+esc(sub)+'</span>'+(rest?'<span class="l d">'+esc(rest)+'</span>':"");
+  return '<span class="l s">'+esc(sub)+'</span>'+(a[1]?'<span class="l d">'+esc(a[1])+'</span>':"")+(a[2]?'<span class="l d">'+esc(a[2])+'</span>':"");
+}
 function penLabel(r,narrow){
   var sub=suburbOf(r.address)||r.name||noteLine(r.raw)||"Pencilled";
   return narrow?shortSub(sub):sub;
@@ -541,12 +568,12 @@ function laneBlocks(p,d,narrow){
   var out="",col=safeColour(p.colour);
   function box(s,e,cls,id,act,label,tip){
     var a=Math.max(s,DAY_START),b=Math.min(e,DAY_END);if(b<=a)return;
-    out+='<button type="button" class="wb '+(narrow?"v ":"")+cls+'" style="top:'+Math.round((a-DAY_START)*PPM)+'px;height:'+Math.max(10,Math.round((b-a)*PPM)-1)+'px" data-a="'+act+'" data-id="'+esc(id)+'" aria-label="'+esc(tip)+'">'+esc(label)+'</button>';
+    out+='<button type="button" class="wb '+(narrow?"v ":"")+cls+'" style="top:'+Math.round((a-DAY_START)*PPM)+'px;height:'+Math.max(10,Math.round((b-a)*PPM)-1)+'px" data-a="'+act+'" data-id="'+esc(id)+'" aria-label="'+esc(tip)+'">'+partsHtml(label,narrow)+'</button>';
   }
   S.jobs.forEach(function(j){if(j.job_date!==d||j.staff_id!==p.id)return;var s=tm(j.start_time);if(s==null)return;var e=s+(+j.duration_min||60);
-    box(s,e,(isTodo(j)?"todo ":"")+(j.status==="done"?"done":""),j.id,"job",blockLabel(j,narrow),fmtRange(s,e)+" "+blockLabel(j));});
+    box(s,e,(isTodo(j)?"todo ":"")+(j.status==="done"?"done":""),j.id,"job",blockParts(j,narrow),fmtRange(s,e)+" "+blockParts(j,false).filter(Boolean).join(", "));});
   S.pen.forEach(function(r){if(r.job_date!==d||r.staff_id!==p.id)return;var s=tm(r.start_time);if(s==null)return;var e=s+(+r.duration_min||60);
-    box(s,e,"pen",r.id,"pen",penLabel(r,narrow),"Pencilled "+fmtRange(s,e)+" "+(r.name||noteLine(r.raw)));});
+    box(s,e,"pen",r.id,"pen",penParts(r,narrow),"Pencilled "+fmtRange(s,e)+" "+penParts(r,false).filter(Boolean).join(", "));});
   return out;
 }
 function weekGridHtml(ppl,nowMin){
@@ -568,16 +595,15 @@ function weekGridHtml(ppl,nowMin){
     });
     h+='</div>';
   });
-  h+='</div><p class="wleg"><b style="color:var(--ok)">Green</b> = free. Tap it to pencil in at that time. Solid = booked, dashed = pencilled.'+(ppl.length>1?' Left lane '+esc(firstWord(ppl[0].name))+', right lane '+esc(firstWord(ppl[1].name))+'.':'')+(ppl.some(function(p){return p.role==="master";})?' Colour stripe = your weekly plan.':'')+' Tap a day to open it.</p></div>';
+  h+='</div><p class="wleg"><b style="color:var(--ok)">Green</b> = free. Tap a spot to zoom into that day, then tap the time. Solid = booked, dashed = pencilled.'+(ppl.length>1?' Left lane '+esc(firstWord(ppl[0].name))+', right lane '+esc(firstWord(ppl[1].name))+'.':'')+(ppl.some(function(p){return p.role==="master";})?' Colour stripe = your weekly plan.':'')+'</p></div>';
   return h;
 }
-function wlTap(a,ev){
-  var d=a.getAttribute("data-d"),p=staffById(a.getAttribute("data-s"));if(!p)return;
-  var rc=a.getBoundingClientRect(),min=Math.max(DAY_START,DAY_START+Math.floor(((ev.clientY-rc.top)/PPM)/30)*30),now=new Date();
-  var ch=freeChunks(p,d,busyFor(p,d),now.getHours()*60+now.getMinutes()).filter(function(c){return min>=c[0]&&min<c[1];})[0];
-  if(!ch)return;      // booked, in the past or a weekend: nothing to pencil in
-  openNew({date:d,staff:p.id,chunk:{a:ch[0],b:ch[1]},start:Math.max(min,ch[0])});
+// a tap on a spot in the Week view zooms into that day (the Days view, scrolled to it); the time is then tapped on the day itself, where the hour blocks are big enough for a finger (Mitch, 2026-11-19)
+function zoomDay(d){
+  S.view="days";try{localStorage.setItem(LS_VIEW,"days");}catch(e){}render();
+  var card=$("d-"+d);if(card)window.scrollTo(0,card.getBoundingClientRect().top+window.pageYOffset-120);
 }
+function wlTap(a){var d=a.getAttribute("data-d");if(d)zoomDay(d);}
 function render(){
   if(!S.me)return;
   var y=window.pageYOffset,ppl=peopleShown(),now=new Date(),nowMin=now.getHours()*60+now.getMinutes();
@@ -764,11 +790,8 @@ document.addEventListener("click",function(ev){
     S.ws=k==="today"?mondayOf(today()):addDays(S.ws,k==="next"?7:-7);window.scrollTo(0,0);reload(false);
   }else if(k==="who"){S.who=v;try{localStorage.setItem(LS_WHO,v);}catch(e){}render();}
   else if(k==="view"){S.view=v==="week"?"week":"days";try{localStorage.setItem(LS_VIEW,S.view);}catch(e){}window.scrollTo(0,0);render();}
-  else if(k==="wkday"){
-    S.view="days";try{localStorage.setItem(LS_VIEW,"days");}catch(e){}render();
-    var card=$("d-"+a.getAttribute("data-d"));if(card)window.scrollTo(0,card.getBoundingClientRect().top+window.pageYOffset-120);
-  }
-  else if(k==="wl")wlTap(a,ev);
+  else if(k==="wkday")zoomDay(a.getAttribute("data-d"));
+  else if(k==="wl")wlTap(a);
   else if(k==="free"){
     var st=staffById(a.getAttribute("data-s"));
     var at=a.getAttribute("data-at"),at2=a.getAttribute("data-at2");

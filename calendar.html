@@ -214,6 +214,9 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .jc.st-done,.jm.st-done,.tcard.st-done{opacity:.6;filter:grayscale(.7)}
 /* a To do (a note to self, 50_todo_service.sql): dashed outline on a plain card, so it can't be mistaken for a client job */
 .jc.todo,.jm.todo,.jt.todo,.tcard.todo{outline:1.5px dashed var(--ink3);outline-offset:-3px;background-image:repeating-linear-gradient(135deg,transparent 0 7px,rgba(0,0,0,.045) 7px 14px)}
+.jc.pn,.jt.pn{background:var(--surface);outline:1.5px dashed var(--sc);outline-offset:-3px}
+.is-master .jc.pn,.is-master .jt.pn{cursor:pointer}
+.jc.pn .ds .cl{font-style:italic}
 .jc.st-cancelled,.jm.st-cancelled,.tcard.st-cancelled{opacity:.55;background-image:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.05) 6px 12px)}
 .jc.st-cancelled .nm,.jm.st-cancelled .nm{text-decoration:line-through}
 .jc.dragging,.jm.dragging{opacity:.3}
@@ -1352,6 +1355,7 @@ async function restoreDraft(){
 function markPencilMoved(pid,jobId){
   S.sb.from("pencilled").update({status:"moved",moved_job_id:jobId}).eq("id",pid).select("id").then(function(r){
     if(r.error||!r.data||!r.data.length)toast("Booked, but the pencilled note didn't clear in Week Book. Drop it there.",true);
+    else if(S.pen){S.pen=S.pen.filter(function(x){return x.id!==pid;});renderBody();}
   },function(){toast("Booked, but the pencilled note didn't clear in Week Book. Drop it there.",true);});
 }
 async function handlePencil(){
@@ -1427,7 +1431,7 @@ function stopApp(){
   if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
   S.noPriceTbl=false;S.priceNoted=false;S.priceFailNoted=false;S.usualFail=false;S.noPropCols=false;      // the next person to log in finds out for themselves
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
-  S.plan=null;S.notes=null;S.noPlanTbl=false;S.noNotesTbl=false;closeDayNote();
+  S.plan=null;S.notes=null;S.noPlanTbl=false;S.noNotesTbl=false;S.pen=null;S.noPenTbl=false;closeDayNote();
   D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
   offClear();      // and the saved jobs (the offline copy) go with them
   driveWipe();      // the saved drive times have client addresses in them: they don't stay on the device after a log out (this runs for a log out, a login that ran out, and a different person logging in)
@@ -1941,17 +1945,49 @@ function nowLineHtml(d,g){
   const n=new Date(),m=n.getHours()*60+n.getMinutes();
   return (m>=g.gs&&m<g.ge)?'<div class="now" style="top:'+((m-g.gs)*g.ppm)+'px"></div>':"";
 }
-// one person's timed jobs for one day, at their start time and as tall as they are long. Jobs that overlap sit side by side.
-function laneCardsHtml(list,g,laneW){
+/* ---------- pencilled notes on the calendar (master only; Mitch, 2026-11-19: "can it show up on the normal calendar pencilled in?") ----------
+   A note pencilled in on the Week Book page shows as a dashed card at its time in that person's lane (or, with no time or no person, as a dashed chip in the Unassigned list).
+   Tapping one opens the booking bar filled in from it (prefillFromPencil), the same as the Transfer button; Book makes the real job and the note goes. Edit or drop one in Week Book. */
+function penOpen(){return (S.isMaster&&S.pen)?S.pen:[];}
+function penPlaced(r){const st=r.staff_id&&S.staffById[r.staff_id];return tmToMin(r.start_time)!=null&&!!st&&!!st.active;}
+function penLane(d,sid){return penOpen().filter(function(r){return r.job_date===d&&r.staff_id===sid&&penPlaced(r);});}
+function penPlacedIn(days,staffIds){return penOpen().filter(function(r){return days[r.job_date]&&penPlaced(r)&&staffIds[r.staff_id];});}
+function penLoose(days,solo){return penOpen().filter(function(r){return days[r.job_date]&&!penPlaced(r)&&(!solo||!r.staff_id||r.staff_id===solo);});}
+function penRaw(r){return trim(String(r.raw||"").split(/\r?\n/)[0]);}
+function penWords(r){return [trim(r.name),trim(r.address),trim(r.job)].filter(Boolean).join(", ")||penRaw(r)||"note";}
+function penCardHtml(r,s,dur,fit,style){
+  const nw=/\bnw\b/.test(fit),xn=/\bxn\b/.test(fit);
+  const a=trim(r.address),nm=trim(r.name)||a||penRaw(r)||"Pencilled",first=nm.split(/\s+/)[0];
+  const main=xn?first.slice(0,4):nw?first:nm,tip="Pencilled in: "+penWords(r)+". Tap to book it.";
+  const cl=["Pencilled",nm!==a?a:""].filter(Boolean).join(" \u00b7 "),sv=trim(r.job);
+  return '<div class="jc pn '+fit+'" data-pen="'+esc(r.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(r.staff_id)+';'+style+'">'+
+    '<div class="l1"><span class="tm">'+esc(cardTime(fit,s,dur))+'</span></div>'+
+    '<div class="nm">'+esc(main)+'</div>'+
+    (nw?"":'<div class="ds"><span class="cl">'+esc(cl)+'</span>'+(sv?'<span class="sep"> \u00b7 </span><span class="sv">'+esc(sv)+'</span>':"")+'</div>')+'</div>';
+}
+function penChipHtml(r,pre){
+  const tip="Pencilled in: "+penWords(r)+". Tap to book it.";
+  return '<div class="jt pn" data-pen="'+esc(r.id)+'" role="button" tabindex="0" title="'+esc(tip)+'" aria-label="'+esc(tip)+'" style="--sc:'+staffColour(r.staff_id)+'">'+
+    (pre?'<span class="ct">'+esc(pre)+'</span>':"")+esc("Pencilled: "+(trim(r.name)||trim(r.address)||penRaw(r)||"note"))+'</div>';
+}
+function openPencilNote(id){
+  const r=penOpen().filter(function(x){return x.id===id;})[0];
+  if(!r||SH||SV)return;
+  prefillFromPencil(r);
+}
+// one person's timed jobs for one day, at their start time and as tall as they are long. Jobs that overlap sit side by side. pens = that person's pencilled notes for the day (drawn the same way, dashed).
+function laneCardsHtml(list,g,laneW,pens){
   const items=list.filter(isTimed).map(function(j){
     const s=tmToMin(j.start_time),d=Math.max(+j.duration_min||0,1);
     return {j:j,s:s,d:d,e:s+Math.max(d,SNAP)};
   });
+  (pens||[]).forEach(function(r){const s=tmToMin(r.start_time),d=Math.max(+r.duration_min||0,1);items.push({pen:r,s:s,d:d,e:s+Math.max(d,SNAP)});});
   lanes(items);
   return items.map(function(it){
     const top=(it.s-g.gs)*g.ppm,h=Math.max(it.d*g.ppm-2,16),w=100/it.lanes,gap=laneW/it.lanes<44?1:3;      // the tightest lanes keep every pixel
-    const cw=laneW/it.lanes-gap;
-    return gridCardHtml(it.j,it.s,it.d,cardFit(h,cw),"top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - "+gap+"px)",cw);
+    const cw=laneW/it.lanes-gap,st="top:"+top+"px;height:"+h+"px;left:"+(it.lane*w)+"%;width:calc("+w+"% - "+gap+"px)";
+    if(it.pen)return penCardHtml(it.pen,it.s,it.d,cardFit(h,cw),st);
+    return gridCardHtml(it.j,it.s,it.d,cardFit(h,cw),st,cw);
   }).join("");
 }
 
@@ -2016,6 +2052,13 @@ async function loadPlanNotes(range){
       if(r.error){if(missingTable(r.error,"day_notes")){S.noNotesTbl=true;S.notes=null;}else throw r.error;}
       else{const m={};(r.data||[]).forEach(function(x){if(x.body)m[String(x.note_date).slice(0,10)]=x.body;});S.notes=m;}
     }catch(e){console.warn("The day notes didn't load.",e);}
+  }
+  if(!S.noPenTbl){      // the notes pencilled in on the Week Book page (table pencilled, 49_pencilled.sql): drawn dashed on the days, tap one to book it
+    try{
+      const r=await S.sb.from("pencilled").select("id,raw,name,phone,email,address,job,notes,duration_min,job_date,start_time,staff_id,status").eq("status","open").gte("job_date",range.from).lte("job_date",range.to);
+      if(r.error){if(missingTable(r.error,"pencilled")){S.noPenTbl=true;S.pen=null;}else throw r.error;}
+      else S.pen=r.data||[];
+    }catch(e){console.warn("The pencilled notes didn't load.",e);}
   }
 }
 function closeDayNote(){const o=byId("dnov");if(o&&o.parentNode)o.parentNode.removeChild(o);}
@@ -2091,7 +2134,8 @@ function dayHtml(){
   const solo=phoneSolo(act),cols=solo?act.filter(function(c){return c.id===solo;}):act;
   const onGrid=all.filter(function(j){return j.staff_id&&ids[j.staff_id]&&(!solo||j.staff_id===solo);});
   const tray=all.filter(function(j){return !(j.staff_id&&ids[j.staff_id]);});      // the tray is only ever unassigned jobs, even when one person is picked
-  const g=gridSpan(onGrid);g.ppm=S.ppm;S.grid=g;
+  const dayD={};dayD[S.date]=true;const colIds={};cols.forEach(function(c){colIds[c.id]=true;});
+  const g=gridSpan(onGrid.concat(penPlacedIn(dayD,colIds)));g.ppm=S.ppm;S.grid=g;
   const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm;
   const colW=Math.max(isNarrow()?136:150,gridWidth()/Math.max(1,cols.length)),short=colW<200;
   const ntCount=onGrid.filter(function(j){return !isTimed(j);}).length;
@@ -2109,21 +2153,23 @@ function dayHtml(){
     const noTime=mine.filter(function(j){return !isTimed(j);}).sort(byTime);
     nt+='<div class="ntc" data-drop="notime" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">'+
       (noTime.length?noTime.map(function(j){return chipHtml(j,"","",fitChars(colW-12));}).join(""):'<button type="button" class="ntadd" data-act="qadd" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'">+ Add</button>')+'</div>';
-    body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW)+'</div>';
+    body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(S.date)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(S.date,g)+laneCardsHtml(mine,g,colW,penLane(S.date,c.id))+'</div>';
   });
   return '<div class="dayline"><div class="gridwrap" id="gw"><div class="grid" style="--n:'+(cols.length+(plan?1:0))+'">'+
     '<div class="gtop"><div class="grow">'+head+'</div>'+(maybe?'<div class="grow dnrow"><div class="gut" title="Jobs that might happen this day. Tap to add a note.">Maybe</div><div class="wnc" style="grid-column:2/-1">'+maybeHtml(S.date)+'</div></div>':"")+'<div class="grow ntrow'+(ntCount?"":" thin")+'">'+nt+'</div></div>'+
     '<div class="grow gb">'+gutHtml(g,hpx)+body+'</div></div></div>'+
-    trayHtml(tray)+'</div>';
+    trayHtml(tray,penLoose(dayD,solo))+'</div>';
 }
-function trayHtml(list){
+function trayHtml(list,pens){
+  pens=pens||[];
   const timed=list.filter(isTimed).sort(byTime);
   const untimed=list.filter(function(j){return !isTimed(j);}).sort(byTime);
   function tagFor(j){const s=j.staff_id&&S.staffById[j.staff_id];return s?"Was "+s.name+" (not active)":"";}
-  let h='<aside class="tray'+(list.length?"":" thin")+'" data-drop="tray" aria-label="Unassigned jobs"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
-  if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
+  let h='<aside class="tray'+(list.length||pens.length?"":" thin")+'" data-drop="tray" aria-label="Unassigned jobs"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
+  if(!list.length&&!pens.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
   h+=timed.map(function(j){return miniHtml(j,tagFor(j));}).join("");
   if(untimed.length)h+='<h3>No start time</h3>'+untimed.map(function(j){return miniHtml(j,tagFor(j),"nt");}).join("");
+  if(pens.length)h+='<h3>Pencilled in</h3>'+pens.map(function(r){return penChipHtml(r,tmToMin(r.start_time)==null?"":fmtMin(tmToMin(r.start_time)));}).join("");
   return h+'</aside>';
 }
 
@@ -2142,7 +2188,8 @@ function weekHtml(){
   const solo=phoneSolo(act),people=solo?act.filter(function(c){return c.id===solo;}):act;
   const onGrid=jobs.filter(function(j){return j.staff_id&&ids[j.staff_id]&&(!solo||j.staff_id===solo);});
   const tray=jobs.filter(function(j){return !(j.staff_id&&ids[j.staff_id]);});
-  const g=gridSpan(onGrid);g.ppm=S.ppm;S.grid=g;
+  const colIds={};people.forEach(function(c){colIds[c.id]=true;});
+  const g=gridSpan(onGrid.concat(penPlacedIn(inWk,colIds)));g.ppm=S.ppm;S.grid=g;
   const hpx=(g.ge-g.gs)*g.ppm,hr=60*g.ppm,today=todayYmd();
   const plan=showPlan(),maybe=showMaybe();
   const dayW=gridWidth()/days.length,laneW=dayW/Math.max(1,people.length+(plan?0.62:0)),many=people.length>1;
@@ -2165,24 +2212,29 @@ function weekHtml(){
       strip+='<div class="wlh" data-drop="notime" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="--sc:'+col+'" title="'+esc(c.name+(t.n?": "+totTxt(t,false):""))+'">'+
         (many?'<div class="lt">'+esc(firstWord(c.name)+(t.n?" "+totTxt(t,true):""))+'</div>':"")+
         lane.filter(function(j){return !isTimed(j);}).sort(byTime).map(function(j){return chipHtml(j,"",laneW<90?mainTight(j,laneW<44):"",fitChars(laneW-10));}).join("")+'</div>';
-      body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(d,g)+laneCardsHtml(lane,g,laneW)+'</div>';
+      body+='<div class="col" data-drop="col" data-staff="'+esc(c.id)+'" data-date="'+esc(d)+'" style="height:'+hpx+'px;--hr:'+hr+'px">'+nowLineHtml(d,g)+laneCardsHtml(lane,g,laneW,penLane(d,c.id))+'</div>';
     });
     strip+='</div>';body+='</div>';
   });
   let mrow="";
   if(maybe)mrow='<div class="wrow wnr"><div class="gut" title="Jobs that might happen: tap a day to add a note">Maybe</div>'+days.map(function(d){return '<div class="wnc">'+maybeHtml(d)+'</div>';}).join("")+'</div>';
-  return '<div class="dayline wkline">'+weekTrayHtml(tray)+'<div class="gridwrap" id="gw"><div class="grid wk" style="--n:'+days.length+'">'+
+  return '<div class="dayline wkline">'+weekTrayHtml(tray,penLoose(inWk,solo))+'<div class="gridwrap" id="gw"><div class="grid wk" style="--n:'+days.length+'">'+
     '<div class="gtop"><div class="wrow">'+head+'</div>'+mrow+'<div class="wrow wln'+(onGrid.some(function(j){return !isTimed(j);})?"":" thin")+'">'+strip+'</div></div>'+
     '<div class="wrow gb">'+gutHtml(g,hpx)+body+'</div></div></div></div>';
 }
 // the week's unassigned jobs as one row of chips ("Tue 9:00 Smith"), in day and time order. Drag one onto the grid to give it a person.
-function weekTrayHtml(list){
+function weekTrayHtml(list,pens){
+  pens=pens||[];
   const sorted=list.slice().sort(function(a,b){return a.job_date<b.job_date?-1:a.job_date>b.job_date?1:byTime(a,b);});
-  let h='<aside class="tray row'+(list.length?"":" thin")+'" data-drop="tray" aria-label="Unassigned jobs this week"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
-  if(!list.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
+  let h='<aside class="tray row'+(list.length||pens.length?"":" thin")+'" data-drop="tray" aria-label="Unassigned jobs this week"><div class="trayhead"><h2>Unassigned</h2><span class="n">'+list.length+'</span></div>';
+  if(!list.length&&!pens.length)h+='<p class="traynote">Nothing waiting. Drop a job here to take the person off it.</p>';
   h+=sorted.map(function(j){
     const s=tmToMin(j.start_time),dd=parseYmd(j.job_date),was=j.staff_id&&S.staffById[j.staff_id];
     return chipHtml(j,DOW[dd.getDay()]+(s==null?"":" "+hm(s)),mainLine(j,34)+(was?" (was "+was.name+")":""));
+  }).join("");
+  h+=pens.slice().sort(function(a,b){return a.job_date<b.job_date?-1:a.job_date>b.job_date?1:0;}).map(function(r){
+    const s=tmToMin(r.start_time),dd=parseYmd(r.job_date);
+    return penChipHtml(r,DOW[dd.getDay()]+(s==null?"":" "+hm(s)));
   }).join("");
   return h+'</aside>';
 }
@@ -5712,6 +5764,8 @@ function onClick(e){
   if(act){handleAct(act.getAttribute("data-act"),act);return;}
   if(t.closest("a"))return;
   if(t.closest(".rz"))return;      // the stretch handle never opens the job
+  const pn=t.closest("[data-pen]");
+  if(pn&&!(SH&&SH.bar)){if(Date.now()>=S.noClickUntil)openPencilNote(pn.getAttribute("data-pen"));return;}      // a pencilled note: the booking bar, filled in from it
   const card=t.closest("[data-job]");
   if(card){
     if(Date.now()<S.noClickUntil)return;
