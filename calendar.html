@@ -381,6 +381,11 @@ body.isresize,body.isresize *{cursor:ns-resize!important;-webkit-user-select:non
 .prow{display:flex;align-items:flex-start;gap:10px;width:100%;min-height:56px;text-align:left;padding:10px 12px;margin:0 0 8px;border:1px solid var(--line2);border-radius:12px;background:var(--surface);box-shadow:inset 4px 0 0 var(--prop)}
 .prow:hover,.prow:focus-visible{background:var(--surface2)}
 .prow.cx{opacity:.6}
+.srow{box-shadow:inset 4px 0 0 var(--line2)}
+.srow .pmain span{display:block}
+.srow .pnote{color:var(--ink2);font-size:.82rem;font-weight:400}
+.srchbox{position:sticky;top:0;z-index:2;background:var(--surface);padding:0 0 8px}
+.topsrch{flex:0 0 auto}
 .prow .pwhen{flex:0 0 78px;font-family:"Spline Sans Mono",monospace;font-size:12.5px;font-weight:600;color:var(--ink2);line-height:1.35}
 .prow .pmain{flex:1;min-width:0}
 .prow .pmain b{display:block;overflow-wrap:anywhere}
@@ -700,7 +705,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-15c";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-24a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -750,6 +755,7 @@ const IC={
   l:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>',
   r:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>',
   plus:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  search:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>',
   phone:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 12l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 5a2 2 0 0 1 2-2z"/></svg>',
   msg:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.3 9 9 0 0 1-3.9-.9L3 20.5l1.6-4.8A8.4 8.4 0 0 1 3.7 11 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/></svg>',
   mail:'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
@@ -1672,6 +1678,7 @@ function renderShell(){
   S.whoOpen=false;
   // The LPC badge is the Home button (it asks first if a job sheet or the booking bar holds something unsaved, see leaveOk). The + is the same button the floating + was: data-act="qadd" with no staff or day, so the booking bar opens with exactly the same who, day and time.
   setApp('<header class="top"><a class="lpchome" href="home.html" aria-label="Home"><img class="lpcmark" src="logo/lpc-badge.png" alt="Lighthouse Pest Control" width="26" height="26"></a><h1>Job Calendar</h1><span class="who">'+esc(S.me.name)+'</span>'+
+    '<button type="button" class="mbtn topsrch" id="srch-btn" data-act="search" aria-label="Search jobs" title="Search jobs">'+IC.search+'</button>'+
     (S.isMaster?'<button type="button" class="topadd" data-act="qadd" aria-label="Book a job" title="Book a job">'+IC.plus+'</button>':"")+menuHtml()+'</header>'+
     '<main><div id="tb"></div><div id="dr"></div><div id="cb"></div></main>',"cal");
   renderToolbar();renderBody();
@@ -3219,6 +3226,11 @@ function sheetHtml(){
       '<input class="inp" id="f-name" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" value="'+esc(I.name)+'" placeholder="Start typing a name or phone number">'+
       '<div class="aclist" id="f-name-list" role="listbox" hidden></div></div>'+
       '<div class="hint" id="f-name-hint"></div>';
+  }else if(SH.clientId){
+    // A worker can fix a name that came in short ("Kate", "Sam"): it is saved on the client, with no search or client swap like the master's box (its id is f-tname, not f-name).
+    h+='<div class="fld"><label class="fl" for="f-tname">Client name</label>'+
+      '<input class="inp" id="f-tname" type="text" autocomplete="off" autocapitalize="words" autocorrect="off" spellcheck="false" value="'+esc(I.name)+'" placeholder="Full name">'+
+      '<div class="hint">Only got part of the name? Put the full name in here and tap Save. It changes it on the client.</div></div>';
   }else{
     h+='<div class="fld"><div class="fl">Client name</div><div class="ro">'+esc(I.name||"No client")+'</div></div>';
   }
@@ -3351,7 +3363,7 @@ function setVal(id,v){const e=byId(id);if(e)e.value=v==null?"":v;}
 function readForm(){
   const I=SH.init,M=S.isMaster;
   const f={
-    name:M?trim(val("f-name")):(SH.client?SH.client.name:""),
+    name:M?trim(val("f-name")):(byId("f-tname")&&trim(val("f-tname"))?trim(val("f-tname")):(SH.client?SH.client.name:"")),      // (a worker's name box is f-tname; blank keeps the saved name)
     phone:trim(val("f-phone")),email:trim(val("f-email")),street:trim(val("f-street")),suburb:trim(val("f-suburb")),
     state:trim(val("f-state")),postcode:trim(val("f-postcode")),address:trim(val("f-addr")),
     services:SH.svc.map(function(e){return {type:e.type,description:e.description,price:trim(e.price),discount:M?trim(e.discount):"",qty:M&&trim(e.qty)?trim(e.qty):"1"};}),
@@ -4482,7 +4494,7 @@ async function updateClientRow(sh,f,rename){
   const base=sh.client||{},p={};
   ["name","phone","email","street","suburb","state","postcode"].forEach(function(k){
     const nv=nn(f[k]);
-    if(k==="name"){if(S.isMaster&&rename&&nv&&nv!==trim(base.name))p.name=nv;return;}
+    if(k==="name"){if((S.isMaster?rename:true)&&nv&&nv!==trim(base.name))p.name=nv;return;}      // (the master is asked first; a worker's f.name only differs from the saved one when they typed in their name box)
     if(nv!==nn(base[k]))p[k]=nv;
   });
   if(!S.noNotesCol&&f.cnotes!=null){const nv=nn(f.cnotes);if(nv!==nn(base.notes))p.notes=nv;}      // the client's notes go to the client, not the job
@@ -4496,6 +4508,7 @@ async function updateClientRow(sh,f,rename){
   if(!r.data||!r.data.length)throw plainErr("The client details didn't save. You may not be allowed to change this client.");
   Object.assign(sh.client,p);
   if(sh.job&&sh.job.client)Object.assign(sh.job.client,p);
+  if(p.name)S.jobs.forEach(function(x){if(x.client_id===sh.clientId&&x.client)x.client.name=p.name;});      // (the client's other jobs on screen show the new name too)
 }
 function upsertLocal(row){
   const r=currentRange();
@@ -4845,6 +4858,86 @@ async function openPropJob(id){
   const rg=currentRange();
   if(j.job_date<rg.from||j.job_date>rg.to){S.date=j.job_date;afterNav();}
   openSheet(j,null);
+}
+/* ----- Search (master and worker): the magnifier in the top bar opens a panel, like the Proposals list (SV.kind is "search") -----
+   Type any of: a client's name, part of the address, a word from the notes, or the service. Every word typed has to be in the job somewhere (name, address, notes
+   or service), so "smith bangalow" finds Smith jobs in Bangalow. Newest first, any date, cancelled ones included (tagged). A worker only ever gets their own jobs
+   (the database rules do that, same as the calendar). A row opens the job through openPropJob (it takes the calendar to that day first). */
+const SRCH_MIN=2,SRCH_MAX=40,SRCH_WAIT=300,SRCH_IDS=80;
+function srchWords(q){return trim(q).replace(/[,()*:"\\%_]/g," ").split(/\s+/).filter(Boolean).slice(0,4);}      // (the characters that would break the filter text are dropped)
+function srchRowHtml(j){
+  const a=trim(j.address),cn=trim(j.client&&j.client.name),todo=j.service_type===TODO,note=trim(String(j.notes||"").split(/\n/)[0]);
+  const who=S.isMaster&&j.staff_id&&S.staffById[j.staff_id]?String(S.staffById[j.staff_id].name).split(/\s+/)[0]:"";
+  const main=todo?(note||"To do"):(a||cn||"No address or client name");
+  const sub=todo?"To do":[a&&cn?cn:"",j.service_type||""].filter(Boolean).join(" \u00b7 ");
+  return '<button type="button" class="prow srow'+(j.status==="cancelled"?" cx":"")+'" data-svp="openjob" data-id="'+esc(j.id)+'" data-date="'+esc(j.job_date)+'">'+
+    '<span class="pwhen">'+esc(propWhen(j))+(j.status==="cancelled"?'<br>Cancelled':j.status==="done"?'<br>Done':"")+(who?'<br>'+esc(who):"")+'</span>'+
+    '<span class="pmain"><b>'+esc(main)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':"")+(!todo&&note?'<span class="pnote">'+esc(oneLine(note,90))+'</span>':"")+'</span></button>';
+}
+function srchBodyHtml(){
+  if(!SV||SV.kind!=="search")return "";
+  if(SV.err)return '<div class="banner bad">'+esc(SV.err)+'</div>';
+  if(SV.busy&&!SV.rows)return '<div class="hint">Searching...</div>';
+  if(!SV.rows)return '<div class="hint">Type a name, an address, a suburb or a word from the notes. It looks through every job, old ones too.</div>';
+  if(!SV.rows.length)return '<div class="empty"><h3>Nothing found</h3><p>Try fewer words, or just part of the name or street.</p></div>';
+  return SV.rows.slice(0,SRCH_MAX).map(srchRowHtml).join("")+(SV.rows.length>SRCH_MAX?'<div class="hint">Showing the latest '+SRCH_MAX+'. Type a bit more to narrow it down.</div>':"");
+}
+function srchPanelHtml(){
+  return '<div class="sheet" id="svp-back"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="svp-title">'+
+    '<div class="shhead"><div class="shttl"><h2 id="svp-title">Search jobs</h2></div>'+
+    '<button type="button" class="x" data-svp="close" aria-label="Close">'+IC.x+'</button></div>'+
+    '<div class="shbody"><div class="srchbox"><label class="vh" for="srch-q">Search jobs</label>'+
+    '<input class="inp" id="srch-q" type="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="search" placeholder="Name, address, suburb or notes"></div>'+
+    '<div id="srch-body">'+srchBodyHtml()+'</div></div><div class="shfoot"><button type="button" class="btn pri" data-svp="close">Done</button></div></div></div>';
+}
+function openSearch(){
+  if(SV||S.screen!=="cal")return;
+  if(SH&&(!SH.bar||!closeSheet(false)))return;      // the booking bar closes first (and asks if it has something typed in it)
+  SV={prevFocus:byId("srch-btn"),back:false,kind:"search",q:"",rows:null,err:"",busy:false,seq:0,t:0};
+  byId("sheet").innerHTML=srchPanelHtml();
+  document.documentElement.classList.add("sheet-open");
+  const app=byId("app");app.setAttribute("inert","");app.setAttribute("aria-hidden","true");
+  const q=byId("srch-q");if(q){try{q.focus({preventScroll:true});}catch(e){}}
+}
+function srchDraw(){const b=byId("srch-body");if(b)b.innerHTML=srchBodyHtml();}
+function onSearchInput(){
+  const sv=SV;if(!sv||sv.kind!=="search")return;
+  sv.q=trim(val("srch-q"));clearTimeout(sv.t);
+  if(srchWords(sv.q).join(" ").length<SRCH_MIN){sv.seq++;sv.rows=null;sv.err="";sv.busy=false;srchDraw();return;}
+  sv.t=setTimeout(function(){runSearch();},SRCH_WAIT);
+}
+async function runSearch(){
+  const sv=SV;if(!sv||sv.kind!=="search")return;
+  clearTimeout(sv.t);
+  const words=srchWords(sv.q);
+  if(words.join(" ").length<SRCH_MIN)return;
+  const seq=++sv.seq;sv.busy=true;sv.err="";if(!sv.rows)srchDraw();
+  try{
+    // 1. the clients with each word in their name (or phone, for a number): their jobs count as a match for that word
+    const ids=await Promise.all(words.map(async function(w){
+      const digits=w.replace(/\D/g,"");
+      let cq=S.sb.from("clients").select("id").ilike("name","%"+w+"%").limit(SRCH_IDS);
+      if(digits.length>=4)cq=S.sb.from("clients").select("id").or("name.ilike.%"+w+"%,phone.ilike.%"+digits+"%").limit(SRCH_IDS);
+      const r=await cq;
+      if(r.error)throw r.error;
+      return (r.data||[]).map(function(c){return c.id;}).filter(function(id){return /^[A-Za-z0-9_-]+$/.test(String(id));});
+    }));
+    // 2. the jobs: every word has to be in the address, the notes, the service or one of those clients
+    let q=S.sb.from("jobs").select("id,job_date,start_time,address,notes,status,service_type,staff_id,client_id,client:clients(id,name)");
+    words.forEach(function(w,i){
+      q=q.or("address.ilike.%"+w+"%,notes.ilike.%"+w+"%,service_type.ilike.%"+w+"%"+(ids[i].length?",client_id.in.("+ids[i].join(",")+")":""));
+    });
+    q=q.order("job_date",{ascending:false}).order("start_time",{ascending:false,nullsFirst:false}).limit(SRCH_MAX+1);
+    const r=await q;
+    if(SV!==sv||seq!==sv.seq)return;      // closed, or newer typing has taken over
+    if(r.error)throw r.error;
+    sv.rows=(r.data||[]).filter(function(j){return S.isMaster||j.status!=="cancelled";});
+    sv.busy=false;
+  }catch(e){
+    if(SV!==sv||seq!==sv.seq)return;
+    sv.busy=false;sv.rows=null;sv.err="Couldn't search. "+friendly(e);
+  }
+  srchDraw();
 }
 
 /* =====================================================================
@@ -5709,6 +5802,7 @@ function handleAct(k,el){
   else if(k==="svcpanel")openSvcPanel();
   else if(k==="weekbook"){location.href="week.html";}
   else if(k==="proplist")openPropList();
+  else if(k==="search")openSearch();
   else if(k==="restart"){S.starting=false;if(S.userId)startApp();else renderLogin("","");}
   else if(k==="reload"){location.reload();}
   else if(k==="reboot"){checkSession();}
@@ -5804,6 +5898,7 @@ function onClick(e){
 function inBar(el){return !!(el&&el.closest&&el.closest("#bar"));}
 function onInput(e){
   const id=e.target&&e.target.id;
+  if(SV&&SV.kind==="search"&&id==="srch-q"){onSearchInput();return;}
   if(SH&&(!SH.bar||inBar(e.target))){
     if(SH.quick)quickClearMsg();
     if(e.target.getAttribute&&e.target.getAttribute("data-sv")){onSvcField(e.target);return;}      // a service's price or invoice wording
@@ -5841,7 +5936,11 @@ function flushDate(){
   if(v&&v!==S.date)gotoDate(v);
 }
 function onKey(e){
-  if(SV){if(e.key==="Escape"){closeSvcPanel(false);}return;}
+  if(SV){
+    if(e.key==="Escape"){closeSvcPanel(false);}
+    else if(e.key==="Enter"&&SV.kind==="search"&&e.target&&e.target.id==="srch-q"){e.preventDefault();runSearch();try{e.target.blur();}catch(x){}}      // (Enter searches now and puts the keyboard away so the results are in view)
+    return;
+  }
   const modal=!!SH&&!SH.bar;      // a full job sheet (the booking bar is not modal: the calendar behind it still works)
   if(S.whoOpen&&!modal&&e.key==="Escape"){e.preventDefault();whoSet(false,true);return;}
   if(S.menuOpen&&!modal){

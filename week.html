@@ -88,6 +88,11 @@ button{background:none;border:0;padding:0;cursor:pointer}
 .rd label{display:block;font-size:.75rem;color:var(--ink2);font-weight:600;margin-bottom:2px}
 .rd input{width:100%;min-height:44px;padding:0 10px;border:1.5px solid var(--line);border-radius:10px;font-size:16px;background:#fff}
 .rd input.chk{border-color:var(--soon);background:var(--soonBg)}
+.aclist{margin:4px 0 0;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.aclist .acl{padding:6px 12px 2px;font-size:.72rem;font-weight:600;color:var(--ink2)}
+.aclist .ac{display:block;width:100%;min-height:44px;padding:8px 12px;text-align:left;font-size:.92rem;line-height:1.25;border-top:1px solid var(--line);background:transparent}
+.aclist .ac:active{background:var(--bg)}
+.aclist .acpow{padding:4px 12px 6px;font-size:.7rem;color:var(--ink3)}
 /* the Week view */
 .wg{margin-top:10px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 6px 8px}
 .wgh,.wgb{display:grid;grid-template-columns:24px repeat(var(--n),minmax(0,1fr));gap:3px}
@@ -148,7 +153,7 @@ button{background:none;border:0;padding:0;cursor:pointer}
    Job Calendar's booking bar writes (service_type "To do", SQL 50). Master only. Never sends a message to anyone. */
 (function(){
 "use strict";
-var BUILD="2026-11-19j";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
+var BUILD="2026-11-24a";      // (shown at the bottom of the page: change it with every change, so Mitch can tell which copy his phone has)
 var MIN_CHUNK=45;                      // a free chunk shorter than this (minutes) is not shown
 var DAY_START=7*60, DAY_END=17*60;        // free time is green all day, 7am to 5pm Monday to Friday, for everyone (same hours as the Job Calendar's green spots). Mitch's weekly plan shows as tags on top of it.
 var STEP=30;
@@ -229,6 +234,29 @@ function namesFor(key,types){
   if(key==="nemesis"){var a=types.filter(function(t){return /nemesis/i.test(t.name);});return a.length===1?[a[0].name]:[];}
   return pick(function(n){return n.indexOf(key)>=0;});
 }
+// Does a bit of text look like a person's name? (a partial name like "Kate" or "Kate TBC" is fine; "Tomorrow arvo" or "dentist 2pm" is not)
+var NONAME=/^(?:quote|quotes|lunch|meeting|dentist|doctor|visit|follow|followup|pickup|collect|order|invoice|supplier|tender|measure|site|day|off|holiday|leave|sick|training|course|stock|chemical|chemicals|ute|car|truck|bank|accountant|someone|somebody|unknown|lady|man|guy|neighbour|neighbor|builder|plumber|electrician|agent|owner|tenant|strata|manager|office|council|am|pm|noon|midday|lunchtime|ok|yes|no|maybe|tbd|hours?|mins?|minutes?|hrs?)$/i;
+function looksLikeName(s){
+  s=trim(s);var w=s.split(/\s+/);
+  if(!s||w.length>4)return false;
+  for(var i=0;i<w.length;i++){
+    var x=w[i];
+    if(x==="&")continue;
+    if(!/^[A-Za-z][A-Za-z'’.\-]*$/.test(x))return false;
+    var bare=x.replace(/[^A-Za-z]/g,"");
+    if(STOPW.test(bare)||NONAME.test(bare))return false;
+  }
+  return !STREET_RE.test(s.replace(/^(?:dr|mr|mrs|ms|miss)\.?\s+/i,""));      // ("Dr Smith": the Dr is a title, not a Drive)
+}
+// Does a bit of text look like a street address? It needs a street word (Rd, Street, Gardens ...) or one of the local suburbs.
+var ADDR_WORD_RE=/\b(?:gardens?|gdns|mews|hill|heights|hts|retreat|glen|bend|chase|cove|corner|outlook|link|pass|path|promenade|track|tr|estate|bvd|brae|fairway|ramble|cir|circle|arcade|green|gate|junction|quay|reserve|estate)\b/i;
+function looksLikeAddress(s){
+  s=trim(s);if(!s)return false;
+  if(STREET_RE.test(s)||ADDR_WORD_RE.test(s))return true;
+  var low=s.toLowerCase();
+  for(var i=0;i<SUBURBS.length;i++)if(new RegExp("(?:^|[\\s,])"+SUBURBS[i].replace(/ /g,"\\s+")+"(?![A-Za-z])").test(low))return true;
+  return false;
+}
 function readNote(raw,types){
   types=types||[];
   var out={name:"",phone:"",email:"",address:"",job:"",notes:"",mins:null,unsure:{}};
@@ -279,9 +307,14 @@ function readNote(raw,types){
     else extra.push(l);
   });
   if(pre.length)(nameLines.length?extra:nameLines).unshift(pre.replace(/[\s,:\-]+$/,""));
-  out.name=titleCase(trim(nameLines.join(" ")));
-  out.address=titleCase(out.address);
-  var notes=extra.concat(leftWords.length?[leftWords.join(" ")]:[]);
+  var nm=trim(nameLines.join(" ")),ad=out.address,held=[];
+  // Anything it can't place goes to Other words, as typed, instead of into a box where it would be wrong. A name has to look like a name (one to four plain
+  // words, nothing like a day, a time or "wants"), and an address needs a street word or a local suburb ("3 bags of bait" is not one).
+  if(nm&&!looksLikeName(nm)){held.push(nm);nm="";}
+  if(ad&&!looksLikeAddress(ad)){held.push(ad);ad="";}
+  out.name=titleCase(nm);
+  out.address=titleCase(ad);
+  var notes=held.concat(extra,leftWords.length?[leftWords.join(" ")]:[]);
   out.notes=notes.join(" / ");
   // sure or not
   if(!out.name||/\d/.test(out.name)||out.name.split(/\s+/).length>4||STREET_RE.test(out.name))out.unsure.name=true;
@@ -623,7 +656,7 @@ function render(){
 
 /* ---------- sheets ---------- */
 function openSheet(html){$("sheet").innerHTML=html;$("sheet").classList.add("on");$("shade").classList.add("on");document.documentElement.style.overflow="hidden";}
-function closeSheet(){SH=null;$("sheet").classList.remove("on");$("shade").classList.remove("on");$("sheet").innerHTML="";document.documentElement.style.overflow="";}
+function closeSheet(){acHide();SH=null;$("sheet").classList.remove("on");$("shade").classList.remove("on");$("sheet").innerHTML="";document.documentElement.style.overflow="";}
 function toast(msg,act,label){
   var t=$("toast");clearTimeout(toastT);
   t.innerHTML='<span>'+esc(msg)+'</span>'+(act?'<button type="button" id="toast-a">'+esc(label||"Undo")+'</button>':"");
@@ -638,10 +671,11 @@ function sheetHtml(title,editing){
   var h='<div class="sh-h"><b>'+esc(title)+'</b><button type="button" class="x" data-a="close" aria-label="Close">×</button></div>'+
     '<label class="vh" for="raw">Everything you know, in one go</label>'+
     '<textarea id="raw" placeholder="Name, address, phone, email, job, time needed. All in one go." autocapitalize="sentences" spellcheck="false"></textarea>'+
+    '<div class="aclist" id="ac-raw" role="listbox" hidden></div>'+
     '<div class="lbl">I read it as (fix anything wrong)</div><div class="rd">';
   FIELDS.forEach(function(f){
     var w=(f==="address"||f==="notes")?" w":"";
-    h+='<div class="f'+w+'"><label for="f-'+f+'">'+LAB[f]+'</label><input id="f-'+f+'" type="'+(f==="phone"?"tel":f==="email"?"email":"text")+'" autocomplete="off" autocorrect="off" autocapitalize="'+(f==="email"?"none":"words")+'" data-f="'+f+'"></div>';
+    h+='<div class="f'+w+'"><label for="f-'+f+'">'+LAB[f]+'</label><input id="f-'+f+'" type="'+(f==="phone"?"tel":f==="email"?"email":"text")+'" autocomplete="off" autocorrect="off" autocapitalize="'+(f==="email"?"none":"words")+'" data-f="'+f+'">'+(f==="address"?'<div class="aclist" id="ac-addr" role="listbox" hidden></div>':"")+'</div>';
   });
   h+='</div><div class="lbl" id="t-lbl">Starts</div><div class="chips scr" id="c-time"></div>'+
     '<div class="tinrow"><label for="t-in">Any other time</label><input id="t-in" type="time" step="300"></div><div class="lbl">Length</div><div class="chips" id="c-len"></div><div class="lbl">Who</div><div class="chips" id="c-who"></div><div id="msg" role="alert"></div><div class="btns">';
@@ -782,6 +816,76 @@ async function doDrop(){
   }catch(e){lock(false);msg("Not dropped: "+friendly(e));}
 }
 
+/* ---------- address suggestions ----------
+   Same Google Places lookup, key (lpc-config.js) and Northern Rivers bias as the Job Calendar. As the address is typed, in the Address box or in the one big box
+   (the reader finds the address in it), a short list pops up under whichever box is being typed in. Tap one and the full street, suburb, state and postcode
+   go in the Address box (and the reader leaves that box alone from then on). Nothing is asked until 4+ characters and 300ms of quiet, answers are remembered,
+   an older question is cancelled by a newer one, and if Google says no (or there is no signal) the boxes carry on as they were. */
+var G_AUTO="https://places.googleapis.com/v1/places:autocomplete",G_LAT=-28.65,G_LNG=153.56,G_RADIUS=50000,AC_MIN=4,AC_WAIT=300;
+var AC={t:0,seq:0,cache:{},ctl:null,where:"",preds:[],down:0};
+function gKey(){var c=window.LPC_SUPABASE||{};return trim(c.googleKey);}
+function acHide(){
+  clearTimeout(AC.t);AC.seq++;AC.where="";AC.preds=[];
+  if(AC.ctl){try{AC.ctl.abort();}catch(e){}AC.ctl=null;}
+  ["ac-raw","ac-addr"].forEach(function(id){var l=$(id);if(l){l.hidden=true;l.innerHTML="";}});
+}
+function acAsk(where){
+  if(!SH)return;
+  var q=trim(val("f-address"));
+  clearTimeout(AC.t);
+  if(q.length<AC_MIN||!/[A-Za-z]/.test(q)){acHide();return;}
+  AC.where=where;
+  AC.t=setTimeout(function(){acLookup(q,where);},AC_WAIT);
+}
+function acDraw(preds,q,where,note){
+  var host=$(where==="raw"?"ac-raw":"ac-addr"),other=$(where==="raw"?"ac-addr":"ac-raw");
+  if(other){other.hidden=true;other.innerHTML="";}
+  if(!host)return;
+  var qn=q.toLowerCase().replace(/\s+/g," ");
+  var show=preds.filter(function(p){return p.line.toLowerCase().replace(/\s+/g," ")!==qn;}).slice(0,5);      // (the list is not shown for an address that is already in full)
+  AC.preds=show;
+  if(!show.length&&!note){host.hidden=true;host.innerHTML="";return;}
+  host.innerHTML=note?'<div class="acl">'+esc(note)+'</div>':'<div class="acl">Is the address one of these?</div>'+show.map(function(p,i){return '<button type="button" class="ac" role="option" data-a="acpick" data-i="'+i+'">'+esc(p.line)+'</button>';}).join("")+'<div class="acpow" role="presentation">Address suggestions: Google Maps</div>';
+  host.hidden=false;
+}
+async function acLookup(q,where){
+  var sh=SH;if(!sh)return;
+  var key=q.toLowerCase().replace(/\s+/g," ");
+  if(!gKey()||Date.now()<AC.down)return;
+  var hit=AC.cache[key];if(hit){acDraw(hit,q,where);return;}
+  if(AC.ctl){try{AC.ctl.abort();}catch(e){}}
+  var ctl=("AbortController" in window)?new AbortController():null;AC.ctl=ctl;var seq=++AC.seq;
+  if(!sh.gTok)sh.gTok=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2);
+  try{
+    var r=await fetch(G_AUTO,{method:"POST",headers:{"Content-Type":"application/json","X-Goog-Api-Key":gKey()},signal:ctl?ctl.signal:undefined,
+      body:JSON.stringify({input:q,sessionToken:sh.gTok,includedRegionCodes:["au"],includedPrimaryTypes:["street_address","premise","subpremise","route"],
+        locationBias:{circle:{center:{latitude:G_LAT,longitude:G_LNG},radius:G_RADIUS}}})});
+    if(!r.ok){if(r.status===403||r.status===429)AC.down=Date.now()+5*60000;throw new Error("lookup "+r.status);}
+    var data=await r.json(),seen={},preds=[];
+    (data&&data.suggestions||[]).forEach(function(s){
+      var p=s&&s.placePrediction,t=trim(p&&p.text&&p.text.text);if(!t)return;
+      var line=trim(t.replace(/,\s*Australia$/i,"")),k=line.toLowerCase();if(seen[k])return;seen[k]=1;preds.push({line:line});
+    });
+    AC.cache[key]=preds;
+    if(SH!==sh||seq!==AC.seq||trim(val("f-address"))!==q)return;      // the sheet closed, or the text has moved on
+    acDraw(preds,q,where);
+  }catch(e){
+    if(SH!==sh||seq!==AC.seq||(e&&e.name==="AbortError"))return;
+    acDraw([],q,where,"Address lookup isn't available right now. Type the address in.");
+  }
+}
+function acPick(i){
+  var p=AC.preds[i];if(!SH||!p)return;
+  setVal("f-address",p.line);SH.touched.address=true;tint("address",false);
+  SH.gTok=null;      // (the next address gets a new Google session)
+  acHide();
+}
+document.addEventListener("mousedown",function(e){if(e.target.closest&&e.target.closest(".aclist"))e.preventDefault();});      // (tapping a suggestion keeps the keyboard and the text box as they are)
+document.addEventListener("focusin",function(e){
+  var id=e.target&&e.target.id;
+  if((AC.where==="raw"&&id!=="raw")||(AC.where==="addr"&&id!=="f-address"))if(!(e.target.closest&&e.target.closest(".aclist")))acHide();
+});
+
 /* ---------- events ---------- */
 document.addEventListener("click",function(ev){
   var a=ev.target.closest&&ev.target.closest("[data-a]");if(!a)return;
@@ -802,6 +906,7 @@ document.addEventListener("click",function(ev){
   }else if(k==="pen")openEdit(a.getAttribute("data-id"));
   else if(k==="job")openJob(a.getAttribute("data-id"));
   else if(k==="close")closeSheet();
+  else if(k==="acpick")acPick(+a.getAttribute("data-i"));
   else if(k==="pencil")doPencil();else if(k==="todo")doTodo();else if(k==="save")doSave();else if(k==="drop")doDrop();else if(k==="transfer")doTransfer();
   else if(k==="t"&&SH){SH.start=v===""?null:+v;renderTimes();saveDraft();}
   else if(k==="l"&&SH){SH.len=+v;SH.lenTouched=true;renderLen();renderTimes();saveDraft();}
@@ -813,13 +918,13 @@ document.addEventListener("click",function(ev){
 });
 document.addEventListener("input",function(ev){
   var e=ev.target;if(!SH)return;
-  if(e.id==="raw")onRaw();
+  if(e.id==="raw"){onRaw();if(SH.touched.address)acHide();else acAsk("raw");}
   else if(e.id==="t-in"){      // any time of day: the phone's own time picker
     var tv=e.value;
     if(/^\d{2}:\d{2}$/.test(tv)){SH.start=(+tv.slice(0,2))*60+(+tv.slice(3,5));renderTimes();saveDraft();}
     else if(tv===""){SH.start=null;renderTimes();saveDraft();}
   }
-  else if(e.getAttribute&&e.getAttribute("data-f")){SH.touched[e.getAttribute("data-f")]=true;tint(e.getAttribute("data-f"),false);}
+  else if(e.getAttribute&&e.getAttribute("data-f")){var df=e.getAttribute("data-f");SH.touched[df]=true;tint(df,false);if(df==="address")acAsk("addr");}
 });
 $("shade").addEventListener("click",closeSheet);
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&SH)closeSheet();});
