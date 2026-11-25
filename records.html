@@ -41,7 +41,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .wrap{max-width:880px;margin:0 auto;padding:0 14px}
 
 /* header + top tabs */
-header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepInk);padding:12px 0 0;box-shadow:var(--raise)}
+header{position:sticky;top:0;z-index:30;background:var(--deep);color:var(--deepInk);
+  padding:calc(12px + env(safe-area-inset-top)) 0 0;box-shadow:var(--raise)}   /* the inset keeps the badge and title out from under the iPhone clock bar on the Home Screen app */
 .brand{display:flex;align-items:baseline;gap:9px;padding-bottom:10px}
 .brand h1{font-size:19px;color:var(--deepInk);letter-spacing:-.01em}
 .brand .sub{font-size:11px;opacity:.72;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
@@ -208,7 +209,7 @@ select.inp{appearance:none;-webkit-appearance:none}
 .pbtns{display:flex;gap:10px;flex:0 0 auto}
 .pbtns .mic{min-height:40px;padding:0 14px}
 .need{color:var(--over);font-size:13px;font-weight:600;margin:6px 0 0}
-[data-bad],#errs,[id^="blk-"],#addsvc{scroll-margin-top:106px}      /* the header is sticky: land just under it */
+[data-bad],#errs,[id^="blk-"],#addsvc{scroll-margin-top:calc(106px + env(safe-area-inset-top))}      /* the header is sticky: land just under it */
 /* one block per service on a record (description, products, areas, equipment) */
 .svcblk{margin-top:18px;padding:0 12px 12px;border:1px solid var(--line2);border-radius:13px;background:var(--bg)}
 .svcblk .sechead{margin-top:14px}
@@ -273,6 +274,7 @@ let W=null;          // weather state for the form
 let UI={};           // little UI toggles (edit mode, add-product box...)
 let BASE="";         // snapshot of the form the last time it was "clean" (customer just picked, record loaded, or saved)
 let LEAVING=false;   // set once the badge's "Leave without saving?" has been answered yes, so the browser doesn't ask a second time
+let FROM_CAL=false;  // opened from a job on the Job Calendar, so the Saved screen's big button goes back there (otherwise Home)
 
 /* ---------- storage ----------
    Small settings (product lists, amounts, mix rates) live in localStorage.
@@ -941,13 +943,16 @@ function render(){
   const y=window.scrollY;
   if(S.tab==="team"&&ME.role==="master"){ renderTeam(); $("#savebar").innerHTML=""; }
   else if(S.tab==="records"){ if(S.openId) renderView(); else renderList(); $("#savebar").innerHTML=""; }
-  else if(S.justSaved&&S.openId){ renderView(); $("#savebar").innerHTML=""; }
+  else if(S.justSaved&&S.openId){ renderView(); $("#savebar").innerHTML=doneBarHTML(); }
   else renderForm();
   renderBanner(); fitBar();
   window.scrollTo(0,y);
   attachTyped();
   if(UI.scrollTo){ const e=$(UI.scrollTo); UI.scrollTo=""; if(e) e.scrollIntoView({block:"start"}); }      // a service block just added
 }
+/* after saving, the bar that held Save holds the way out (the Home Screen app has no browser back button) */
+const doneBarHTML=()=>'<div class="qbar"><a class="btn pri" id="doneback" style="min-height:48px;font-size:17px" href="'
+  +(FROM_CAL?'calendar.html">Back to calendar':'home.html">Back to Home')+'</a></div>';
 /* keep the bottom of the page clear of the sticky bar, whatever height it is this time */
 function fitBar(){ const b=$("#savebar"); document.documentElement.style.setProperty("--barh",((b&&b.offsetHeight)||0)+"px"); }
 window.addEventListener("resize",fitBar);
@@ -1694,6 +1699,12 @@ document.addEventListener("click",function(e){
   if(dirty()&&!confirm("Leave without saving?")){ e.preventDefault(); return; }
   LEAVING=true; setTimeout(()=>{ LEAVING=false; },3000);
 });
+/* "Back to calendar": when the calendar is the page we came from, step back to it, so it can come up on the same day he left.
+   Otherwise (a reload, or opened some other way) the link itself opens the calendar. */
+document.addEventListener("click",function(e){
+  const a=e.target.closest&&e.target.closest("#doneback"); if(!a||!FROM_CAL) return;
+  if(history.length>1&&/\/calendar\.html/.test(document.referrer)){ e.preventDefault(); history.back(); }
+});
 /* "A new version is ready. Tap to update." (lpc-sw-banner.js) reloads the page: ask first if a record is in progress and not saved */
 window.lpcSwBeforeUpdate=function(){
   if(dirty()&&!confirm("Update now? The record you're filling in isn't saved yet.")) return false;
@@ -1739,6 +1750,7 @@ function recordForJob(job){
 function fromJob(){
   let q; try{ q=new URLSearchParams(location.search); }catch(e){ return ""; }
   const job=(q.get("job")||"").trim(); if(!job) return "";
+  FROM_CAL=true;
   const client=(q.get("client")||"").trim(), addr=(q.get("addr")||"").trim(), svc=(q.get("service")||"").trim(), dq=(q.get("date")||"").trim();
   /* the link has been read, so take the query off the address: a refresh then doesn't fill it in a second time (the #hash stays) */
   try{ history.replaceState(null,"",location.pathname+location.hash); }catch(e){}
