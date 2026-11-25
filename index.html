@@ -3212,17 +3212,80 @@ async function fetchJobs(make){
   if(r&&r.error&&!NO_CNOTES&&missingNotesCol(r.error)){NO_CNOTES=true;r=await make(JOB_COLS_NC);}
   return r;
 }
-/* ---------- read-only Notes panel: the Calendar job's notes and the client's notes ----------
-   STATE.jobRef = {notes, cnotes, at} (at = when they were read, ms). It sits at the TOP LEVEL of STATE on purpose, never inside STATE.customer, because
+/* ---------- access notes for the job's address (gate and lockbox codes, keys, dog) ----------
+   client_properties.access_notes (51_site_access_notes.sql). The client's notes show at all their addresses; these belong to one. The matching below is a COPY of the
+   Job Calendar's (calendar.html): change both together. Strict on purpose: a code shown on the wrong property is worse than no code. */
+function siteLine(s){const t=v=>String(v==null?"":v).trim(),tail=[s.suburb,s.state,s.postcode].map(t).filter(Boolean).join(" ");return [t(s.address),tail].filter(Boolean).join(", ");}
+/* SITE-MATCH-START (Inspection Capture carries a copy of this block: change both together)
+   Matching a job's address to a saved address, for the access notes. Strict on purpose: a code shown on the wrong property is worse than no code. The same place written
+   two ways ("3 Sample Street, Exampleton NSW 2000" and "3 sample st") matches; a different number, unit, street name, street type or suburb does not. */
+const STREET_WORDS={street:"st",st:"st",road:"rd",rd:"rd",drive:"dr",drv:"dr",dr:"dr",avenue:"av",ave:"av",av:"av",court:"ct",crt:"ct",ct:"ct",close:"cl",cl:"cl",place:"pl",pl:"pl",lane:"ln",ln:"ln",
+  crescent:"cres",cres:"cres",cr:"cres",parade:"pde",pde:"pde",terrace:"tce",tce:"tce",highway:"hwy",hwy:"hwy",circuit:"cct",cct:"cct",circle:"cir",cir:"cir",boulevard:"bvd",blvd:"bvd",bvd:"bvd",
+  esplanade:"esp",esp:"esp",grove:"gr",gr:"gr",way:"way"};
+// {street, suburb} in one spelling, or null when the line has no number in it (so it isn't one property)
+function siteKey(line){
+  let t=String(line==null?"":line).toLowerCase().replace(/[.'’]/g,"").replace(/\s+/g," ").trim();
+  if(!t||/^\(.*\)$/.test(t))return null;
+  t=t.replace(/[ ,]+australia$/,"").replace(/[ ,]+(?:nsw|qld|vic|sa|wa|tas|nt|act)(?: \d{4})?$/,"").replace(/[ ,]+\d{4}$/,"").replace(/[ ,]+$/,"");
+  const parts=t.split(",").map(function(p){return p.trim();}).filter(function(p,i,a){return p&&p!==a[i-1];});
+  let suburb="";
+  if(parts.length>1){const last=parts[parts.length-1],w=last.split(" ");if(!/\d/.test(last)&&!STREET_WORDS[w[w.length-1]])suburb=parts.pop();}
+  let street=parts.join(" ").replace(/^(?:unit|u|apartment|apt|flat|villa|townhouse) ?(\d+[a-z]?)(?: ?\/ ?| )(?=\d)/,"$1/").replace(/ ?([\/-]) ?/g,"$1");
+  const w=street.split(" ");
+  for(let i=w.length-1;i>=2;i--){      // the street's type word, written one way. With no comma, what follows it is the suburb ("9 sample drive exampleton")
+    if(!Object.prototype.hasOwnProperty.call(STREET_WORDS,w[i]))continue;
+    w[i]=STREET_WORDS[w[i]];
+    if(!suburb&&i<w.length-1){suburb=w.slice(i+1).join(" ");w.length=i+1;}
+    break;
+  }
+  street=w.join(" ");
+  return /\d/.test(street)?{street:street,suburb:suburb}:null;
+}
+// the same property: the same street, and the suburbs don't disagree (either one blank, or the same)
+function sameKey(a,b){return !!(a&&b&&a.street===b.street&&(!a.suburb||!b.suburb||a.suburb===b.suburb));}
+// The saved addresses (client_properties rows of ONE client) that are this address, closest first. [] = none. null = can't tell: no suburb given, and that street is saved in two.
+function sitesAt(addr,rows){
+  const k=siteKey(addr);if(!k)return [];
+  const line=String(addr).toLowerCase().replace(/\s+/g," ").trim(),hit=[],subs={};
+  (rows||[]).forEach(function(r,i){
+    const x=siteKey(siteLine(r));if(!sameKey(k,x))return;
+    if(x.suburb)subs[x.suburb]=1;
+    hit.push({row:r,i:i,rank:String(siteLine(r)).toLowerCase().replace(/\s+/g," ").trim()===line?0:x.suburb===k.suburb?1:2});
+  });
+  if(!k.suburb&&Object.keys(subs).length>1)return null;
+  return hit.sort(function(a,b){return a.rank-b.rank||a.i-b.i;}).map(function(h){return h.row;});
+}
+function accessText(rows){
+  const out=[];(rows||[]).forEach(function(r){const t=String(r.access_notes||"").trim();if(t&&out.indexOf(t)<0)out.push(t);});
+  return out.join("\n");
+}
+/* SITE-MATCH-END */
+// Reads the access notes for this job's address onto j.snote, only from the saved address that is this one. false = couldn't ask (no signal, or the answer failed).
+// A database without the column yet has none.
+async function addAccess(sb,j){
+  const cid=j&&j.client&&j.client.id;
+  if(!cid||!j.address)return true;
+  try{
+    const r=await sb.from("client_properties").select("address,suburb,state,postcode,access_notes").eq("client_id",cid);
+    if(r.error)return /access_notes/.test(String(r.error.message||""));
+    j.snote=accessText(sitesAt(j.address,r.data||[]));
+    return true;
+  }catch(e){return false;}
+}
+/* ---------- read-only Notes panel: the access notes, the Calendar job's notes and the client's notes ----------
+   STATE.jobRef = {notes, cnotes, snotes, at} (at = when they were read, ms). It sits at the TOP LEVEL of STATE on purpose, never inside STATE.customer, because
    buildPacket() copies the whole customer into the exported file, the office copy and the Mira input. buildPacket() and the office summary build from named
    fields, so jobRef never leaves the device. It is saved with the job (IndexedDB), so it opens with no signal. */
 function noteTxt(v){return typeof v==="string"?v.trim():"";}
 function jobRefFrom(j,at){      // null when there is nothing but blanks; at = when it was read (left out = now, 0 = unknown)
   if(!j||typeof j!=="object")return null;
-  const n=noteTxt(j.notes),cn=noteTxt(j.client&&j.client.notes);
-  return (n||cn)?{notes:n,cnotes:cn,at:at==null?Date.now():(+at||0)}:null;
+  const n=noteTxt(j.notes),cn=noteTxt(j.client&&j.client.notes),sn=noteTxt(j.snote);
+  if(!(n||cn||sn))return null;
+  const ref={notes:n,cnotes:cn,at:at==null?Date.now():(+at||0)};
+  if(sn)ref.snotes=sn;
+  return ref;
 }
-function jobRefHas(r){return !!(r&&(noteTxt(r.notes)||noteTxt(r.cnotes)));}
+function jobRefHas(r){return !!(r&&(noteTxt(r.notes)||noteTxt(r.cnotes)||noteTxt(r.snotes)));}
 function setJobRef(ref){if(ref)STATE.jobRef=ref;else delete STATE.jobRef;}
 // The Calendar's offline copy (localStorage lpc_jobs_off_v1): {v:1,uid,days:{"YYYY-MM-DD":{at,jobs:[{id,notes,client:{notes},...}]}},savedAt}.
 // Returns {job,at} for this job id, or null (no copy, a broken copy, or the job isn't in it). at = when the Calendar fetched that day.
@@ -3245,10 +3308,11 @@ function jobRefAsOf(at){      // "Mon 9 Nov, 2:35 pm" in this device's time (the
   return DOW3[d.getDay()]+" "+d.getDate()+" "+MON3[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?" "+d.getFullYear():"")+", "+((h%12)||12)+":"+String(d.getMinutes()).padStart(2,"0")+" "+(h<12?"am":"pm");
 }
 function jobNotesHtml(ref){
-  const n=noteTxt(ref&&ref.notes),cn=noteTxt(ref&&ref.cnotes),asof=jobRefAsOf(ref&&ref.at);
+  const n=noteTxt(ref&&ref.notes),cn=noteTxt(ref&&ref.cnotes),sn=noteTxt(ref&&ref.snotes),asof=jobRefAsOf(ref&&ref.at);
   return `<p class="fnote jnasof">${asof?"As of "+escv(asof)+" · read only":"Read only"}</p>`
+    +(sn?`<div class="flab">Access for this address</div><div class="jnote">${escv(sn)}</div><div class="flab">Job notes</div>`:"")
     +(n?`<div class="jnote">${escv(n)}</div>`:`<p class="fnote">No job notes.</p>`)
-    +(cn?`<div class="flab">Client notes</div><div class="jnote">${escv(cn)}</div>`:"");
+    +(cn?`<div class="flab">Client notes (all their addresses)</div><div class="jnote">${escv(cn)}</div>`:"");
 }
 function setNotesBtn(){const b=document.getElementById("notespill");if(b)b.hidden=!jobRefHas(STATE&&STATE.jobRef);}
 function openJobNotes(){
@@ -3267,7 +3331,12 @@ async function refreshJobRef(jid){
       if(ME){
         const sb=await sbClient();
         const r=await fetchJobs(c=>sb.from("jobs").select(c).eq("id",jid).maybeSingle());
-        if(r&&!r.error&&r.data){if(STATE.customer&&STATE.customer.calJobId===jid){setJobRef(jobRefFrom(r.data));scheduleSave();}done=true;}
+        if(r&&!r.error&&r.data){
+          const asked=await addAccess(sb,r.data);
+          if(STATE.customer&&STATE.customer.calJobId===jid){
+            if(!asked&&STATE.jobRef&&STATE.jobRef.snotes)r.data.snote=STATE.jobRef.snotes;      // couldn't ask: keep what this report already holds
+            setJobRef(jobRefFrom(r.data));scheduleSave();}
+          done=true;}
       }
     }
     if(!done){      // no signal or signed out: the Calendar's offline copy, only if it is newer than what this report already holds
@@ -3319,6 +3388,7 @@ async function openTodayJobs(){
   }catch(e){const el=document.getElementById("tjlist");if(el)el.innerHTML=`<span class="fnote">${escv(sbErr(e))}</span>`;}
 }
 async function startFromJob(j,at){      // at = when the notes were read, only passed when they came from the Calendar's offline copy
+  if(at===undefined&&j.client&&j.client.id){try{await addAccess(await sbClient(),j);}catch(e){}}      // the access notes for this address (online only)
   // an empty job on the screen is reused, so no blank job gets left behind in the list
   const blank=!(STATE.customer&&(STATE.customer.address||STATE.customer.client))&&!Object.keys(STATE.sections||{}).length;
   if(STATE.id&&!blank){await dbSet("job::"+STATE.id,STATE);await upsertJobMeta();}
@@ -3434,7 +3504,7 @@ async function handleLaunchParams(){
   }
   // 3. not signed in or no signal: use what the calendar put in the link (name and address), plus the notes from the Calendar's offline copy if it holds this job
   const off=offlineJobFromStore(jid),j3={id:jid,address:addr,client:{name:client}};
-  if(off){j3.notes=off.job.notes;j3.client.notes=off.job.client&&off.job.client.notes;}
+  if(off){j3.notes=off.job.notes;j3.snote=off.job.snote;j3.client.notes=off.job.client&&off.job.client.notes;}
   await startFromJob(j3,off?off.at:undefined);
   setNotesBtn();
   toast("Started. Sign in (Jobs) to fill the phone and email too",3600);

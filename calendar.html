@@ -705,7 +705,7 @@ const PPM_FLOOR_BAR=0.3;                 // ...except with the booking bar open:
 const SNAP=15;               // minutes
 const MIN_DUR=15;            // shortest a job can be stretched down to
 const UNAS="#7E8D88";
-const BUILD="2026-11-24a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
+const BUILD="2026-11-25a";      // shown quietly at the foot of the ⋯ menu, so Mitch can tell which copy a phone or iPad is running
 const CLIENT_COLS="id,name,phone,email,street,suburb,state,postcode";
 // clients.notes and service_types.default_minutes come from 06_lengths_notes.sql, service_types.addon_minutes from 07_addon_minutes.sql. If the database doesn't
 // have them yet, the first answer that says so switches them off for the session (S.noNotesCol, S.noLenCol, S.noAddonCol), quietly: they are left out of every
@@ -795,6 +795,7 @@ const S={hashErr:"",screen:"boot",sb:null,user:null,userId:null,me:null,isMaster
   fetchSeq:0,pending:0,live:"",channel:null,refetchT:null,pollT:null,
   scrollToWork:true,dirtyRender:false,dragging:false,pressing:false,noClickUntil:0,grid:{gs:WORK_START,ge:WORK_END,ppm:1},ppm:1,winKey:"",starting:false,
   uploads:0,pendingPhotos:[],lastRenderKey:"",tbDateT:0,tbDateV:"",tbDateFocus:false,addrCache:new Map(),phoneWho:"both",gBlockUntil:0,noPlaceId:false,noNotesCol:false,noLenCol:false,noAddonCol:false,menuOpen:false,whoOpen:false,
+  noAccessCol:false,siteRows:{},      // access notes per address: the column isn't in the database yet (51) / each client's saved addresses (with their access notes) for the jobs on screen
   noPropCols:false,      // the proposal flag columns (10_proposal_flags.sql) aren't in the database: the Barrier / Baiting buttons and the Proposals to do list stay hidden
   noPriceTbl:false,priceNoted:false,priceFailNoted:false,usualFail:false,priceChan:null,      // prices (master only): the 08 tables are missing / that was said once / a price load failed and was said / usual prices didn't load / the realtime channel for the two price tables
 
@@ -842,6 +843,7 @@ function missingCol(e,col){
 }
 // Looks at a failed answer: if it says clients.notes, service_types.default_minutes or service_types.addon_minutes isn't there, remember that and return true (ask again without it).
 function noteMissing(e){
+  if(!S.noAccessCol&&missingCol(e,"access_notes")){S.noAccessCol=true;return true;}      // 51_site_access_notes.sql
   if(!S.noNotesCol&&missingCol(e,"notes")){S.noNotesCol=true;return true;}
   if(!S.noLenCol&&missingCol(e,"default_minutes")){S.noLenCol=true;return true;}
   if(!S.noAddonCol&&missingCol(e,"addon_minutes")){S.noAddonCol=true;return true;}
@@ -1317,6 +1319,7 @@ function fillSheet(F,o){
   Object.keys(vals).forEach(function(id){if(byId(id))setVal(id,vals[id]);});
   if(S.isMaster&&F.dur>0)setDur(F.dur);      // (the How long list is in 15 minute steps: a length like 80 min is added to it)
   if(S.isMaster){SH.clientId=o.clientId||null;SH.client=o.client?Object.assign({},o.client):null;}
+  if(Array.isArray(F.access))SH.sn=F.access.filter(function(d){return d&&d.cid&&d.key&&d.key.street;}).map(function(d){return Object.assign({},d);});      // typed access notes, still tied to their address
   SH.svc=draftServices(F);renderSvcList();renderSvcDetails();
   if(o.addrTouched)SH.addrTouched=true;
   if(o.durHand)SH.durHand=true;
@@ -1436,6 +1439,7 @@ function stopApp(){
   if(S.channel){try{S.sb.removeChannel(S.channel);}catch(e){}S.channel=null;}
   if(S.priceChan){try{S.sb.removeChannel(S.priceChan);}catch(e){}S.priceChan=null;}
   S.noPriceTbl=false;S.priceNoted=false;S.priceFailNoted=false;S.usualFail=false;S.noPropCols=false;      // the next person to log in finds out for themselves
+  S.siteRows={};S.noAccessCol=false;
   S.live="";S.jobs=[];S.byId={};S.loaded=false;S.range=null;S.starting=false;
   S.plan=null;S.notes=null;S.noPlanTbl=false;S.noNotesTbl=false;S.pen=null;S.noPenTbl=false;closeDayNote();
   D.q=[];D.want={};clearTimeout(D.pumpT);D.pumpT=0;clearTimeout(D.fbT);D.fbT=0;if(D.rafT){try{cancelAnimationFrame(D.rafT);}catch(e){}D.rafT=0;}
@@ -1467,6 +1471,7 @@ function offJob(j){
   return {id:j.id,job_date:j.job_date,start_time:j.start_time,duration_min:j.duration_min,staff_id:j.staff_id,status:j.status,address:j.address,notes:j.notes,
     service_type:j.service_type,services:Array.isArray(j.services)?j.services.filter(function(e){return e&&e.type;}).map(function(e){return {type:e.type};}):[],
     proposal_barrier:!!j.proposal_barrier,proposal_baiting:!!j.proposal_baiting,
+    snote:accessOf(j),cmulti:multiOf(j),      // the access notes for this job's address, already worked out, and whether the client note covers several addresses
     client:c?{name:c.name,phone:c.phone,street:c.street,suburb:c.suburb,state:c.state,postcode:c.postcode,notes:c.notes}:null};
 }
 function dayGap(a,b){return Math.round((parseYmd(a)-parseYmd(b))/864e5);}
@@ -1475,8 +1480,14 @@ function offSave(rows,range){
     if(!S.userId||!range)return;
     let o=offRead();
     if(!o||o.uid!==S.userId)o={v:1,uid:S.userId,days:{}};
-    const now=Date.now(),t=todayYmd(),lo=addDays(t,-OFFJ_BACK),hi=addDays(t,OFFJ_AHEAD),by={};
-    rows.forEach(function(j){if(j.status!=="cancelled")(by[j.job_date]=by[j.job_date]||[]).push(offJob(j));});
+    const now=Date.now(),t=todayYmd(),lo=addDays(t,-OFFJ_BACK),hi=addDays(t,OFFJ_AHEAD),by={},had={};
+    Object.keys(o.days).forEach(function(d){(o.days[d].jobs||[]).forEach(function(x){had[x.id]=x;});});
+    rows.forEach(function(j){
+      if(j.status==="cancelled")return;
+      const n=offJob(j),was=had[j.id];
+      if(!S.siteRows[j.client_id]&&was&&was.address===j.address){n.snote=was.snote;n.cmulti=was.cmulti;}      // the addresses didn't load this time: keep the access notes already saved on this device
+      (by[j.job_date]=by[j.job_date]||[]).push(n);
+    });
     for(let d=range.from,n=0;d<=range.to&&n<14;d=addDays(d,1),n++)if(d>=lo&&d<=hi)o.days[d]={at:now,jobs:by[d]||[]};
     Object.keys(o.days).forEach(function(d){if(d<lo||d>hi)delete o.days[d];});
     o.savedAt=now;o.me=S.me?{name:S.me.name}:(o.me||null);
@@ -1544,7 +1555,8 @@ async function fetchJobs(silent){
     if(r.error)throw r.error;
     const rows=r.data||[];
     // Master only: the prices of these jobs (and, on a refresh, the usual prices) come from their own tables and are merged into the jobs in memory. A worker never asks.
-    if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null,loadPlanNotes(range)]);if(seq!==S.fetchSeq)return;}
+    if(S.isMaster){await Promise.all([attachPrices(rows),silent?loadUsualPrices():null,loadPlanNotes(range),loadSiteRows(rows)]);if(seq!==S.fetchSeq)return;}
+    else{await loadSiteRows(rows);if(seq!==S.fetchSeq)return;}      // (both need the access notes for the addresses on screen)
     setJobs(rows);S.range=range;S.loaded=true;S.loadErr="";
     offSave(rows,range);
     checkPropCols(rows);syncSheetProps();
@@ -1555,6 +1567,22 @@ async function fetchJobs(silent){
     if(!S.loaded&&!S.jobs.length)S.loaded=false;
     renderBody();
   }
+}
+/* ----- the saved addresses of the clients on screen, for the access notes on their cards ----- */
+function siteCols(){return "id,client_id,address,suburb,state,postcode,job_count,source"+(S.noAccessCol?"":",access_notes");}
+// If it fails, what was loaded earlier is kept (and the jobs still show).
+async function loadSiteRows(rows){
+  const ids=rows.map(function(j){return j.client_id;}).filter(function(id,i,a){return id&&a.indexOf(id)===i;});
+  try{
+    for(let i=0;i<ids.length;i+=50){
+      const part=ids.slice(i,i+50),got={};
+      part.forEach(function(id){got[id]=[];});
+      const r=await colRetry(function(){return S.sb.from("client_properties").select(siteCols()).in("client_id",part).limit(1000);});
+      if(r.error)throw r.error;
+      (r.data||[]).forEach(function(x){if(got[x.client_id])got[x.client_id].push(x);});
+      Object.assign(S.siteRows,got);
+    }
+  }catch(e){console.warn("The saved addresses (access notes) didn't load.",e);}
 }
 /* ----- prices (master only; a worker never calls any of this) ----- */
 // Fills j._price, j._lines and j._pOk on each job in rows from job_prices: ONE query for the jobs in view (in chunks of 100 ids). A job with no row has no price entered.
@@ -1848,9 +1876,17 @@ function onWinResize(){
 
 /* ---------- cards ---------- */
 function stLabel(st){return st==="done"?"Done":st==="cancelled"?"Cancelled":"Booked";}
-// A client's notes (dog, gate code ...): a small ! on the job's card, and the whole note in its tooltip / screen-reader label
+// A client's notes (who to ring ...) and the access notes for the job's address (gate code ...): a small ! on the job's card, and both in its tooltip / screen-reader label
 function noteOf(j){return trim(j&&j.client&&j.client.notes);}
-function noteMark(j){return (noteOf(j)?'<span class="cn" aria-hidden="true">!</span>':"")+(docN(j)?'<span class="cd" aria-hidden="true">doc</span>':"")+(S.isMaster&&j.invoiced?'<span class="invm" aria-hidden="true">inv</span>':"");}
+// the access notes for THIS job's address: "" when there are none, or when it can't be told which saved address it is (never another address's notes)
+function accessOf(j){
+  if(!j)return "";
+  if(typeof j.snote==="string")return trim(j.snote);      // the offline copy carries them already worked out
+  return accessText(sitesAt(j.address,S.siteRows[j.client_id]));
+}
+// more than one address on file: the client note shows on all of them, and its label says so
+function multiOf(j){return !!j&&(typeof j.cmulti==="boolean"?j.cmulti:manyAddresses(S.siteRows[j.client_id]));}
+function noteMark(j){return (noteOf(j)||accessOf(j)?'<span class="cn" aria-hidden="true">!</span>':"")+(docN(j)?'<span class="cd" aria-hidden="true">doc</span>':"")+(S.isMaster&&j.invoiced?'<span class="invm" aria-hidden="true">inv</span>':"");}
 function oneLine(s,max){const t=String(s==null?"":s).replace(/\s+/g," ").trim();return t.length>max?t.slice(0,max-3)+"...":t;}
 // The small cards (the Unassigned list): time, then the address (or the client's name if there is no address), then the client's name and the services.
 function cardHtml(j,cls,style){
@@ -1875,7 +1911,7 @@ function jobTip(j){
   const s=tmToMin(j.start_time),a=trim(j.address),c=clientNameOf(j),sv=svcNames(j).join(" + ");
   const who=[a,c].filter(Boolean);if(!who.length)who.push(isTodo(j)&&todoTitle(j,200)?todoTitle(j,200):"No address or client name");
   const when=s==null?"No start time":fmtMin(s)+" to "+fmtMin(s+j.duration_min);
-  return who.concat([sv,when,stLabel(j.status)]).concat(S.isMaster&&j.invoiced?["Invoiced"]:[]).filter(Boolean).join(". ")+(hasProp(j)?". Proposal to do: "+propText(j):"")+(noteOf(j)?". Client note: "+oneLine(noteOf(j),400):"");
+  return who.concat([sv,when,stLabel(j.status)]).concat(S.isMaster&&j.invoiced?["Invoiced"]:[]).filter(Boolean).join(". ")+(hasProp(j)?". Proposal to do: "+propText(j):"")+(accessOf(j)?". Access for this address: "+oneLine(accessOf(j),400):"")+(noteOf(j)?(multiOf(j)?". Client note (all their addresses): ":". Client note: ")+oneLine(noteOf(j),400):"");
 }
 // What a timed card has room for (see the .jc CSS), from its height and width in px. Week lanes on a phone are very narrow.
 function cardFit(h,w){
@@ -2269,7 +2305,8 @@ function techCard(j){
     (second?'<div class="taddr">'+esc(second)+'</div>':"")+
     (svcLabel(j,80)?'<div class="tsvc">'+esc(svcLabel(j,80))+'</div>':"")+
     (hasProp(j)?'<div class="tprop">'+(pr.b?'<span class="ptag big">Barrier proposal</span>':"")+(pr.t?'<span class="ptag big">Baiting proposal</span>':"")+'</div>':"")+
-    (noteOf(j)?'<div class="tcn" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(noteOf(j))+'</span></div>':"")+
+    (accessOf(j)?'<div class="tcn" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt"><b>This address:</b> '+esc(accessOf(j))+'</span></div>':"")+
+    (noteOf(j)?'<div class="tcn" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+(multiOf(j)?'<b>All their addresses:</b> ':"")+esc(noteOf(j))+'</span></div>':"")+
     (j.notes?'<div class="tnote">'+esc(j.notes)+'</div>':"")+
     (docN(j)?'<div class="tdocs">'+docN(j)+' document'+(docN(j)===1?'':'s')+' attached. Tap the job to open '+(docN(j)===1?'it':'them')+'.</div>':"")+
     '<span class="stl '+esc(j.status)+'">'+esc(stLabel(j.status))+'</span></div><div class="tacts">';
@@ -3005,6 +3042,7 @@ function openSheet(job,defaults){
     svc:svc,svcBase:svc.map(function(e){return e.type;}),svcMemo:{},svcMore:false,      // svcBase: the services the job had when the sheet opened (a worker can add to these, not take them off)
     more:moreLoad(),moreForce:!!(job&&job.status==="cancelled"),      // the More row: open or shut as last left on this device; a cancelled job opens it (Reopen is in there)
     cnOpen:false,cnTouched:false,      // the client notes box: showing, and typed in on this sheet (until then it just mirrors the client's saved notes)
+    sn:[],siteRaw:[],      // access notes typed on this sheet, each tied to the client and address it was typed for / every saved address of the client (with its access notes)
     durHand:!!job,durAuto:false,durBase:null,svcTouched:false,      // job length: set by hand (a saved job's length counts as set by hand), set from the services, services ticked on this sheet
     legacyPrice:(S.isMaster&&job&&job._price!=null&&!svc.length)?job._price:null,      // an old job with a price but no service: the only service ticked takes it (kept until the prices save)
     legacyHeld:"",      // the service that currently holds that price
@@ -3216,7 +3254,8 @@ function sheetHtml(){
     '<div class="aclist" id="f-addr-list" role="listbox" hidden></div></div>'+
     '<div class="hint" id="f-addr-hint" role="status"></div>'+
     '<div class="sites" id="f-addr-sites" hidden></div>'+
-    '<div class="sites" id="f-addr-offer" hidden></div>';
+    '<div class="sites" id="f-addr-offer" hidden></div>'+
+    accessBoxHtml("");
   // a worker sees the services straight under the address and can add to them (the ones Mitch ticked stay on; see renderSvcList)
   if(!M)h+='<div class="fld"><div class="fl" id="sv-lbl">The job</div><div id="sv-list" role="group" aria-labelledby="sv-lbl"></div></div>';
   // 2. the client: name, phone, email (Ring, Text, Email and Maps are under them). The client's own street, suburb, state and postcode are in the More row.
@@ -3240,11 +3279,11 @@ function sheetHtml(){
      '<div class="btns" id="sh-contact">'+
        '<a class="btn" id="ln-ring">'+IC.phone+' Ring</a><a class="btn" id="ln-text">'+IC.msg+' Text</a>'+
        '<a class="btn" id="ln-mail">'+IC.mail+' Email</a><a class="btn" id="ln-map" target="_blank" rel="noopener">'+IC.pin+' Maps</a></div>';
-  // client notes: stay with the client, not the job. A strip under the title when there are some, or a "+ Client note" link.
+  // client notes: stay with the client, not the job, so they show at EVERY address the client has (codes go in the access box under the job address). A strip under the title when there are some, or a "+ Client note" link.
   if(!S.noNotesCol&&(M||SH.clientId)){
     h+='<button type="button" class="linkbtn cnadd" id="cn-add" data-sh="cnadd" hidden>+ Client note</button>'+
-      '<div class="fld" id="cn-box" hidden><label class="fl" for="f-cnotes">Client notes <span class="fl2">(these stay with the client, not this job: dog, gate code, key, parking)</span></label>'+
-      '<textarea class="inp cnta" id="f-cnotes" placeholder="Dog, gate code, key, parking...">'+esc(I.cnotes)+'</textarea></div>';
+      '<div class="fld" id="cn-box" hidden><label class="fl" for="f-cnotes">Client notes <span class="fl2" id="cn-lbl2">'+esc(cnLabel())+'</span></label>'+
+      '<textarea class="inp cnta" id="f-cnotes" placeholder="About the client: who to ring, how they pay...">'+esc(I.cnotes)+'</textarea></div>';
   }
   // 3. the job
   h+='<div class="lbl">Job</div>'+
@@ -3338,23 +3377,144 @@ function flagMore(msg){
   return msg;
 }
 /* ----- client notes -----
-   Notes that stay with the client (dog, gate code, key, parking). clients.notes, saved to the client row, not the job. With notes: a yellow strip under the
-   title (and a ! on the job's card). Without: a "+ Client note" link. The box mirrors the client's saved notes until it is typed in. */
+   Notes that stay with the client (who to ring, how they pay). clients.notes, saved to the client row, not the job, so they show at every address the client has. With notes: a
+   yellow strip under the title (and a ! on the job's card). Without: a "+ Client note" link. The box mirrors the client's saved notes until it is typed in.
+   Codes, keys and anything else about one property go in the access box under the job address instead (below). The same strip shows those, first. */
+function cnLabel(){
+  return S.noAccessCol?"(show at ALL their addresses. A code for one address goes in Notes, on the job)"
+    :"(show at ALL their addresses: who to ring, how they pay. Codes and keys go in Access for this address)";
+}
+// both kinds of note, labelled so one can't be taken for the other
+function noteStripHtml(access,client,many){
+  return '<span class="cn" aria-hidden="true">!</span><span class="cntxt">'+(access?'<b>This address:</b> '+esc(access):"")+(access&&client?"\n":"")+
+    (client?(many?'<b>All their addresses:</b> ':access?'<b>Client:</b> ':"")+esc(client):"")+'</span>';
+}
 function renderCNotes(){
   if(!SH||SH.quick)return;
   const ta=byId("f-cnotes"),strip=byId("cn-strip"),box=byId("cn-box"),add=byId("cn-add");
-  if(!ta||!strip||!box||!add)return;
-  if(SH.clientId&&SH.client&&!SH.cnTouched){const n=SH.client.notes||"";if(ta.value!==n)ta.value=n;}
-  const can=!S.noNotesCol&&!!(SH.clientId||(S.isMaster&&trim(val("f-name")))),txt=trim(ta.value),open=!!SH.cnOpen;
-  strip.hidden=!(can&&txt&&!open);
-  if(!strip.hidden)strip.innerHTML='<span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(txt)+'</span><button type="button" class="linkbtn" data-sh="cnedit">Edit</button>';
-  box.hidden=!(can&&open);
-  add.hidden=!(can&&!txt&&!open);
+  if(!strip)return;
+  if(ta&&SH.clientId&&SH.client&&!SH.cnTouched){const n=SH.client.notes||"";if(ta.value!==n)ta.value=n;}
+  const can=!!ta&&!S.noNotesCol&&!!(SH.clientId||(S.isMaster&&trim(val("f-name")))),txt=can?trim(ta.value):"",open=!!SH.cnOpen;
+  const st=snState(),access=st.on?trim(byId("f-access")?val("f-access"):""):"",ctxt=open?"":txt;
+  strip.hidden=!(access||ctxt);
+  if(!strip.hidden)strip.innerHTML=noteStripHtml(access,ctxt,manyAddresses(SH.siteRaw))+(ctxt?'<button type="button" class="linkbtn" data-sh="cnedit">Edit</button>':"");
+  const l2=byId("cn-lbl2");if(l2&&l2.textContent!==cnLabel())l2.textContent=cnLabel();
+  if(box)box.hidden=!(can&&open);
+  if(add)add.hidden=!(can&&!txt&&!open);
 }
 function openCNotes(){
   if(!SH||SH.quick)return;
   SH.cnOpen=true;renderCNotes();
   const t=byId("f-cnotes");if(t){try{t.focus();}catch(e){}}
+}
+
+/* ----- access notes for ONE address (gate, door and lockbox codes, keys, dog) -----
+   client_properties.access_notes (51_site_access_notes.sql). They belong to the address, so a code typed for one of a property manager's places can't show on the others (it did
+   when codes went in the client note). The box sits under the job address and only works once there is a client and an address with a number in it. What is typed is tied to the
+   client and address it was typed for: change either and the box shows the other one's notes, and the typed text is never saved anywhere else. */
+function accessBoxHtml(cls){
+  return '<div class="fld'+cls+'" id="sn-box" hidden><label class="fl" for="f-access">Access for this address <span class="fl2">(codes, keys, gate, dog. Shows only on jobs at this address)</span></label>'+
+    '<textarea class="inp cnta" id="f-access" rows="2" placeholder="Gate code, lockbox, key, dog, parking..."></textarea></div>'+
+    '<div class="hint" id="sn-hint" role="status"></div>';
+}
+// the client the access notes would be saved under: the linked one, or "new" for a name typed for a new client, or "" for none
+function snCid(){return SH.clientId?SH.clientId:(S.isMaster&&trim(val("f-name"))?"new":"");}
+function snFind(list,cid,key){return (list||[]).filter(function(d){return d.cid===cid&&sameKey(d.key,key);})[0]||null;}
+function snChanged(sh){return (sh.sn||[]).filter(function(d){return trim(d.text)!==trim(d.base);});}
+// what typed-but-elsewhere text was typed for, said in words: another address, or the same address under another client
+function snWhere(d,key){return sameKey(d.key,key)?"another client at "+d.addr:d.addr;}
+// Where the access box stands: on (with the saved notes for this client at this address), or off and why ("" = nothing to say)
+function snState(){
+  const off=function(why){return {on:false,why:why||""};};
+  if(!SH)return off();
+  const cid=snCid(),addr=trim(val("f-addr"));
+  if(!cid||!addr)return off();
+  const key=siteKey(addr);
+  if(!key)return off("No access notes for this one: it needs a street number. Put any code in the job notes.");
+  if(S.noAccessCol)return off("A code or key for this address goes in the job notes for now. The box for it needs the 51 database update.");
+  let saved="";
+  if(cid!=="new"){
+    if(SH.sitesFor!==cid)return off("Getting the access notes for this address...");
+    if(!SH.sitesOk)return off("This client's addresses didn't load, so access notes can't be shown or saved. Close the job and open it again.");
+    const rows=sitesAt(addr,SH.siteRaw);
+    if(rows===null)return off("This street is on file in more than one suburb. Add the suburb to the job address to see its access notes.");
+    saved=accessText(rows);
+  }
+  return {on:true,why:"",cid:cid,key:key,addr:addr,saved:saved};
+}
+function renderAccess(){
+  if(!SH)return;
+  const box=byId("sn-box"),ta=byId("f-access"),hint=byId("sn-hint");if(!box||!ta||!hint)return;
+  const s=snState(),d=s.on?snFind(SH.sn,s.cid,s.key):null,v=s.on?(d?d.text:s.saved):"";
+  box.hidden=!s.on;
+  if(ta.value!==v)ta.value=v;
+  // text typed for some other address (or client) is kept, but it is not for this one: say so
+  const other=snChanged(SH).filter(function(x){return !(s.on&&x.cid===s.cid&&sameKey(x.key,s.key));});
+  const why=[s.why,other.length?"What you typed in the access box for "+snWhere(other[0],siteKey(val("f-addr")))+" isn't for this job as it is now, so it won't be saved.":""].filter(Boolean).join(" ");
+  if(hint.textContent!==why)hint.textContent=why;
+}
+function onAccessInput(){
+  const s=snState();if(!s.on)return;
+  let d=snFind(SH.sn,s.cid,s.key);
+  if(!d){d={cid:s.cid,key:s.key,addr:s.addr,base:s.saved,text:""};SH.sn.push(d);}
+  d.text=String(val("f-access")||"").replace(/\r\n/g,"\n");
+  d.addr=s.addr;if(s.key.suburb)d.key=s.key;
+}
+// Before a save. Access text typed for another address or client is never moved across to this one: the person is told, and chooses.
+function snCheck(sh,f,clientId){
+  const key=siteKey(f.address),cid=clientId||"new";
+  const stray=snChanged(sh).filter(function(d){return !(key&&d.cid===cid&&sameKey(d.key,key));});
+  if(!stray.length)return true;
+  if(!confirm("You typed access notes for "+snWhere(stray[0],key)+". This job is being saved for "+(sameKey(stray[0].key,key)?"a different client":(f.address||"no address"))+
+    ", so they will NOT be saved.\n\nSave the job without them?"))return false;
+  sh.sn=sh.sn.filter(function(d){return stray.indexOf(d)<0;});
+  return true;
+}
+// The client note shows at every address the client has. A new code or key going into it, for a client with more than one address, is checked first.
+function cnCheck(sh,f){
+  if(S.noNotesCol||f.cnotes==null||!sh.client||!sh.clientId)return true;
+  const now=nn(f.cnotes);
+  if(!now||now===nn(sh.client.notes)||!manyAddresses(sh.siteRaw)||!looksLikeAccess(now))return true;
+  return confirm('Client notes show on ALL of '+trim(sh.client.name)+"'s addresses:\n\n"+oneLine(now,200)+'\n\nIf this code or key is for one address only, tap Cancel and put it in '+
+    (S.noAccessCol?"the job notes":'"Access for this address"')+'.\n\nOK = show it at every address.');
+}
+// Saves the access notes typed for this job's address, onto that address in the client's saved addresses (adding the address if it isn't there). Throws a plain message if it can't.
+async function saveAccess(sh,clientId,addr){
+  const key=siteKey(addr);
+  if(!clientId||!key)return;
+  const d=snFind(snChanged(sh),clientId,key);
+  if(!d)return;
+  if(S.noAccessCol)throw plainErr("The database update (51) hasn't been run yet.");
+  const res=await fetchSites(clientId,sh.client);      // fresh: someone else may have changed them since this sheet opened
+  if(!res.ok)throw plainErr("Couldn't read this client's addresses.");
+  if(S.noAccessCol)throw plainErr("The database update (51) hasn't been run yet.");
+  let rows=sitesAt(addr,res.raw);
+  if(rows===null)throw plainErr("This street is on file in more than one suburb. Add the suburb to the job address.");
+  const text=trim(d.text),now=accessText(rows);
+  if(now!==text&&now!==trim(d.base)&&!confirm("The access notes for "+addr+" were changed since you opened this job. They now say:\n\n"+(now||"(blank)")+"\n\nReplace that with what you typed?")){
+    d.base=now;throw plainErr('Someone else changed them: they now say "'+oneLine(now||"(blank)",120)+'". Check what you typed.');
+  }
+  if(now!==text){
+    if(!rows.length){      // saveNewSite adds most addresses before this; one it left out is added here
+      const p=splitAddr(addr),row={id:clientId+"::"+siteSlug(p.street)+"-"+Date.now().toString(36),client_id:clientId,address:p.street,suburb:nn(p.suburb),state:nn(p.state),postcode:nn(p.postcode),source:"calendar"};
+      const ins=await S.sb.from("client_properties").insert(row);
+      if(ins.error)throw ins.error;
+      res.raw.push(row);rows=[row];
+    }
+    // one home for the notes: the row that has them now, else the closest match. Written first; any other copy of this address is cleared after.
+    const home=rows.filter(function(x){return trim(x.access_notes);})[0]||rows[0];
+    const writes=[home].concat(rows.filter(function(x){return x!==home&&trim(x.access_notes);}));
+    for(let i=0;i<writes.length;i++){
+      const row=writes[i],v=row===home?(text||null):null;
+      const r=await S.sb.from("client_properties").update({access_notes:v}).eq("id",row.id).select("id");
+      if(r.error){if(missingCol(r.error,"access_notes")){S.noAccessCol=true;throw plainErr("The database update (51) hasn't been run yet.");}throw r.error;}
+      if(!r.data||!r.data.length)throw plainErr("You may not be allowed to change this address.");
+      row.access_notes=v;
+    }
+  }
+  sh.sn=sh.sn.filter(function(x){return x!==d;});
+  sh.siteRaw=res.raw;sh.sitesFor=clientId;sh.sitesOk=true;S.siteRows[clientId]=res.raw;
+  if(SH===sh)renderAccess();
 }
 
 /* ----- form reading, links, dirty check ----- */
@@ -3369,7 +3529,8 @@ function readForm(){
     services:SH.svc.map(function(e){return {type:e.type,description:e.description,price:trim(e.price),discount:M?trim(e.discount):"",qty:M&&trim(e.qty)?trim(e.qty):"1"};}),
     invoiced:M?!!(byId("f-inv")&&byId("f-inv").checked):!!(SH.job&&SH.job.invoiced),
     notes:String(val("f-notes")||"").replace(/\r\n/g,"\n"),
-    cnotes:byId("f-cnotes")?String(val("f-cnotes")||"").replace(/\r\n/g,"\n"):null      // null = no notes box on this sheet (the booking bar, or the database has no clients.notes yet)
+    cnotes:byId("f-cnotes")?String(val("f-cnotes")||"").replace(/\r\n/g,"\n"):null,      // null = no notes box on this sheet (the booking bar, or the database has no clients.notes yet)
+    access:snChanged(SH).map(function(d){return Object.assign({},d);})      // access notes typed and not yet saved, each with the client and address they belong to
   };
   if(M){f.date=val("f-date")||"";f.time=val("f-time")||"";f.dur=parseInt(val("f-dur"),10);f.staff=val("f-staff")||"";}
   else{f.date=I.date;f.time=I.time;f.dur=I.dur;f.staff=I.staff;}
@@ -3377,7 +3538,7 @@ function readForm(){
 }
 function snap(){
   // the bar: not the day, time or who (those are set by the chips and the green spots), but the notes are
-  if(SH.quick){const f=readForm();return JSON.stringify([f.name,f.phone,f.email,f.street,f.suburb,f.state,f.postcode,f.address,f.services,f.notes,SH.cnTouched?f.cnotes:""])+"|"+(SH.clientId||"");}
+  if(SH.quick){const f=readForm();return JSON.stringify([f.name,f.phone,f.email,f.street,f.suburb,f.state,f.postcode,f.address,f.services,f.notes,SH.cnTouched?f.cnotes:"",f.access])+"|"+(SH.clientId||"");}
   return JSON.stringify(readForm())+"|"+(SH.clientId||"");
 }
 function isDirty(){return !!SH&&snap()!==SH.baseline;}
@@ -3395,6 +3556,7 @@ function recordsHref(id,name,addr,recTypes,date){
 function updateLinks(){
   if(!SH)return;
   if(SH.quick){quickSync();return;}      // the booking bar has no Ring/Text/Maps buttons or paperwork: it only needs its own chips and summary refreshed
+  renderAccess();renderCNotes();
   const f=readForm(),num=f.phone.replace(/[^\d+]/g,"");
   setLink("ln-ring",num.length>=3?"tel:"+num:"");
   setLink("ln-text",num.length>=3?"sms:"+num:"");
@@ -3549,6 +3711,7 @@ function showNameList(list,match){
 // prefer = the site address the search matched on, so that site is the one filled in
 function applyClient(c,blankOnly,prefer){
   SH.offerAddr=!blankOnly;hideAddrOffer();      // picked by hand (not the save-time match): if the job already has an address, offer this client's instead (see offerClientAddr)
+  if(!SH.clientId)(SH.sn||[]).forEach(function(d){if(d.cid==="new"){d.cid=c.id;d.base="";}});      // access notes typed while the name was still being typed belong to the client that was picked
   SH.clientId=c.id;SH.client=Object.assign({},c);
   SH.unlinked=null;SH.renameTo=null;       // picking a client settles who this job is for
   // A client picked from the list: their saved notes (if any) show in the strip. The existing client picked at Save (blankOnly) keeps a note that was just typed
@@ -3562,7 +3725,7 @@ function applyClient(c,blankOnly,prefer){
   if(S.isMaster)setVal("f-name",c.name);
   set("f-phone",c.phone);set("f-email",c.email);set("f-street",c.street);set("f-suburb",c.suburb);set("f-state",c.state);set("f-postcode",c.postcode);
   SH.preferAddr=prefer||"";
-  SH.sites=[];SH.sitesFor=null;SH.sitesOk=false;renderSites();      // the last client's sites don't belong to this one
+  SH.sites=[];SH.siteRaw=[];SH.sitesFor=null;SH.sitesOk=false;renderSites();      // the last client's sites don't belong to this one
   hideNameList();updateClientHint();updateLinks();
   loadSites(SH,c.id);       // fills the job address from their sites (or their own address) if the box is empty
 }
@@ -3579,7 +3742,7 @@ function unlinkClient(){
   SH.unlinked=SH.client?{client:Object.assign({},SH.client),vals:vals}:null;
   SH.renameTo=null;
   SH.clientId=null;SH.client=null;SH.offerAddr=false;hideAddrOffer();
-  SH.sites=[];SH.sitesFor=null;SH.sitesOk=false;SH.sitesSeq++;SH.preferAddr="";renderSites();
+  SH.sites=[];SH.siteRaw=[];SH.sitesFor=null;SH.sitesOk=false;SH.sitesSeq++;SH.preferAddr="";renderSites();
   updateLinks();
 }
 function diffClient(){
@@ -3622,6 +3785,61 @@ function updateClientHint(){
 function normAddr(s){return String(s==null?"":s).toLowerCase().replace(/\s*,\s*/g,", ").replace(/\s+/g," ").trim();}
 function isPlaceholderAddr(a){const t=trim(a);return !t||/^\(.*\)$/.test(t);}      // the Xero seed has "(address unknown)" rows
 function siteLine(s){return composeAddr(s.address,s.suburb,s.state,s.postcode);}
+/* SITE-MATCH-START (Inspection Capture carries a copy of this block: change both together)
+   Matching a job's address to a saved address, for the access notes. Strict on purpose: a code shown on the wrong property is worse than no code. The same place written
+   two ways ("3 Sample Street, Exampleton NSW 2000" and "3 sample st") matches; a different number, unit, street name, street type or suburb does not. */
+const STREET_WORDS={street:"st",st:"st",road:"rd",rd:"rd",drive:"dr",drv:"dr",dr:"dr",avenue:"av",ave:"av",av:"av",court:"ct",crt:"ct",ct:"ct",close:"cl",cl:"cl",place:"pl",pl:"pl",lane:"ln",ln:"ln",
+  crescent:"cres",cres:"cres",cr:"cres",parade:"pde",pde:"pde",terrace:"tce",tce:"tce",highway:"hwy",hwy:"hwy",circuit:"cct",cct:"cct",circle:"cir",cir:"cir",boulevard:"bvd",blvd:"bvd",bvd:"bvd",
+  esplanade:"esp",esp:"esp",grove:"gr",gr:"gr",way:"way"};
+// {street, suburb} in one spelling, or null when the line has no number in it (so it isn't one property)
+function siteKey(line){
+  let t=String(line==null?"":line).toLowerCase().replace(/[.'’]/g,"").replace(/\s+/g," ").trim();
+  if(!t||/^\(.*\)$/.test(t))return null;
+  t=t.replace(/[ ,]+australia$/,"").replace(/[ ,]+(?:nsw|qld|vic|sa|wa|tas|nt|act)(?: \d{4})?$/,"").replace(/[ ,]+\d{4}$/,"").replace(/[ ,]+$/,"");
+  const parts=t.split(",").map(function(p){return p.trim();}).filter(function(p,i,a){return p&&p!==a[i-1];});
+  let suburb="";
+  if(parts.length>1){const last=parts[parts.length-1],w=last.split(" ");if(!/\d/.test(last)&&!STREET_WORDS[w[w.length-1]])suburb=parts.pop();}
+  let street=parts.join(" ").replace(/^(?:unit|u|apartment|apt|flat|villa|townhouse) ?(\d+[a-z]?)(?: ?\/ ?| )(?=\d)/,"$1/").replace(/ ?([\/-]) ?/g,"$1");
+  const w=street.split(" ");
+  for(let i=w.length-1;i>=2;i--){      // the street's type word, written one way. With no comma, what follows it is the suburb ("9 sample drive exampleton")
+    if(!Object.prototype.hasOwnProperty.call(STREET_WORDS,w[i]))continue;
+    w[i]=STREET_WORDS[w[i]];
+    if(!suburb&&i<w.length-1){suburb=w.slice(i+1).join(" ");w.length=i+1;}
+    break;
+  }
+  street=w.join(" ");
+  return /\d/.test(street)?{street:street,suburb:suburb}:null;
+}
+// the same property: the same street, and the suburbs don't disagree (either one blank, or the same)
+function sameKey(a,b){return !!(a&&b&&a.street===b.street&&(!a.suburb||!b.suburb||a.suburb===b.suburb));}
+// The saved addresses (client_properties rows of ONE client) that are this address, closest first. [] = none. null = can't tell: no suburb given, and that street is saved in two.
+function sitesAt(addr,rows){
+  const k=siteKey(addr);if(!k)return [];
+  const line=String(addr).toLowerCase().replace(/\s+/g," ").trim(),hit=[],subs={};
+  (rows||[]).forEach(function(r,i){
+    const x=siteKey(siteLine(r));if(!sameKey(k,x))return;
+    if(x.suburb)subs[x.suburb]=1;
+    hit.push({row:r,i:i,rank:String(siteLine(r)).toLowerCase().replace(/\s+/g," ").trim()===line?0:x.suburb===k.suburb?1:2});
+  });
+  if(!k.suburb&&Object.keys(subs).length>1)return null;
+  return hit.sort(function(a,b){return a.rank-b.rank||a.i-b.i;}).map(function(h){return h.row;});
+}
+function accessText(rows){
+  const out=[];(rows||[]).forEach(function(r){const t=String(r.access_notes||"").trim();if(t&&out.indexOf(t)<0)out.push(t);});
+  return out.join("\n");
+}
+/* SITE-MATCH-END */
+// does this client have more than one address on file?
+function manyAddresses(rows){
+  const seen=[];
+  (rows||[]).forEach(function(r){const k=siteKey(siteLine(r));if(k&&!seen.some(function(x){return sameKey(x,k);}))seen.push(k);});
+  return seen.length>1;
+}
+// reads like a code or a key: one of those words, or a 3 to 6 digit number (phone numbers don't count)
+function looksLikeAccess(t){
+  const x=String(t||"").replace(/(?:\+?61|0)[ -]?[2-478](?:[ -]?\d){8}/g," ");
+  return /\b(?:code|lock ?box|key ?safe|keypad|padlock|pin|keys?|gate)\b/i.test(x)||/(?:^|[^\d$.,\/])\d{3,6}(?![\d.,\/])/.test(x);
+}
 // "111 Paterson St, Byron Bay NSW 2481" -> street, suburb, state, postcode. Only splits when the tail has a state or a postcode, else it is all street.
 function splitAddr(line){
   const a=trim(line);
@@ -3641,8 +3859,8 @@ function missingPlaceId(e){
 async function fetchSites(clientId,client){
   let rows=null;
   try{
-    const r=await S.sb.from("client_properties").select("id,address,suburb,state,postcode,job_count,source").eq("client_id",clientId)
-      .order("job_count",{ascending:false}).order("address",{ascending:true});
+    const r=await colRetry(function(){return S.sb.from("client_properties").select(siteCols()).eq("client_id",clientId)
+      .order("job_count",{ascending:false}).order("address",{ascending:true});});
     if(r.error)throw r.error;
     rows=r.data||[];
   }catch(e){console.warn("Couldn't load this client's job sites.",e);}
@@ -3656,14 +3874,14 @@ async function fetchSites(clientId,client){
   const c=client||{};
   if(trim(c.street)&&!seen[normAddr(c.street)])
     list.push({id:null,address:trim(c.street),suburb:trim(c.suburb),state:trim(c.state),postcode:trim(c.postcode),source:"contact"});
-  return {list:list,ok:rows!==null};
+  return {list:list,ok:rows!==null,raw:rows||[]};      // raw = every saved row, duplicates and all, with the access notes
 }
 async function loadSites(sh,clientId){
   if(!sh||!clientId)return;
   const seq=++sh.sitesSeq;
   const res=await fetchSites(clientId,sh.client);
   if(SH!==sh||seq!==sh.sitesSeq||sh.clientId!==clientId)return;      // another client was picked, or the sheet was closed
-  sh.sites=res.list;sh.sitesFor=clientId;sh.sitesOk=res.ok;
+  sh.sites=res.list;sh.siteRaw=res.raw;sh.sitesFor=clientId;sh.sitesOk=res.ok;
   renderSites();
   applySitePrefill(sh);
 }
@@ -3720,6 +3938,7 @@ function applySitePrefill(sh){
 function renderSites(){
   const el=byId("f-addr-sites");if(!el||!SH)return;
   if(SH.quick)quickSync();      // booking bar: the sites have just loaded (or been cleared), so its summary can stop saying it is still looking
+  else{renderAccess();renderCNotes();}      // the access box and the notes strip follow the address in the box
   const list=SH.sites||[];
   if(list.length<2){el.hidden=true;el.innerHTML="";return;}
   const cur=normAddr(val("f-addr"));
@@ -3779,6 +3998,7 @@ async function saveNewSite(sh,clientId,addr){
     if(ins.error&&row.place_id&&missingPlaceId(ins.error)){S.noPlaceId=true;delete row.place_id;ins=await S.sb.from("client_properties").insert(row);}      // the place_id column isn't there yet: save the site without it
     if(!ins.error){
       sh.sites=real.concat([{id:id,address:row.address,suburb:trim(row.suburb),state:trim(row.state),postcode:trim(row.postcode),source:"calendar"}]);
+      sh.siteRaw=(sh.sitesFor===clientId?sh.siteRaw||[]:[]).concat([row]);
       sh.sitesFor=clientId;sh.sitesOk=true;
       if(SH===sh)renderSites();
       return;
@@ -3789,7 +4009,7 @@ async function saveNewSite(sh,clientId,addr){
     taken[id]=1;
     const fresh=await fetchSites(clientId,sh.client);
     if(!fresh.ok)throw new Error("couldn't read this client's sites");
-    sh.sites=fresh.list;sh.sitesFor=clientId;sh.sitesOk=true;
+    sh.sites=fresh.list;sh.siteRaw=fresh.raw;sh.sitesFor=clientId;sh.sitesOk=true;
     real=savedRows(fresh.list);
     if(SH===sh)renderSites();
     if(findThere(real))return;
@@ -4532,9 +4752,12 @@ async function saveSheet(extra,opts){
   }
   let f=readForm();const bad=validate(f);
   if(bad){showMsg(bad,"bad");return false;}
+  // notes about one property: access text typed for another address is never moved across, and a new code going into the client note (all their addresses) is checked
+  if(!snCheck(sh,f,sh.clientId)){showMsg("Not saved. Check the access notes, then save again.","warn");return false;}
+  if(!cnCheck(sh,f)){showMsg("Not saved. Take the code out of the client note first.","warn");if(!sh.quick)openCNotes();return false;}
   setBusy(true);showMsg("Saving...","ok");
   S.pending++;
-  let okSave=false,lostContact=false,siteFailed=false,priceMissed=false;
+  let okSave=false,lostContact=false,siteFailed=false,priceMissed=false,accessErr=null;
   try{
     // 1. the client
     let clientId=sh.clientId,rename=false;
@@ -4569,7 +4792,9 @@ async function saveSheet(extra,opts){
         }
       }
       quickClientAddr(sh,f);      // (a new client booked address-first gets that address as their own, the bar and the full sheet alike)
-      const row=await createClientRow(f);
+      const was=sh.clientId,row=await createClientRow(f);
+      sh.sn.forEach(function(d){if(d.cid==="new"||d.cid===was){d.cid=row.id;d.base="";}});      // access notes typed for this booking go with the client just made
+      sh.siteRaw=[];sh.sitesFor=null;sh.sitesOk=false;
       sh.clientId=clientId=row.id;sh.client=Object.assign({},row);sh.unlinked=null;sh.renameTo=null;
       if(SH===sh)updateClientHint();
     }else if(clientId){
@@ -4617,6 +4842,9 @@ async function saveSheet(extra,opts){
     // The job is saved. If its address isn't one of the client's sites yet, add it. A failure here is logged and mentioned, never a failed save.
     try{await saveNewSite(sh,clientId,f.address);}
     catch(e){siteFailed=true;console.warn("The job saved, but its address couldn't be added to the client's sites.",e);}
+    // Then the access notes typed for this address, onto that address. A failure keeps the sheet open with what was typed.
+    try{await saveAccess(sh,clientId,f.address);if(SH===sh)sh.baseline=snap();}
+    catch(e){accessErr=e;if(SH===sh)sh.baseline="";console.warn("The job saved, but the access notes didn't.",e);}
     scheduleRefetch(300);
   }catch(e){
     if(SH===sh){showMsg(friendly(e),"bad");if(sh.quick)quickNameBack(sh);}
@@ -4627,8 +4855,11 @@ async function saveSheet(extra,opts){
   if(!okSave){if(SH===sh&&sh.quick&&sh.prefillHeld){sh.prefillHeld=false;applySitePrefill(sh);}return false;}      // (a site prefill that was held back while the bar saved)
   clearDraftForJob(sh.jobId);
   const siteNote="The address couldn't be added to their list of sites.",priceNote="The price didn't save. Open the job to add it.";
-  if(SH!==sh){toast("Saved"+(priceMissed?". "+priceNote:"")+(siteFailed?". "+siteNote:""),siteFailed||priceMissed);return true;}       // the sheet was closed while this was saving (logged out, for one); the write itself went through
-  if(opts.quick){quickDone(sh,opts,siteFailed,siteNote,priceMissed,priceNote);return true;}
+  const accessNote=accessErr?"The access notes didn't save. "+friendly(accessErr):"";
+  if(SH!==sh){toast("Saved"+(priceMissed?". "+priceNote:"")+(siteFailed?". "+siteNote:"")+(accessErr?". "+accessNote:""),siteFailed||priceMissed||!!accessErr);return true;}       // the sheet was closed while this was saving (logged out, for one); the write itself went through
+  if(opts.quick){      // the job is booked, so an address or access note that didn't save is a warning
+    quickDone(sh,opts,siteFailed||!!accessErr,[siteFailed?siteNote:"",accessErr?accessNote+" Open the job to add them.":""].filter(Boolean).join(" "),priceMissed,priceNote);return true;
+  }
   const warn=lostContact?" The phone, email and address weren't saved, because this job has no client.":"",kind=lostContact?"warn":"ok";
   if(opts.fresh){
     // First save of a new job: reopen it as a saved job so photos, paperwork and the done button appear.
@@ -4636,8 +4867,14 @@ async function saveSheet(extra,opts){
     closeSheet(true);
     openSheet(saved,null);
     if(SH){SH.moreForce=true;updateMoreRow();}      // Take photo and Choose photos are inside More: open it for this sheet only (the saved shut/open setting is left alone)
-    showMsg("Saved."+(S.byId[saved.id]?"":" It is on "+niceDate(saved.job_date)+", so it isn't on this screen.")+warn+" You can add photos now.",kind);
+    if(SH&&accessErr){SH.sn=sh.sn.slice();renderAccess();renderCNotes();}      // what was typed goes back in the box, to try again
+    if(accessErr)showMsg("The job saved, but the access notes didn't. "+friendly(accessErr)+" Tap Save to try again.","bad");
+    else showMsg("Saved."+(S.byId[saved.id]?"":" It is on "+niceDate(saved.job_date)+", so it isn't on this screen.")+warn+" You can add photos now.",kind);
     if(siteFailed)toast(siteNote,true);
+  }else if(accessErr){
+    if(sh.clientId&&sh.sitesFor!==sh.clientId)loadSites(sh,sh.clientId);      // (a client made by this save: fetch their addresses so the box works again)
+    refreshSheetHead();updateLinks();showMsg("The job saved, but the access notes didn't. "+friendly(accessErr)+" Tap Save to try again.","bad");
+    return false;
   }else if(opts.keepOpen){
     refreshSheetHead();showMsg("Saved."+warn,kind);updateLinks();
     if(siteFailed)toast(siteNote,true);
@@ -5207,7 +5444,7 @@ function quickState(init,prevFocus){
   return {isNew:true,quick:true,bar:true,job:null,jobId:null,client:null,clientId:null,init:init,addrTouched:false,baseline:"",busy:false,
     recs:{service:null,insp:null},photos:[],sSeq:0,sT:0,acT:0,acSeq:0,acAbort:null,acResults:[],nameResults:[],nameMatch:{},dupDeclined:"",back:false,uploading:false,
     unlinked:null,renameTo:null,pendingN:0,svc:[],svcMemo:{},svcMore:false,legacyPrice:null,legacyHeld:"",durHand:false,durAuto:false,durBase:null,svcTouched:false,
-    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,cnTouched:false,
+    sites:[],sitesFor:null,sitesOk:false,sitesSeq:0,preferAddr:"",addrAuto:"",addrPick:null,gTok:null,pickSeq:0,addrPending:null,cnTouched:false,sn:[],siteRaw:[],
     asSeq:0,acSites:[],acG:[],acSDone:false,acGDone:false,propBusy:{},
     qEdit:false,qSum:null,saveName:null,saveAddr:null,prevFocus:prevFocus||null,
     bmore:false,      // the More panel on the bar is open
@@ -5253,8 +5490,9 @@ function quickHtml(){
   // job notes sit on the front (so a note can be typed while booking); More has the client's note, the day, the time, and the full job sheet (the phone and email show straight under the name)
   h+='<div class="fld" style="margin-top:6px"><label class="fl" for="f-notes">Job notes <span class="fl2">(optional)</span></label><textarea class="inp" id="f-notes" rows="2" style="min-height:76px" autocapitalize="sentences" placeholder="Anything to remember about this job"></textarea></div>';
   h+='<div class="barmore" id="q-more" hidden>'+
-    (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">(stays with the client: dog, gate code, key, parking)</span></label>'+
-      '<textarea class="inp" id="f-cnotes" rows="2" placeholder="Dog, gate code, key, parking..."></textarea></div>')+
+    accessBoxHtml("")+
+    (S.noNotesCol?"":'<div class="fld"><label class="fl" for="f-cnotes">Client note <span class="fl2">'+esc(cnLabel())+'</span></label>'+
+      '<textarea class="inp" id="f-cnotes" rows="2" placeholder="About the client: who to ring, how they pay..."></textarea></div>')+
     '<div class="lbl">Day<span class="qdl" id="q-daylbl"></span></div><div class="chiprow" id="q-days" role="group" aria-label="Day">';
   quickDays().forEach(function(d){h+='<button type="button" class="chip qc" data-sh="qday" data-v="'+esc(d.v)+'" aria-pressed="false">'+esc(d.l)+'</button>';});
   h+='<input class="inp qdate" id="f-date" type="date" aria-label="Pick another day" value="'+esc(I.date)+'"></div>'+
@@ -5317,6 +5555,7 @@ function quickSync(){
   // the client note box shows the client's saved notes until it is typed in (what it holds is saved to the client with the job)
   const cta=byId("f-cnotes");
   if(cta&&has&&SH.client&&!SH.cnTouched){const n=SH.client.notes||"";if(cta.value!==n&&document.activeElement!==cta)cta.value=n;}
+  renderAccess();
   const mp=byId("q-more"),mt=byId("q-moretog");
   if(mp)mp.hidden=!SH.bmore;
   if(mt){mt.textContent=SH.bmore?"Less":"More";mt.setAttribute("aria-expanded",SH.bmore?"true":"false");}
@@ -5328,8 +5567,9 @@ function quickSync(){
       h='<div class="qsum"><div class="qsl">'+(ph?esc(ph):'<span class="miss">No phone</span>')+(em?" · "+esc(em):"")+'</div>'+
         '<div class="qsa"><button type="button" class="linkbtn" data-sh="qedit" aria-expanded="'+(SH.qEdit?"true":"false")+'">'+(SH.qEdit?"Done":"Edit")+'</button>'+
         '<button type="button" class="linkbtn" data-sh="qchange">Change client</button></div></div>';
-      // the client's notes (dog, gate code ...) where they can't be missed while booking
-      if(SH.client&&trim(SH.client.notes)&&!S.noNotesCol)h+='<div class="cnstrip inl" role="note"><span class="cn" aria-hidden="true">!</span><span class="cntxt">'+esc(trim(SH.client.notes))+'</span></div>';
+      // the address's access notes and the client's notes where they can't be missed while booking
+      const st=snState(),acc=st.on?trim(val("f-access")):"",cnt=(SH.client&&!S.noNotesCol)?trim(SH.client.notes):"";
+      if(acc||cnt)h+='<div class="cnstrip inl" role="note">'+noteStripHtml(acc,cnt,manyAddresses(SH.siteRaw))+'</div>';
     }else if(isNewC){
       h='<div class="qhint"><span class="hint new">New client. Added to your list when you save.</span></div>';
     }
@@ -5446,7 +5686,7 @@ function quickReset(old){
   const day=barDayDefault(old);      // the same rule as the first booking: the day on screen (or today), unless a day is picked by hand
   SH=quickState(quickInit({date:day,time:"",staff:who}),old.prevFocus);
   SH.bmore=old.bmore;SH.dayAuto=old.dayAuto;
-  ["f-name","f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr","f-time","f-notes","f-cnotes"].forEach(function(id){setVal(id,"");});
+  ["f-name","f-phone","f-email","f-street","f-suburb","f-state","f-postcode","f-addr","f-time","f-notes","f-cnotes","f-access"].forEach(function(id){setVal(id,"");});
   setVal("f-staff",who);setVal("f-date",SH.init.date);setVal("f-dur",String(SH.init.dur));      // the last booking's automatic length must not carry over to the next one
   hideNameList();hideAddrList();renderSites();
   quickRenderSvc();      // (this also clears the status line and takes the green spots off)
@@ -5905,6 +6145,7 @@ function onInput(e){
     if(id==="f-name")onNameInput();
     else if(id==="f-addr")onAddrInput();
     else if(id==="f-cnotes")SH.cnTouched=true;
+    else if(id==="f-access")onAccessInput();
     updateLinks();
     return;
   }
