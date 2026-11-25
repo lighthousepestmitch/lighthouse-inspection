@@ -4923,6 +4923,61 @@ function doSave(){
   const wasNew=SH.isNew;
   return saveSheet(null,wasNew?{keepOpen:true,fresh:true}:{});
 }
+/* ----- BAIT CHECK CARD (52_bait_tracker.sql): Mark done on a "Bait Station Check" job asks what was found first. Saving it lets the database line up the
+   client text; the job is then marked done as usual. If the bait tables aren't there or the card can't open, the person is asked before the job is marked done. ----- */
+const BAIT_TICKS=[["baited_active","Active termites baited"],["live","Live termites seen"],["eaten","Bait eaten"],["added","Bait added"],["decayed","Decayed or mouldy bait replaced"],["monitors","Monitors replaced"],["stations","Stations replaced"],["lids","Lids replaced"],["damaged","Station missing or damaged"],["missed","Some stations not reached"],["follow_up","Follow-up needed"]];
+const BAIT_TEXT={queued:"Check saved. The client text goes in about 10 minutes.",held:"Check saved. No text sent: this one needs a phone call.",no_mobile:"Check saved. No good mobile, so no text.",none:"Check saved.",sent:"Check saved. The client has already been texted."};
+function isBaitJob(){return !!(SH&&SH.svc&&SH.svc.some(function(e){return /^bait station check$/i.test(trim(e.type));}));}
+// null = leave the job as it is; {msg} = carry on and mark it done
+async function baitCheckCard(jobId,jobDate){
+  let row=null;
+  try{
+    const get=function(){return S.sb.from("bait_checks").select("*").eq("job_id",jobId).maybeSingle();};
+    let r=await get();
+    if(r.error)throw r.error;
+    if(!r.data){
+      const l=await S.sb.rpc("bait_link_job",{p_job:jobId});
+      if(l.error)throw l.error;
+      if(l.data){r=await get();if(r.error)throw r.error;}
+    }
+    row=r.data;
+  }catch(e){return confirm("The bait record couldn't open ("+friendly(e)+").\n\nMark the job done without it? No text will go.")?{msg:""}:null;}
+  if(!row)return confirm("No bait site matches this address. It can be added in the Bait Tracker.\n\nMark done without a bait record? No text will go.")?{msg:""}:null;
+  return new Promise(function(done){
+    const had=Array.isArray(row.ticks)?row.ticks:[],ov=document.createElement("div");
+    ov.setAttribute("style","position:fixed;inset:0;z-index:200;background:rgba(10,20,18,.55);display:flex;align-items:flex-end;justify-content:center");
+    const box="width:100%;min-height:44px;font-size:16px;padding:8px 10px;border:1px solid var(--line2);border-radius:10px;background:var(--surface);color:var(--ink)";
+    ov.innerHTML='<div role="dialog" aria-modal="true" aria-label="Bait check" style="background:var(--surface);color:var(--ink);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))">'+
+      '<h2 style="margin:0 0 10px">Bait check</h2><div style="display:flex;gap:6px">'+
+      [["not_active","Not active"],["active","Active"],["no_access","Couldn\'t get in"]].map(function(o){return '<button type="button" class="btn" style="flex:1" data-res="'+o[0]+'" aria-pressed="false">'+o[1]+'</button>';}).join("")+'</div>'+
+      BAIT_TICKS.map(function(t){return '<label style="display:flex;gap:10px;align-items:center;min-height:40px;border-bottom:1px solid var(--line)"><input type="checkbox" value="'+t[0]+'" style="width:22px;height:22px"'+(had.indexOf(t[0])>=0?" checked":"")+'><span>'+t[1]+'</span></label>';}).join("")+
+      '<div style="margin:12px 0 4px;font-weight:700">Which stations</div><input data-f="which" style="'+box+'" placeholder="e.g. 3, 7, 9">'+
+      '<div style="margin:12px 0 4px;font-weight:700">General notes</div><textarea data-f="notes" style="'+box+';min-height:90px"></textarea>'+
+      '<div data-f="err" role="alert" style="color:#A23C29;margin-top:8px"></div>'+
+      '<div style="display:flex;gap:8px;margin-top:12px"><button type="button" class="btn" style="flex:1" data-b="cancel">Cancel</button><button type="button" class="btn ok" style="flex:2" data-b="save">Save and mark done</button></div></div>';
+    const q=function(s){return ov.querySelector(s);};
+    let res=row.result||"";
+    const paint=function(){ov.querySelectorAll("[data-res]").forEach(function(b){const on=b.getAttribute("data-res")===res;b.classList.toggle("pri",on);b.setAttribute("aria-pressed",on?"true":"false");});};
+    q('[data-f="which"]').value=row.which_stations||"";q('[data-f="notes"]').value=row.notes||"";
+    document.body.appendChild(ov);paint();
+    const close=function(v){ov.remove();done(v);};
+    ov.addEventListener("click",async function(ev){
+      const b=ev.target.closest("button");if(!b)return;
+      if(b.hasAttribute("data-res")){res=b.getAttribute("data-res");q('[data-f="err"]').textContent="";paint();return;}
+      if(b.getAttribute("data-b")==="cancel"){close(null);return;}
+      if(!res){q('[data-f="err"]').textContent="Pick Not active, Active or Couldn't get in.";return;}
+      b.disabled=true;
+      const ticks=Array.prototype.slice.call(ov.querySelectorAll("input[type=checkbox]:checked")).map(function(c){return c.value;});
+      const now=new Date(),td=now.getFullYear()+"-"+pad(now.getMonth()+1)+"-"+pad(now.getDate());
+      try{
+        const u=await S.sb.from("bait_checks").update({result:res,ticks:ticks,which_stations:trim(q('[data-f="which"]').value)||null,notes:trim(q('[data-f="notes"]').value)||null,check_date:jobDate&&jobDate<td?jobDate:td,done_at:now.toISOString()}).eq("id",row.id).select("text_status").maybeSingle();
+        if(u.error)throw u.error;
+        if(!u.data)throw plainErr("The check didn't save.");
+        close({msg:(BAIT_TEXT[u.data.text_status]||"Check saved.")+(ticks.indexOf("added")>=0?" Fill in the Service record for the bait added.":"")});
+      }catch(e){q('[data-f="err"]').textContent=friendly(e);b.disabled=false;}
+    });
+  });
+}
 async function setStatus(kind){
   if(!SH||!SH.jobId)return;
   let extra;
@@ -4931,6 +4986,16 @@ async function setStatus(kind){
   else if(kind==="cancel"){if(!confirm("Cancel this job? It stays on file but drops off the calendar."))return;extra={status:"cancelled",done_at:null,done_by:null};}
   else if(kind==="reopen")extra={status:"booked"};
   else return;
+  if(kind==="done"&&isBaitJob()){
+    if(SH.baitBusy)return;
+    const sh=SH;sh.baitBusy=true;
+    let b=null;
+    try{b=await baitCheckCard(sh.jobId,sh.job&&sh.job.job_date);}finally{sh.baitBusy=false;}
+    if(!b||SH!==sh)return;
+    await saveSheet(extra,{});
+    if(b.msg)toast(b.msg);
+    return;
+  }
   await saveSheet(extra,{});
 }
 async function deleteJob(){

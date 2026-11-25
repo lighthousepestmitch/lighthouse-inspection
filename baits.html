@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Bait Tracker</title>
+<link rel="icon" type="image/png" sizes="32x32" href="logo/icon-32.png">
+<style>
+:root{--bg:#F6F7F5;--surface:#fff;--ink:#14201E;--ink2:#4B5B57;--ink3:#7E8D88;--line:#DCE1DD;--deep:#0E4F54;--ok:#276B59;--okBg:#E2EFE9;--soon:#8C6314;--soonBg:#F8F0DC;--over:#A23C29;--overBg:#F8E8E3}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding-bottom:60px}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:var(--deep)}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+header{display:flex;align-items:center;gap:10px;padding:calc(env(safe-area-inset-top) + 14px) 0 10px}
+header h1{font-size:22px;flex:1}
+.btn{min-height:44px;padding:0 16px;border:1.5px solid var(--deep);border-radius:12px;font-weight:700;color:var(--deep);background:#fff;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.btn.pri{background:var(--deep);color:#fff}
+.btn.sm{min-height:36px;padding:0 12px;font-size:13px}
+.btn:disabled{opacity:.5}
+nav{display:flex;gap:6px;margin-bottom:12px}
+nav button{flex:1;min-height:42px;border-radius:10px;background:#fff;border:1px solid var(--line);font-weight:700;color:var(--ink2)}
+nav button.on{background:var(--deep);color:#fff;border-color:var(--deep)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:16px;margin-bottom:4px}
+.sub{color:var(--ink2);font-size:13px}
+.row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line);padding:9px 0}
+.row .grow{flex:1;min-width:0;text-align:left}
+.row b{display:block}
+.chip{display:inline-block;font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 7px;margin:3px 4px 0 0;background:#EEF1EF;color:var(--ink2)}
+.chip.ok{background:var(--okBg);color:var(--ok)}.chip.soon{background:var(--soonBg);color:var(--soon)}.chip.over{background:var(--overBg);color:var(--over)}
+.mv{width:34px;height:30px;border:1px solid var(--line);border-radius:7px;background:#fff}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:10px}
+label{display:block;font-size:12px;font-weight:700;color:var(--ink2)}
+label.tick{display:flex;gap:8px;align-items:center;font-size:14px;margin-top:10px}
+input,select,textarea{width:100%;min-height:42px;border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:#fff;font-size:16px}
+input[type=checkbox]{width:20px;height:20px;min-height:0}
+textarea{min-height:80px}
+.full{grid-column:1/-1}
+.acts{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.lg{max-width:420px;margin:40px auto;padding:0 16px}.lg input{margin-bottom:10px}
+#toast{position:fixed;left:16px;right:16px;bottom:16px;max-width:520px;margin:0 auto;background:var(--ink);color:#fff;padding:12px 14px;border-radius:12px;display:none}
+#toast.bad{background:var(--over)}
+</style>
+</head>
+<body>
+<div id="app"><div class="lg">Loading...</div></div>
+<div id="toast" role="status"></div>
+<script src="lpc-config.js?v=2"></script>
+<script src="lpc-sw-banner.js?v=1" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
+<script>
+"use strict";
+var S={sb:null,me:null,staff:[],sites:[],checks:[],set:null,tab:"runs",q:"",edit:null,busy:false};
+var SERVICE="Bait Station Check",EVERY=91,LEN=45,STEP=60;
+var FIRST={1:"2026-12-03",2:"2026-12-10",3:"2026-12-17",4:"2027-01-07",5:"2027-01-14"};   // first round, from the plan
+var TICKS={baited_active:"Active termites baited",live:"Live termites seen",eaten:"Bait eaten",added:"Bait added",decayed:"Decayed or mouldy bait replaced",monitors:"Monitors replaced",stations:"Stations replaced",lids:"Lids replaced",damaged:"Station missing or damaged",missed:"Some stations not reached",follow_up:"Follow-up needed"};
+var RES={not_active:"Not active",active:"Active",no_access:"Couldn't get in"};
+var $=function(id){return document.getElementById(id);};
+function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function toast(m,bad){var t=$("toast");t.textContent=m;t.className=bad?"bad":"";t.style.display="block";clearTimeout(t._t);t._t=setTimeout(function(){t.style.display="none";},bad?8000:3500);}
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dt(s){var p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);}
+function today(){return ymd(new Date());}
+function addDays(s,n){var d=dt(s);d.setDate(d.getDate()+n);return ymd(d);}
+function diff(a,b){return Math.round((dt(a)-dt(b))/86400000);}
+function fmt(s){if(!s)return"";var d=dt(s),o={weekday:"short",day:"numeric",month:"short"};if(d.getFullYear()!==new Date().getFullYear())o.year="numeric";return d.toLocaleDateString("en-AU",o);}
+function fdate(s){return s?dt(s).toLocaleDateString("en-AU",{day:"2-digit",month:"2-digit",year:"numeric"}):"";}
+function hm(m){var h=Math.floor(m/60);return(h%12||12)+":"+String(m%60).padStart(2,"0")+(h<12?"am":"pm");}
+function mob(v){var n=String(v||"").replace(/\D/g,"");if(n.slice(0,2)==="61")n="0"+n.slice(2);return /^04\d{8}$/.test(n)?n:"";}
+function street(a){return String(a||"").split(",")[0];}
+function site(id){return S.sites.find(function(x){return x.id===id;});}
+function checksFor(id){return S.checks.filter(function(c){return c.site_id===id;});}
+function visitDate(c){if(c.result==="no_access")return null;if(c.result)return c.check_date;return c.job&&c.job.status==="done"?c.job.job_date:null;}
+function lastCheck(id){return checksFor(id).map(visitDate).filter(Boolean).sort().pop()||null;}
+function booking(id){return checksFor(id).filter(function(c){return !c.result&&c.job&&c.job.status==="booked";}).map(function(c){return c.job.job_date;}).sort()[0]||null;}
+function nextDue(s){var l=lastCheck(s.id);return l?addDays(l,EVERY):null;}
+function chips(s){
+  var h="",b=booking(s.id),n=nextDue(s),t=today();
+  if(s.status!=="active")h+='<span class="chip">'+(s.status==="held"?"Held":"Stopped")+'</span>';
+  if(b)h+='<span class="chip '+(b<t?"over":"ok")+'">'+(b<t?"Booked "+fmt(b)+", not marked done":"Booked "+fmt(b))+'</span>';
+  else if(s.status==="active"){h+=n?'<span class="chip '+(n<t?"over":diff(n,t)<=14?"soon":"ok")+'">Next check '+fmt(n)+'</span>':'<span class="chip soon">No check recorded</span>';}
+  if(!s.period_end)h+='<span class="chip soon">No dates</span>';
+  else{var d=diff(s.period_end,t);h+='<span class="chip '+(d<0?"over":d<=30?"soon":"")+'">'+(d<0?"Period ended ":"Paid to ")+fdate(s.period_end)+'</span>';}
+  return h+'<span class="chip">'+esc(s.system)+'</span>';
+}
+function inRun(r){return S.sites.filter(function(s){return s.run===r&&s.status==="active";}).sort(function(a,b){return a.run_order-b.run_order||a.address.localeCompare(b.address);});}
+function suggest(r,list){
+  var t=today();
+  if(list.every(function(s){return !lastCheck(s.id);})&&FIRST[r]&&FIRST[r]>t)return FIRST[r];
+  var dues=list.map(nextDue).filter(Boolean).sort(),d=dues[0]?addDays(dues[0],-3):addDays(t,7);
+  if(d<=t)d=addDays(t,1);
+  while(dt(d).getDay()!==4)d=addDays(d,1);
+  return d;
+}
+/* ---------- screens ---------- */
+function render(){
+  if(S.edit){renderEdit();return;}
+  var h='<div class="wrap"><header><h1>Bait Tracker</h1><a class="btn sm" href="home.html">Home</a><a class="btn sm" href="calendar.html">Calendar</a><button class="btn pri sm" data-a="add">+ Add site</button></header><nav>';
+  [["runs","Runs"],["sites","Sites"],["chase","Chase"],["texts","Texts"]].forEach(function(t){h+='<button data-a="tab" data-v="'+t[0]+'" class="'+(S.tab===t[0]?"on":"")+'">'+t[1]+'</button>';});
+  h+='</nav>'+({runs:runsHtml,sites:sitesHtml,chase:chaseHtml,texts:textsHtml})[S.tab]()+'</div>';
+  $("app").innerHTML=h;
+}
+function siteRow(s,extra){return '<div class="row">'+(extra||"")+'<button class="grow" data-a="edit" data-id="'+s.id+'"><b>'+esc(street(s.address))+'</b><span class="sub">'+esc(s.client_name)+(s.suburb?", "+esc(s.suburb):"")+'</span><br>'+chips(s)+'</button></div>';}
+function runsHtml(){
+  var runs=Array.from(new Set(S.sites.filter(function(s){return s.status==="active"&&s.run;}).map(function(s){return s.run;}))).sort(function(a,b){return a-b;});
+  if(!runs.length)return '<div class="card">No runs yet. Add a site and give it a run number.</div>';
+  var techs=S.staff.filter(function(p){return p.active;}),def=techs.find(function(p){return /^andrew/i.test(p.name);})||S.me;
+  return runs.map(function(r){
+    var list=inRun(r),open=list.filter(function(s){return !booking(s.id);});
+    var subs=Array.from(new Set(list.map(function(s){return s.suburb;}).filter(Boolean))).join(", ");
+    var h='<div class="card"><h2>Run '+r+' ('+list.length+' site'+(list.length===1?"":"s")+')</h2><div class="sub">'+esc(subs)+(list.length>8?" . More than 8, split this run":"")+'</div>';
+    list.forEach(function(s){h+=siteRow(s,'<span><button class="mv" aria-label="Move up" data-a="up" data-id="'+s.id+'">&#8593;</button><br><button class="mv" aria-label="Move down" data-a="down" data-id="'+s.id+'">&#8595;</button></span>');});
+    if(open.length){
+      h+='<div class="form"><div><label>Date</label><input type="date" id="d'+r+'" value="'+suggest(r,open)+'"></div><div><label>Who</label><select id="w'+r+'">'+techs.map(function(p){return '<option value="'+p.id+'"'+(p.id===def.id?" selected":"")+'>'+esc(p.name)+'</option>';}).join("")+'</select></div><div><label>First one at</label><input type="time" id="t'+r+'" value="07:30"></div></div>';
+      h+='<div class="acts"><button class="btn pri" data-a="book" data-r="'+r+'">Book '+open.length+' check'+(open.length===1?"":"s")+' in Job Calendar</button></div>';
+    }else h+='<div class="sub" style="margin-top:8px">All booked.</div>';
+    return h+'</div>';
+  }).join("");
+}
+function sitesHtml(){
+  var q=S.q.toLowerCase(),list=S.sites.filter(function(s){return !q||(s.client_name+" "+s.address+" "+s.system).toLowerCase().indexOf(q)>=0;}).sort(function(a,b){return a.address.localeCompare(b.address,undefined,{numeric:true});});
+  var n=S.sites.filter(function(s){return s.status==="active";}).length;
+  return '<div class="card"><input id="q" placeholder="Search name, street or system" value="'+esc(S.q)+'"><div class="sub" style="margin-top:6px">'+n+' on the round, '+(S.sites.length-n)+' held or stopped</div><div id="list">'+list.map(function(s){return siteRow(s);}).join("")+'</div></div>';
+}
+function chaseHtml(){
+  var t=today(),A=S.sites.filter(function(s){return s.status==="active";});
+  function box(title,list){return list.length?'<div class="card"><h2>'+title+' ('+list.length+')</h2>'+list.map(function(s){return siteRow(s);}).join("")+'</div>':"";}
+  var h=box("Renewal ended or ends within 30 days",A.filter(function(s){return s.period_end&&diff(s.period_end,t)<=30;}).sort(function(a,b){return a.period_end.localeCompare(b.period_end);}))+
+    box("Booked but not marked done",A.filter(function(s){var b=booking(s.id);return b&&b<t;}))+
+    box("Check overdue and not booked",A.filter(function(s){var n=nextDue(s);return n&&n<t&&!booking(s.id);}))+
+    box("Wants a text but no good mobile",A.filter(function(s){return s.auto_text&&!mob(s.mobile);}))+
+    box("No run number",A.filter(function(s){return !s.run;}))+
+    box("Held off the round",S.sites.filter(function(s){return s.status==="held";}));
+  return h||'<div class="card">Nothing to chase.</div>';
+}
+function compose(s,c){
+  var p=S.staff.find(function(x){return x.id===c.checked_by;});
+  return S.set.template.split("{name}").join(s.contact_name||"there").split("{who}").join(p&&p.role==="tech"?p.name.split(" ")[0]:"I").split("{street}").join(street(s.address));
+}
+function textsHtml(){
+  var x=S.set;
+  var h='<div class="card"><h2>Automatic texts</h2><div class="sub">Sent from your number by your Mac, 10 minutes after Mark done, weekdays 7am to 6pm. Only a clean Not active check sends by itself.</div>'+
+    '<label class="tick"><input type="checkbox" id="live"'+(x.texts_live?" checked":"")+'> Send for real (off = practice run, nothing is sent)</label><label class="tick"><input type="checkbox" id="paused"'+(x.texts_paused?" checked":"")+'> Pause all texts</label>'+
+    '<div style="margin-top:10px"><label>Message. {name}, {who} and {street} fill in by themselves</label><textarea id="tpl">'+esc(x.template)+'</textarea></div><div class="acts"><button class="btn" data-a="savetpl">Save message</button></div></div>';
+  var L={queued:["Waiting to send","soon"],sending:["Sending","soon"],sent:["Sent","ok"],held:["Ring them","over"],failed:["Failed","over"],no_mobile:["No mobile","over"],dry_run:["Practice only, not sent","soon"],handled:["Handled",""]};
+  var list=S.checks.filter(function(c){return c.text_status!=="none"&&site(c.site_id);}).sort(function(a,b){return String(b.done_at).localeCompare(String(a.done_at));}).slice(0,60);
+  h+='<div class="card"><h2>Recent</h2>'+(list.length?"":'<div class="sub">Nothing yet. Texts show here after the first check is marked done.</div>');
+  list.forEach(function(c){
+    var s=site(c.site_id),st=L[c.text_status],n=mob(s.mobile),body=c.text_status==="held"?"Hey "+(s.contact_name||"there")+", ":(c.text_body||compose(s,c)),open=["held","failed","no_mobile","dry_run"].indexOf(c.text_status)>=0;
+    h+='<div class="row"><div class="grow"><b>'+esc(street(s.address))+'</b><span class="sub">'+esc(s.client_name)+", "+fmt(c.check_date)+", "+esc(RES[c.result]||"")+'</span><br><span class="chip '+st[1]+'">'+st[0]+'</span>'+
+      (c.text_body?'<div class="sub">'+esc(c.text_body)+'</div>':"")+(c.text_error?'<div class="sub">'+esc(c.text_error)+'</div>':"")+
+      (open?'<div class="acts">'+(n?'<a class="btn sm" href="sms:'+n+'?&body='+encodeURIComponent(body)+'">Open in Messages</a><a class="btn sm" href="tel:'+n+'">Ring</a>':"")+'<button class="btn sm" data-a="handled" data-id="'+c.id+'">Mark handled</button></div>':"")+'</div></div>';
+  });
+  return h+'</div>';
+}
+function renderEdit(){
+  var s=S.edit,isNew=!s.id;
+  function f(k,label,type,cls){return '<div class="'+(cls||"")+'"><label>'+label+'</label><input id="f_'+k+'" type="'+(type||"text")+'" value="'+esc(s[k])+'"></div>';}
+  function sel(k,label,opts){return '<div><label>'+label+'</label><select id="f_'+k+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(String(s[k])===o[0]?" selected":"")+'>'+o[1]+'</option>';}).join("")+'</select></div>';}
+  var h='<div class="wrap"><header><h1>'+(isNew?"Add bait site":esc(street(s.address)))+'</h1><button class="btn sm" data-a="close">Back</button></header><div class="card"><div class="form">'+
+    f("client_name","Client","text","full")+f("address","Address (street, suburb)","text","full")+f("suburb","Suburb")+sel("system","System",[["Nemesis","Nemesis"],["Trelona","Trelona"],["Other","Other"]])+
+    sel("status","Round",[["active","On the round"],["held","Held off"],["stopped","Stopped"]])+f("run","Run number","number")+f("period_start","Maintenance from","date")+f("period_end","Maintenance to","date")+f("invoice_no","Invoice")+f("stations","How many stations","number")+
+    f("contact_name","First name for texts")+f("mobile","Mobile","tel")+'<div class="full"><label class="tick"><input type="checkbox" id="f_auto_text"'+(s.auto_text?" checked":"")+'> Text this client after a clean check</label></div>'+
+    '<div class="full"><label>Notes</label><textarea id="f_notes">'+esc(s.notes)+'</textarea></div></div>'+(s.period_source?'<div class="sub">Dates from: '+esc(s.period_source)+'</div>':"")+
+    '<div class="acts"><button class="btn pri" data-a="save">Save site</button></div></div>';
+  if(!isNew){
+    var list=checksFor(s.id).filter(function(c){return c.result||(c.job&&c.job.status!=="cancelled");});
+    h+='<div class="card"><h2>Checks</h2>'+(list.length?"":'<div class="sub">None yet.</div>');
+    list.forEach(function(c){
+      h+='<div class="row"><div class="grow"><b>'+fmt(c.result?c.check_date:c.job.job_date)+": "+esc(c.result?RES[c.result]:c.job.status==="done"?"Done, no record":"Booked")+'</b>'+(c.ticks||[]).map(function(k){return '<span class="chip">'+esc(TICKS[k]||k)+'</span>';}).join("")+
+        (c.which_stations?'<div class="sub">Stations: '+esc(c.which_stations)+'</div>':"")+(c.notes?'<div class="sub">'+esc(c.notes)+'</div>':"")+'</div></div>';
+    });
+    h+='</div>';
+  }
+  $("app").innerHTML=h+'</div>';
+}
+/* ---------- actions ---------- */
+function ok(r){if(r.error)throw r.error;return r.data;}
+async function reload(){
+  var r=await Promise.all([
+    S.sb.from("staff").select("id,name,role,active"),
+    S.sb.from("bait_sites").select("*"),
+    S.sb.from("bait_checks").select("*, job:jobs(id,job_date,start_time,status,staff_id)").order("created_at",{ascending:false}).limit(1000),
+    S.sb.from("bait_settings").select("*").eq("id",1).maybeSingle()]);
+  S.staff=ok(r[0]);S.sites=ok(r[1]);S.checks=ok(r[2]);S.set=ok(r[3])||{texts_live:false,texts_paused:false,template:""};
+  render();
+}
+async function saveSite(){
+  var s=S.edit,p={};
+  ["client_name","address","suburb","system","status","run","period_start","period_end","invoice_no","stations","contact_name","mobile","notes"].forEach(function(k){var v=$("f_"+k).value.trim();p[k]=v===""?null:v;});
+  p.auto_text=$("f_auto_text").checked;
+  if(!p.client_name||!p.address){toast("Client and address are needed.",true);return;}
+  if(p.run)p.run=+p.run;if(p.stations)p.stations=+p.stations;
+  if(p.period_start&&!p.period_end){var d=dt(p.period_start);d.setFullYear(d.getFullYear()+1);d.setDate(d.getDate()-1);p.period_end=ymd(d);}
+  if(p.period_start!==s.period_start||p.period_end!==s.period_end)p.period_source="entered";
+  if(s.id){ok(await S.sb.from("bait_sites").update(p).eq("id",s.id).select("id").single());}
+  else{
+    var found=ok(await S.sb.from("clients").select("id").ilike("name",p.client_name.replace(/[%_\\]/g,"\\$&")).limit(1));
+    if(found.length)p.client_id=found[0].id;
+    else{p.client_id=p.client_name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+"-"+Date.now().toString(36).slice(-4);
+      ok(await S.sb.from("clients").insert({id:p.client_id,name:p.client_name,phone:p.mobile,street:street(p.address),suburb:p.suburb,source:"calendar"}));}
+    p.run_order=999;
+    ok(await S.sb.from("bait_sites").insert(p));
+  }
+  S.edit=null;await reload();toast("Saved");
+}
+async function move(id,dir){
+  var s=site(id),list=inRun(s.run),i=list.findIndex(function(x){return x.id===id;}),j=i+dir;
+  if(j<0||j>=list.length)return;
+  list.splice(j,0,list.splice(i,1)[0]);
+  for(var k=0;k<list.length;k++){var o=(k+1)*10;if(list[k].run_order!==o){ok(await S.sb.from("bait_sites").update({run_order:o}).eq("id",list[k].id).select("id"));list[k].run_order=o;}}
+  render();
+}
+async function book(r){
+  var d=$("d"+r).value,who=$("w"+r).value,tm=$("t"+r).value;
+  if(!d||!who||!tm){toast("Pick a date, person and start time.",true);return;}
+  if(d<today()){toast("That date has gone.",true);return;}
+  var list=inRun(r).filter(function(s){return !booking(s.id);});
+  var a=+tm.slice(0,2)*60+ +tm.slice(3,5),end=a+STEP*(list.length-1)+LEN;
+  if(end>1440){toast("Start earlier, that runs past midnight.",true);return;}
+  var busy=ok(await S.sb.from("jobs").select("start_time,duration_min,address,status").eq("job_date",d).eq("staff_id",who).neq("status","cancelled"));
+  var clash=busy.filter(function(j){if(!j.start_time)return false;var b=+j.start_time.slice(0,2)*60+ +j.start_time.slice(3,5),e=b+(j.duration_min||60);return list.some(function(_,i){var x=a+i*STEP;return x<e&&x+LEN>b;});});
+  var name=(S.staff.find(function(p){return p.id===who;})||{}).name;
+  var msg="Book "+list.length+" bait checks for "+name+" on "+fmt(d)+", "+hm(a)+" to "+hm(end)+"?";
+  if([0,6].indexOf(dt(d).getDay())>=0)msg+="\n\nThat's a weekend.";
+  if(clash.length)msg+="\n\nClashes with jobs already booked:\n"+clash.map(function(j){return "  "+j.start_time.slice(0,5)+" "+(j.address||"");}).join("\n");
+  if(!confirm(msg))return;
+  var made=0;
+  try{
+    for(var i=0;i<list.length;i++){
+      var s=list[i],m=a+i*STEP;
+      var job=ok(await S.sb.from("jobs").insert({client_id:s.client_id,staff_id:who,job_date:d,start_time:String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")+":00",duration_min:LEN,service_type:SERVICE,services:[{type:SERVICE}],address:s.address,
+        notes:"Quarterly bait check ("+s.system+")."+(s.stations?" "+s.stations+" stations.":""),status:"booked"}).select("id").single());
+      var c=await S.sb.from("bait_checks").insert({site_id:s.id,job_id:job.id,check_date:d});
+      if(c.error){await S.sb.from("jobs").delete().eq("id",job.id);throw c.error;}
+      made++;
+    }
+    toast(made+" checks booked for "+name+" on "+fmt(d));
+  }catch(e){toast("Booked "+made+" of "+list.length+". "+(e.message||"Something went wrong."),true);}
+  await reload();
+}
+async function act(el){
+  var a=el.getAttribute("data-a"),id=el.getAttribute("data-id");
+  if(a==="tab"){S.tab=el.getAttribute("data-v");render();}
+  else if(a==="add"){S.edit={system:"Nemesis",status:"active",auto_text:true};render();window.scrollTo(0,0);}
+  else if(a==="edit"){S.edit=Object.assign({},site(id));render();window.scrollTo(0,0);}
+  else if(a==="close"){S.edit=null;render();}
+  else if(a==="save")await saveSite();
+  else if(a==="up"||a==="down")await move(id,a==="up"?-1:1);
+  else if(a==="book")await book(+el.getAttribute("data-r"));
+  else if(a==="handled"){ok(await S.sb.from("bait_checks").update({text_status:"handled"}).eq("id",id).select("id"));await reload();}
+  else if(a==="savetpl"){var v=$("tpl").value.trim();if(!v){toast("The message is empty.",true);return;}ok(await S.sb.from("bait_settings").update({template:v}).eq("id",1).select("id"));await reload();toast("Message saved");}
+}
+document.addEventListener("click",async function(ev){
+  var el=ev.target.closest("[data-a]");if(!el||S.busy)return;
+  S.busy=true;el.disabled=true;
+  try{await act(el);}catch(e){toast(e.message||"That didn't work. Check you're online.",true);}
+  S.busy=false;el.disabled=false;
+});
+document.addEventListener("input",function(ev){
+  if(ev.target.id==="q"){S.q=ev.target.value;var p=ev.target.selectionStart;render();$("q").focus();$("q").setSelectionRange(p,p);}
+});
+document.addEventListener("change",async function(ev){
+  var id=ev.target.id;if(id!=="live"&&id!=="paused")return;
+  var on=ev.target.checked;
+  if(id==="live"&&on&&!confirm("Start sending real texts to clients after clean checks?")){ev.target.checked=false;return;}
+  try{ok(await S.sb.from("bait_settings").update(id==="live"?{texts_live:on}:{texts_paused:on}).eq("id",1).select("id"));await reload();}catch(e){toast(e.message,true);}
+});
+/* ---------- sign in ---------- */
+function note(title,text){$("app").innerHTML='<div class="lg"><h1>'+esc(title)+'</h1><p>'+esc(text)+'</p><p><a href="home.html">Back to Home</a></p></div>';}
+function login(){
+  $("app").innerHTML='<div class="lg"><h1>Bait Tracker</h1><form id="lgf"><input id="lg-e" type="email" placeholder="Email" autocomplete="username"><input id="lg-p" type="password" placeholder="Password" autocomplete="current-password"><button class="btn pri" type="submit" style="width:100%">Log in</button><p id="lg-m"></p></form></div>';
+  $("lgf").addEventListener("submit",async function(ev){
+    ev.preventDefault();var r=await S.sb.auth.signInWithPassword({email:$("lg-e").value.trim(),password:$("lg-p").value});
+    if(r.error){$("lg-m").textContent="That email or password isn't right, or you're offline.";return;}
+    start(r.data.session);
+  });
+}
+async function start(session){
+  if(!session){login();return;}
+  try{
+    var me=ok(await S.sb.from("staff").select("id,name,role,active").eq("id",session.user.id).maybeSingle());
+    if(!me||me.role!=="master"||!me.active){note("This page is for Mitch","Your bait checks are in the Job Calendar.");return;}
+    S.me=me;await reload();
+  }catch(e){
+    if(/bait_(sites|checks|settings)/.test(e.message||""))note("One step to go","Run 52_bait_tracker.sql in Supabase, then reload this page.");
+    else note("Couldn't load",e.message||"Check you're online, then reload.");
+  }
+}
+(function(){
+  var c=window.LPC_SUPABASE;
+  if(!c||!window.supabase){note("Bait Tracker","Couldn't load the login tools. Check you're online, then reload.");return;}
+  S.sb=window.supabase.createClient(c.url,c.anonKey);
+  S.sb.auth.getSession().then(function(r){start(r.data&&r.data.session);});
+})();
+</script>
+</body>
+</html>

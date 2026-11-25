@@ -22,6 +22,17 @@
    ]
   },
   {
+   "id": "baits",
+   "name": "Bait Tracker",
+   "does": "Bait sites, runs and texts",
+   "url": "baits.html",
+   "field": true,
+   "status": "Needs work",
+   "todo": [
+    "Renewal dates picked up from new invoices"
+   ]
+  },
+  {
    "id": "week",
    "name": "Week Book",
    "does": "Free times and pencil in",
